@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"os/exec"
 
+	"io/ioutil"
+
+	"os"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -19,10 +23,16 @@ var _ = Describe("Backup", func() {
 	var port = "1234"
 	var databaseName = "mycooldb"
 	var password = "password"
+	var outputFile string
+	AfterEach(func() {
+		os.Remove(outputFile)
+	})
 
 	BeforeEach(func() {
-		fakePgDump = binmock.NewBinMock("pg_dump", "..")
-		fakePgDump.WhenCalled().WillExitWith(0)
+		fakePgDump = binmock.NewBinMock("pg_dump")
+		fakePgDump.WhenCalled().WillExitWith(0).WillPrintToStdOut("pg_dump_output")
+
+		outputFile = tempFilePath()
 
 		cmd = exec.Command("../jobs/database_backuper/templates/backup")
 		cmd.Env = []string{
@@ -32,6 +42,7 @@ var _ = Describe("Backup", func() {
 			fmt.Sprintf("PORT=%s", port),
 			fmt.Sprintf("DATABASE=%s", databaseName),
 			fmt.Sprintf("PASSWORD=%s", password),
+			fmt.Sprintf("OUTPUT_FILE=%s", outputFile),
 		}
 
 		var err error
@@ -54,7 +65,23 @@ var _ = Describe("Backup", func() {
 		Expect(fakePgDump.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 	})
 
+	It("calls pg_dump with the correct env vars", func() {
+		Expect(fakePgDump.Invocations()).To(HaveLen(1))
+		Expect(fakePgDump.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+	})
+
 	It("succeeds", func() {
 		Expect(session).Should(gexec.Exit(0))
 	})
+
+	It("pushes the pg_dump output to the output file", func() {
+		Expect(ioutil.ReadFile(outputFile)).To(ContainSubstring("pg_dump_output"))
+	})
 })
+
+func tempFilePath() string {
+	tmpfile, err := ioutil.TempFile("", "")
+	Expect(err).NotTo(HaveOccurred())
+	tmpfile.Close()
+	return tmpfile.Name()
+}

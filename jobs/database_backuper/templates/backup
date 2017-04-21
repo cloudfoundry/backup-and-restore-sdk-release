@@ -9,4 +9,4 @@ export PGPASSWORD="$PASSWORD"
   --host="$HOST" \
   --port="$PORT" \
   --format=custom \
-  "$DATABASE"
+  "$DATABASE" > $OUTPUT_FILE
