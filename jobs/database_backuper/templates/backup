@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+export PG_DUMP_PATH=${PG_DUMP_PATH:-/var/vcap/packages/postgres/bin/pg_dump}
+
+"$PG_DUMP_PATH" \
+  --user="$USER" \
+  --host="$HOST" \
+  --port="$PORT" \
+  --format=custom \
+  "$DATABASE"
