@@ -18,6 +18,7 @@ var _ = Describe("Backup", func() {
 	var host = "127.0.0.1"
 	var port = "1234"
 	var databaseName = "mycooldb"
+	var password = "password"
 
 	BeforeEach(func() {
 		fakePgDump = binmock.NewBinMock("pg_dump", "..")
@@ -30,6 +31,7 @@ var _ = Describe("Backup", func() {
 			fmt.Sprintf("HOST=%s", host),
 			fmt.Sprintf("PORT=%s", port),
 			fmt.Sprintf("DATABASE=%s", databaseName),
+			fmt.Sprintf("PASSWORD=%s", password),
 		}
 
 		var err error
@@ -49,6 +51,7 @@ var _ = Describe("Backup", func() {
 
 		Expect(fakePgDump.Invocations()).To(HaveLen(1))
 		Expect(fakePgDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+		Expect(fakePgDump.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 	})
 
 	It("succeeds", func() {

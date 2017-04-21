@@ -2,6 +2,8 @@
 
 export PG_DUMP_PATH=${PG_DUMP_PATH:-/var/vcap/packages/postgres/bin/pg_dump}
 
+export PGPASSWORD="$PASSWORD"
+
 "$PG_DUMP_PATH" \
   --user="$USER" \
   --host="$HOST" \
