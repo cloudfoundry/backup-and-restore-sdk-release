@@ -1,0 +1,10 @@
+---
+name: database_backuper
+
+templates:
+  backup.erb: bin/backup
+  restore.erb: bin/restore
+
+packages: []
+
+properties: {}
