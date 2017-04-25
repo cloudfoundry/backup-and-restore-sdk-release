@@ -8,6 +8,7 @@ image_resource:
 inputs:
 - name: database-backup-and-restore-release
 - name: release-tarball
+- name: bosh-backup-and-restore-meta
 
 outputs:
 - name: database-backup-and-restore-release-build
