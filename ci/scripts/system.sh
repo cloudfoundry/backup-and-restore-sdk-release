@@ -5,9 +5,12 @@ set -ex
 eval "$(ssh-agent)"
 ./bosh-backup-and-restore-meta/unlock-ci.sh
 
+chmod 400 bosh-backup-and-restore-meta/keys/github
+ssh-add bosh-backup-and-restore-meta/keys/github
+
+
 export GOPATH=$PWD
 export PATH=$PATH:$GOPATH/bin
-
 export BOSH_URL="https://genesis-bosh.backup-and-restore.cf-app.com:25555"
 export BOSH_CERT_PATH=bosh-backup-and-restore-meta/certs/genesis-bosh.backup-and-restore.cf-app.com.crt
 export BOSH_CLIENT
