@@ -1,0 +1,36 @@
+---
+name: postgres-dev
+
+releases:
+- name: bosh
+  version: 260.3
+- name: database-backup-and-restore
+  version: {{database-backup-and-restore-release-version}}
+  url: {{database-backup-and-restore-release-url}}
+
+stemcells:
+- alias: trusty
+  os: ubuntu-trusty
+  version: latest
+
+instance_groups:
+- name: postgres
+  instances: 1
+  vm_type: medium
+  persistent_disk_type: fifty
+  stemcell: trusty
+  networks:
+  - name: concourse
+  jobs:
+  - name: postgres
+    release: bosh
+  azs: [z1]
+  properties:
+    postgres:
+      password: {{postgres-password}}
+
+update:
+  canaries: 1
+  max_in_flight: 1
+  canary_watch_time: 2000
+  update_watch_time: 2000

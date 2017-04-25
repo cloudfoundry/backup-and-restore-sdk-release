@@ -6,12 +6,17 @@ image_resource:
   source: {repository: cloudfoundrylondon/backup-and-restore}
 
 inputs:
-- name: version
 - name: database-backup-and-restore-release
-- name: bosh-backup-and-restore-meta
+- name: release-tarball
 
 outputs:
 - name: database-backup-and-restore-release-build
 
 run:
-  path: database-backup-and-restore-release/ci/scripts/create-release.sh
+  path: database-backup-and-restore-release/ci/scripts/generate-manifest-and-deploy.sh
+
+params:
+  TEAM_GPG_KEY:
+  BOSH_CLIENT:
+  BOSH_CLIENT_SECRET:
+  POSTGRES_PASSWORD:

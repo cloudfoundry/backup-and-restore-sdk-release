@@ -15,4 +15,3 @@ run:
 
 params:
   TEAM_GPG_KEY:
-  DOCKER_HOST:
