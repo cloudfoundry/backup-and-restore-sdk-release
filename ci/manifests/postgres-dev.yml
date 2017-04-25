@@ -24,6 +24,8 @@ instance_groups:
   jobs:
   - name: postgres
     release: bosh
+  - name: database_backuper
+    release: database-backup-and-restore
   azs: [z1]
   properties:
     postgres:
