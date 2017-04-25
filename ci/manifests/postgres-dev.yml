@@ -5,8 +5,8 @@ releases:
 - name: bosh
   version: 260.3
 - name: database-backup-and-restore
-  version: {{database-backup-and-restore-release-version}}
-  url: {{database-backup-and-restore-release-url}}
+  version: ((database-backup-and-restore-release-version))
+  url: ((database-backup-and-restore-release-url))
 
 stemcells:
 - alias: trusty
@@ -27,7 +27,7 @@ instance_groups:
   azs: [z1]
   properties:
     postgres:
-      password: {{postgres-password}}
+      password: ((postgres-password))
 
 update:
   canaries: 1
