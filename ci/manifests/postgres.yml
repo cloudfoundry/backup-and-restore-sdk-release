@@ -30,6 +30,7 @@ instance_groups:
   properties:
     postgres:
       password: ((postgres-password))
+      listen_address: 0.0.0.0
 - name: database_backuper
   instances: 1
   vm_type: medium
