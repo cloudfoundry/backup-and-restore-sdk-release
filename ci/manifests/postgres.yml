@@ -30,6 +30,17 @@ instance_groups:
   properties:
     postgres:
       password: ((postgres-password))
+- name: database_backuper
+  instances: 1
+  vm_type: medium
+  persistent_disk_type: fifty
+  stemcell: trusty
+  networks:
+  - name: concourse
+  jobs:
+  - name: database_backuper
+    release: database-backup-and-restore
+  azs: [z1]
 
 update:
   canaries: 1
