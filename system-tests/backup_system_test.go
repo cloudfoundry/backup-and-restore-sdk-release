@@ -7,6 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -14,17 +15,60 @@ import (
 )
 
 var _ = Describe("backup", func() {
-	It("backs up a Postgres database", func() {
-		expectFilename := "/tmp/sql_dump"
-		Expect(RunOnInstance("postgres-dev", "postgres", "0",
-			fmt.Sprintf("rm -rf %s", expectFilename))).To(gexec.Exit(0))
-		Expect(RunOnInstance("postgres-dev", "postgres", "0",
-			fmt.Sprintf("HOST=localhost PORT=5432 USER=bosh PASSWORD=%s DATABASE=bosh OUTPUT_FILE=%s /var/vcap/jobs/database_backuper/bin/backup",
-				MustHaveEnv("POSTGRES_PASSWORD"), expectFilename))).To(gexec.Exit(0))
-		Expect(RunOnInstance("postgres-dev", "postgres", "0",
-			fmt.Sprintf("ls -l %s", expectFilename))).To(gexec.Exit(0))
+	Context("database_backuper is colocated with Postgres", func() {
+		It("backs up the Postgres database", func() {
+			expectFilename := "/tmp/sql_dump"
+			Expect(RunOnInstance("postgres-dev", "postgres", "0",
+				fmt.Sprintf("rm -rf %s", expectFilename))).To(gexec.Exit(0))
+			Expect(RunOnInstance("postgres-dev", "postgres", "0",
+				fmt.Sprintf("HOST=localhost PORT=5432 USER=bosh PASSWORD=%s DATABASE=bosh OUTPUT_FILE=%s /var/vcap/jobs/database_backuper/bin/backup",
+					MustHaveEnv("POSTGRES_PASSWORD"), expectFilename))).To(gexec.Exit(0))
+			Expect(RunOnInstance("postgres-dev", "postgres", "0",
+				fmt.Sprintf("ls -l %s", expectFilename))).To(gexec.Exit(0))
+		})
+	})
+
+	Context("database_backuper lives on its own instance", func() {
+		It("backs up the Postgres database", func() {
+			expectFilename := "/tmp/sql_dump"
+
+			ip := getIPOfInstance("postgres-dev", "postgres")
+
+			Expect(RunOnInstance("postgres-dev", "database_backuper", "0",
+				fmt.Sprintf("rm -rf %s", expectFilename))).To(gexec.Exit(0))
+			Expect(RunOnInstance("postgres-dev", "database_backuper", "0",
+				fmt.Sprintf("HOST=%s PORT=5432 USER=bosh PASSWORD=%s DATABASE=bosh OUTPUT_FILE=%s /var/vcap/jobs/database_backuper/bin/backup",
+					ip, MustHaveEnv("POSTGRES_PASSWORD"), expectFilename))).To(gexec.Exit(0))
+			Expect(RunOnInstance("postgres-dev", "database_backuper", "0",
+				fmt.Sprintf("ls -l %s", expectFilename))).To(gexec.Exit(0))
+		})
 	})
 })
+
+func getIPOfInstance(deploymentName, instanceName string) string {
+	session := RunCommand(
+		BoshCommand(),
+		forDeployment(deploymentName),
+		"instances",
+		"--json",
+	)
+	thing := jsonOutputFromCli{}
+	contents := session.Out.Contents()
+	Expect(json.Unmarshal(contents, &thing)).To(Succeed())
+	for _, instanceData := range thing.Tables[0].Rows {
+		if strings.HasPrefix(instanceData["instance"], instanceName+"/") {
+			return instanceData["ips"]
+		}
+	}
+	Fail("Cant find instances with name '" + instanceName + "' and deployment name '" + deploymentName + "'")
+	return ""
+}
+
+type jsonOutputFromCli struct {
+	Tables []struct {
+		Rows []map[string]string
+	}
+}
 
 func RunOnInstance(deployment, instanceName, instanceIndex string, cmd ...string) *gexec.Session {
 	return RunCommand(
