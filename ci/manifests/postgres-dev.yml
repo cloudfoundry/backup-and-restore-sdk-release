@@ -1,4 +1,6 @@
 ---
+name: ((deployment-name))
+
 releases:
 - name: bosh
   version: 260.3
