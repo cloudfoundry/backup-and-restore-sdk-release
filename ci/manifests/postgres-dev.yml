@@ -1,6 +1,4 @@
 ---
-name: postgres-dev
-
 releases:
 - name: bosh
   version: 260.3
