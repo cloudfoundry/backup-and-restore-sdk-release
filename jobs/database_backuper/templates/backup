@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export PG_DUMP_PATH=${PG_DUMP_PATH:-/var/vcap/packages/postgres/bin/pg_dump}
+export PG_DUMP_PATH=${PG_DUMP_PATH:-/var/vcap/packages/database-backuper-postgres-9.4.11/bin/pg_dump}
 
 export PGPASSWORD="$PASSWORD"
 

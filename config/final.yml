@@ -1,3 +1,9 @@
 ---
 name: database-backup-and-restore
 final_name: database-backup-and-restore
+blobstore:
+  provider: s3
+  options:
+    bucket_name: database-backup-and-restore-release-blobs
+    region: eu-west-1
+    endpoint: https://s3-eu-west-1.amazonaws.com

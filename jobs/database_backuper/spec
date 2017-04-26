@@ -5,6 +5,7 @@ templates:
   backup: bin/backup
   restore: bin/restore
 
-packages: []
+packages:
+- database-backuper-postgres-9.4.11
 
 properties: {}
