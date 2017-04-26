@@ -1,6 +1,5 @@
 ---
 name: database-backup-and-restore
-final_name: database-backup-and-restore
 blobstore:
   provider: s3
   options:

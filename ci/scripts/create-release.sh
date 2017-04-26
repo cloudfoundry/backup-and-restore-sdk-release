@@ -6,6 +6,5 @@ set -x
 export VERSION=$(cat version/number)
 
 pushd database-backup-and-restore-release
-  bosh -n create release --version $VERSION --with-tarball --force
-  mv dev_releases/database-backup-and-restore/* ../database-backup-and-restore-release-build/
+  bosh-cli create-release --version $VERSION --tarball=../database-backup-and-restore-release-build/database-backup-and-restore-release-$VERSION.tgz --force
 popd
