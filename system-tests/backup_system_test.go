@@ -15,31 +15,31 @@ import (
 )
 
 var _ = Describe("backup", func() {
-	Context("database_backuper is colocated with Postgres", func() {
+	Context("database-backuper is colocated with Postgres", func() {
 		It("backs up the Postgres database", func() {
 			expectFilename := "/tmp/sql_dump"
 			Expect(RunOnInstance("postgres-dev", "postgres", "0",
 				fmt.Sprintf("rm -rf %s", expectFilename))).To(gexec.Exit(0))
 			Expect(RunOnInstance("postgres-dev", "postgres", "0",
-				fmt.Sprintf("HOST=localhost PORT=5432 USER=bosh PASSWORD=%s DATABASE=bosh OUTPUT_FILE=%s /var/vcap/jobs/database_backuper/bin/backup",
+				fmt.Sprintf("HOST=localhost PORT=5432 USER=bosh PASSWORD=%s DATABASE=bosh OUTPUT_FILE=%s /var/vcap/jobs/database-backuper/bin/backup",
 					MustHaveEnv("POSTGRES_PASSWORD"), expectFilename))).To(gexec.Exit(0))
 			Expect(RunOnInstance("postgres-dev", "postgres", "0",
 				fmt.Sprintf("ls -l %s", expectFilename))).To(gexec.Exit(0))
 		})
 	})
 
-	Context("database_backuper lives on its own instance", func() {
+	Context("database-backuper lives on its own instance", func() {
 		It("backs up the Postgres database", func() {
 			expectFilename := "/tmp/sql_dump"
 
 			ip := getIPOfInstance("postgres-dev", "postgres")
 
-			Expect(RunOnInstance("postgres-dev", "database_backuper", "0",
+			Expect(RunOnInstance("postgres-dev", "database-backuper", "0",
 				fmt.Sprintf("rm -rf %s", expectFilename))).To(gexec.Exit(0))
-			Expect(RunOnInstance("postgres-dev", "database_backuper", "0",
-				fmt.Sprintf("HOST=%s PORT=5432 USER=bosh PASSWORD=%s DATABASE=bosh OUTPUT_FILE=%s /var/vcap/jobs/database_backuper/bin/backup",
+			Expect(RunOnInstance("postgres-dev", "database-backuper", "0",
+				fmt.Sprintf("HOST=%s PORT=5432 USER=bosh PASSWORD=%s DATABASE=bosh OUTPUT_FILE=%s /var/vcap/jobs/database-backuper/bin/backup",
 					ip, MustHaveEnv("POSTGRES_PASSWORD"), expectFilename))).To(gexec.Exit(0))
-			Expect(RunOnInstance("postgres-dev", "database_backuper", "0",
+			Expect(RunOnInstance("postgres-dev", "database-backuper", "0",
 				fmt.Sprintf("ls -l %s", expectFilename))).To(gexec.Exit(0))
 		})
 	})

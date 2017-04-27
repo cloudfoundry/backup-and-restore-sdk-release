@@ -1,5 +1,5 @@
 ---
-name: database_backuper
+name: database-backuper
 
 templates:
   backup: bin/backup

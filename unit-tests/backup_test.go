@@ -34,7 +34,7 @@ var _ = Describe("Backup", func() {
 
 		outputFile = tempFilePath()
 
-		cmd = exec.Command("../jobs/database_backuper/templates/backup")
+		cmd = exec.Command("../jobs/database-backuper/templates/backup")
 		cmd.Env = []string{
 			fmt.Sprintf("PG_DUMP_PATH=%s", fakePgDump.Path),
 			fmt.Sprintf("USER=%s", username),
