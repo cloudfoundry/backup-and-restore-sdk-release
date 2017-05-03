@@ -1,12 +1,3 @@
 #!/usr/bin/env bash
 
-export PG_DUMP_PATH=${PG_DUMP_PATH:-/var/vcap/packages/database-backuper-postgres-9.4.11/bin/pg_dump}
-
-export PGPASSWORD="$PASSWORD"
-
-"$PG_DUMP_PATH" \
-  --user="$USER" \
-  --host="$HOST" \
-  --port="$PORT" \
-  --format=custom \
-  "$DATABASE" > $OUTPUT_FILE
+/var/vcap/packages/database-backuper/bin/database-backuper

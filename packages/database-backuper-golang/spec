@@ -1,0 +1,7 @@
+---
+name: database-backuper-golang
+
+dependencies: []
+
+files:
+- go/go1.8.linux-amd64.tar.gz

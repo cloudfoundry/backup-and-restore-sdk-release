@@ -7,11 +7,10 @@ image_resource:
 
 inputs:
 - name: database-backup-and-restore-release
-  path: src/github.com/pivotal-cf/database-backup-and-restore-release
 - name: bosh-backup-and-restore-meta
 
 run:
-  path: src/github.com/pivotal-cf/database-backup-and-restore-release/ci/scripts/unit.sh
+  path: database-backup-and-restore-release/ci/scripts/unit.sh
 
 params:
   TEAM_GPG_KEY:

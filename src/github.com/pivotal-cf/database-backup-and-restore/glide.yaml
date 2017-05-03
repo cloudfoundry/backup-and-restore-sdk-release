@@ -1,0 +1,8 @@
+package: .
+testImport:
+- package: github.com/onsi/ginkgo
+  version: ~1.3.1
+- package: github.com/onsi/gomega
+  version: ~1.1.0
+- package: github.com/pivotal-cf-experimental/go-binmock
+  version: master

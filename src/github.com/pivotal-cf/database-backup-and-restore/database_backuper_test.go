@@ -1,4 +1,4 @@
-package unit_tests
+package database_backup_and_restore
 
 import (
 	"fmt"
@@ -30,11 +30,13 @@ var _ = Describe("Backup", func() {
 
 	BeforeEach(func() {
 		fakePgDump = binmock.NewBinMock("pg_dump")
-		fakePgDump.WhenCalled().WillExitWith(0).WillPrintToStdOut("pg_dump_output")
+		fakePgDump.WhenCalled().WillExitWith(0)
 
 		outputFile = tempFilePath()
+		path, err := gexec.Build("github.com/pivotal-cf/database-backup-and-restore/cmd/database-backuper")
+		Expect(err).NotTo(HaveOccurred())
 
-		cmd = exec.Command("../jobs/database-backuper/templates/backup")
+		cmd = exec.Command(path)
 		cmd.Env = []string{
 			fmt.Sprintf("PG_DUMP_PATH=%s", fakePgDump.Path),
 			fmt.Sprintf("USER=%s", username),
@@ -45,7 +47,6 @@ var _ = Describe("Backup", func() {
 			fmt.Sprintf("OUTPUT_FILE=%s", outputFile),
 		}
 
-		var err error
 		session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 		Expect(err).ToNot(HaveOccurred())
 		Eventually(session).Should(gexec.Exit())
@@ -57,6 +58,7 @@ var _ = Describe("Backup", func() {
 			fmt.Sprintf("--host=%s", host),
 			fmt.Sprintf("--port=%s", port),
 			"--format=custom",
+			fmt.Sprintf("--file=%s", outputFile),
 			databaseName,
 		}
 
@@ -72,10 +74,6 @@ var _ = Describe("Backup", func() {
 
 	It("succeeds", func() {
 		Expect(session).Should(gexec.Exit(0))
-	})
-
-	It("pushes the pg_dump output to the output file", func() {
-		Expect(ioutil.ReadFile(outputFile)).To(ContainSubstring("pg_dump_output"))
 	})
 })
 
