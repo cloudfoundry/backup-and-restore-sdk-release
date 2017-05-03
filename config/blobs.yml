@@ -1,5 +1,6 @@
 go/go1.8.1.linux-amd64.tar.gz:
   size: 91277742
+  object_id: aae713d6-4758-4486-7dd2-c34b45a7c9aa
   sha: a433f76c569055ff8536d796995518dd91a9fa5b
 postgres/postgresql-9.4.11.tar.gz:
   size: 23380382
