@@ -7,7 +7,5 @@ templates:
 
 packages:
 - database-backuper
-- database-backuper-golang
-- database-backuper-postgres-9.4.11
 
 properties: {}
