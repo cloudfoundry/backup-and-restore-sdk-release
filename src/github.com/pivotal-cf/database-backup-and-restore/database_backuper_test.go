@@ -82,12 +82,14 @@ var _ = Describe("Backup", func() {
 	})
 
 	Context("when the config.json is provided", func() {
+		var configFile *os.File
+
 		BeforeEach(func() {
 			fakePgDump = binmock.NewBinMock("pg_dump")
 			fakePgDump.WhenCalled().WillExitWith(0)
 
 			outputFile = tempFilePath()
-			configFile, err := ioutil.TempFile(os.TempDir(), time.Now().String())
+			configFile, err = ioutil.TempFile(os.TempDir(), time.Now().String())
 			Expect(err).NotTo(HaveOccurred())
 			fmt.Fprintf(
 				configFile,
@@ -101,7 +103,10 @@ var _ = Describe("Backup", func() {
 				outputFile,
 			)
 
-			cmd = exec.Command(path, configFile.Name())
+		})
+
+		JustBeforeEach(func() {
+			cmd := exec.Command(path, configFile.Name())
 			cmd.Env = append(cmd.Env, fmt.Sprintf("PG_DUMP_PATH=%s", fakePgDump.Path))
 
 			session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
@@ -135,6 +140,17 @@ var _ = Describe("Backup", func() {
 
 		It("succeeds", func() {
 			Expect(session).Should(gexec.Exit(0))
+		})
+
+		Context("and pg_dump fails", func() {
+			BeforeEach(func() {
+				fakePgDump = binmock.NewBinMock("pg_dump")
+				fakePgDump.WhenCalled().WillExitWith(1)
+			})
+
+			It("also fails", func() {
+				Eventually(session).Should(gexec.Exit(1))
+			})
 		})
 	})
 })
