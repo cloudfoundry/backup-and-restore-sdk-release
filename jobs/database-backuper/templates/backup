@@ -1,5 +1,3 @@
 #!/usr/bin/env bash
 
-CONFIG_PATH=/var/vcap/jobs/database-backuper/config/config.json
-
-/var/vcap/packages/database-backuper/bin/database-backuper $CONFIG_PATH
+/var/vcap/packages/database-backuper/bin/database-backuper $1

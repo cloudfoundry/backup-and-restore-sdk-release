@@ -66,7 +66,7 @@ var _ = Describe("Backup", func() {
 			Expect(session.Err).To(gbytes.Say(`Could not parse config json`))
 		})
 
-		It("exit with error if the config is not a valid json", func() {
+		It("exit with error if unsupported adapter", func() {
 			outputFile = tempFilePath()
 			configFile, err := ioutil.TempFile(os.TempDir(), time.Now().String())
 			Expect(err).NotTo(HaveOccurred())

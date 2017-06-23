@@ -40,6 +40,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "missing argument: config.json\nUsage: database-backuper config.json\n")
 		os.Exit(1)
 	}
+
 	configPath := os.Args[1]
 	configString, err := ioutil.ReadFile(configPath)
 	if err != nil {
