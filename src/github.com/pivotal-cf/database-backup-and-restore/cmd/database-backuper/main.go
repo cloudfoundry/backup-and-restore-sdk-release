@@ -37,7 +37,7 @@ func main() {
 	}
 
 	if len(os.Args) != 2 {
-		fmt.Fprintf(os.Stderr, "missing argument: config.json\nUsage: database-backuper config.json")
+		fmt.Fprintf(os.Stderr, "missing argument: config.json\nUsage: database-backuper config.json\n")
 		os.Exit(1)
 	}
 	configPath := os.Args[1]

@@ -16,7 +16,7 @@ import (
 
 var _ = Describe("backup", func() {
 	Context("database-backuper is colocated with Postgres", func() {
-		FIt("backs up the Postgres database", func() {
+		It("backs up the Postgres database", func() {
 			expectFilename := "/tmp/sql_dump"
 			configJson := fmt.Sprintf(
 				`{"username":"bosh","password":"%s","host":"localhost","port":"5432","database":"bosh","adapter":"postgres","output_file":"%s"}`,
