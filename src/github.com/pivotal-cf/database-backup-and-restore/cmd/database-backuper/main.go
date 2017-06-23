@@ -33,7 +33,7 @@ type Config struct {
 func main() {
 	pgDumpPath, pgDumpPathVariableSet := os.LookupEnv("PG_DUMP_PATH")
 	if !pgDumpPathVariableSet {
-		pgDumpPath = "/var/vcap/packages/database-backuper-postgres-9.4.11/bin/pg_dump"
+		pgDumpPath = "/var/vcap/packages/database-backuper-postgres/bin/pg_dump"
 	}
 
 	if len(os.Args) != 2 {

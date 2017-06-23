@@ -1,7 +1,0 @@
----
-name: database-backuper-postgres-9.4.11
-
-dependencies: []
-
-files:
-- postgres/postgresql-9.4.11.tar.gz

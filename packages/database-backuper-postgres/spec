@@ -1,0 +1,7 @@
+---
+name: database-backuper-postgres
+
+dependencies: []
+
+files:
+- postgres/postgresql-9.6.3.tar.gz

@@ -7,6 +7,6 @@ templates:
 
 packages:
 - database-backuper
-- database-backuper-postgres-9.4.11
+- database-backuper-postgres
 
 properties: {}
