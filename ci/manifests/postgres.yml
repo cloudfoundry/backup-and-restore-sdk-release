@@ -22,7 +22,7 @@ instance_groups:
   networks:
   - name: concourse
   jobs:
-  - name: postgres
+  - name: postgres-9.4
     release: bosh
   - name: database-backuper
     release: database-backup-and-restore
