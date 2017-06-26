@@ -44,4 +44,4 @@ cp <output_file> $ARTIFACT_DIRECTORY
 ```
 
 ### Supported database adapters
-* `postgres`
+* `postgres` - packages 9.6.3
