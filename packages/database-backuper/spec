@@ -5,4 +5,4 @@ dependencies:
 - database-backuper-golang
 
 files:
-- github.com/pivotal-cf/database-backup-and-restore/cmd/database-backuper/main.go
+- github.com/pivotal-cf/database-backup-and-restore/cmd/database-backup-restore/main.go

@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
-echo "bar"
+set -e
+
+/var/vcap/packages/database-backuper/bin/database-backup-restore --config $1 --restore
