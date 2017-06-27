@@ -22,12 +22,12 @@ func TestSystemTests(t *testing.T) {
 }
 
 func runSqlCommand(command, database string) *gexec.Session {
-	return runOnPostgresVM(
+	return runOnPostgresVMAndSucceed(
 		fmt.Sprintf(`/var/vcap/packages/postgres-9.4/bin/psql -U vcap "%s" --command="%s"`, database, command),
 	)
 }
 
-func runOnPostgresVM(command string) *gexec.Session {
+func runOnPostgresVMAndSucceed(command string) *gexec.Session {
 	session := RunOnInstance(
 		"postgres-dev", "postgres", "0", command,
 	)
