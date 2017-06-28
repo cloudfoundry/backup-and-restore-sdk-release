@@ -26,7 +26,7 @@ var _ = Describe("backup", func() {
 
 			runOnPostgresVMAndSucceed(fmt.Sprintf(`/var/vcap/packages/postgres-9.4/bin/createdb -U vcap "%s"`, databaseName))
 			runSqlCommand("CREATE TABLE people (name varchar);", databaseName)
-			runSqlCommand("INSERT into people VALUES ('Derik');", databaseName)
+			runSqlCommand("INSERT INTO people VALUES ('Derik');", databaseName)
 
 			configJson := fmt.Sprintf(
 				`{"username":"vcap","password":"%s","host":"localhost","port":"5432","database":"%s","adapter":"postgres","output_file":"%s"}`,

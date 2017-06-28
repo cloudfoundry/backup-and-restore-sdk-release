@@ -20,7 +20,7 @@ var _ = Describe("restore", func() {
 		databaseName = "db" + strconv.FormatInt(time.Now().Unix(), 10)
 		runOnPostgresVMAndSucceed(fmt.Sprintf(`/var/vcap/packages/postgres-9.4/bin/createdb -U vcap "%s"`, databaseName))
 		runSqlCommand("CREATE TABLE people (name varchar);", databaseName)
-		runSqlCommand("INSERT into people VALUES ('Derik');", databaseName)
+		runSqlCommand("INSERT INTO people VALUES ('Derik');", databaseName)
 
 		configPath = "/tmp/config.json" + strconv.FormatInt(time.Now().Unix(), 10)
 		dbDumpPath = "/tmp/sql_dump" + strconv.FormatInt(time.Now().Unix(), 10)

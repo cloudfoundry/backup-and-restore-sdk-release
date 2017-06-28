@@ -2,4 +2,6 @@
 
 set -e
 
+export PG_RESTORE_PATH="/var/vcap/packages/database-backuper-postgres/bin/pg_restore"
+
 /var/vcap/packages/database-backuper/bin/database-backup-restore --config $1 --restore

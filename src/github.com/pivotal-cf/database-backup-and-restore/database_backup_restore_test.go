@@ -51,7 +51,7 @@ var _ = Describe("Backup and Restore", func() {
 		BeforeEach(func() {
 			cmdActionFlag = "--backup"
 		})
-		Context("when the arguments are wrong", func() {
+		Context("incorrect usage", func() {
 			It("exits with error if no config is passed", func() {
 				cmd = exec.Command(path, cmdActionFlag)
 
@@ -108,6 +108,30 @@ var _ = Describe("Backup and Restore", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Err).To(gbytes.Say(`Missing --backup or --restore flag`))
+			})
+
+			It("exits with error if PG_DUMP_PATH is not set", func() {
+				outputFile = tempFilePath()
+				configFile, err := ioutil.TempFile(os.TempDir(), time.Now().String())
+				Expect(err).NotTo(HaveOccurred())
+				fmt.Fprintf(
+					configFile,
+					`{"username":"%s","password":"%s","host":"%s","port":"%s","database":"%s","adapter":"%s","output_file":"%s"}`,
+					username,
+					password,
+					host,
+					port,
+					databaseName,
+					adapter,
+					outputFile,
+				)
+
+				cmd = exec.Command(path, "--config", configFile.Name(), cmdActionFlag)
+
+				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).ToNot(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(session.Err).To(gbytes.Say(`PG_DUMP_PATH must be set`))
 			})
 		})
 
@@ -256,6 +280,32 @@ var _ = Describe("Backup and Restore", func() {
 
 				It("also fails", func() {
 					Eventually(session).Should(gexec.Exit(1))
+				})
+			})
+
+			Context("incorrect usage", func(){
+				It("exits with error if PG_DUMP_PATH is not set", func() {
+					outputFile = tempFilePath()
+					configFile, err := ioutil.TempFile(os.TempDir(), time.Now().String())
+					Expect(err).NotTo(HaveOccurred())
+					fmt.Fprintf(
+						configFile,
+						`{"username":"%s","password":"%s","host":"%s","port":"%s","database":"%s","adapter":"%s","output_file":"%s"}`,
+						username,
+						password,
+						host,
+						port,
+						databaseName,
+						adapter,
+						outputFile,
+					)
+
+					cmd = exec.Command(path, "--config", configFile.Name(), cmdActionFlag)
+
+					session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+					Expect(err).ToNot(HaveOccurred())
+					Eventually(session).Should(gexec.Exit(1))
+					Expect(session.Err).To(gbytes.Say(`PG_RESTORE_PATH must be set`))
 				})
 			})
 		})

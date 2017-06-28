@@ -87,7 +87,7 @@ func restore(config Config) *exec.Cmd {
 	pgRestorePath, pgRestorePathVariableSet := os.LookupEnv("PG_RESTORE_PATH")
 
 	if !pgRestorePathVariableSet {
-		pgRestorePath = "/var/vcap/packages/database-backuper-postgres/bin/pg_restore"
+		log.Fatalln("PG_RESTORE_PATH must be set")
 	}
 
 	cmd := exec.Command(pgRestorePath, "-v", "--user="+config.Username, "--host="+config.Host, "--port="+config.Port, "--format=custom", "--dbname="+config.Database, "--clean", config.OutputFile)
@@ -100,7 +100,7 @@ func backup(config Config) *exec.Cmd {
 	pgDumpPath, pgDumpPathVariableSet := os.LookupEnv("PG_DUMP_PATH")
 
 	if !pgDumpPathVariableSet {
-		pgDumpPath = "/var/vcap/packages/database-backuper-postgres/bin/pg_dump"
+		log.Fatalln("PG_DUMP_PATH must be set")
 	}
 
 	cmd := exec.Command(pgDumpPath, "-v", "--user="+config.Username, "--host="+config.Host, "--port="+config.Port, "--format=custom", "--file="+config.OutputFile, config.Database)
