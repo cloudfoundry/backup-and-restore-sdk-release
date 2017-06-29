@@ -23,6 +23,6 @@ export POSTGRES_PASSWORD
 
 
 
-cd src/github.com/pivotal-cf/database-backup-and-restore-release
+cd src/github.com/pivotal-cf/backup-and-restore-sdk-release
 glide install
 ginkgo system-tests
