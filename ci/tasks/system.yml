@@ -6,12 +6,12 @@ image_resource:
   source: {repository: cloudfoundrylondon/backup-and-restore}
 
 inputs:
-- name: database-backup-and-restore-release
-  path: src/github.com/pivotal-cf/database-backup-and-restore-release
+- name: backup-and-restore-sdk-release
+  path: src/github.com/pivotal-cf/backup-and-restore-sdk-release
 - name: bosh-backup-and-restore-meta
 
 run:
-  path: src/github.com/pivotal-cf/database-backup-and-restore-release/ci/scripts/system.sh
+  path: src/github.com/pivotal-cf/backup-and-restore-sdk-release/ci/scripts/system.sh
 
 params:
   TEAM_GPG_KEY:

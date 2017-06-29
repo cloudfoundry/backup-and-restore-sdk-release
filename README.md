@@ -1,8 +1,8 @@
-# database-backup-and-restore BOSH release
+# backup-and-restore-sdk BOSH release
 
-A BOSH release for backing up a number of different databases.
+A backup and restore sdk for BOSH releases for e.g. backing up a number of different databases.
 
-### Usage
+### Usage for database backup
 
 Co-locate the `database-backuper` job on the database VM that should be backed up:
 
@@ -14,7 +14,7 @@ instance_groups:
   - name: postgres-server
     release: postgres-release
   - name: database-backuper                       <<
-    release: database-backup-and-restore-release  <<
+    release: backup-and-restore-sdk-release  <<
 ...
 ```
 

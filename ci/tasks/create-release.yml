@@ -7,10 +7,10 @@ image_resource:
 
 inputs:
 - name: version
-- name: database-backup-and-restore-release
+- name: backup-and-restore-sdk-release
 
 outputs:
-- name: database-backup-and-restore-release-build
+- name: backup-and-restore-sdk-release-build
 
 run:
-  path: database-backup-and-restore-release/ci/scripts/create-release.sh
+  path: backup-and-restore-sdk-release/ci/scripts/create-release.sh

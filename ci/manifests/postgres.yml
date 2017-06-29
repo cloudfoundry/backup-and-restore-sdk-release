@@ -4,9 +4,9 @@ name: ((deployment-name))
 releases:
 - name: bosh
   version: 260.3
-- name: database-backup-and-restore
-  version: ((database-backup-and-restore-release-version))
-  url: ((database-backup-and-restore-release-url))
+- name: backup-and-restore-sdk
+  version: ((backup-and-restore-sdk-release-version))
+  url: ((backup-and-restore-sdk-release-url))
 
 stemcells:
 - alias: trusty
@@ -25,7 +25,7 @@ instance_groups:
   - name: postgres-9.4
     release: bosh
   - name: database-backuper
-    release: database-backup-and-restore
+    release: backup-and-restore-sdk
   azs: [z1]
   properties:
     postgres:
@@ -40,7 +40,7 @@ instance_groups:
   - name: concourse
   jobs:
   - name: database-backuper
-    release: database-backup-and-restore
+    release: backup-and-restore-sdk
   azs: [z1]
 
 update:

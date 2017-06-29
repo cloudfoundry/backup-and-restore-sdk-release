@@ -6,15 +6,15 @@ image_resource:
   source: {repository: cloudfoundrylondon/backup-and-restore}
 
 inputs:
-- name: database-backup-and-restore-release
+- name: backup-and-restore-sdk-release
 - name: release-tarball
 - name: bosh-backup-and-restore-meta
 
 outputs:
-- name: database-backup-and-restore-release-build
+- name: backup-and-restore-sdk-release-build
 
 run:
-  path: database-backup-and-restore-release/ci/scripts/generate-manifest-and-deploy.sh
+  path: backup-and-restore-sdk-release/ci/scripts/generate-manifest-and-deploy.sh
 
 params:
   TEAM_GPG_KEY:
