@@ -26,7 +26,7 @@ var _ = Describe("restore", func() {
 		dbDumpPath = "/tmp/sql_dump" + strconv.FormatInt(time.Now().Unix(), 10)
 
 		configJson := fmt.Sprintf(
-			`{"username":"vcap","password":"%s","host":"localhost","port":"5432","database":"%s","adapter":"postgres"}`,
+			`{"username":"vcap","password":"%s","host":"localhost","port":5432,"database":"%s","adapter":"postgres"}`,
 			MustHaveEnv("POSTGRES_PASSWORD"),
 			databaseName,
 		)

@@ -29,7 +29,7 @@ var _ = Describe("backup", func() {
 			runSqlCommand("INSERT INTO people VALUES ('Derik');", databaseName)
 
 			configJson := fmt.Sprintf(
-				`{"username":"vcap","password":"%s","host":"localhost","port":"5432","database":"%s","adapter":"postgres"}`,
+				`{"username":"vcap","password":"%s","host":"localhost","port":5432,"database":"%s","adapter":"postgres"}`,
 				MustHaveEnv("POSTGRES_PASSWORD"),
 				databaseName,
 			)
@@ -55,7 +55,7 @@ var _ = Describe("backup", func() {
 			deploymentName := "postgres-dev"
 			ip := getIPOfInstance(deploymentName, "postgres")
 			configJson := fmt.Sprintf(
-				`{"username":"bosh","password":"%s","host":"%s","port":"5432","database":"bosh","adapter":"postgres"}`,
+				`{"username":"bosh","password":"%s","host":"%s","port":5432,"database":"bosh","adapter":"postgres"}`,
 				MustHaveEnv("POSTGRES_PASSWORD"),
 				ip,
 			)

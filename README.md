@@ -25,7 +25,7 @@ Template a `config.json` as follows:
   "username": "db user",
   "password": "db password",
   "host": "db host",
-  "port": "db port",
+  "port": <db port>,
   "adapter": "db adapter; see 'Supported database adapters'",
   "database": "name of database to back up"
 }
