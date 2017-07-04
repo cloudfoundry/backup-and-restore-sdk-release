@@ -9,17 +9,26 @@ import (
 
 	"os"
 
+	"strings"
+
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/go-binmock"
 )
 
-var _ = Describe("Backup and Restore", func() {
+type GeneratorFunction func() (string, error)
+type TestEntry struct {
+	arguments       string
+	expectedOutput  string
+	configGenerator GeneratorFunction
+}
+
+var _ = Describe("Backup and Restore DB Utility", func() {
 	var fakePgDump *binmock.Mock
 	var fakePgRestore *binmock.Mock
-	var cmd *exec.Cmd
 	var session *gexec.Session
 	var username = "testuser"
 	var host = "127.0.0.1"
@@ -27,7 +36,7 @@ var _ = Describe("Backup and Restore", func() {
 	var databaseName = "mycooldb"
 	var password = "password"
 	var adapter = "postgres"
-	var outputFile string
+	var artifactFile string
 	var path string
 	var err error
 
@@ -36,281 +45,221 @@ var _ = Describe("Backup and Restore", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("fails if two actions are provided", func() {
-		cmd = exec.Command(path, "--config", "/foo", "--backup", "--restore")
+	Context("incorrect cli usage", func() {
+		var entriesToTest []TableEntry
 
-		session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-		Expect(err).ToNot(HaveOccurred())
-		Eventually(session).Should(gexec.Exit(1))
-		Expect(session.Err).To(gbytes.Say(`Only one of: --backup or --restore can be provided`))
+		entriesToTest = []TableEntry{
+			Entry("two actions provided", TestEntry{
+				arguments:      "--backup --restore",
+				expectedOutput: "Only one of: --backup or --restore can be provided",
+			}),
+			Entry("no action provided", TestEntry{
+				arguments:      "--artifact-file /foo --config foo",
+				expectedOutput: "Missing --backup or --restore flag",
+			}),
+			Entry("no config is passed", TestEntry{
+				arguments:      "--backup --artifact-file /foo",
+				expectedOutput: "Missing --config flag",
+			}),
+			Entry("the config is not accessible", TestEntry{
+				arguments:      "--backup --artifact-file /foo --config /foo/bar/bar.json",
+				expectedOutput: "no such file",
+			}),
+			Entry("is not a valid json", TestEntry{
+				arguments:       "--backup --artifact-file /foo --config %s",
+				configGenerator: invalidConfig,
+				expectedOutput:  "Could not parse config json",
+			}),
+			Entry("unsupported adapter", TestEntry{
+				arguments:       "--backup --artifact-file /foo --config %s",
+				configGenerator: invalidAdapterConfig,
+				expectedOutput:  "Unsupported adapter foo-server",
+			}),
+			Entry("the artifact-file is not provided", TestEntry{
+				arguments:       "--backup --config %s",
+				configGenerator: validConfig,
+				expectedOutput:  "Missing --artifact-file flag",
+			}),
+			Entry("PG_DUMP_PATH is not set", TestEntry{
+				arguments:       "--backup --artifact-file /foo --config %s",
+				configGenerator: validConfig,
+				expectedOutput:  "PG_DUMP_PATH must be set",
+			}),
+			Entry("PG_RESTORE_PATH is not set", TestEntry{
+				arguments:       "--restore --artifact-file /foo --config %s",
+				configGenerator: validConfig,
+				expectedOutput:  "PG_RESTORE_PATH must be set",
+			}),
+		}
+
+		DescribeTable("raises the appropriate error when",
+			func(entry TestEntry) {
+				if entry.configGenerator != nil {
+					configPath, err := entry.configGenerator()
+					Expect(err).NotTo(HaveOccurred())
+					entry.arguments = fmt.Sprintf(entry.arguments, configPath)
+					defer os.Remove(configPath)
+				}
+				args := strings.Split(entry.arguments, " ")
+				cmd := exec.Command(path, args...)
+
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).ToNot(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(session.Err).To(gbytes.Say(entry.expectedOutput))
+			},
+			entriesToTest...,
+		)
 	})
 
 	Context("--backup", func() {
 		var cmdActionFlag string
-
 		BeforeEach(func() {
 			cmdActionFlag = "--backup"
 		})
-		Context("incorrect usage", func() {
-			It("exits with error if no config is passed", func() {
-				cmd = exec.Command(path, cmdActionFlag)
 
-				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-				Expect(err).ToNot(HaveOccurred())
-				Eventually(session).Should(gexec.Exit(1))
-				Expect(session.Err).To(gbytes.Say(`missing argument: --config config.json`))
-			})
+		var configFile *os.File
 
-			It("exits with error if the config is not accessible", func() {
-				cmd = exec.Command(path, "--config", "/foo/bar/bar.json", cmdActionFlag)
+		BeforeEach(func() {
+			fakePgDump = binmock.NewBinMock("pg_dump")
+			fakePgDump.WhenCalled().WillExitWith(0)
 
-				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-				Expect(err).ToNot(HaveOccurred())
-				Eventually(session).Should(gexec.Exit(1))
-				Expect(session.Err).To(gbytes.Say(`no such file`))
-			})
-
-			It("exits with error if the config is not a valid json", func() {
-				configFile, err := ioutil.TempFile(os.TempDir(), time.Now().String())
-				Expect(err).NotTo(HaveOccurred())
-				fmt.Fprintf(configFile, "foo!")
-				cmd = exec.Command(path, "--config", configFile.Name(), cmdActionFlag)
-
-				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-				Expect(err).ToNot(HaveOccurred())
-				Eventually(session).Should(gexec.Exit(1))
-				Expect(session.Err).To(gbytes.Say(`Could not parse config json`))
-			})
-
-			It("exits with error if unsupported adapter", func() {
-				outputFile = tempFilePath()
-				configFile, err := ioutil.TempFile(os.TempDir(), time.Now().String())
-				Expect(err).NotTo(HaveOccurred())
-				fmt.Fprintf(configFile, `{"adapter":"foo-server"}`)
-
-				cmd = exec.Command(path, "--config", configFile.Name(), cmdActionFlag)
-
-				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-				Expect(err).ToNot(HaveOccurred())
-				Eventually(session).Should(gexec.Exit(1))
-				Expect(session.Err).To(gbytes.Say(`Unsupported adapter foo-server`))
-			})
-
-			It("exits with error if no action provided", func() {
-				outputFile = tempFilePath()
-				configFile, err := ioutil.TempFile(os.TempDir(), time.Now().String())
-				Expect(err).NotTo(HaveOccurred())
-				fmt.Fprintf(configFile, `{"some":"json"}`)
-
-				cmd = exec.Command(path, "--config", configFile.Name())
-
-				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-				Expect(err).ToNot(HaveOccurred())
-				Eventually(session).Should(gexec.Exit(1))
-				Expect(session.Err).To(gbytes.Say(`Missing --backup or --restore flag`))
-			})
-
-			It("exits with error if PG_DUMP_PATH is not set", func() {
-				outputFile = tempFilePath()
-				configFile, err := ioutil.TempFile(os.TempDir(), time.Now().String())
-				Expect(err).NotTo(HaveOccurred())
-				fmt.Fprintf(
-					configFile,
-					`{"username":"%s","password":"%s","host":"%s","port":"%s","database":"%s","adapter":"%s","output_file":"%s"}`,
-					username,
-					password,
-					host,
-					port,
-					databaseName,
-					adapter,
-					outputFile,
-				)
-
-				cmd = exec.Command(path, "--config", configFile.Name(), cmdActionFlag)
-
-				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-				Expect(err).ToNot(HaveOccurred())
-				Eventually(session).Should(gexec.Exit(1))
-				Expect(session.Err).To(gbytes.Say(`PG_DUMP_PATH must be set`))
-			})
+			artifactFile = tempFilePath()
+			configFile, err = ioutil.TempFile(os.TempDir(), time.Now().String())
+			Expect(err).NotTo(HaveOccurred())
+			fmt.Fprintf(
+				configFile,
+				`{"username":"%s","password":"%s","host":"%s","port":"%s","database":"%s","adapter":"%s"}`,
+				username,
+				password,
+				host,
+				port,
+				databaseName,
+				adapter,
+			)
 		})
 
-		Context("when the config.json is provided", func() {
-			var configFile *os.File
+		JustBeforeEach(func() {
+			cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
+			cmd.Env = append(cmd.Env, fmt.Sprintf("PG_DUMP_PATH=%s", fakePgDump.Path))
 
+			session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).ToNot(HaveOccurred())
+			Eventually(session).Should(gexec.Exit())
+		})
+
+		AfterEach(func() {
+			os.Remove(artifactFile)
+		})
+
+		It("calls pg_dump with the correct arguments", func() {
+			expectedArgs := []string{
+				"-v",
+				fmt.Sprintf("--user=%s", username),
+				fmt.Sprintf("--host=%s", host),
+				fmt.Sprintf("--port=%s", port),
+				"--format=custom",
+				fmt.Sprintf("--file=%s", artifactFile),
+				databaseName,
+			}
+
+			Expect(fakePgDump.Invocations()).To(HaveLen(1))
+			Expect(fakePgDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+			Expect(fakePgDump.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+		})
+
+		It("calls pg_dump with the correct env vars", func() {
+			Expect(fakePgDump.Invocations()).To(HaveLen(1))
+			Expect(fakePgDump.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+		})
+
+		It("succeeds", func() {
+			Expect(session).Should(gexec.Exit(0))
+		})
+
+		Context("and pg_dump fails", func() {
 			BeforeEach(func() {
 				fakePgDump = binmock.NewBinMock("pg_dump")
-				fakePgDump.WhenCalled().WillExitWith(0)
-
-				outputFile = tempFilePath()
-				configFile, err = ioutil.TempFile(os.TempDir(), time.Now().String())
-				Expect(err).NotTo(HaveOccurred())
-				fmt.Fprintf(
-					configFile,
-					`{"username":"%s","password":"%s","host":"%s","port":"%s","database":"%s","adapter":"%s","output_file":"%s"}`,
-					username,
-					password,
-					host,
-					port,
-					databaseName,
-					adapter,
-					outputFile,
-				)
-
+				fakePgDump.WhenCalled().WillExitWith(1)
 			})
 
-			JustBeforeEach(func() {
-				cmd := exec.Command(path, "--config", configFile.Name(), cmdActionFlag)
-				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_DUMP_PATH=%s", fakePgDump.Path))
-
-				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-				Expect(err).ToNot(HaveOccurred())
-				Eventually(session).Should(gexec.Exit())
-			})
-
-			AfterEach(func() {
-				os.Remove(outputFile)
-			})
-
-			It("calls pg_dump with the correct arguments", func() {
-				expectedArgs := []string{
-					"-v",
-					fmt.Sprintf("--user=%s", username),
-					fmt.Sprintf("--host=%s", host),
-					fmt.Sprintf("--port=%s", port),
-					"--format=custom",
-					fmt.Sprintf("--file=%s", outputFile),
-					databaseName,
-				}
-
-				Expect(fakePgDump.Invocations()).To(HaveLen(1))
-				Expect(fakePgDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-				Expect(fakePgDump.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
-			})
-
-			It("calls pg_dump with the correct env vars", func() {
-				Expect(fakePgDump.Invocations()).To(HaveLen(1))
-				Expect(fakePgDump.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
-			})
-
-			It("succeeds", func() {
-				Expect(session).Should(gexec.Exit(0))
-			})
-
-			Context("and pg_dump fails", func() {
-				BeforeEach(func() {
-					fakePgDump = binmock.NewBinMock("pg_dump")
-					fakePgDump.WhenCalled().WillExitWith(1)
-				})
-
-				It("also fails", func() {
-					Eventually(session).Should(gexec.Exit(1))
-				})
+			It("also fails", func() {
+				Eventually(session).Should(gexec.Exit(1))
 			})
 		})
 	})
 
 	Context("--restore", func() {
-		Context("when the config.json is provided", func() {
-			var configFile *os.File
-			var cmdActionFlag string
+		var configFile *os.File
+		var cmdActionFlag string
 
+		BeforeEach(func() {
+			cmdActionFlag = "--restore"
+
+			fakePgRestore = binmock.NewBinMock("pg_restore")
+			fakePgRestore.WhenCalled().WillExitWith(0)
+
+			artifactFile = tempFilePath()
+			configFile, err = ioutil.TempFile(os.TempDir(), time.Now().String())
+			Expect(err).NotTo(HaveOccurred())
+			fmt.Fprintf(
+				configFile,
+				`{"username":"%s","password":"%s","host":"%s","port":"%s","database":"%s","adapter":"%s"}`,
+				username,
+				password,
+				host,
+				port,
+				databaseName,
+				adapter,
+			)
+
+		})
+
+		JustBeforeEach(func() {
+			cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
+			cmd.Env = append(cmd.Env, fmt.Sprintf("PG_RESTORE_PATH=%s", fakePgRestore.Path))
+
+			session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).ToNot(HaveOccurred())
+			Eventually(session).Should(gexec.Exit())
+		})
+
+		AfterEach(func() {
+			os.Remove(artifactFile)
+		})
+
+		It("calls pg_restore with the correct arguments", func() {
+			expectedArgs := []string{
+				"-v",
+				fmt.Sprintf("--user=%s", username),
+				fmt.Sprintf("--host=%s", host),
+				fmt.Sprintf("--port=%s", port),
+				"--format=custom",
+				fmt.Sprintf("--dbname=%s", databaseName),
+				"--clean",
+				artifactFile,
+			}
+
+			Expect(fakePgRestore.Invocations()).To(HaveLen(1))
+			Expect(fakePgRestore.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+			Expect(fakePgRestore.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+		})
+
+		It("succeeds", func() {
+			Expect(session).Should(gexec.Exit(0))
+		})
+
+		Context("and pg_restore fails", func() {
 			BeforeEach(func() {
-				cmdActionFlag = "--restore"
-
 				fakePgRestore = binmock.NewBinMock("pg_restore")
-				fakePgRestore.WhenCalled().WillExitWith(0)
-
-				outputFile = tempFilePath()
-				configFile, err = ioutil.TempFile(os.TempDir(), time.Now().String())
-				Expect(err).NotTo(HaveOccurred())
-				fmt.Fprintf(
-					configFile,
-					`{"username":"%s","password":"%s","host":"%s","port":"%s","database":"%s","adapter":"%s","output_file":"%s"}`,
-					username,
-					password,
-					host,
-					port,
-					databaseName,
-					adapter,
-					outputFile,
-				)
-
+				fakePgRestore.WhenCalled().WillExitWith(1)
 			})
 
-			JustBeforeEach(func() {
-				cmd := exec.Command(path, "--config", configFile.Name(), cmdActionFlag)
-				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_RESTORE_PATH=%s", fakePgRestore.Path))
-
-				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-				Expect(err).ToNot(HaveOccurred())
-				Eventually(session).Should(gexec.Exit())
-			})
-
-			AfterEach(func() {
-				os.Remove(outputFile)
-			})
-
-			It("calls pg_restore with the correct arguments", func() {
-				expectedArgs := []string{
-					"-v",
-					fmt.Sprintf("--user=%s", username),
-					fmt.Sprintf("--host=%s", host),
-					fmt.Sprintf("--port=%s", port),
-					"--format=custom",
-					fmt.Sprintf("--dbname=%s", databaseName),
-					"--clean",
-					outputFile,
-				}
-
-				Expect(fakePgRestore.Invocations()).To(HaveLen(1))
-				Expect(fakePgRestore.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-				Expect(fakePgRestore.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
-			})
-
-			It("succeeds", func() {
-				Expect(session).Should(gexec.Exit(0))
-			})
-
-			Context("and pg_restore fails", func() {
-				BeforeEach(func() {
-					fakePgRestore = binmock.NewBinMock("pg_restore")
-					fakePgRestore.WhenCalled().WillExitWith(1)
-				})
-
-				It("also fails", func() {
-					Eventually(session).Should(gexec.Exit(1))
-				})
-			})
-
-			Context("incorrect usage", func(){
-				It("exits with error if PG_DUMP_PATH is not set", func() {
-					outputFile = tempFilePath()
-					configFile, err := ioutil.TempFile(os.TempDir(), time.Now().String())
-					Expect(err).NotTo(HaveOccurred())
-					fmt.Fprintf(
-						configFile,
-						`{"username":"%s","password":"%s","host":"%s","port":"%s","database":"%s","adapter":"%s","output_file":"%s"}`,
-						username,
-						password,
-						host,
-						port,
-						databaseName,
-						adapter,
-						outputFile,
-					)
-
-					cmd = exec.Command(path, "--config", configFile.Name(), cmdActionFlag)
-
-					session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-					Expect(err).ToNot(HaveOccurred())
-					Eventually(session).Should(gexec.Exit(1))
-					Expect(session.Err).To(gbytes.Say(`PG_RESTORE_PATH must be set`))
-				})
+			It("also fails", func() {
+				Eventually(session).Should(gexec.Exit(1))
 			})
 		})
 	})
-
 })
 
 func tempFilePath() string {
@@ -318,4 +267,34 @@ func tempFilePath() string {
 	Expect(err).NotTo(HaveOccurred())
 	tmpfile.Close()
 	return tmpfile.Name()
+}
+
+func invalidConfig() (string, error) {
+	invalidJsonConfig, err := ioutil.TempFile(os.TempDir(), "")
+	if err != nil {
+		return "", err
+	}
+	fmt.Fprintf(invalidJsonConfig, "foo!")
+	return invalidJsonConfig.Name(), nil
+}
+
+func invalidAdapterConfig() (string, error) {
+	invalidAdapterConfig, err := ioutil.TempFile(os.TempDir(), "")
+	if err != nil {
+		return "", err
+	}
+	fmt.Fprintf(invalidAdapterConfig, `{"adapter":"foo-server"}`)
+	return invalidAdapterConfig.Name(), nil
+}
+
+func validConfig() (string, error) {
+	validConfig, err := ioutil.TempFile(os.TempDir(), "")
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Fprintf(validConfig,
+		`{"username":"testuser","password":"password","host":"127.0.0.1","port":"1234","database":"mycooldb","adapter":"postgres"}`,
+	)
+	return validConfig.Name(), nil
 }

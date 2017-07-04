@@ -26,10 +26,9 @@ var _ = Describe("restore", func() {
 		dbDumpPath = "/tmp/sql_dump" + strconv.FormatInt(time.Now().Unix(), 10)
 
 		configJson := fmt.Sprintf(
-			`{"username":"vcap","password":"%s","host":"localhost","port":"5432","database":"%s","adapter":"postgres","output_file":"%s"}`,
+			`{"username":"vcap","password":"%s","host":"localhost","port":"5432","database":"%s","adapter":"postgres"}`,
 			MustHaveEnv("POSTGRES_PASSWORD"),
 			databaseName,
-			dbDumpPath,
 		)
 		runOnPostgresVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 	})
@@ -41,11 +40,11 @@ var _ = Describe("restore", func() {
 
 	Context("database-backuper is colocated with Postgres", func() {
 		It("restores the Postgres database", func() {
-			runOnPostgresVMAndSucceed(fmt.Sprintf(`/var/vcap/jobs/database-backuper/bin/backup %s`, configPath))
+			runOnPostgresVMAndSucceed(fmt.Sprintf(`/var/vcap/jobs/database-backuper/bin/backup --config %s --artifact-file %s`, configPath, dbDumpPath))
 
 			runSqlCommand("UPDATE people SET NAME = 'Dave';", databaseName)
 
-			runOnPostgresVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backuper/bin/restore %s", configPath))
+			runOnPostgresVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backuper/bin/restore --config %s --artifact-file %s", configPath, dbDumpPath))
 
 			Expect(runSqlCommand("SELECT name FROM people;", databaseName)).To(gbytes.Say("Derik"))
 			Expect(runSqlCommand("SELECT name FROM people;", databaseName)).NotTo(gbytes.Say("Dave"))

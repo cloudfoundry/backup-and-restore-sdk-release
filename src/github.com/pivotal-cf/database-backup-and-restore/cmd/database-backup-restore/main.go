@@ -22,54 +22,57 @@ func isSupported(adapter string) bool {
 }
 
 type Config struct {
-	Username   string `json:"username"`
-	Password   string `json:"password"`
-	Port       string `json:"port"`
-	Adapter    string `json:"adapter"`
-	Host       string `json:"host"`
-	OutputFile string `json:"output_file"`
-	Database   string `json:"database"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Port     string `json:"port"`
+	Adapter  string `json:"adapter"`
+	Host     string `json:"host"`
+	Database string `json:"database"`
 }
 
 func main() {
-
 	var configPath = flag.String("config", "", "Path to JSON config file")
 	var backupAction = flag.Bool("backup", false, "Run database backup")
 	var restoreAction = flag.Bool("restore", false, "Run database restore")
+	var artifactFilePath = flag.String("artifact-file", "", "Path to output file")
 
 	flag.Parse()
 
+	if *backupAction && *restoreAction {
+		failAndPrintUsage("Only one of: --backup or --restore can be provided")
+	}
+
 	if *configPath == "" {
-		log.Fatalln("missing argument: --config config.json\nUsage: database-backuper --config config.json")
+		failAndPrintUsage("Missing --config flag")
 	}
 
 	if !*backupAction && !*restoreAction {
-		log.Fatalln("Missing --backup or --restore flag")
+		failAndPrintUsage("Missing --backup or --restore flag")
 	}
 
-	if *backupAction && *restoreAction {
-		log.Fatalln("Only one of: --backup or --restore can be provided")
+	if *artifactFilePath == "" {
+		failAndPrintUsage("Missing --artifact-file flag")
 	}
 
 	configString, err := ioutil.ReadFile(*configPath)
 	if err != nil {
-		log.Fatalf("Fail reading config file: %s", err)
+		log.Fatalf("Fail reading config file: %s\n", err)
 	}
 
 	var config Config
 	if err := json.Unmarshal(configString, &config); err != nil {
-		log.Fatalf("Could not parse config json: %s", err)
+		log.Fatalf("Could not parse config json: %s\n", err)
 	}
 
 	if !isSupported(config.Adapter) {
-		log.Fatalf("Unsupported adapter %s", config.Adapter)
+		log.Fatalf("Unsupported adapter %s\n", config.Adapter)
 	}
 
 	var cmd *exec.Cmd
 	if *restoreAction {
-		cmd = restore(config)
+		cmd = restore(config, *artifactFilePath)
 	} else {
-		cmd = backup(config)
+		cmd = backup(config, *artifactFilePath)
 	}
 
 	fmt.Println(cmd.Args)
@@ -83,27 +86,48 @@ func main() {
 	}
 }
 
-func restore(config Config) *exec.Cmd {
+func failAndPrintUsage(message string) {
+	log.Fatalf("%s\nUsage: database-backuper [--backup|--restore] --config <config-file> --artifact-file <artifact-file>\n", message)
+}
+
+func restore(config Config, artifactFilePath string) *exec.Cmd {
 	pgRestorePath, pgRestorePathVariableSet := os.LookupEnv("PG_RESTORE_PATH")
 
 	if !pgRestorePathVariableSet {
 		log.Fatalln("PG_RESTORE_PATH must be set")
 	}
 
-	cmd := exec.Command(pgRestorePath, "-v", "--user="+config.Username, "--host="+config.Host, "--port="+config.Port, "--format=custom", "--dbname="+config.Database, "--clean", config.OutputFile)
+	cmd := exec.Command(pgRestorePath,
+		"-v",
+		"--user="+config.Username,
+		"--host="+config.Host,
+		"--port="+config.Port,
+		"--format=custom",
+		"--dbname="+config.Database,
+		"--clean",
+		artifactFilePath,
+	)
 	cmd.Env = append(cmd.Env, "PGPASSWORD="+config.Password)
 
 	return cmd
 }
 
-func backup(config Config) *exec.Cmd {
+func backup(config Config, artifactFilePath string) *exec.Cmd {
 	pgDumpPath, pgDumpPathVariableSet := os.LookupEnv("PG_DUMP_PATH")
 
 	if !pgDumpPathVariableSet {
 		log.Fatalln("PG_DUMP_PATH must be set")
 	}
 
-	cmd := exec.Command(pgDumpPath, "-v", "--user="+config.Username, "--host="+config.Host, "--port="+config.Port, "--format=custom", "--file="+config.OutputFile, config.Database)
+	cmd := exec.Command(pgDumpPath,
+		"-v",
+		"--user="+config.Username,
+		"--host="+config.Host,
+		"--port="+config.Port,
+		"--format=custom",
+		"--file="+artifactFilePath,
+		config.Database,
+	)
 	cmd.Env = append(cmd.Env, "PGPASSWORD="+config.Password)
 
 	return cmd

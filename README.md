@@ -27,21 +27,20 @@ Template a `config.json` as follows:
   "host": "db host",
   "port": "db port",
   "adapter": "db adapter; see 'Supported database adapters'",
-  "database": "name of database to back up",
-  "output_file": "db backup output destination"
+  "database": "name of database to back up"
 }
 ```
 
 In your release backup script, call database-backuper/bin/backup:
 
 ```bash
-/var/vcap/jobs/database-backuper/bin/backup /path/to/config.json
+/var/vcap/jobs/database-backuper/bin/backup --config /path/to/config.json --artifact-file /path/to/artifact/file
 ```
 
-If using BOSH Backup and Restore, you'll have to copy the database backup to $ARTIFACT_DIRECTORY in your backup script.
+If using BOSH Backup and Restore, ensure that your artifact file lives inside the $BBR_ARTIFACT_DIRECTORY. For example:
 
 ```bash
-cp <output_file> $ARTIFACT_DIRECTORY 
+/var/vcap/jobs/database-backuper/bin/backup --config /path/to/config.json --artifact-file $BBR_ARTIFACT_DIRECTORY/sqlDump
 ```
 
 ### Supported database adapters

@@ -4,4 +4,4 @@ set -e
 
 export PG_DUMP_PATH="/var/vcap/packages/database-backuper-postgres/bin/pg_dump"
 
-/var/vcap/packages/database-backuper/bin/database-backup-restore --config $1 --backup
+/var/vcap/packages/database-backuper/bin/database-backup-restore --backup $*

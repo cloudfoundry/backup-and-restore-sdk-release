@@ -29,10 +29,9 @@ var _ = Describe("backup", func() {
 			runSqlCommand("INSERT INTO people VALUES ('Derik');", databaseName)
 
 			configJson := fmt.Sprintf(
-				`{"username":"vcap","password":"%s","host":"localhost","port":"5432","database":"%s","adapter":"postgres","output_file":"%s"}`,
+				`{"username":"vcap","password":"%s","host":"localhost","port":"5432","database":"%s","adapter":"postgres"}`,
 				MustHaveEnv("POSTGRES_PASSWORD"),
 				databaseName,
-				dbDumpPath,
 			)
 
 			runOnPostgresVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
@@ -44,7 +43,7 @@ var _ = Describe("backup", func() {
 		})
 
 		It("backs up the Postgres database", func() {
-			runOnPostgresVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backuper/bin/backup %s", configPath))
+			runOnPostgresVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backuper/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
 			runOnPostgresVMAndSucceed(fmt.Sprintf("ls -l %s", dbDumpPath))
 		})
 	})
@@ -53,23 +52,23 @@ var _ = Describe("backup", func() {
 		It("backs up the Postgres database", func() {
 			expectFilename := "/tmp/sql_dump"
 
-			ip := getIPOfInstance("postgres-dev", "postgres")
+			deploymentName := "postgres-dev"
+			ip := getIPOfInstance(deploymentName, "postgres")
 			configJson := fmt.Sprintf(
-				`{"username":"bosh","password":"%s","host":"%s","port":"5432","database":"bosh","adapter":"postgres","output_file":"%s"}`,
+				`{"username":"bosh","password":"%s","host":"%s","port":"5432","database":"bosh","adapter":"postgres"}`,
 				MustHaveEnv("POSTGRES_PASSWORD"),
 				ip,
-				expectFilename,
 			)
 
-			Expect(RunOnInstance("postgres-dev", "database-backuper", "0",
+			Expect(RunOnInstance(deploymentName, "database-backuper", "0",
 				fmt.Sprintf("rm -rf /tmp/config.json %s", expectFilename))).To(gexec.Exit(0))
-			Expect(RunOnInstance("postgres-dev", "database-backuper", "0",
+			Expect(RunOnInstance(deploymentName, "database-backuper", "0",
 				fmt.Sprintf("echo '%s' >> /tmp/config.json", configJson))).To(gexec.Exit(0))
 
-			Expect(RunOnInstance("postgres-dev", "database-backuper", "0",
-				fmt.Sprintf("/var/vcap/jobs/database-backuper/bin/backup /tmp/config.json"),
+			Expect(RunOnInstance(deploymentName, "database-backuper", "0",
+				fmt.Sprintf("/var/vcap/jobs/database-backuper/bin/backup --artifact-file %s --config /tmp/config.json", expectFilename),
 			)).To(gexec.Exit(0))
-			Expect(RunOnInstance("postgres-dev", "database-backuper", "0",
+			Expect(RunOnInstance(deploymentName, "database-backuper", "0",
 				fmt.Sprintf("ls -l %s", expectFilename))).To(gexec.Exit(0))
 		})
 	})
