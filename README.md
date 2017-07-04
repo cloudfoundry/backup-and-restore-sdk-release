@@ -27,6 +27,7 @@ Template a `config.json` as follows:
   "host": "db host",
   "port": "db port",
   "adapter": "db adapter; see 'Supported database adapters'",
+  "database": "name of database to back up",
   "output_file": "db backup output destination"
 }
 ```
