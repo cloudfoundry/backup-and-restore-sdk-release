@@ -24,7 +24,7 @@ func isSupported(adapter string) bool {
 type Config struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-	Port     string `json:"port"`
+	Port     int    `json:"port"`
 	Adapter  string `json:"adapter"`
 	Host     string `json:"host"`
 	Database string `json:"database"`
@@ -101,7 +101,7 @@ func restore(config Config, artifactFilePath string) *exec.Cmd {
 		"-v",
 		"--user="+config.Username,
 		"--host="+config.Host,
-		"--port="+config.Port,
+		fmt.Sprintf("--port=%d", config.Port),
 		"--format=custom",
 		"--dbname="+config.Database,
 		"--clean",
@@ -123,7 +123,7 @@ func backup(config Config, artifactFilePath string) *exec.Cmd {
 		"-v",
 		"--user="+config.Username,
 		"--host="+config.Host,
-		"--port="+config.Port,
+		fmt.Sprintf("--port=%d", config.Port),
 		"--format=custom",
 		"--file="+artifactFilePath,
 		config.Database,

@@ -32,7 +32,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 	var session *gexec.Session
 	var username = "testuser"
 	var host = "127.0.0.1"
-	var port = "1234"
+	var port = 1234
 	var databaseName = "mycooldb"
 	var password = "password"
 	var adapter = "postgres"
@@ -129,7 +129,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 			Expect(err).NotTo(HaveOccurred())
 			fmt.Fprintf(
 				configFile,
-				`{"username":"%s","password":"%s","host":"%s","port":"%s","database":"%s","adapter":"%s"}`,
+				`{"username":"%s","password":"%s","host":"%s","port":%d,"database":"%s","adapter":"%s"}`,
 				username,
 				password,
 				host,
@@ -157,7 +157,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				"-v",
 				fmt.Sprintf("--user=%s", username),
 				fmt.Sprintf("--host=%s", host),
-				fmt.Sprintf("--port=%s", port),
+				fmt.Sprintf("--port=%d", port),
 				"--format=custom",
 				fmt.Sprintf("--file=%s", artifactFile),
 				databaseName,
@@ -204,7 +204,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 			Expect(err).NotTo(HaveOccurred())
 			fmt.Fprintf(
 				configFile,
-				`{"username":"%s","password":"%s","host":"%s","port":"%s","database":"%s","adapter":"%s"}`,
+				`{"username":"%s","password":"%s","host":"%s","port":%d,"database":"%s","adapter":"%s"}`,
 				username,
 				password,
 				host,
@@ -233,7 +233,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				"-v",
 				fmt.Sprintf("--user=%s", username),
 				fmt.Sprintf("--host=%s", host),
-				fmt.Sprintf("--port=%s", port),
+				fmt.Sprintf("--port=%d", port),
 				"--format=custom",
 				fmt.Sprintf("--dbname=%s", databaseName),
 				"--clean",
@@ -294,7 +294,7 @@ func validConfig() (string, error) {
 	}
 
 	fmt.Fprintf(validConfig,
-		`{"username":"testuser","password":"password","host":"127.0.0.1","port":"1234","database":"mycooldb","adapter":"postgres"}`,
+		`{"username":"testuser","password":"password","host":"127.0.0.1","port":1234,"database":"mycooldb","adapter":"postgres"}`,
 	)
 	return validConfig.Name(), nil
 }
