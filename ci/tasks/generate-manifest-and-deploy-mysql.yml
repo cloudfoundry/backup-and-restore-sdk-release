@@ -1,0 +1,24 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source: {repository: cloudfoundrylondon/backup-and-restore}
+
+inputs:
+- name: backup-and-restore-sdk-release
+- name: release-tarball
+- name: bosh-backup-and-restore-meta
+
+outputs:
+- name: backup-and-restore-sdk-release-build
+
+run:
+  path: backup-and-restore-sdk-release/ci/scripts/generate-manifest-and-deploy-mysql.sh
+
+params:
+  TEAM_GPG_KEY:
+  BOSH_CLIENT:
+  BOSH_CLIENT_SECRET:
+  BOSH_DEPLOYMENT:
+  MYSQL_PASSWORD:
