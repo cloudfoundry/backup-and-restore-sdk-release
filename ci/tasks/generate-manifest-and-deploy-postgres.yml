@@ -7,14 +7,18 @@ image_resource:
 
 inputs:
 - name: backup-and-restore-sdk-release
-  path: src/github.com/pivotal-cf/backup-and-restore-sdk-release
+- name: release-tarball
 - name: bosh-backup-and-restore-meta
 
+outputs:
+- name: backup-and-restore-sdk-release-build
+
 run:
-  path: src/github.com/pivotal-cf/backup-and-restore-sdk-release/ci/scripts/system.sh
+  path: backup-and-restore-sdk-release/ci/scripts/generate-manifest-and-deploy-postgres.sh
 
 params:
   TEAM_GPG_KEY:
-  BOSH_CLIENT_SECRET:
   BOSH_CLIENT:
+  BOSH_CLIENT_SECRET:
+  BOSH_DEPLOYMENT:
   POSTGRES_PASSWORD:

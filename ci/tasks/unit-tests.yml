@@ -10,7 +10,7 @@ inputs:
 - name: bosh-backup-and-restore-meta
 
 run:
-  path: backup-and-restore-sdk-release/ci/scripts/unit.sh
+  path: backup-and-restore-sdk-release/ci/scripts/unit-tests.sh
 
 params:
   TEAM_GPG_KEY:
