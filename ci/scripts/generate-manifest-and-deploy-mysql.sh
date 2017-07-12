@@ -12,5 +12,5 @@ bosh-cli --non-interactive -e genesis-bosh.backup-and-restore.cf-app.com \
   deploy backup-and-restore-sdk-release/ci/manifests/mysql.yml \
   -v backup-and-restore-sdk-release-version=$(cat release-tarball/version) \
   -v backup-and-restore-sdk-release-url=$(cat release-tarball/url) \
-  -v postgres-password=${MYSQL_PASSWORD} \
+  -v mysql-password=${MYSQL_PASSWORD} \
   -v deployment-name=${BOSH_DEPLOYMENT}

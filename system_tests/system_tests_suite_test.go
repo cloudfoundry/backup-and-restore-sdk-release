@@ -37,6 +37,21 @@ func runOnPostgresVMAndSucceed(command string) *gexec.Session {
 	return session
 }
 
+func runMysqlSqlCommand(command, database string) *gexec.Session {
+	return runOnMysqlVMAndSucceed(
+		fmt.Sprintf(`echo -e "%s" | /var/vcap/packages/mariadb/bin/mysql -u root -h localhost --password='%s' "%s"`, command, MustHaveEnv("MYSQL_PASSWORD"), database),
+	)
+}
+
+func runOnMysqlVMAndSucceed(command string) *gexec.Session {
+	session := RunOnInstance(
+		"mysql-dev", "mysql", "0", command,
+	)
+	Expect(session).To(gexec.Exit(0))
+
+	return session
+}
+
 func RunOnInstance(deployment, instanceName, instanceIndex string, cmd ...string) *gexec.Session {
 	return RunCommand(
 		join(

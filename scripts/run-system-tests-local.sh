@@ -8,8 +8,17 @@ export BOSH_GATEWAY_USER=vcap
 export BOSH_GATEWAY_HOST=genesis-bosh.backup-and-restore.cf-app.com
 export BOSH_GATEWAY_KEY=~/workspace/bosh-backup-and-restore-meta/genesis-bosh/bosh.pem
 export POSTGRES_PASSWORD=foo
+export MYSQL_PASSWORD=foo
 
+TEST_SUITE=""
+if [[ $# -ge 1 ]]; then
+    TEST_SUITE=$1
+fi
 
 pushd $(dirname $0)/..
-  ginkgo system_tests -trace
+    if [[ "${TEST_SUITE}" == "" ]]; then
+        ginkgo system_tests -trace
+    else
+        ginkgo --focus=${TEST_SUITE} system_tests -trace
+    fi
 popd
