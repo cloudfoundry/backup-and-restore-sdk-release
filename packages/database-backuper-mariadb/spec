@@ -4,4 +4,4 @@ name: mariadb
 dependencies: []
 
 files:
-- mariadb/**/*
+- mariadb/mariadb-*.tar.gz
