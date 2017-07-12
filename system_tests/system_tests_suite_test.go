@@ -2,14 +2,15 @@ package system_tests
 
 import (
 	"fmt"
-	"io"
+	"os"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 
-	"os"
+	"encoding/json"
+	"io"
 	"os/exec"
 	"strings"
 	"testing"
@@ -21,7 +22,7 @@ func TestSystemTests(t *testing.T) {
 	RunSpecs(t, "SystemTests Suite")
 }
 
-func runSqlCommand(command, database string) *gexec.Session {
+func runPostgresSqlCommand(command, database string) *gexec.Session {
 	return runOnPostgresVMAndSucceed(
 		fmt.Sprintf(`/var/vcap/packages/postgres-9.4/bin/psql -U vcap "%s" --command="%s"`, database, command),
 	)
@@ -112,4 +113,29 @@ func MustHaveEnv(keyname string) string {
 
 func join(args ...string) string {
 	return strings.Join(args, " ")
+}
+
+func getIPOfInstance(deploymentName, instanceName string) string {
+	session := RunCommand(
+		BoshCommand(),
+		forDeployment(deploymentName),
+		"instances",
+		"--json",
+	)
+	outputFromCli := jsonOutputFromCli{}
+	contents := session.Out.Contents()
+	Expect(json.Unmarshal(contents, &outputFromCli)).To(Succeed())
+	for _, instanceData := range outputFromCli.Tables[0].Rows {
+		if strings.HasPrefix(instanceData["instance"], instanceName+"/") {
+			return instanceData["ips"]
+		}
+	}
+	Fail("Cant find instances with name '" + instanceName + "' and deployment name '" + deploymentName + "'")
+	return ""
+}
+
+type jsonOutputFromCli struct {
+	Tables []struct {
+		Rows []map[string]string
+	}
 }

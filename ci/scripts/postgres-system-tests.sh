@@ -25,4 +25,4 @@ export POSTGRES_PASSWORD
 
 cd src/github.com/pivotal-cf/backup-and-restore-sdk-release
 glide install
-ginkgo system-tests
+ginkgo --focus=postgres system_tests

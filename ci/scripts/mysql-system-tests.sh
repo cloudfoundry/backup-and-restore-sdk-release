@@ -21,5 +21,6 @@ export BOSH_GATEWAY_HOST=genesis-bosh.backup-and-restore.cf-app.com
 export BOSH_GATEWAY_KEY=`pwd`/bosh-backup-and-restore-meta/genesis-bosh/bosh.pem
 export POSTGRES_PASSWORD
 
-echo "Tests are not yet implemented"
-exit 1
+cd src/github.com/pivotal-cf/backup-and-restore-sdk-release
+glide install
+ginkgo --focus=mysql system_tests

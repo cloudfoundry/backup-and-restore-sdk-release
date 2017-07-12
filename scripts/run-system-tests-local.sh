@@ -11,5 +11,5 @@ export POSTGRES_PASSWORD=foo
 
 
 pushd $(dirname $0)/..
-  ginkgo system-tests -trace
+  ginkgo system_tests -trace
 popd

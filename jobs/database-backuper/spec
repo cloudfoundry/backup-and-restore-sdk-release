@@ -8,5 +8,6 @@ templates:
 packages:
 - database-backuper
 - database-backuper-postgres
+- database-backuper-mysql
 
 properties: {}
