@@ -1,0 +1,17 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source: {repository: cloudfoundrylondon/backup-and-restore}
+
+inputs:
+- name: version
+- name: backup-and-restore-sdk-release
+
+outputs:
+- name: backup-and-restore-sdk-final-release
+- name: backup-and-restore-sdk-final-release-tarball
+
+run:
+  path: backup-and-restore-sdk-release/ci/scripts/create-final.sh
