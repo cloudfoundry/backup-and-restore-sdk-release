@@ -186,7 +186,7 @@ func mysqlDump(config Config, artifactFilePath string) *exec.Cmd {
 		"--host="+config.Host,
 		fmt.Sprintf("--port=%d", config.Port),
 		"--result-file="+artifactFilePath,
-		"--databases "+config.Database,
+		config.Database,
 	)
 	cmd.Env = append(cmd.Env, "MYSQL_PWD="+config.Password)
 

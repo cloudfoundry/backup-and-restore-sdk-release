@@ -171,7 +171,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 					fmt.Sprintf("--host=%s", host),
 					fmt.Sprintf("--port=%d", port),
 					fmt.Sprintf("--result-file=%s", artifactFile),
-					fmt.Sprintf("--databases %s", databaseName),
+					databaseName,
 				}
 
 				Expect(fakeDump.Invocations()).To(HaveLen(1))
