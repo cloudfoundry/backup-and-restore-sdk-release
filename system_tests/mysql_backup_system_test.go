@@ -24,9 +24,11 @@ var _ = Describe("mysql-backup", func() {
 		runMysqlSqlCommand("CREATE TABLE people (name varchar(255));", databaseName)
 		runMysqlSqlCommand("INSERT INTO people VALUES ('Derik');", databaseName)
 
+		ip := getIPOfInstance("mysql-dev", "mysql")
 		configJson := fmt.Sprintf(
-			`{"username":"root","password":"%s","host":"localhost","port":3306,"database":"%s","adapter":"mysql"}`,
+			`{"username":"root","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql"}`,
 			MustHaveEnv("MYSQL_PASSWORD"),
+			ip,
 			databaseName,
 		)
 
