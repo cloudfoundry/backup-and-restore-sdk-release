@@ -3,5 +3,6 @@
 set -e
 
 export PG_DUMP_PATH="/var/vcap/packages/database-backuper-postgres/bin/pg_dump"
+export MYSQL_DUMP_PATH="/var/vcap/packages/database-backuper-mysql/bin/mysqldump"
 
 /var/vcap/packages/database-backuper/bin/database-backup-restore --backup $*

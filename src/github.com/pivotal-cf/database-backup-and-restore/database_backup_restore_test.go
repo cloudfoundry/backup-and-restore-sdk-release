@@ -27,15 +27,15 @@ type TestEntry struct {
 }
 
 var _ = Describe("Backup and Restore DB Utility", func() {
-	var fakePgDump *binmock.Mock
-	var fakePgRestore *binmock.Mock
+	var fakeDump *binmock.Mock
+	var fakeRestore *binmock.Mock
 	var session *gexec.Session
 	var username = "testuser"
 	var host = "127.0.0.1"
 	var port = 1234
 	var databaseName = "mycooldb"
 	var password = "password"
-	var adapter = "postgres"
+	var adapter string
 	var artifactFile string
 	var path string
 	var err error
@@ -77,18 +77,28 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 			}),
 			Entry("the artifact-file is not provided", TestEntry{
 				arguments:       "--backup --config %s",
-				configGenerator: validConfig,
+				configGenerator: validPgConfig,
 				expectedOutput:  "Missing --artifact-file flag",
 			}),
 			Entry("PG_DUMP_PATH is not set", TestEntry{
 				arguments:       "--backup --artifact-file /foo --config %s",
-				configGenerator: validConfig,
+				configGenerator: validPgConfig,
 				expectedOutput:  "PG_DUMP_PATH must be set",
 			}),
 			Entry("PG_RESTORE_PATH is not set", TestEntry{
 				arguments:       "--restore --artifact-file /foo --config %s",
-				configGenerator: validConfig,
+				configGenerator: validPgConfig,
 				expectedOutput:  "PG_RESTORE_PATH must be set",
+			}),
+			Entry("MYSQL_DUMP_PATH is not set", TestEntry{
+				arguments:       "--backup --artifact-file /foo --config %s",
+				configGenerator: validMysqlConfig,
+				expectedOutput:  "MYSQL_DUMP_PATH must be set",
+			}),
+			Entry("MYSQL_RESTORE_PATH is not set", TestEntry{
+				arguments:       "--restore --artifact-file /foo --config %s",
+				configGenerator: validMysqlConfig,
+				expectedOutput:  "MYSQL_RESTORE_PATH must be set",
 			}),
 		}
 
@@ -113,17 +123,10 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 	})
 
 	Context("--backup", func() {
-		var cmdActionFlag string
-		BeforeEach(func() {
-			cmdActionFlag = "--backup"
-		})
-
 		var configFile *os.File
+		var cmdActionFlag = "--backup"
 
-		BeforeEach(func() {
-			fakePgDump = binmock.NewBinMock("pg_dump")
-			fakePgDump.WhenCalled().WillExitWith(0)
-
+		JustBeforeEach(func() {
 			artifactFile = tempFilePath()
 			configFile, err = ioutil.TempFile(os.TempDir(), time.Now().String())
 			Expect(err).NotTo(HaveOccurred())
@@ -139,66 +142,118 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 			)
 		})
 
-		JustBeforeEach(func() {
-			cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
-			cmd.Env = append(cmd.Env, fmt.Sprintf("PG_DUMP_PATH=%s", fakePgDump.Path))
-
-			session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
-			Eventually(session).Should(gexec.Exit())
-		})
-
 		AfterEach(func() {
 			os.Remove(artifactFile)
 		})
 
-		It("calls pg_dump with the correct arguments", func() {
-			expectedArgs := []string{
-				"-v",
-				fmt.Sprintf("--user=%s", username),
-				fmt.Sprintf("--host=%s", host),
-				fmt.Sprintf("--port=%d", port),
-				"--format=custom",
-				fmt.Sprintf("--file=%s", artifactFile),
-				databaseName,
-			}
-
-			Expect(fakePgDump.Invocations()).To(HaveLen(1))
-			Expect(fakePgDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-			Expect(fakePgDump.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
-		})
-
-		It("calls pg_dump with the correct env vars", func() {
-			Expect(fakePgDump.Invocations()).To(HaveLen(1))
-			Expect(fakePgDump.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
-		})
-
-		It("succeeds", func() {
-			Expect(session).Should(gexec.Exit(0))
-		})
-
-		Context("and pg_dump fails", func() {
+		Context("mysql", func() {
 			BeforeEach(func() {
-				fakePgDump = binmock.NewBinMock("pg_dump")
-				fakePgDump.WhenCalled().WillExitWith(1)
+				adapter = "mysql"
+				fakeDump = binmock.NewBinMock("mysqldump")
+				fakeDump.WhenCalled().WillExitWith(0)
 			})
 
-			It("also fails", func() {
-				Eventually(session).Should(gexec.Exit(1))
+			JustBeforeEach(func() {
+				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
+				cmd.Env = append(cmd.Env, fmt.Sprintf("MYSQL_DUMP_PATH=%s", fakeDump.Path))
+
+				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).ToNot(HaveOccurred())
+				Eventually(session).Should(gexec.Exit())
+			})
+
+			It("calls mysqldump with the correct arguments", func() {
+				expectedArgs := []string{
+					"-v",
+					"--single-transaction",
+					"--skip-add-locks",
+					fmt.Sprintf("--user=%s", username),
+					fmt.Sprintf("--host=%s", host),
+					fmt.Sprintf("--port=%d", port),
+					fmt.Sprintf("--result-file=%s", artifactFile),
+					fmt.Sprintf("--databases %s", databaseName),
+				}
+
+				Expect(fakeDump.Invocations()).To(HaveLen(1))
+				Expect(fakeDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+				Expect(fakeDump.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+			})
+
+			It("succeeds", func() {
+				Expect(session).Should(gexec.Exit(0))
+			})
+
+			Context("and mysqldump fails", func() {
+				BeforeEach(func() {
+					fakeDump = binmock.NewBinMock("mysqldump")
+					fakeDump.WhenCalled().WillExitWith(1)
+				})
+
+				It("also fails", func() {
+					Eventually(session).Should(gexec.Exit(1))
+				})
+			})
+		})
+
+		Context("postgres", func() {
+			BeforeEach(func() {
+				adapter = "postgres"
+				fakeDump = binmock.NewBinMock("pg_dump")
+				fakeDump.WhenCalled().WillExitWith(0)
+			})
+
+			JustBeforeEach(func() {
+				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
+				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_DUMP_PATH=%s", fakeDump.Path))
+
+				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).ToNot(HaveOccurred())
+				Eventually(session).Should(gexec.Exit())
+			})
+
+			It("calls pg_dump with the correct arguments", func() {
+				expectedArgs := []string{
+					"-v",
+					fmt.Sprintf("--user=%s", username),
+					fmt.Sprintf("--host=%s", host),
+					fmt.Sprintf("--port=%d", port),
+					"--format=custom",
+					fmt.Sprintf("--file=%s", artifactFile),
+					databaseName,
+				}
+
+				Expect(fakeDump.Invocations()).To(HaveLen(1))
+				Expect(fakeDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+				Expect(fakeDump.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+			})
+
+			It("calls pg_dump with the correct env vars", func() {
+				Expect(fakeDump.Invocations()).To(HaveLen(1))
+				Expect(fakeDump.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+			})
+
+			It("succeeds", func() {
+				Expect(session).Should(gexec.Exit(0))
+			})
+
+			Context("and pg_dump fails", func() {
+				BeforeEach(func() {
+					fakeDump = binmock.NewBinMock("pg_dump")
+					fakeDump.WhenCalled().WillExitWith(1)
+				})
+
+				It("also fails", func() {
+					Eventually(session).Should(gexec.Exit(1))
+				})
 			})
 		})
 	})
 
 	Context("--restore", func() {
 		var configFile *os.File
-		var cmdActionFlag string
+		var cmdActionFlag = "--restore"
 
-		BeforeEach(func() {
-			cmdActionFlag = "--restore"
-
-			fakePgRestore = binmock.NewBinMock("pg_restore")
-			fakePgRestore.WhenCalled().WillExitWith(0)
-
+		JustBeforeEach(func() {
 			artifactFile = tempFilePath()
 			configFile, err = ioutil.TempFile(os.TempDir(), time.Now().String())
 			Expect(err).NotTo(HaveOccurred())
@@ -212,51 +267,106 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				databaseName,
 				adapter,
 			)
-
-		})
-
-		JustBeforeEach(func() {
-			cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
-			cmd.Env = append(cmd.Env, fmt.Sprintf("PG_RESTORE_PATH=%s", fakePgRestore.Path))
-
-			session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
-			Eventually(session).Should(gexec.Exit())
 		})
 
 		AfterEach(func() {
 			os.Remove(artifactFile)
 		})
 
-		It("calls pg_restore with the correct arguments", func() {
-			expectedArgs := []string{
-				"-v",
-				fmt.Sprintf("--user=%s", username),
-				fmt.Sprintf("--host=%s", host),
-				fmt.Sprintf("--port=%d", port),
-				"--format=custom",
-				fmt.Sprintf("--dbname=%s", databaseName),
-				"--clean",
-				artifactFile,
-			}
-
-			Expect(fakePgRestore.Invocations()).To(HaveLen(1))
-			Expect(fakePgRestore.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-			Expect(fakePgRestore.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
-		})
-
-		It("succeeds", func() {
-			Expect(session).Should(gexec.Exit(0))
-		})
-
-		Context("and pg_restore fails", func() {
+		Context("mysql", func() {
 			BeforeEach(func() {
-				fakePgRestore = binmock.NewBinMock("pg_restore")
-				fakePgRestore.WhenCalled().WillExitWith(1)
+				adapter = "mysql"
+				fakeRestore = binmock.NewBinMock("mysql")
+				fakeRestore.WhenCalled().WillExitWith(0)
 			})
 
-			It("also fails", func() {
-				Eventually(session).Should(gexec.Exit(1))
+			JustBeforeEach(func() {
+				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
+				cmd.Env = append(cmd.Env, fmt.Sprintf("MYSQL_RESTORE_PATH=%s", fakeRestore.Path))
+
+				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).ToNot(HaveOccurred())
+				Eventually(session).Should(gexec.Exit())
+			})
+
+			It("calls mysql with the correct arguments", func() {
+				expectedArgs := []string{
+					"-v",
+					fmt.Sprintf("--user=%s", username),
+					fmt.Sprintf("--host=%s", host),
+					fmt.Sprintf("--port=%d", port),
+					databaseName,
+					"<",
+					artifactFile,
+				}
+
+				Expect(fakeRestore.Invocations()).To(HaveLen(1))
+				Expect(fakeRestore.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+				Expect(fakeRestore.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+			})
+
+			It("succeeds", func() {
+				Expect(session).Should(gexec.Exit(0))
+			})
+
+			Context("and mysql fails", func() {
+				BeforeEach(func() {
+					fakeRestore = binmock.NewBinMock("mysql")
+					fakeRestore.WhenCalled().WillExitWith(1)
+				})
+
+				It("also fails", func() {
+					Eventually(session).Should(gexec.Exit(1))
+				})
+			})
+		})
+
+		Context("postgres", func() {
+			BeforeEach(func() {
+				adapter = "postgres"
+				fakeRestore = binmock.NewBinMock("pg_restore")
+				fakeRestore.WhenCalled().WillExitWith(0)
+			})
+
+			JustBeforeEach(func() {
+				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
+				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_RESTORE_PATH=%s", fakeRestore.Path))
+
+				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).ToNot(HaveOccurred())
+				Eventually(session).Should(gexec.Exit())
+			})
+
+			It("calls pg_restore with the correct arguments", func() {
+				expectedArgs := []string{
+					"-v",
+					fmt.Sprintf("--user=%s", username),
+					fmt.Sprintf("--host=%s", host),
+					fmt.Sprintf("--port=%d", port),
+					"--format=custom",
+					fmt.Sprintf("--dbname=%s", databaseName),
+					"--clean",
+					artifactFile,
+				}
+
+				Expect(fakeRestore.Invocations()).To(HaveLen(1))
+				Expect(fakeRestore.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+				Expect(fakeRestore.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+			})
+
+			It("succeeds", func() {
+				Expect(session).Should(gexec.Exit(0))
+			})
+
+			Context("and pg_restore fails", func() {
+				BeforeEach(func() {
+					fakeRestore = binmock.NewBinMock("pg_restore")
+					fakeRestore.WhenCalled().WillExitWith(1)
+				})
+
+				It("also fails", func() {
+					Eventually(session).Should(gexec.Exit(1))
+				})
 			})
 		})
 	})
@@ -287,7 +397,19 @@ func invalidAdapterConfig() (string, error) {
 	return invalidAdapterConfig.Name(), nil
 }
 
-func validConfig() (string, error) {
+func validMysqlConfig() (string, error) {
+	validConfig, err := ioutil.TempFile(os.TempDir(), "")
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Fprintf(validConfig,
+		`{"username":"testuser","password":"password","host":"127.0.0.1","port":1234,"database":"mycooldb","adapter":"mysql"}`,
+	)
+	return validConfig.Name(), nil
+}
+
+func validPgConfig() (string, error) {
 	validConfig, err := ioutil.TempFile(os.TempDir(), "")
 	if err != nil {
 		return "", err

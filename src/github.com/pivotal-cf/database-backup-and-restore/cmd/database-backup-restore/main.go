@@ -10,7 +10,7 @@ import (
 	"os/exec"
 )
 
-var supportedAdapters = []string{"postgres"}
+var supportedAdapters = []string{"postgres", "mysql"}
 
 func isSupported(adapter string) bool {
 	for _, el := range supportedAdapters {
@@ -91,12 +91,27 @@ func failAndPrintUsage(message string) {
 }
 
 func restore(config Config, artifactFilePath string) *exec.Cmd {
+	if config.Adapter == "postgres" {
+		return pgRestore(config, artifactFilePath)
+	} else {
+		return mysqlRestore(config, artifactFilePath)
+	}
+}
+
+func backup(config Config, artifactFilePath string) *exec.Cmd {
+	if config.Adapter == "postgres" {
+		return pgDump(config, artifactFilePath)
+	} else {
+		return mysqlDump(config, artifactFilePath)
+	}
+}
+
+func pgRestore(config Config, artifactFilePath string) *exec.Cmd {
 	pgRestorePath, pgRestorePathVariableSet := os.LookupEnv("PG_RESTORE_PATH")
 
 	if !pgRestorePathVariableSet {
 		log.Fatalln("PG_RESTORE_PATH must be set")
 	}
-
 	cmd := exec.Command(pgRestorePath,
 		"-v",
 		"--user="+config.Username,
@@ -107,12 +122,35 @@ func restore(config Config, artifactFilePath string) *exec.Cmd {
 		"--clean",
 		artifactFilePath,
 	)
+
 	cmd.Env = append(cmd.Env, "PGPASSWORD="+config.Password)
 
 	return cmd
 }
 
-func backup(config Config, artifactFilePath string) *exec.Cmd {
+func mysqlRestore(config Config, artifactFilePath string) *exec.Cmd {
+	mysqlRestorePath, mysqlRestorePathVariableSet := os.LookupEnv("MYSQL_RESTORE_PATH")
+
+	if !mysqlRestorePathVariableSet {
+		log.Fatalln("MYSQL_RESTORE_PATH must be set")
+	}
+
+	cmd := exec.Command(mysqlRestorePath,
+		"-v",
+		"--user="+config.Username,
+		"--host="+config.Host,
+		fmt.Sprintf("--port=%d", config.Port),
+		config.Database,
+		"<",
+		artifactFilePath,
+	)
+
+	cmd.Env = append(cmd.Env, "MYSQL_PWD="+config.Password)
+
+	return cmd
+}
+
+func pgDump(config Config, artifactFilePath string) *exec.Cmd {
 	pgDumpPath, pgDumpPathVariableSet := os.LookupEnv("PG_DUMP_PATH")
 
 	if !pgDumpPathVariableSet {
@@ -129,6 +167,28 @@ func backup(config Config, artifactFilePath string) *exec.Cmd {
 		config.Database,
 	)
 	cmd.Env = append(cmd.Env, "PGPASSWORD="+config.Password)
+
+	return cmd
+}
+
+func mysqlDump(config Config, artifactFilePath string) *exec.Cmd {
+	mysqlDumpPath, mysqlDumpPathVariableSet := os.LookupEnv("MYSQL_DUMP_PATH")
+
+	if !mysqlDumpPathVariableSet {
+		log.Fatalln("MYSQL_DUMP_PATH must be set")
+	}
+
+	cmd := exec.Command(mysqlDumpPath,
+		"-v",
+		"--single-transaction",
+		"--skip-add-locks",
+		"--user="+config.Username,
+		"--host="+config.Host,
+		fmt.Sprintf("--port=%d", config.Port),
+		"--result-file="+artifactFilePath,
+		"--databases "+config.Database,
+	)
+	cmd.Env = append(cmd.Env, "MYSQL_PWD="+config.Password)
 
 	return cmd
 }
