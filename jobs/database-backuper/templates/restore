@@ -2,7 +2,7 @@
 
 set -e
 
-export PG_RESTORE_PATH="/var/vcap/packages/database-backuper-postgres/bin/pg_restore"
-export MYSQL_RESTORE_PATH="/var/vcap/packages/database-backuper-mysql/bin/mysql"
+export PG_RESTORE_PATH="/var/vcap/packages/database-backup-restorer-postgres/bin/pg_restore"
+export MYSQL_RESTORE_PATH="/var/vcap/packages/database-backup-restorer-mysql/bin/mysql"
 
-/var/vcap/packages/database-backuper/bin/database-backup-restore --restore $*
+/var/vcap/packages/database-backup-restorer/bin/database-backup-restore --restore $*

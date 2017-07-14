@@ -4,7 +4,7 @@ A backup and restore sdk for BOSH releases for e.g. backing up a number of diffe
 
 ### Usage for database backup
 
-Co-locate the `database-backuper` job on the database VM that should be backed up:
+Co-locate the `database-backup-restorer` job on the database VM that should be backed up:
 
 ```yaml
 ---
@@ -13,7 +13,7 @@ instance_groups:
   jobs:
   - name: postgres-server
     release: postgres-release
-  - name: database-backuper                       <<
+  - name: database-backup-restorer                       <<
     release: backup-and-restore-sdk-release  <<
 ...
 ```
@@ -31,16 +31,16 @@ Template a `config.json` as follows:
 }
 ```
 
-In your release backup script, call database-backuper/bin/backup:
+In your release backup script, call database-backup-restorer/bin/backup:
 
 ```bash
-/var/vcap/jobs/database-backuper/bin/backup --config /path/to/config.json --artifact-file /path/to/artifact/file
+/var/vcap/jobs/database-backup-restorer/bin/backup --config /path/to/config.json --artifact-file /path/to/artifact/file
 ```
 
 If using BOSH Backup and Restore, ensure that your artifact file lives inside the $BBR_ARTIFACT_DIRECTORY. For example:
 
 ```bash
-/var/vcap/jobs/database-backuper/bin/backup --config /path/to/config.json --artifact-file $BBR_ARTIFACT_DIRECTORY/sqlDump
+/var/vcap/jobs/database-backup-restorer/bin/backup --config /path/to/config.json --artifact-file $BBR_ARTIFACT_DIRECTORY/sqlDump
 ```
 
 ### Supported database adapters

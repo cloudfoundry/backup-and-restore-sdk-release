@@ -1,8 +1,8 @@
 ---
-name: database-backuper
+name: database-backup-restorer
 
 dependencies:
-- database-backuper-golang
+- database-backup-restorer-golang
 
 files:
 - github.com/pivotal-cf/database-backup-and-restore/cmd/database-backup-restore/main.go

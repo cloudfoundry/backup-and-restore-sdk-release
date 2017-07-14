@@ -24,14 +24,14 @@ instance_groups:
   jobs:
   - name: postgres-9.4
     release: bosh
-  - name: database-backuper
+  - name: database-backup-restorer
     release: backup-and-restore-sdk
   azs: [z1]
   properties:
     postgres:
       password: ((postgres-password))
       listen_address: 0.0.0.0
-- name: database-backuper
+- name: database-backup-restorer
   instances: 1
   vm_type: medium
   persistent_disk_type: fifty
@@ -39,7 +39,7 @@ instance_groups:
   networks:
   - name: concourse
   jobs:
-  - name: database-backuper
+  - name: database-backup-restorer
     release: backup-and-restore-sdk
   azs: [z1]
 

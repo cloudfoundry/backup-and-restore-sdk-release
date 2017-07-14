@@ -1,5 +1,5 @@
 ---
-name: database-backuper-postgres
+name: database-backup-restorer-postgres
 
 dependencies: []
 

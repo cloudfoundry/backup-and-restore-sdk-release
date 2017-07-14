@@ -32,23 +32,23 @@ var _ = Describe("mysql-backup", func() {
 			databaseName,
 		)
 
-		RunOnInstance("mysql-dev", "database-backuper", "0",
+		RunOnInstance("mysql-dev", "database-backup-restorer", "0",
 			fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 	})
 
 	AfterEach(func() {
 		runOnMysqlVMAndSucceed(fmt.Sprintf(`echo 'DROP DATABASE %s;' | /var/vcap/packages/mariadb/bin/mysql -u root -h localhost --password='%s'`, databaseName, MustHaveEnv("MYSQL_PASSWORD")))
-		RunOnInstance("mysql-dev", "database-backuper", "0",
+		RunOnInstance("mysql-dev", "database-backup-restorer", "0",
 			fmt.Sprintf("rm -rf %s %s", configPath, dbDumpPath))
 	})
 
-	Context("database-backuper lives on its own instance", func() {
+	Context("database-backup-restorer lives on its own instance", func() {
 		It("backs up the MySQL database", func() {
-			backupSession := RunOnInstance("mysql-dev", "database-backuper", "0",
-				fmt.Sprintf("/var/vcap/jobs/database-backuper/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
+			backupSession := RunOnInstance("mysql-dev", "database-backup-restorer", "0",
+				fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
 			Expect(backupSession).To(gexec.Exit(0))
 
-			fileCheckSession := RunOnInstance("mysql-dev", "database-backuper", "0",
+			fileCheckSession := RunOnInstance("mysql-dev", "database-backup-restorer", "0",
 				fmt.Sprintf("ls -l %s", dbDumpPath))
 			Expect(fileCheckSession).To(gexec.Exit(0))
 		})

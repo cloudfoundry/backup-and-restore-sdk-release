@@ -1,5 +1,5 @@
 ---
-name: database-backuper-golang
+name: database-backup-restorer-golang
 
 dependencies: []
 

@@ -88,7 +88,7 @@ func main() {
 }
 
 func failAndPrintUsage(message string) {
-	log.Fatalf("%s\nUsage: database-backuper [--backup|--restore] --config <config-file> --artifact-file <artifact-file>\n", message)
+	log.Fatalf("%s\nUsage: database-backup-restorer [--backup|--restore] --config <config-file> --artifact-file <artifact-file>\n", message)
 }
 
 func restore(config Config, artifactFilePath string) *exec.Cmd {

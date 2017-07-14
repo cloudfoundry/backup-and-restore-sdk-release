@@ -12,7 +12,7 @@ import (
 )
 
 var _ = Describe("postgres-backup", func() {
-	Context("database-backuper is colocated with Postgres", func() {
+	Context("database-backup-restorer is colocated with Postgres", func() {
 		var dbDumpPath string
 		var configPath string
 		var databaseName string
@@ -41,12 +41,12 @@ var _ = Describe("postgres-backup", func() {
 		})
 
 		It("backs up the Postgres database", func() {
-			runOnPostgresVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backuper/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
+			runOnPostgresVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
 			runOnPostgresVMAndSucceed(fmt.Sprintf("ls -l %s", dbDumpPath))
 		})
 	})
 
-	Context("database-backuper lives on its own instance", func() {
+	Context("database-backup-restorer lives on its own instance", func() {
 		It("backs up the Postgres database", func() {
 			expectFilename := "/tmp/sql_dump"
 
@@ -58,15 +58,15 @@ var _ = Describe("postgres-backup", func() {
 				ip,
 			)
 
-			Expect(RunOnInstance(deploymentName, "database-backuper", "0",
+			Expect(RunOnInstance(deploymentName, "database-backup-restorer", "0",
 				fmt.Sprintf("rm -rf /tmp/config.json %s", expectFilename))).To(gexec.Exit(0))
-			Expect(RunOnInstance(deploymentName, "database-backuper", "0",
+			Expect(RunOnInstance(deploymentName, "database-backup-restorer", "0",
 				fmt.Sprintf("echo '%s' >> /tmp/config.json", configJson))).To(gexec.Exit(0))
 
-			Expect(RunOnInstance(deploymentName, "database-backuper", "0",
-				fmt.Sprintf("/var/vcap/jobs/database-backuper/bin/backup --artifact-file %s --config /tmp/config.json", expectFilename),
+			Expect(RunOnInstance(deploymentName, "database-backup-restorer", "0",
+				fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config /tmp/config.json", expectFilename),
 			)).To(gexec.Exit(0))
-			Expect(RunOnInstance(deploymentName, "database-backuper", "0",
+			Expect(RunOnInstance(deploymentName, "database-backup-restorer", "0",
 				fmt.Sprintf("ls -l %s", expectFilename))).To(gexec.Exit(0))
 		})
 	})

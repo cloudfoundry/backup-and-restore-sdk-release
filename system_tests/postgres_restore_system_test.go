@@ -38,13 +38,13 @@ var _ = Describe("postgres-restore", func() {
 		runOnPostgresVMAndSucceed(fmt.Sprintf("rm -rf %s %s", configPath, dbDumpPath))
 	})
 
-	Context("database-backuper is colocated with Postgres", func() {
+	Context("database-backup-restorer is colocated with Postgres", func() {
 		It("restores the Postgres database", func() {
-			runOnPostgresVMAndSucceed(fmt.Sprintf(`/var/vcap/jobs/database-backuper/bin/backup --config %s --artifact-file %s`, configPath, dbDumpPath))
+			runOnPostgresVMAndSucceed(fmt.Sprintf(`/var/vcap/jobs/database-backup-restorer/bin/backup --config %s --artifact-file %s`, configPath, dbDumpPath))
 
 			runPostgresSqlCommand("UPDATE people SET NAME = 'Dave';", databaseName)
 
-			runOnPostgresVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backuper/bin/restore --config %s --artifact-file %s", configPath, dbDumpPath))
+			runOnPostgresVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s", configPath, dbDumpPath))
 
 			Expect(runPostgresSqlCommand("SELECT name FROM people;", databaseName)).To(gbytes.Say("Derik"))
 			Expect(runPostgresSqlCommand("SELECT name FROM people;", databaseName)).NotTo(gbytes.Say("Dave"))

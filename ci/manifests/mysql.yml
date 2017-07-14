@@ -41,7 +41,7 @@ instance_groups:
             endpoint_username: galera_healthcheck
             endpoint_password: "foo"
 
-- name: database-backuper
+- name: database-backup-restorer
   instances: 1
   vm_type: medium
   persistent_disk_type: fifty
@@ -49,7 +49,7 @@ instance_groups:
   networks:
   - name: concourse
   jobs:
-  - name: database-backuper
+  - name: database-backup-restorer
     release: backup-and-restore-sdk
   azs: [z1]
 

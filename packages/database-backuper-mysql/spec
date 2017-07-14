@@ -1,5 +1,5 @@
 ---
-name: database-backuper-mysql
+name: database-backup-restorer-mysql
 
 dependencies: []
 

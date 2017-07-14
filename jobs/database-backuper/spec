@@ -1,13 +1,13 @@
 ---
-name: database-backuper
+name: database-backup-restorer
 
 templates:
   backup: bin/backup
   restore: bin/restore
 
 packages:
-- database-backuper
-- database-backuper-postgres
-- database-backuper-mysql
+- database-backup-restorer
+- database-backup-restorer-postgres
+- database-backup-restorer-mysql
 
 properties: {}
