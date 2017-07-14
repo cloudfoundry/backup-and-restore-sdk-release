@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"bufio"
 )
 
 var supportedAdapters = []string{"postgres", "mysql"}
@@ -135,16 +136,22 @@ func mysqlRestore(config Config, artifactFilePath string) *exec.Cmd {
 		log.Fatalln("MYSQL_RESTORE_PATH must be set")
 	}
 
+	artifactFile, err := os.Open(artifactFilePath)
+	if err != nil {
+		log.Fatalln("Error reading from artifact file, %s", err)
+	}
+
 	cmd := exec.Command(mysqlRestorePath,
 		"-v",
 		"--user="+config.Username,
 		"--host="+config.Host,
 		fmt.Sprintf("--port=%d", config.Port),
 		config.Database,
-		"<",
-		artifactFilePath,
 	)
 
+	fmt.Println(ioutil.ReadFile(artifactFilePath))
+
+	cmd.Stdin = bufio.NewReader(artifactFile)
 	cmd.Env = append(cmd.Env, "MYSQL_PWD="+config.Password)
 
 	return cmd

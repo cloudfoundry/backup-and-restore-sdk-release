@@ -11,6 +11,8 @@ import (
 
 	"strings"
 
+	"log"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -281,6 +283,11 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 			})
 
 			JustBeforeEach(func() {
+				err := ioutil.WriteFile(artifactFile, []byte("SOME BACKUP SQL"), 0644)
+				if err != nil {
+					log.Fatalln("Failed to write to artifact file, %s", err)
+				}
+
 				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
 				cmd.Env = append(cmd.Env, fmt.Sprintf("MYSQL_RESTORE_PATH=%s", fakeRestore.Path))
 
@@ -296,12 +303,11 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 					fmt.Sprintf("--host=%s", host),
 					fmt.Sprintf("--port=%d", port),
 					databaseName,
-					"<",
-					artifactFile,
 				}
 
 				Expect(fakeRestore.Invocations()).To(HaveLen(1))
 				Expect(fakeRestore.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+				Expect(fakeRestore.Invocations()[0].Stdin()).Should(ConsistOf("SOME BACKUP SQL"))
 				Expect(fakeRestore.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
 			})
 
