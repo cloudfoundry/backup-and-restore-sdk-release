@@ -1,14 +1,14 @@
 # Backup and Restore SDK BOSH release
 
-A SDK BOSH release used to backup and restore databases for BOSH deployed Cloud Foundry components.
+A SDK BOSH release used to backup and restore databases for BOSH deployed Cloud Foundry components
+
+* [Release Author Guide](http://www.boshbackuprestore.io/bosh-backup-and-restore/release_author_guide.html)
 
 ## Database Backup and Restore
 
 ### The backup-and-restore instance group
 
-You should co-locate the `database-backup-restorer` job and your release backup scripts on to a backup-and-restore instance in your Cloud Foundry deployment:
-
-[Release Author Guide](http://www.boshbackuprestore.io/bosh-backup-and-restore/release_author_guide.html).
+You should co-locate the `database-backup-restorer` job and your release backup scripts on the same VM. If you use a dedicated backup-and-restore VM instance, co-locate them together on that VM.
 
 Example BOSH v2 deployment manifest:
 ```yaml
@@ -25,14 +25,14 @@ instance_groups:
   azs: [z1]
   instances: 1
   jobs:
-  - name: backup-my-release
+  - name: backup-scripts
     properties:
       mydb:
       address: mydb.example.com
       db_scheme: mysql
       port: 3306
     release: my_release
-  - name: backup-and-restore-utility
+  - name: database-backup-restorer
     release: backup-and-restore-sdk-release
 ...
 ```
