@@ -1,20 +1,39 @@
-# backup-and-restore-sdk BOSH release
+# Backup and Restore SDK BOSH release
 
-A backup and restore sdk for BOSH releases for e.g. backing up a number of different databases.
+A SDK BOSH release used to backup and restore databases for BOSH deployed Cloud Foundry components.
 
-### Usage for database backup
+## Database Backup and Restore
 
-Co-locate the `database-backup-restorer` job on the database VM that should be backed up:
+### The backup-and-restore instance group
 
+You should co-locate the `database-backup-restorer` job and your release backup scripts on to a backup-and-restore instance in your Cloud Foundry deployment:
+
+[Release Author Guide](http://www.boshbackuprestore.io/bosh-backup-and-restore/release_author_guide.html).
+
+Example BOSH v2 deployment manifest:
 ```yaml
----
+...
 instance_groups:
-- name: postgres
+- name: backup
+  networks:
+  - name: my-network
+  persistent_disk_type: 10GB
+  stemcell: default
+  update:
+    serial: true
+  vm_type: m3.large
+  azs: [z1]
+  instances: 1
   jobs:
-  - name: postgres-server
-    release: postgres-release
-  - name: database-backup-restorer                       <<
-    release: backup-and-restore-sdk-release  <<
+  - name: backup-my-release
+    properties:
+      mydb:
+      address: mydb.example.com
+      db_scheme: mysql
+      port: 3306
+    release: my_release
+  - name: backup-and-restore-utility
+    release: backup-and-restore-sdk-release
 ...
 ```
 
@@ -25,23 +44,26 @@ Template a `config.json` as follows:
   "username": "db user",
   "password": "db password",
   "host": "db host",
-  "port": <db port>,
+  "port": your_db_port,
   "adapter": "db adapter; see 'Supported database adapters'",
   "database": "name of database to back up"
 }
 ```
 
-In your release backup script, call database-backup-restorer/bin/backup:
+#### Supported Database Adapters
+* `postgres`
+* `mysql`
+
+### Usage
+
+In your release backup script, call `database-backup-restorer/bin/backup`:
 
 ```bash
-/var/vcap/jobs/database-backup-restorer/bin/backup --config /path/to/config.json --artifact-file /path/to/artifact/file
+/var/vcap/jobs/database-backup-restorer/bin/backup --config /path/to/config.json --artifact-file $BBR_ARTIFACT_DIRECTORY/artifactFile
 ```
 
-If using BOSH Backup and Restore, ensure that your artifact file lives inside the $BBR_ARTIFACT_DIRECTORY. For example:
+In your release restore script, call `database-backup-restorer/bin/restore`:
 
 ```bash
-/var/vcap/jobs/database-backup-restorer/bin/backup --config /path/to/config.json --artifact-file $BBR_ARTIFACT_DIRECTORY/sqlDump
+/var/vcap/jobs/database-backup-restorer/bin/restore --config /path/to/config.json --artifact-file $BBR_ARTIFACT_DIRECTORY/artifactFile
 ```
-
-### Supported database adapters
-* `postgres` - packages 9.4.11
