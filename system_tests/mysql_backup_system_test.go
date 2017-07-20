@@ -69,7 +69,7 @@ var _ = Describe("mysql-backup", func() {
 		})
 	})
 
-	Context("mysql server is different version", func() {
+	PContext("mysql server is different version", func() {
 		BeforeEach(func() {
 			brJob = JobInstance{
 				deployment:    "mysql-old-dev-test",
