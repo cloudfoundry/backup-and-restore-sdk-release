@@ -4,4 +4,4 @@ name: database-backup-restorer-golang
 dependencies: []
 
 files:
-- go/go1.8.1.linux-amd64.tar.gz
+- go/go1.8.3.linux-amd64.tar.gz
