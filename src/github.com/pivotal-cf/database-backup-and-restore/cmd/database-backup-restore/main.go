@@ -194,16 +194,20 @@ func mysqlDump(config Config, artifactFilePath string) *exec.Cmd {
 	mysqldumpCmd := exec.Command(mysqlDumpPath, "-V")
 	mysqldumpVersion := extractVersionUsingCommand(mysqldumpCmd, `^mysqldump\s+Ver\s+[^ ]+\s+Distrib\s+([^ ]+),`)
 
+	log.Printf("%s version %v", mysqlDumpPath, mysqldumpVersion)
+
 	// extract version from mysql server
 	mysqlClientCmd := exec.Command(mysqlClientPath,
-		"-N",
-		"-s",
-		fmt.Sprintf("-u'%s'", config.Username),
-		fmt.Sprintf("-p'%s'", config.Password),
-		fmt.Sprintf("-h'%s'", config.Host),
-		fmt.Sprintf("-P%d", config.Port),
-		"-e 'SELECT VERSION()'")
+		"--skip-column-names",
+		"--silent",
+		fmt.Sprintf("--user=%s", config.Username),
+		fmt.Sprintf("--password=%s", config.Password),
+		fmt.Sprintf("--host=%s", config.Host),
+		fmt.Sprintf("--port=%d", config.Port),
+		"--execute=SELECT VERSION()")
 	mysqlVersion := extractVersionUsingCommand(mysqlClientCmd, `(.+)`)
+
+	log.Printf("mysql server (%s:%d) version %v\n", config.Host, config.Port, mysqlVersion)
 
 	// compare versions: for ServerX.ServerY.ServerZ and DumpX.DumpY.DumpZ
 	// 	=> ServerX != DumpX => error

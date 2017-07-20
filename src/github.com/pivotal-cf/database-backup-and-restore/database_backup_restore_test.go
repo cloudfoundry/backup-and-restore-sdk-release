@@ -158,13 +158,13 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 
 				fakeClient = binmock.NewBinMock("mysql")
 				// fakeClient.WhenCalled().WillPrintToStdOut("10.1.24-MariaDB-wsrep")
-				fakeClient.WhenCalledWith("-N",
-					"-s",
-					fmt.Sprintf("-u'%s'", username),
-					fmt.Sprintf("-p'%s'", password),
-					fmt.Sprintf("-h'%s'", host),
-					fmt.Sprintf("-P%d", port),
-					"-e 'SELECT VERSION()'").WillPrintToStdOut("10.1.24-MariaDB-wsrep")
+				fakeClient.WhenCalledWith("--skip-column-names",
+					"--silent",
+					fmt.Sprintf("--user=%s", username),
+					fmt.Sprintf("--password=%s", password),
+					fmt.Sprintf("--host=%s", host),
+					fmt.Sprintf("--port=%d", port),
+					`--execute=SELECT VERSION()`).WillPrintToStdOut("10.1.24-MariaDB-wsrep")
 			})
 
 			JustBeforeEach(func() {
@@ -219,7 +219,14 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 			Context("mysqldump has a different major version than the server", func() {
 				BeforeEach(func() {
 					fakeClient = binmock.NewBinMock("mysql")
-					fakeClient.WhenCalled().WillPrintToStdOut("9.1.24-MariaDB-wsrep")
+					fakeClient.WhenCalledWith(
+						"--skip-column-names",
+						"--silent",
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--password=%s", password),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						`--execute=SELECT VERSION()`).WillPrintToStdOut("9.1.24-MariaDB-wsrep")
 				})
 
 				It("fails because of a version mismatch", func() {
@@ -231,7 +238,14 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 			Context("mysqldump has a different minor version than the server", func() {
 				BeforeEach(func() {
 					fakeClient = binmock.NewBinMock("mysql")
-					fakeClient.WhenCalled().WillPrintToStdOut("10.0.24-MariaDB-wsrep")
+					fakeClient.WhenCalledWith(
+						"--skip-column-names",
+						"--silent",
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--password=%s", password),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						`--execute=SELECT VERSION()`).WillPrintToStdOut("10.0.24-MariaDB-wsrep")
 				})
 
 				It("fails because of a version mismatch", func() {
@@ -243,7 +257,14 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 			Context("mysqldump has a different patch version than the server", func() {
 				BeforeEach(func() {
 					fakeClient = binmock.NewBinMock("mysql")
-					fakeClient.WhenCalled().WillPrintToStdOut("10.1.22-MariaDB-wsrep")
+					fakeClient.WhenCalledWith(
+						"--skip-column-names",
+						"--silent",
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--password=%s", password),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						`--execute=SELECT VERSION()`).WillPrintToStdOut("10.1.22-MariaDB-wsrep")
 				})
 
 				It("succeeds despite different patch versions", func() {
