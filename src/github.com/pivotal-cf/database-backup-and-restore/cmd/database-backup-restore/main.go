@@ -196,7 +196,13 @@ func mysqlDump(config Config, artifactFilePath string) *exec.Cmd {
 
 	// extract version from mysql server
 	mysqlClientCmd := exec.Command(mysqlClientPath,
-		fmt.Sprintf("-N -s -u'%s' -p'%s' -h'%s' -P%d -e 'SELECT VERSION()'", config.Username, config.Password, config.Host, config.Port))
+		"-N",
+		"-s",
+		fmt.Sprintf("-u'%s'", config.Username),
+		fmt.Sprintf("-p'%s'", config.Password),
+		fmt.Sprintf("-h'%s'", config.Host),
+		fmt.Sprintf("-P%d", config.Port),
+		"-e 'SELECT VERSION()'")
 	mysqlVersion := extractVersionUsingCommand(mysqlClientCmd, `(.+)`)
 
 	// compare versions: for ServerX.ServerY.ServerZ and DumpX.DumpY.DumpZ

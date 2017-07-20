@@ -157,7 +157,14 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				fakeDump.WhenCalled().WillExitWith(0)
 
 				fakeClient = binmock.NewBinMock("mysql")
-				fakeClient.WhenCalled().WillPrintToStdOut("10.1.24-MariaDB-wsrep")
+				// fakeClient.WhenCalled().WillPrintToStdOut("10.1.24-MariaDB-wsrep")
+				fakeClient.WhenCalledWith("-N",
+					"-s",
+					fmt.Sprintf("-u'%s'", username),
+					fmt.Sprintf("-p'%s'", password),
+					fmt.Sprintf("-h'%s'", host),
+					fmt.Sprintf("-P%d", port),
+					"-e 'SELECT VERSION()'").WillPrintToStdOut("10.1.24-MariaDB-wsrep")
 			})
 
 			JustBeforeEach(func() {
