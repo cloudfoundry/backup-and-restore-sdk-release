@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -8,7 +9,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"bufio"
+	"regexp"
 )
 
 var supportedAdapters = []string{"postgres", "mysql"}
@@ -130,16 +131,14 @@ func pgRestore(config Config, artifactFilePath string) *exec.Cmd {
 }
 
 func mysqlRestore(config Config, artifactFilePath string) *exec.Cmd {
-	mysqlRestorePath, mysqlRestorePathVariableSet := os.LookupEnv("MYSQL_RESTORE_PATH")
+	mysqlRestorePath, mysqlRestorePathVariableSet := os.LookupEnv("MYSQL_CLIENT_PATH")
 
 	if !mysqlRestorePathVariableSet {
-		log.Fatalln("MYSQL_RESTORE_PATH must be set")
+		log.Fatalln("MYSQL_CLIENT_PATH must be set")
 	}
 
 	artifactFile, err := os.Open(artifactFilePath)
-	if err != nil {
-		log.Fatalln("Error reading from artifact file, %s", err)
-	}
+	checkErr("Error reading from artifact file,", err)
 
 	cmd := exec.Command(mysqlRestorePath,
 		"-v",
@@ -180,9 +179,32 @@ func pgDump(config Config, artifactFilePath string) *exec.Cmd {
 
 func mysqlDump(config Config, artifactFilePath string) *exec.Cmd {
 	mysqlDumpPath, mysqlDumpPathVariableSet := os.LookupEnv("MYSQL_DUMP_PATH")
+	mysqlClientPath, mysqlClientPathVariableSet := os.LookupEnv("MYSQL_CLIENT_PATH")
 
 	if !mysqlDumpPathVariableSet {
 		log.Fatalln("MYSQL_DUMP_PATH must be set")
+	}
+
+	if !mysqlClientPathVariableSet {
+		log.Fatalln("MYSQL_CLIENT_PATH must be set")
+	}
+
+	// sample output: "mysqldump  Ver 10.16 Distrib 10.1.22-MariaDB, for Linux (x86_64)"
+	// /mysqldump\s+Ver\s+[^ ]+\s+Distrib\s+([^ ]+),/
+	mysqldumpCmd := exec.Command(mysqlDumpPath, "-V")
+	mysqldumpVersion := extractVersionUsingCommand(mysqldumpCmd, `^mysqldump\s+Ver\s+[^ ]+\s+Distrib\s+([^ ]+),`)
+
+	// extract version from mysql server
+	mysqlClientCmd := exec.Command(mysqlClientPath,
+		fmt.Sprintf("-N -s -u'%s' -p'%s' -h'%s' -P%d -e 'SELECT VERSION()'", config.Username, config.Password, config.Host, config.Port))
+	mysqlVersion := extractVersionUsingCommand(mysqlClientCmd, `(.+)`)
+
+	// compare versions: for ServerX.ServerY.ServerZ and DumpX.DumpY.DumpZ
+	// 	=> ServerX != DumpX => error
+	//	=> ServerY != DumpY => error
+	// ServerZ and DumpZ are regarded as patch version and compatibility is assumed
+	if mysqlVersion.major != mysqldumpVersion.major || mysqlVersion.minor != mysqldumpVersion.minor {
+		log.Fatalln("major/minor version mismatch between mysqldump and mysql server")
 	}
 
 	cmd := exec.Command(mysqlDumpPath,
@@ -198,4 +220,41 @@ func mysqlDump(config Config, artifactFilePath string) *exec.Cmd {
 	cmd.Env = append(cmd.Env, "MYSQL_PWD="+config.Password)
 
 	return cmd
+}
+
+func checkErr(msg string, err error) {
+	if err != nil {
+		log.Fatalln(msg, err)
+	}
+}
+
+type semanticVersion struct {
+	major string
+	minor string
+	patch string
+}
+
+func extractVersionUsingCommand(cmd *exec.Cmd, searchPattern string) semanticVersion {
+	stdout, err := cmd.Output()
+	checkErr("Error running command.", err)
+
+	r := regexp.MustCompile(searchPattern)
+	matches := r.FindSubmatch(stdout)
+	if matches == nil {
+		log.Fatalln("Could not determine version by using search pattern:", searchPattern)
+	}
+
+	versionString := matches[1]
+
+	r = regexp.MustCompile(`(\d+).(\d+).(\S+)`)
+	matches = r.FindSubmatch(versionString)
+	if matches == nil {
+		log.Fatalln("Could not determine version by using search pattern:", searchPattern)
+	}
+
+	return semanticVersion{
+		major: string(matches[1]),
+		minor: string(matches[2]),
+		patch: string(matches[3]),
+	}
 }

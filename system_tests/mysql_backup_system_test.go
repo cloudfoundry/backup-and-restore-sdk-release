@@ -69,16 +69,16 @@ var _ = Describe("mysql-backup", func() {
 		})
 	})
 
-	PContext("mysql server is different version", func() {
+	Context("mysql server is different version", func() {
 		BeforeEach(func() {
 			brJob = JobInstance{
-				deployment:    "mysql-old-dev-test",
+				deployment:    "mysql-old-dev",
 				instance:      "database-backup-restorer",
 				instanceIndex: "0",
 			}
 
 			dbJob = JobInstance{
-				deployment:    "mysql-old-dev-test",
+				deployment:    "mysql-old-dev",
 				instance:      "mysql",
 				instanceIndex: "0",
 			}

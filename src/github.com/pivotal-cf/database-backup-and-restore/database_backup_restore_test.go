@@ -31,6 +31,7 @@ type TestEntry struct {
 var _ = Describe("Backup and Restore DB Utility", func() {
 	var fakeDump *binmock.Mock
 	var fakeRestore *binmock.Mock
+	var fakeClient *binmock.Mock
 	var session *gexec.Session
 	var username = "testuser"
 	var host = "127.0.0.1"
@@ -97,10 +98,10 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				configGenerator: validMysqlConfig,
 				expectedOutput:  "MYSQL_DUMP_PATH must be set",
 			}),
-			Entry("MYSQL_RESTORE_PATH is not set", TestEntry{
+			Entry("MYSQL_CLIENT_PATH is not set", TestEntry{
 				arguments:       "--restore --artifact-file /foo --config %s",
 				configGenerator: validMysqlConfig,
-				expectedOutput:  "MYSQL_RESTORE_PATH must be set",
+				expectedOutput:  "MYSQL_CLIENT_PATH must be set",
 			}),
 		}
 
@@ -152,12 +153,17 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 			BeforeEach(func() {
 				adapter = "mysql"
 				fakeDump = binmock.NewBinMock("mysqldump")
+				fakeDump.WhenCalledWith("-V").WillPrintToStdOut("mysqldump  Ver 10.16 Distrib 10.1.24-MariaDB, for Linux (x86_64)")
 				fakeDump.WhenCalled().WillExitWith(0)
+
+				fakeClient = binmock.NewBinMock("mysql")
+				fakeClient.WhenCalled().WillPrintToStdOut("10.1.24-MariaDB-wsrep")
 			})
 
 			JustBeforeEach(func() {
 				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
 				cmd.Env = append(cmd.Env, fmt.Sprintf("MYSQL_DUMP_PATH=%s", fakeDump.Path))
+				cmd.Env = append(cmd.Env, fmt.Sprintf("MYSQL_CLIENT_PATH=%s", fakeClient.Path))
 
 				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).ToNot(HaveOccurred())
@@ -165,20 +171,27 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 			})
 
 			It("calls mysqldump with the correct arguments", func() {
-				expectedArgs := []string{
-					"-v",
-					"--single-transaction",
-					"--skip-add-locks",
-					fmt.Sprintf("--user=%s", username),
-					fmt.Sprintf("--host=%s", host),
-					fmt.Sprintf("--port=%d", port),
-					fmt.Sprintf("--result-file=%s", artifactFile),
-					databaseName,
-				}
+				Expect(fakeDump.Invocations()).To(HaveLen(2))
 
-				Expect(fakeDump.Invocations()).To(HaveLen(1))
-				Expect(fakeDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-				Expect(fakeDump.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+				By("first checking the version", func() {
+					Expect(fakeDump.Invocations()[0].Args()).Should(ConsistOf("-V"))
+				})
+
+				By("then calling dump", func() {
+					expectedArgs := []string{
+						"-v",
+						"--single-transaction",
+						"--skip-add-locks",
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						fmt.Sprintf("--result-file=%s", artifactFile),
+						databaseName,
+					}
+
+					Expect(fakeDump.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+					Expect(fakeDump.Invocations()[1].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+				})
 			})
 
 			It("succeeds", func() {
@@ -193,6 +206,41 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 
 				It("also fails", func() {
 					Eventually(session).Should(gexec.Exit(1))
+				})
+			})
+
+			Context("mysqldump has a different major version than the server", func() {
+				BeforeEach(func() {
+					fakeClient = binmock.NewBinMock("mysql")
+					fakeClient.WhenCalled().WillPrintToStdOut("9.1.24-MariaDB-wsrep")
+				})
+
+				It("fails because of a version mismatch", func() {
+					Expect(session).Should(gexec.Exit(1))
+					Expect(string(session.Err.Contents())).Should(ContainSubstring("major/minor version mismatch"))
+				})
+			})
+
+			Context("mysqldump has a different minor version than the server", func() {
+				BeforeEach(func() {
+					fakeClient = binmock.NewBinMock("mysql")
+					fakeClient.WhenCalled().WillPrintToStdOut("10.0.24-MariaDB-wsrep")
+				})
+
+				It("fails because of a version mismatch", func() {
+					Expect(session).Should(gexec.Exit(1))
+					Expect(string(session.Err.Contents())).Should(ContainSubstring("major/minor version mismatch"))
+				})
+			})
+
+			Context("mysqldump has a different patch version than the server", func() {
+				BeforeEach(func() {
+					fakeClient = binmock.NewBinMock("mysql")
+					fakeClient.WhenCalled().WillPrintToStdOut("10.1.22-MariaDB-wsrep")
+				})
+
+				It("succeeds despite different patch versions", func() {
+					Expect(session).Should(gexec.Exit(0))
 				})
 			})
 		})
@@ -289,7 +337,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				}
 
 				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
-				cmd.Env = append(cmd.Env, fmt.Sprintf("MYSQL_RESTORE_PATH=%s", fakeRestore.Path))
+				cmd.Env = append(cmd.Env, fmt.Sprintf("MYSQL_CLIENT_PATH=%s", fakeRestore.Path))
 
 				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).ToNot(HaveOccurred())

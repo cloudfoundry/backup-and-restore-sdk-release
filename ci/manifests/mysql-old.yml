@@ -1,0 +1,61 @@
+---
+name: ((deployment-name))
+
+releases:
+- name: cf-mysql
+  version: 27
+- name: backup-and-restore-sdk
+  version: ((backup-and-restore-sdk-release-version))
+  url: ((backup-and-restore-sdk-release-url))
+
+stemcells:
+- alias: trusty
+  os: ubuntu-trusty
+  version: latest
+
+instance_groups:
+- name: mysql
+  instances: 1
+  vm_type: medium
+  persistent_disk_type: fifty
+  stemcell: trusty
+  update:
+    serial: true
+  networks:
+  - name: concourse
+  jobs:
+  - name: mysql
+    release: cf-mysql
+  azs: [z1]
+  properties:
+    cf_mysql:
+        mysql:
+          startup_timeout: 120
+          admin_password: ((mysql-password))
+          port: 3306
+          binlog_enabled: false
+          cluster_ips: [10.0.3.17]
+          cluster_health:
+            password: "foo"
+          galera_healthcheck:
+            db_password: "foo"
+            endpoint_username: galera_healthcheck
+            endpoint_password: "foo"
+
+- name: database-backup-restorer
+  instances: 1
+  vm_type: medium
+  persistent_disk_type: fifty
+  stemcell: trusty
+  networks:
+  - name: concourse
+  jobs:
+  - name: database-backup-restorer
+    release: backup-and-restore-sdk
+  azs: [z1]
+
+update:
+  canaries: 1
+  max_in_flight: 1
+  canary_watch_time: 30000
+  update_watch_time: 30000
