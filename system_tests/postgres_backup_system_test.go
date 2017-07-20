@@ -16,15 +16,22 @@ var _ = Describe("postgres-backup", func() {
 		var dbDumpPath string
 		var configPath string
 		var databaseName string
+		var dbJob JobInstance
 
 		BeforeEach(func() {
+			dbJob = JobInstance{
+				deployment:    "postgres-dev",
+				instance:      "postgres",
+				instanceIndex: "0",
+			}
+
 			configPath = "/tmp/config.json" + strconv.FormatInt(time.Now().Unix(), 10)
 			dbDumpPath = "/tmp/sql_dump" + strconv.FormatInt(time.Now().Unix(), 10)
 			databaseName = "db" + strconv.FormatInt(time.Now().Unix(), 10)
 
-			runOnPostgresVMAndSucceed(fmt.Sprintf(`/var/vcap/packages/postgres-9.4/bin/createdb -U vcap "%s"`, databaseName))
-			runPostgresSqlCommand("CREATE TABLE people (name varchar);", databaseName)
-			runPostgresSqlCommand("INSERT INTO people VALUES ('Derik');", databaseName)
+			dbJob.runOnVMAndSucceed(fmt.Sprintf(`/var/vcap/packages/postgres-9.4/bin/createdb -U vcap "%s"`, databaseName))
+			dbJob.runPostgresSqlCommand("CREATE TABLE people (name varchar);", databaseName)
+			dbJob.runPostgresSqlCommand("INSERT INTO people VALUES ('Derik');", databaseName)
 
 			configJson := fmt.Sprintf(
 				`{"username":"vcap","password":"%s","host":"localhost","port":5432,"database":"%s","adapter":"postgres"}`,
@@ -32,42 +39,52 @@ var _ = Describe("postgres-backup", func() {
 				databaseName,
 			)
 
-			runOnPostgresVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+			dbJob.runOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 		})
 
 		AfterEach(func() {
-			runOnPostgresVMAndSucceed(fmt.Sprintf(`/var/vcap/packages/postgres-9.4/bin/dropdb -U vcap "%s"`, databaseName))
-			runOnPostgresVMAndSucceed(fmt.Sprintf("rm -rf %s %s", configPath, dbDumpPath))
+			dbJob.runOnVMAndSucceed(fmt.Sprintf(`/var/vcap/packages/postgres-9.4/bin/dropdb -U vcap "%s"`, databaseName))
+			dbJob.runOnVMAndSucceed(fmt.Sprintf("rm -rf %s %s", configPath, dbDumpPath))
 		})
 
 		It("backs up the Postgres database", func() {
-			runOnPostgresVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
-			runOnPostgresVMAndSucceed(fmt.Sprintf("ls -l %s", dbDumpPath))
+			dbJob.runOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
+			dbJob.runOnVMAndSucceed(fmt.Sprintf("ls -l %s", dbDumpPath))
 		})
 	})
 
 	Context("database-backup-restorer lives on its own instance", func() {
+		var dbJob, brJob JobInstance
+
+		BeforeEach(func() {
+			brJob = JobInstance{
+				deployment:    "postgres-dev",
+				instance:      "database-backup-restorer",
+				instanceIndex: "0",
+			}
+
+			dbJob = JobInstance{
+				deployment:    "postgres-dev",
+				instance:      "postgres",
+				instanceIndex: "0",
+			}
+		})
+
 		It("backs up the Postgres database", func() {
 			expectFilename := "/tmp/sql_dump"
 
-			deploymentName := "postgres-dev"
-			ip := getIPOfInstance(deploymentName, "postgres")
+			ip := dbJob.getIPOfInstance()
 			configJson := fmt.Sprintf(
 				`{"username":"bosh","password":"%s","host":"%s","port":5432,"database":"bosh","adapter":"postgres"}`,
 				MustHaveEnv("POSTGRES_PASSWORD"),
 				ip,
 			)
 
-			Expect(RunOnInstance(deploymentName, "database-backup-restorer", "0",
-				fmt.Sprintf("rm -rf /tmp/config.json %s", expectFilename))).To(gexec.Exit(0))
-			Expect(RunOnInstance(deploymentName, "database-backup-restorer", "0",
-				fmt.Sprintf("echo '%s' >> /tmp/config.json", configJson))).To(gexec.Exit(0))
+			Expect(brJob.RunOnInstance(fmt.Sprintf("rm -rf /tmp/config.json %s", expectFilename))).To(gexec.Exit(0))
+			Expect(brJob.RunOnInstance(fmt.Sprintf("echo '%s' >> /tmp/config.json", configJson))).To(gexec.Exit(0))
 
-			Expect(RunOnInstance(deploymentName, "database-backup-restorer", "0",
-				fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config /tmp/config.json", expectFilename),
-			)).To(gexec.Exit(0))
-			Expect(RunOnInstance(deploymentName, "database-backup-restorer", "0",
-				fmt.Sprintf("ls -l %s", expectFilename))).To(gexec.Exit(0))
+			Expect(brJob.RunOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config /tmp/config.json", expectFilename))).To(gexec.Exit(0))
+			Expect(brJob.RunOnInstance(fmt.Sprintf("ls -l %s", expectFilename))).To(gexec.Exit(0))
 		})
 	})
 })

@@ -1,5 +1,5 @@
 hash: b536424c8da472c97f7a86c795c02e1fdf6e0626eedfb7e099b73c1300d54c63
-updated: 2017-07-14T11:55:21.284973765+01:00
+updated: 2017-07-19T15:59:42.137636394+01:00
 imports: []
 testImports:
 - name: github.com/onsi/ginkgo
@@ -42,7 +42,7 @@ testImports:
 - name: github.com/pivotal-cf-experimental/go-binmock
   version: 016bc18e3d9193f307f77ec00fe239a399ee7d44
 - name: golang.org/x/sys
-  version: b90f89a1e7a9c1f6b918820b3daa7f08488c8594
+  version: f3918c30c5c2cb527c0b071a27c35120a6c0719a
   subpackages:
   - unix
 - name: gopkg.in/yaml.v2

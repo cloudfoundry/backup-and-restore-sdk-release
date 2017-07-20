@@ -7,6 +7,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 )
 
@@ -14,17 +15,21 @@ var _ = Describe("mysql-backup", func() {
 	var dbDumpPath string
 	var configPath string
 	var databaseName string
+	var dbJob, brJob JobInstance
 
 	BeforeEach(func() {
 		configPath = "/tmp/config.json" + strconv.FormatInt(time.Now().Unix(), 10)
 		dbDumpPath = "/tmp/sql_dump" + strconv.FormatInt(time.Now().Unix(), 10)
 		databaseName = "db" + strconv.FormatInt(time.Now().Unix(), 10)
+	})
 
-		runOnMysqlVMAndSucceed(fmt.Sprintf(`echo 'CREATE DATABASE %s;' | /var/vcap/packages/mariadb/bin/mysql -u root -h localhost --password='%s'`, databaseName, MustHaveEnv("MYSQL_PASSWORD")))
-		runMysqlSqlCommand("CREATE TABLE people (name varchar(255));", databaseName)
-		runMysqlSqlCommand("INSERT INTO people VALUES ('Derik');", databaseName)
+	JustBeforeEach(func() {
+		dbJob.runOnVMAndSucceed(fmt.Sprintf(`echo 'CREATE DATABASE %s;' | /var/vcap/packages/mariadb/bin/mysql -u root -h localhost --password='%s'`, databaseName, MustHaveEnv("MYSQL_PASSWORD")))
+		dbJob.runMysqlSqlCommand("CREATE TABLE people (name varchar(255));", databaseName)
+		dbJob.runMysqlSqlCommand("INSERT INTO people VALUES ('Derik');", databaseName)
 
-		ip := getIPOfInstance("mysql-dev", "mysql")
+		ip := dbJob.getIPOfInstance()
+
 		configJson := fmt.Sprintf(
 			`{"username":"root","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql"}`,
 			MustHaveEnv("MYSQL_PASSWORD"),
@@ -32,25 +37,58 @@ var _ = Describe("mysql-backup", func() {
 			databaseName,
 		)
 
-		RunOnInstance("mysql-dev", "database-backup-restorer", "0",
-			fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+		brJob.RunOnInstance(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 	})
 
 	AfterEach(func() {
-		runOnMysqlVMAndSucceed(fmt.Sprintf(`echo 'DROP DATABASE %s;' | /var/vcap/packages/mariadb/bin/mysql -u root -h localhost --password='%s'`, databaseName, MustHaveEnv("MYSQL_PASSWORD")))
-		RunOnInstance("mysql-dev", "database-backup-restorer", "0",
-			fmt.Sprintf("rm -rf %s %s", configPath, dbDumpPath))
+		dbJob.runOnVMAndSucceed(fmt.Sprintf(`echo 'DROP DATABASE %s;' | /var/vcap/packages/mariadb/bin/mysql -u root -h localhost --password='%s'`, databaseName, MustHaveEnv("MYSQL_PASSWORD")))
+		brJob.RunOnInstance(fmt.Sprintf("rm -rf %s %s", configPath, dbDumpPath))
 	})
 
 	Context("database-backup-restorer lives on its own instance", func() {
+		BeforeEach(func() {
+			brJob = JobInstance{
+				deployment:    "mysql-dev",
+				instance:      "database-backup-restorer",
+				instanceIndex: "0",
+			}
+
+			dbJob = JobInstance{
+				deployment:    "mysql-dev",
+				instance:      "mysql",
+				instanceIndex: "0",
+			}
+		})
+
 		It("backs up the MySQL database", func() {
-			backupSession := RunOnInstance("mysql-dev", "database-backup-restorer", "0",
-				fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
+			backupSession := brJob.RunOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
 			Expect(backupSession).To(gexec.Exit(0))
 
-			fileCheckSession := RunOnInstance("mysql-dev", "database-backup-restorer", "0",
-				fmt.Sprintf("ls -l %s", dbDumpPath))
+			fileCheckSession := brJob.RunOnInstance(fmt.Sprintf("ls -l %s", dbDumpPath))
 			Expect(fileCheckSession).To(gexec.Exit(0))
+		})
+	})
+
+	Context("mysql server is different version", func() {
+		BeforeEach(func() {
+			brJob = JobInstance{
+				deployment:    "mysql-old-dev-test",
+				instance:      "database-backup-restorer",
+				instanceIndex: "0",
+			}
+
+			dbJob = JobInstance{
+				deployment:    "mysql-old-dev-test",
+				instance:      "mysql",
+				instanceIndex: "0",
+			}
+		})
+
+		It("fails with a helpful message", func() {
+			backupSession := brJob.RunOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
+			Expect(backupSession).To(gexec.Exit(1))
+			Expect(backupSession).To(gbytes.Say("major/minor version mismatch"))
+
 		})
 	})
 })
