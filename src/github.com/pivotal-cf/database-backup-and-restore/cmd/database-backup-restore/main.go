@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strings"
 )
 
 var supportedAdapters = []string{"postgres", "mysql"}
@@ -192,9 +193,11 @@ func mysqlDump(config Config, artifactFilePath string) *exec.Cmd {
 	// sample output: "mysqldump  Ver 10.16 Distrib 10.1.22-MariaDB, for Linux (x86_64)"
 	// /mysqldump\s+Ver\s+[^ ]+\s+Distrib\s+([^ ]+),/
 	mysqldumpCmd := exec.Command(mysqlDumpPath, "-V")
-	mysqldumpVersion := extractVersionUsingCommand(mysqldumpCmd, `^mysqldump\s+Ver\s+[^ ]+\s+Distrib\s+([^ ]+),`)
+	mysqldumpVersion := extractVersionUsingCommand(
+		mysqldumpCmd,
+		`^mysqldump\s+Ver\s+[^ ]+\s+Distrib\s+([^ ]+),`)
 
-	log.Printf("%s version %v", mysqlDumpPath, mysqldumpVersion)
+	log.Printf("%s version %v\n", mysqlDumpPath, mysqldumpVersion)
 
 	// extract version from mysql server
 	mysqlClientCmd := exec.Command(mysqlClientPath,
@@ -205,16 +208,19 @@ func mysqlDump(config Config, artifactFilePath string) *exec.Cmd {
 		fmt.Sprintf("--host=%s", config.Host),
 		fmt.Sprintf("--port=%d", config.Port),
 		"--execute=SELECT VERSION()")
-	mysqlVersion := extractVersionUsingCommand(mysqlClientCmd, `(.+)`)
+	mysqlServerVersion := extractVersionUsingCommand(mysqlClientCmd, `(.+)`)
 
-	log.Printf("mysql server (%s:%d) version %v\n", config.Host, config.Port, mysqlVersion)
+	log.Printf("MYSQL server (%s:%d) version %v\n", config.Host, config.Port, mysqlServerVersion)
 
 	// compare versions: for ServerX.ServerY.ServerZ and DumpX.DumpY.DumpZ
 	// 	=> ServerX != DumpX => error
 	//	=> ServerY != DumpY => error
 	// ServerZ and DumpZ are regarded as patch version and compatibility is assumed
-	if mysqlVersion.major != mysqldumpVersion.major || mysqlVersion.minor != mysqldumpVersion.minor {
-		log.Fatalln("major/minor version mismatch between mysqldump and mysql server")
+	if mysqlServerVersion.major != mysqldumpVersion.major || mysqlServerVersion.minor != mysqldumpVersion.minor {
+		log.Fatalf("Version mismatch between mysqldump %s and the MYSQL server %s\n"+
+			"mysqldump utility and the MYSQL server must be at the same major and minor version.\n",
+			mysqldumpVersion,
+			mysqlServerVersion)
 	}
 
 	cmd := exec.Command(mysqlDumpPath,
@@ -242,6 +248,10 @@ type semanticVersion struct {
 	major string
 	minor string
 	patch string
+}
+
+func (v semanticVersion) String() string {
+	return strings.Join([]string{v.major, v.minor, v.patch}, ".")
 }
 
 func extractVersionUsingCommand(cmd *exec.Cmd, searchPattern string) semanticVersion {

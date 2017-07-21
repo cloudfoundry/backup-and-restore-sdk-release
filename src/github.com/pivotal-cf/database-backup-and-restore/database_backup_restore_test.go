@@ -2,16 +2,12 @@ package database_backup_and_restore
 
 import (
 	"fmt"
-	"os/exec"
-	"time"
-
 	"io/ioutil"
-
-	"os"
-
-	"strings"
-
 	"log"
+	"os"
+	"os/exec"
+	"strings"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -231,7 +227,8 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 
 				It("fails because of a version mismatch", func() {
 					Expect(session).Should(gexec.Exit(1))
-					Expect(string(session.Err.Contents())).Should(ContainSubstring("major/minor version mismatch"))
+					Expect(string(session.Err.Contents())).Should(ContainSubstring(
+						"Version mismatch between mysqldump 10.1.24-MariaDB and the MYSQL server 9.1.24-MariaDB-wsrep"))
 				})
 			})
 
@@ -250,7 +247,8 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 
 				It("fails because of a version mismatch", func() {
 					Expect(session).Should(gexec.Exit(1))
-					Expect(string(session.Err.Contents())).Should(ContainSubstring("major/minor version mismatch"))
+					Expect(string(session.Err.Contents())).Should(ContainSubstring(
+						"Version mismatch between mysqldump 10.1.24-MariaDB and the MYSQL server 10.0.24-MariaDB-wsrep"))
 				})
 			})
 

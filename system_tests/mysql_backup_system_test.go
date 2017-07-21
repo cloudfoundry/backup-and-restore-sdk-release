@@ -72,13 +72,13 @@ var _ = Describe("mysql-backup", func() {
 	Context("mysql server is different version", func() {
 		BeforeEach(func() {
 			brJob = JobInstance{
-				deployment:    "mysql-old-dev",
+				deployment:    "mysql-dev-old",
 				instance:      "database-backup-restorer",
 				instanceIndex: "0",
 			}
 
 			dbJob = JobInstance{
-				deployment:    "mysql-old-dev",
+				deployment:    "mysql-dev-old",
 				instance:      "mysql",
 				instanceIndex: "0",
 			}
@@ -87,8 +87,7 @@ var _ = Describe("mysql-backup", func() {
 		It("fails with a helpful message", func() {
 			backupSession := brJob.RunOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
 			Expect(backupSession).To(gexec.Exit(1))
-			Expect(backupSession).To(gbytes.Say("major/minor version mismatch"))
-
+			Expect(backupSession).To(gbytes.Say("Version mismatch"))
 		})
 	})
 })
