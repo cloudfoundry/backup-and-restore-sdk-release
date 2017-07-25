@@ -148,11 +148,11 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 		Context("mysql", func() {
 			BeforeEach(func() {
 				adapter = "mysql"
-				fakeDump = binmock.NewBinMock("mysqldump")
+				fakeDump = binmock.NewBinMock(Fail)
 				fakeDump.WhenCalledWith("-V").WillPrintToStdOut("mysqldump  Ver 10.16 Distrib 10.1.24-MariaDB, for Linux (x86_64)")
 				fakeDump.WhenCalled().WillExitWith(0)
 
-				fakeClient = binmock.NewBinMock("mysql")
+				fakeClient = binmock.NewBinMock(Fail)
 				// fakeClient.WhenCalled().WillPrintToStdOut("10.1.24-MariaDB-wsrep")
 				fakeClient.WhenCalledWith("--skip-column-names",
 					"--silent",
@@ -203,7 +203,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 
 			Context("and mysqldump fails", func() {
 				BeforeEach(func() {
-					fakeDump = binmock.NewBinMock("mysqldump")
+					fakeDump = binmock.NewBinMock(Fail)
 					fakeDump.WhenCalled().WillExitWith(1)
 				})
 
@@ -214,7 +214,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 
 			Context("mysqldump has a different major version than the server", func() {
 				BeforeEach(func() {
-					fakeClient = binmock.NewBinMock("mysql")
+					fakeClient = binmock.NewBinMock(Fail)
 					fakeClient.WhenCalledWith(
 						"--skip-column-names",
 						"--silent",
@@ -234,7 +234,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 
 			Context("mysqldump has a different minor version than the server", func() {
 				BeforeEach(func() {
-					fakeClient = binmock.NewBinMock("mysql")
+					fakeClient = binmock.NewBinMock(Fail)
 					fakeClient.WhenCalledWith(
 						"--skip-column-names",
 						"--silent",
@@ -254,7 +254,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 
 			Context("mysqldump has a different patch version than the server", func() {
 				BeforeEach(func() {
-					fakeClient = binmock.NewBinMock("mysql")
+					fakeClient = binmock.NewBinMock(Fail)
 					fakeClient.WhenCalledWith(
 						"--skip-column-names",
 						"--silent",
@@ -274,7 +274,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 		Context("postgres", func() {
 			BeforeEach(func() {
 				adapter = "postgres"
-				fakeDump = binmock.NewBinMock("pg_dump")
+				fakeDump = binmock.NewBinMock(Fail)
 				fakeDump.WhenCalled().WillExitWith(0)
 			})
 
@@ -314,7 +314,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 
 			Context("and pg_dump fails", func() {
 				BeforeEach(func() {
-					fakeDump = binmock.NewBinMock("pg_dump")
+					fakeDump = binmock.NewBinMock(Fail)
 					fakeDump.WhenCalled().WillExitWith(1)
 				})
 
@@ -352,7 +352,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 		Context("mysql", func() {
 			BeforeEach(func() {
 				adapter = "mysql"
-				fakeRestore = binmock.NewBinMock("mysql")
+				fakeRestore = binmock.NewBinMock(Fail)
 				fakeRestore.WhenCalled().WillExitWith(0)
 			})
 
@@ -391,7 +391,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 
 			Context("and mysql fails", func() {
 				BeforeEach(func() {
-					fakeRestore = binmock.NewBinMock("mysql")
+					fakeRestore = binmock.NewBinMock(Fail)
 					fakeRestore.WhenCalled().WillExitWith(1)
 				})
 
@@ -404,7 +404,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 		Context("postgres", func() {
 			BeforeEach(func() {
 				adapter = "postgres"
-				fakeRestore = binmock.NewBinMock("pg_restore")
+				fakeRestore = binmock.NewBinMock(Fail)
 				fakeRestore.WhenCalled().WillExitWith(0)
 			})
 
@@ -440,7 +440,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 
 			Context("and pg_restore fails", func() {
 				BeforeEach(func() {
-					fakeRestore = binmock.NewBinMock("pg_restore")
+					fakeRestore = binmock.NewBinMock(Fail)
 					fakeRestore.WhenCalled().WillExitWith(1)
 				})
 
