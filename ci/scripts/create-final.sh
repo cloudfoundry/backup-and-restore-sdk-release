@@ -5,7 +5,7 @@ set -ex
 VERSION=$(cat version/number)
 
 pushd backup-and-restore-sdk-release
-  bosh -n create release --version "$VERSION" --final --with-tarball
+  bosh -n finalize release ./release-tarball/backup-and-restore-sdk-*.tgz --version "$VERSION"
 
   mv releases/backup-and-restore-sdk/backup-and-restore-sdk-"${VERSION}".tgz \
     ../backup-and-restore-sdk-final-release-tarball
