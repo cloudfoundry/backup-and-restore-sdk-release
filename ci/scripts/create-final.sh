@@ -7,8 +7,7 @@ VERSION=$(cat version/number)
 pushd backup-and-restore-sdk-release
   echo "---
 blobstore:
-  provider: s3
-  options:
+  s3:
     access_key_id: $AWS_ACCESS_KEY_ID
     secret_access_key: $AWS_SECRET_ACCESS_KEY
 " > config/private.yml
