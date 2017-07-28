@@ -1,3 +1,5 @@
+#!/bin/bash -eu
+
 # Copyright (C) 2017-Present Pivotal Software, Inc. All rights reserved.
 #
 # This program and the accompanying materials are made available under
@@ -13,8 +15,6 @@
 #
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-#!/bin/bash -eu
 
 export BOSH_URL="https://genesis-bosh.backup-and-restore.cf-app.com:25555"
 export BOSH_CERT_PATH="~/workspace/bosh-backup-and-restore-meta/certs/genesis-bosh.backup-and-restore.cf-app.com.crt"

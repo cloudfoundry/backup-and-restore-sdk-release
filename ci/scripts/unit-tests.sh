@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright (C) 2017-Present Pivotal Software, Inc. All rights reserved.
 #
 # This program and the accompanying materials are made available under
@@ -13,8 +15,6 @@
 #
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-#!/bin/bash
 
 set -ex
 
