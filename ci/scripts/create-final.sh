@@ -5,6 +5,14 @@ set -ex
 VERSION=$(cat version/number)
 
 pushd backup-and-restore-sdk-release
+  echo "---
+blobstore:
+provider: s3
+options:
+  access_key_id: '$AWS_ACCESS_KEY_ID'
+  secret_access_key: '$AWS_SECRET_ACCESS_KEY'
+" > config/private.yml
+
   bosh -n finalize release ../release-tarball/backup-and-restore-sdk-*.tgz --version "$VERSION"
 
   mv releases/backup-and-restore-sdk/backup-and-restore-sdk-"${VERSION}".tgz \
