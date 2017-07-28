@@ -8,6 +8,7 @@ image_resource:
 inputs:
 - name: version
 - name: backup-and-restore-sdk-release
+- name: release-tarball
 
 outputs:
 - name: backup-and-restore-sdk-final-release
