@@ -33,7 +33,7 @@ instance_groups:
       port: 3306
     release: my_release
   - name: database-backup-restorer
-    release: backup-and-restore-sdk-release
+    release: backup-and-restore-sdk
 ...
 ```
 
