@@ -37,6 +37,8 @@ instance_groups:
 ...
 ```
 
+Note: if you are using [cf-deployment](https://github.com/cloudfoundry/cf-deployment) then you can use the [backup-restore opsfile](https://github.com/cloudfoundry/cf-deployment/blob/master/operations/experimental/deploy-bosh-backup-restore.yml).
+
 Template a `config.json` as follows:
 
 ```json
@@ -49,6 +51,10 @@ Template a `config.json` as follows:
   "database": "name of database to back up"
 }
 ```
+
+Note: all fields in `config.json` need to be strings except `port` which is an int.
+
+An example of templating using BOSH Links can be seen in the [cf networking release](https://github.com/cloudfoundry-incubator/cf-networking-release/blob/647f7a71b442c25ec29b1cc6484410946f41935c/jobs/bbr-cfnetworkingdb/templates/config.json.erb).
 
 #### Supported Database Adapters
 * `postgres`
@@ -67,3 +73,7 @@ In your release restore script, call `database-backup-restorer/bin/restore`:
 ```bash
 /var/vcap/jobs/database-backup-restorer/bin/restore --config /path/to/config.json --artifact-file $BBR_ARTIFACT_DIRECTORY/artifactFile
 ```
+
+#### Usage with [bbr](https://github.com/cloudfoundry-incubator/bosh-backup-and-restore)
+
+For an example of the sdk being used in a release that can be backed up by bbr see the [exemplar release](https://github.com/cloudfoundry-incubator/exemplar-backup-and-restore-release).
