@@ -165,8 +165,6 @@ func mysqlRestore(config Config, artifactFilePath string) *exec.Cmd {
 		config.Database,
 	)
 
-	fmt.Println(ioutil.ReadFile(artifactFilePath))
-
 	cmd.Stdin = bufio.NewReader(artifactFile)
 	cmd.Env = append(cmd.Env, "MYSQL_PWD="+config.Password)
 
