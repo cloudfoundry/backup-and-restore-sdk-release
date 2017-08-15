@@ -20,6 +20,7 @@ name: ((deployment-name))
 releases:
 - name: bosh
   version: 260.3
+  url: https://bosh.io/d/github.com/cloudfoundry/bosh?v=260.3
 - name: backup-and-restore-sdk
   version: ((backup-and-restore-sdk-release-version))
   url: ((backup-and-restore-sdk-release-url))
@@ -45,7 +46,7 @@ instance_groups:
   azs: [z1]
   properties:
     postgres:
-      password: ((postgres-password))
+      password: ((db-password))
       listen_address: 0.0.0.0
 - name: database-backup-restorer
   instances: 1

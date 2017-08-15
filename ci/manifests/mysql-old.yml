@@ -20,6 +20,7 @@ name: ((deployment-name))
 releases:
 - name: cf-mysql
   version: 27
+  url: https://bosh.io/d/github.com/cloudfoundry/cf-mysql-release?v=27
 - name: backup-and-restore-sdk
   version: ((backup-and-restore-sdk-release-version))
   url: ((backup-and-restore-sdk-release-url))
@@ -47,7 +48,7 @@ instance_groups:
     cf_mysql:
         mysql:
           startup_timeout: 120
-          admin_password: ((mysql-password))
+          admin_password: ((db-password))
           port: 3306
           binlog_enabled: false
           cluster_ips: [10.0.3.17]
