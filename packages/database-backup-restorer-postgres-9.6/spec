@@ -15,16 +15,9 @@
 # limitations under the License.
 
 ---
-name: database-backup-restorer
+name: database-backup-restorer-postgres-9.6
 
-templates:
-  backup: bin/backup
-  restore: bin/restore
+dependencies: []
 
-packages:
-- database-backup-restorer
-- database-backup-restorer-postgres-9.6
-- database-backup-restorer-postgres-9.4
-- database-backup-restorer-mysql
-
-properties: {}
+files:
+- postgres/postgresql-9.6.3.tar.gz

@@ -1,19 +1,4 @@
-# Copyright (C) 2017-Present Pivotal Software, Inc. All rights reserved.
-#
-# This program and the accompanying materials are made available under
-# the terms of the under the Apache License, Version 2.0 (the "License”);
-# you may not use this file except in compliance with the License.
-#
-# You may obtain a copy of the License at
-# http:#www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
+---
 go/go1.8.1.linux-amd64.tar.gz:
   size: 91277742
   object_id: aae713d6-4758-4486-7dd2-c34b45a7c9aa
@@ -30,3 +15,7 @@ postgres/postgresql-9.4.11.tar.gz:
   size: 23380382
   object_id: 9421c4cd-7954-42ab-6bbd-34217696d34b
   sha: 61eed4b0b7516f6a40e7483b9c3bc3d5398c14a4
+postgres/postgresql-9.6.3.tar.gz:
+  object_id: 0c2ebc06-e261-4bdb-a049-2c74fca31217
+  sha: f596ca487e0c4d41ccc628b1d69b180fb23402db
+  size: 25536998
