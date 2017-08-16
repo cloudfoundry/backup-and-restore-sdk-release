@@ -43,7 +43,7 @@ instance_groups:
     release: bosh
   - name: database-backup-restorer
     release: backup-and-restore-sdk
-  azs: [z1]
+  azs: [lite]
   properties:
     postgres:
       password: ((db-password))
@@ -58,7 +58,7 @@ instance_groups:
   jobs:
   - name: database-backup-restorer
     release: backup-and-restore-sdk
-  azs: [z1]
+  azs: [lite]
 
 update:
   canaries: 1

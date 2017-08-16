@@ -43,7 +43,7 @@ instance_groups:
   jobs:
   - name: mysql
     release: cf-mysql
-  azs: [z1]
+  azs: [lite]
   properties:
     cf_mysql:
         mysql:
@@ -68,7 +68,7 @@ instance_groups:
   jobs:
   - name: database-backup-restorer
     release: backup-and-restore-sdk
-  azs: [z1]
+  azs: [lite]
 
 update:
   canaries: 1
