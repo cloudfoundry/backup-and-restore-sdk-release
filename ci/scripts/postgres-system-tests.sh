@@ -23,7 +23,7 @@ eval "$(ssh-agent)"
 
 chmod 400 bosh-backup-and-restore-meta/keys/github
 ssh-add bosh-backup-and-restore-meta/keys/github
-chmod 400 bosh-backup-and-restore-meta/garden-bosh-uaa/bosh.pem
+chmod 400 bosh-backup-and-restore-meta/genesis-bosh/bosh.pem
 
 export GOPATH=$PWD
 export PATH=$PATH:$GOPATH/bin
