@@ -27,13 +27,13 @@ chmod 400 bosh-backup-and-restore-meta/garden-bosh-uaa/bosh.pem
 
 export GOPATH=$PWD
 export PATH=$PATH:$GOPATH/bin
-export BOSH_URL="https://lite-bosh-uaa.backup-and-restore.cf-app.com:25555"
-export BOSH_CERT_PATH=`pwd`/bosh-backup-and-restore-meta/certs/lite-bosh-uaa.backup-and-restore.cf-app.com.crt
+export BOSH_URL="https://lite-bosh.backup-and-restore.cf-app.com"
+export BOSH_CERT_PATH=`pwd`/bosh-backup-and-restore-meta/certs/lite-bosh.backup-and-restore.cf-app.com.crt
 export BOSH_CLIENT
 export BOSH_CLIENT_SECRET
 export BOSH_GATEWAY_USER=vcap
-export BOSH_GATEWAY_HOST=lite-bosh-uaa.backup-and-restore.cf-app.com
-export BOSH_GATEWAY_KEY=`pwd`/bosh-backup-and-restore-meta/garden-bosh-uaa/bosh.pem
+export BOSH_GATEWAY_HOST=lite-bosh.backup-and-restore.cf-app.com
+export BOSH_GATEWAY_KEY=`pwd`/bosh-backup-and-restore-meta/genesis-bosh/bosh.pem
 export POSTGRES_PASSWORD
 
 cd src/github.com/pivotal-cf/backup-and-restore-sdk-release
