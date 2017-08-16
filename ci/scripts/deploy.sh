@@ -21,9 +21,10 @@ set -eu
 ./bosh-backup-and-restore-meta/unlock-ci.sh
 export BOSH_CLIENT
 export BOSH_CLIENT_SECRET
+export BOSH_ENVIRONMENT
+export BOSH_CA_CERT="./bosh-backup-and-restore-meta/certs/${BOSH_ENVIRONMENT}.crt"
 
-bosh-cli --non-interactive -e ${BOSH_URL} \
-  --ca-cert "./bosh-backup-and-restore-meta/certs/${BOSH_URL}.crt" \
+bosh-cli --non-interactive \
   --deployment ${BOSH_DEPLOYMENT} \
   deploy "backup-and-restore-sdk-release/ci/manifests/${MANIFEST_NAME}" \
   --var=backup-and-restore-sdk-release-version=$(cat release-tarball/version) \

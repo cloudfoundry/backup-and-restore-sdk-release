@@ -21,8 +21,7 @@ set -eux
 ./bosh-backup-and-restore-meta/unlock-ci.sh
 export BOSH_CLIENT
 export BOSH_CLIENT_SECRET
+export BOSH_ENVIRONMENT
+export BOSH_CA_CERT="./bosh-backup-and-restore-meta/certs/${BOSH_ENVIRONMENT}.crt"
 
-bosh-cli --non-interactive -e ${BOSH_URL} \
-  --ca-cert "./bosh-backup-and-restore-meta/certs/${BOSH_URL}.crt" \
-  --deployment ${BOSH_DEPLOYMENT} \
-  delete-deployment
+bosh-cli -n -d ${BOSH_DEPLOYMENT} delete-deployment
