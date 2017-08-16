@@ -26,4 +26,3 @@ export BOSH_ENVIRONMENT
 export BOSH_CA_CERT="./bosh-backup-and-restore-meta/certs/${BOSH_ENVIRONMENT}.crt"
 
 bosh-cli -n cleanup --all
-
