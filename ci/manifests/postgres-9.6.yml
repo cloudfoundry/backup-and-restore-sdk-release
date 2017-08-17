@@ -46,6 +46,7 @@ instance_groups:
   azs: [lite]
   properties:
     databases:
+      port: 5432
       roles:
       - name: pgadmin
         password: ((db-password))
