@@ -48,8 +48,10 @@ instance_groups:
     databases:
       port: 5432
       roles:
-      - name: pgadmin
+      - name: test_user
         password: ((db-password))
+      databases:
+      - name: test_db
 - name: database-backup-restorer
   instances: 1
   vm_type: container
