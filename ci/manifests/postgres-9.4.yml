@@ -46,9 +46,7 @@ instance_groups:
   azs: [lite]
   properties:
     postgres:
-      user: test_user
       password: ((db-password))
-      database: test_db
       listen_address: 0.0.0.0
 - name: database-backup-restorer
   instances: 1

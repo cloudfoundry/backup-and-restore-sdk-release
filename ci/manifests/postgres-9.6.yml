@@ -47,11 +47,6 @@ instance_groups:
   properties:
     databases:
       port: 5432
-      roles:
-      - name: test_user
-        password: ((db-password))
-      databases:
-      - name: test_db
 - name: database-backup-restorer
   instances: 1
   vm_type: container
