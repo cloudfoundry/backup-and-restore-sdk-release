@@ -46,6 +46,7 @@ instance_groups:
   azs: [lite]
   properties:
     postgres:
+      user: bosh
       password: ((db-password))
       listen_address: 0.0.0.0
 - name: database-backup-restorer

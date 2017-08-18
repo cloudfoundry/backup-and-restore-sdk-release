@@ -28,15 +28,16 @@ import (
 )
 
 var _ = Describe("postgres-backup", func() {
-	Context("database-backup-restorer is colocated with Postgres", func() {
+	Context("database-backup-restorer is collocated with Postgres", func() {
 		var dbDumpPath string
 		var configPath string
 		var databaseName string
 		var dbJob JobInstance
+		postgresPackage := "postgres-9.4"
 
 		BeforeEach(func() {
 			dbJob = JobInstance{
-				deployment:    "postgres-dev",
+				deployment:    "postgres-9.4-dev",
 				instance:      "postgres",
 				instanceIndex: "0",
 			}
@@ -45,12 +46,13 @@ var _ = Describe("postgres-backup", func() {
 			dbDumpPath = "/tmp/sql_dump" + strconv.FormatInt(time.Now().Unix(), 10)
 			databaseName = "db" + strconv.FormatInt(time.Now().Unix(), 10)
 
-			dbJob.runOnVMAndSucceed(fmt.Sprintf(`/var/vcap/packages/postgres-9.4/bin/createdb -U vcap "%s"`, databaseName))
-			dbJob.runPostgresSqlCommand("CREATE TABLE people (name varchar);", databaseName)
-			dbJob.runPostgresSqlCommand("INSERT INTO people VALUES ('Derik');", databaseName)
+			dbJob.runOnVMAndSucceed(fmt.Sprintf(`/var/vcap/packages/postgres-9.4/bin/createdb -U bosh "%s"`, databaseName))
+			dbJob.runPostgresSqlCommand("CREATE TABLE people (name varchar);", databaseName, postgresPackage)
+			dbJob.runPostgresSqlCommand("INSERT INTO people VALUES ('Derik');", databaseName, postgresPackage)
+			dbJob.runPostgresSqlCommand("ALTER ROLE bosh SUPERUSER;", databaseName, postgresPackage)
 
 			configJson := fmt.Sprintf(
-				`{"username":"vcap","password":"%s","host":"localhost","port":5432,"database":"%s","adapter":"postgres"}`,
+				`{"username":"bosh","password":"%s","host":"localhost","port":5432,"database":"%s","adapter":"postgres"}`,
 				MustHaveEnv("POSTGRES_PASSWORD"),
 				databaseName,
 			)
@@ -59,12 +61,18 @@ var _ = Describe("postgres-backup", func() {
 		})
 
 		AfterEach(func() {
-			dbJob.runOnVMAndSucceed(fmt.Sprintf(`/var/vcap/packages/postgres-9.4/bin/dropdb -U vcap "%s"`, databaseName))
+			dbJob.runOnVMAndSucceed(fmt.Sprintf(`/var/vcap/packages/postgres-9.4/bin/dropdb -U bosh "%s"`, databaseName))
 			dbJob.runOnVMAndSucceed(fmt.Sprintf("rm -rf %s %s", configPath, dbDumpPath))
 		})
 
 		It("backs up the Postgres database", func() {
-			dbJob.runOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
+			dbJob.runOnVMAndSucceed(
+				fmt.Sprintf(
+					"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+					dbDumpPath,
+					configPath,
+				),
+			)
 			dbJob.runOnVMAndSucceed(fmt.Sprintf("ls -l %s", dbDumpPath))
 		})
 	})
@@ -74,13 +82,13 @@ var _ = Describe("postgres-backup", func() {
 
 		BeforeEach(func() {
 			brJob = JobInstance{
-				deployment:    "postgres-dev",
+				deployment:    "postgres-9.4-dev",
 				instance:      "database-backup-restorer",
 				instanceIndex: "0",
 			}
 
 			dbJob = JobInstance{
-				deployment:    "postgres-dev",
+				deployment:    "postgres-9.4-dev",
 				instance:      "postgres",
 				instanceIndex: "0",
 			}
@@ -97,7 +105,8 @@ var _ = Describe("postgres-backup", func() {
 			)
 
 			Expect(brJob.RunOnInstance(fmt.Sprintf("rm -rf /tmp/config.json %s", expectFilename))).To(gexec.Exit(0))
-			Expect(brJob.RunOnInstance(fmt.Sprintf("echo '%s' >> /tmp/config.json", configJson))).To(gexec.Exit(0))
+			Expect(brJob.RunOnInstance(
+				fmt.Sprintf("echo '%s' >> /tmp/config.json", configJson))).To(gexec.Exit(0))
 
 			Expect(brJob.RunOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config /tmp/config.json", expectFilename))).To(gexec.Exit(0))
 			Expect(brJob.RunOnInstance(fmt.Sprintf("ls -l %s", expectFilename))).To(gexec.Exit(0))
