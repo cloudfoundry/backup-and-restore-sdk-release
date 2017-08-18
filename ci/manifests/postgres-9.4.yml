@@ -41,8 +41,6 @@ instance_groups:
   jobs:
   - name: postgres-9.4
     release: bosh
-  - name: database-backup-restorer
-    release: backup-and-restore-sdk
   azs: [lite]
   properties:
     postgres:

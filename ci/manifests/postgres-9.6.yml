@@ -41,11 +41,12 @@ instance_groups:
   jobs:
   - name: postgres
     release: postgres
-  - name: database-backup-restorer
-    release: backup-and-restore-sdk
   azs: [lite]
   properties:
     databases:
+      roles:
+      - name: test_user
+        password: ((db-password)
       port: 5432
 - name: database-backup-restorer
   instances: 1
