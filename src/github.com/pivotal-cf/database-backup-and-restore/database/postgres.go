@@ -89,10 +89,10 @@ func pgdump96(config Config, artifactFilePath string) *exec.Cmd {
 }
 
 func (a postgresAdapter) Restore(config Config, artifactFilePath string) *exec.Cmd {
-	pgRestorePath, pgRestorePathVariableSet := os.LookupEnv("PG_RESTORE_9_6_PATH")
+	pgRestorePath, pgRestorePathVariableSet := os.LookupEnv("PG_RESTORE_9_4_PATH")
 
 	if !pgRestorePathVariableSet {
-		log.Fatalln("PG_RESTORE_9_6_PATH must be set")
+		log.Fatalln("PG_RESTORE_9_4_PATH must be set")
 	}
 
 	cmd := exec.Command(pgRestorePath,

@@ -101,10 +101,10 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				configGenerator: validPgConfig,
 				expectedOutput:  "PG_DUMP_9_4_PATH must be set",
 			}),
-			Entry("PG_RESTORE_9_6_PATH is not set", TestEntry{
+			Entry("PG_RESTORE_9_4_PATH is not set", TestEntry{
 				arguments:       "--restore --artifact-file /foo --config %s",
 				configGenerator: validPgConfig,
-				expectedOutput:  "PG_RESTORE_9_6_PATH must be set",
+				expectedOutput:  "PG_RESTORE_9_4_PATH must be set",
 			}),
 			Entry("MYSQL_DUMP_PATH is not set", TestEntry{
 				arguments:       "--backup --artifact-file /foo --config %s",
@@ -512,7 +512,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 
 			JustBeforeEach(func() {
 				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
-				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_RESTORE_9_6_PATH=%s", fakeRestore.Path))
+				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_RESTORE_9_4_PATH=%s", fakeRestore.Path))
 
 				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).ToNot(HaveOccurred())
