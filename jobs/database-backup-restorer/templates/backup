@@ -18,7 +18,10 @@
 
 set -e
 
-export PG_DUMP_PATH="/var/vcap/packages/database-backup-restorer-postgres-9.4/bin/pg_dump"
+export PG_DUMP_9_4_PATH="/var/vcap/packages/database-backup-restorer-postgres-9.4/bin/pg_dump"
+export PG_DUMP_9_6_PATH="/var/vcap/packages/database-backup-restorer-postgres-9.6/bin/pg_dump"
+export PG_CLIENT_PATH="/var/vcap/packages/database-backup-restorer-postgres-9.6/psql"
+
 export MYSQL_DUMP_PATH="/var/vcap/packages/database-backup-restorer-mysql/bin/mysqldump"
 export MYSQL_CLIENT_PATH="/var/vcap/packages/database-backup-restorer-mysql/bin/mysql"
 

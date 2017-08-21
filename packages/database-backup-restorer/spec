@@ -22,3 +22,4 @@ dependencies:
 
 files:
 - github.com/pivotal-cf/database-backup-and-restore/cmd/database-backup-restore/main.go
+- github.com/pivotal-cf/database-backup-and-restore/cmd/database-backup-restore/database/*

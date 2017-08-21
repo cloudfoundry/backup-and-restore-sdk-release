@@ -95,15 +95,15 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				configGenerator: validPgConfig,
 				expectedOutput:  "Missing --artifact-file flag",
 			}),
-			Entry("PG_DUMP_PATH is not set", TestEntry{
+			Entry("PG_DUMP_9_4_PATH is not set", TestEntry{
 				arguments:       "--backup --artifact-file /foo --config %s",
 				configGenerator: validPgConfig,
-				expectedOutput:  "PG_DUMP_PATH must be set",
+				expectedOutput:  "PG_DUMP_9_4_PATH must be set",
 			}),
-			Entry("PG_RESTORE_PATH is not set", TestEntry{
+			Entry("PG_RESTORE_9_4_PATH is not set", TestEntry{
 				arguments:       "--restore --artifact-file /foo --config %s",
 				configGenerator: validPgConfig,
-				expectedOutput:  "PG_RESTORE_PATH must be set",
+				expectedOutput:  "PG_RESTORE_9_4_PATH must be set",
 			}),
 			Entry("MYSQL_DUMP_PATH is not set", TestEntry{
 				arguments:       "--backup --artifact-file /foo --config %s",
@@ -292,15 +292,34 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				adapter = "postgres"
 				fakeDump = binmock.NewBinMock(Fail)
 				fakeDump.WhenCalled().WillExitWith(0)
+
+				fakeClient = binmock.NewBinMock(Fail)
+				fakeClient.WhenCalled().WillExitWith(0)
 			})
 
 			JustBeforeEach(func() {
 				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
-				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_DUMP_PATH=%s", fakeDump.Path))
+				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_DUMP_9_4_PATH=%s", fakeDump.Path))
+				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_CLIENT_PATH=%s", fakeClient.Path))
 
 				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).ToNot(HaveOccurred())
 				Eventually(session).Should(gexec.Exit())
+			})
+
+			XIt("calls psql with the correct arguments", func() {
+				expectedArgs := []string{
+					"--tuples-only",
+					fmt.Sprintf("--username=%s", username),
+					fmt.Sprintf("--host=%s", host),
+					fmt.Sprintf("--port=%d", port),
+					databaseName,
+					`--command="SELECT VERSION();"`,
+				}
+
+				Expect(fakeClient.Invocations()).To(HaveLen(1))
+				Expect(fakeClient.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+				Expect(fakeClient.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 			})
 
 			It("calls pg_dump with the correct arguments", func() {
@@ -426,7 +445,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 
 			JustBeforeEach(func() {
 				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
-				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_RESTORE_PATH=%s", fakeRestore.Path))
+				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_RESTORE_9_4_PATH=%s", fakeRestore.Path))
 
 				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).ToNot(HaveOccurred())
