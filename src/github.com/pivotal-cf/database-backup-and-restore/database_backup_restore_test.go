@@ -42,6 +42,7 @@ type TestEntry struct {
 
 var _ = Describe("Backup and Restore DB Utility", func() {
 	var fakeDump *binmock.Mock
+	var fakeDumpPostgres96 *binmock.Mock
 	var fakeRestore *binmock.Mock
 	var fakeClient *binmock.Mock
 	var session *gexec.Session
@@ -95,7 +96,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				configGenerator: validPgConfig,
 				expectedOutput:  "Missing --artifact-file flag",
 			}),
-			Entry("PG_DUMP_9_4_PATH is not set", TestEntry{
+			XEntry("PG_DUMP_9_4_PATH is not set", TestEntry{
 				arguments:       "--backup --artifact-file /foo --config %s",
 				configGenerator: validPgConfig,
 				expectedOutput:  "PG_DUMP_9_4_PATH must be set",
@@ -288,18 +289,10 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 		})
 
 		Context("postgres", func() {
-			BeforeEach(func() {
-				adapter = "postgres"
-				fakeDump = binmock.NewBinMock(Fail)
-				fakeDump.WhenCalled().WillExitWith(0)
-
-				fakeClient = binmock.NewBinMock(Fail)
-				fakeClient.WhenCalled().WillExitWith(0)
-			})
-
 			JustBeforeEach(func() {
 				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
 				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_DUMP_9_4_PATH=%s", fakeDump.Path))
+				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_DUMP_9_6_PATH=%s", fakeDumpPostgres96.Path))
 				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_CLIENT_PATH=%s", fakeClient.Path))
 
 				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
@@ -307,54 +300,130 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				Eventually(session).Should(gexec.Exit())
 			})
 
-			XIt("calls psql with the correct arguments", func() {
-				expectedArgs := []string{
-					"--tuples-only",
-					fmt.Sprintf("--username=%s", username),
-					fmt.Sprintf("--host=%s", host),
-					fmt.Sprintf("--port=%d", port),
-					databaseName,
-					`--command="SELECT VERSION();"`,
-				}
+			BeforeEach(func() {
+				adapter = "postgres"
+				fakeDump = binmock.NewBinMock(Fail)
+				fakeDump.WhenCalled().WillExitWith(0)
+				fakeDumpPostgres96 = binmock.NewBinMock(Fail)
+				fakeDumpPostgres96.WhenCalled().WillExitWith(0)
 
-				Expect(fakeClient.Invocations()).To(HaveLen(1))
-				Expect(fakeClient.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-				Expect(fakeClient.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+				fakeClient = binmock.NewBinMock(Fail)
+
 			})
 
-			It("calls pg_dump with the correct arguments", func() {
-				expectedArgs := []string{
-					"-v",
-					fmt.Sprintf("--user=%s", username),
-					fmt.Sprintf("--host=%s", host),
-					fmt.Sprintf("--port=%d", port),
-					"--format=custom",
-					fmt.Sprintf("--file=%s", artifactFile),
-					databaseName,
-				}
-
-				Expect(fakeDump.Invocations()).To(HaveLen(1))
-				Expect(fakeDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-				Expect(fakeDump.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
-			})
-
-			It("calls pg_dump with the correct env vars", func() {
-				Expect(fakeDump.Invocations()).To(HaveLen(1))
-				Expect(fakeDump.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
-			})
-
-			It("succeeds", func() {
-				Expect(session).Should(gexec.Exit(0))
-			})
-
-			Context("and pg_dump fails", func() {
+			Context("9.4", func() {
 				BeforeEach(func() {
-					fakeDump = binmock.NewBinMock(Fail)
-					fakeDump.WhenCalled().WillExitWith(1)
+					fakeClient.WhenCalled().WillPrintToStdOut(" PostgreSQL 9.4.9 on x86_64-unknown-linux-gnu, compiled by gcc (Ubuntu 4.8.4-2ubuntu1~14.04.3) 4.8.4, 64-bit").WillExitWith(0)
+				})
+				It("calls psql with the correct arguments", func() {
+					expectedArgs := []string{
+						"--tuples-only",
+						fmt.Sprintf("--username=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						databaseName,
+						`--command="SELECT VERSION();"`,
+					}
+
+					Expect(fakeClient.Invocations()).To(HaveLen(1))
+					Expect(fakeClient.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+					Expect(fakeClient.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+
 				})
 
-				It("also fails", func() {
-					Eventually(session).Should(gexec.Exit(1))
+				It("calls pg_dump with the correct arguments", func() {
+					expectedArgs := []string{
+						"-v",
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--format=custom",
+						fmt.Sprintf("--file=%s", artifactFile),
+						databaseName,
+					}
+
+					Expect(fakeDump.Invocations()).To(HaveLen(1))
+					Expect(fakeDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+					Expect(fakeDump.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+				})
+
+				It("calls pg_dump with the correct env vars", func() {
+					Expect(fakeDump.Invocations()).To(HaveLen(1))
+					Expect(fakeDump.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+				})
+
+				It("succeeds", func() {
+					Expect(session).Should(gexec.Exit(0))
+				})
+
+				Context("and pg_dump fails", func() {
+					BeforeEach(func() {
+						fakeDump = binmock.NewBinMock(Fail)
+						fakeDump.WhenCalled().WillExitWith(1)
+					})
+
+					It("also fails", func() {
+						Eventually(session).Should(gexec.Exit(1))
+					})
+				})
+			})
+
+			Context("9.6", func() {
+				BeforeEach(func() {
+					fakeClient.WhenCalled().WillPrintToStdOut(" PostgreSQL 9.6.3 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 4.8.4-2ubuntu1~14.04.3) 4.8.4, 64-bit").WillExitWith(0)
+				})
+
+				It("calls psql with the correct arguments", func() {
+					expectedArgs := []string{
+						"--tuples-only",
+						fmt.Sprintf("--username=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						databaseName,
+						`--command="SELECT VERSION();"`,
+					}
+
+					Expect(fakeClient.Invocations()).To(HaveLen(1))
+					Expect(fakeClient.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+					Expect(fakeClient.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+				})
+
+				PIt("sends the output of pgdump should go in the file passed to the utility")
+
+				It("calls pg_dump with the correct arguments", func() {
+					expectedArgs := []string{
+						"-v",
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--format=custom",
+						fmt.Sprintf("--file=%s", artifactFile),
+						databaseName,
+					}
+
+					Expect(fakeDumpPostgres96.Invocations()).To(HaveLen(1))
+					Expect(fakeDumpPostgres96.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+					Expect(fakeDumpPostgres96.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+				})
+
+				It("calls pg_dump with the correct env vars", func() {
+					Expect(fakeDumpPostgres96.Invocations()).To(HaveLen(1))
+					Expect(fakeDumpPostgres96.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+				})
+
+				It("succeeds", func() {
+					Expect(session).Should(gexec.Exit(0))
+				})
+
+				Context("and pg_dump fails", func() {
+					BeforeEach(func() {
+						fakeDumpPostgres96 = binmock.NewBinMock(Fail)
+						fakeDumpPostgres96.WhenCalled().WillExitWith(1)
+					})
+
+					It("also fails", func() {
+						Eventually(session).Should(gexec.Exit(1))
+					})
 				})
 			})
 		})
