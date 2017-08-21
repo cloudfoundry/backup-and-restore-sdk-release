@@ -20,7 +20,7 @@ set -e
 
 export PG_RESTORE_9_4_PATH="/var/vcap/packages/database-backup-restorer-postgres-9.4/bin/pg_restore"
 export PG_RESTORE_9_6_PATH="/var/vcap/packages/database-backup-restorer-postgres-9.6/bin/pg_restore"
-export PG_CLIENT_PATH="/var/vcap/packages/database-backup-restorer-postgres-9.6/psql"
+export PG_CLIENT_PATH="/var/vcap/packages/database-backup-restorer-postgres-9.6/bin/psql"
 
 export MYSQL_CLIENT_PATH="/var/vcap/packages/database-backup-restorer-mysql/bin/mysql"
 

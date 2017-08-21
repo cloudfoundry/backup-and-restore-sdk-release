@@ -25,7 +25,7 @@ func parseFromString(stringVersion string) (semanticVersion, error) {
 	versionNums := strings.Split(stringVersion, ".")
 
 	if len(versionNums) != 3 {
-		return semanticVersion{}, fmt.Errorf("can't parse semver %s", stringVersion)
+		return semanticVersion{}, fmt.Errorf(`can't parse semver "%s"`, stringVersion)
 	}
 
 	semVer := semanticVersion{

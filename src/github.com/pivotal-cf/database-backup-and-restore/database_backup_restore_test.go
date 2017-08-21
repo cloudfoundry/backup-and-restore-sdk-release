@@ -322,7 +322,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 						fmt.Sprintf("--host=%s", host),
 						fmt.Sprintf("--port=%d", port),
 						databaseName,
-						`--command="SELECT VERSION();"`,
+						`--command=SELECT VERSION()`,
 					}
 
 					Expect(fakeClient.Invocations()).To(HaveLen(1))
@@ -380,15 +380,13 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 						fmt.Sprintf("--host=%s", host),
 						fmt.Sprintf("--port=%d", port),
 						databaseName,
-						`--command="SELECT VERSION();"`,
+						`--command=SELECT VERSION()`,
 					}
 
 					Expect(fakeClient.Invocations()).To(HaveLen(1))
 					Expect(fakeClient.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
 					Expect(fakeClient.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 				})
-
-				PIt("sends the output of pgdump should go in the file passed to the utility")
 
 				It("calls pg_dump with the correct arguments", func() {
 					expectedArgs := []string{

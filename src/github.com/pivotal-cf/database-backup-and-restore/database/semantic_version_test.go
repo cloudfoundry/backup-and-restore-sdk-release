@@ -29,12 +29,12 @@ var _ = Describe("SemanticVersion", func() {
 
 		It("fails if string has 4 parts", func() {
 			_, err := parseFromString("1.2.4.4")
-			Expect(err).To(MatchError("can't parse semver 1.2.4.4"))
+			Expect(err).To(MatchError(`can't parse semver "1.2.4.4"`))
 		})
 
 		It("fails if string has 2 parts", func() {
 			_, err := parseFromString("1.2")
-			Expect(err).To(MatchError("can't parse semver 1.2"))
+			Expect(err).To(MatchError(`can't parse semver "1.2"`))
 		})
 	})
 

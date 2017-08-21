@@ -36,14 +36,14 @@ func ispg94(config Config) bool {
 		fmt.Sprintf("--host=%s", config.Host),
 		fmt.Sprintf("--port=%d", config.Port),
 		config.Database,
-		`--command="SELECT VERSION();"`,
+		`--command=SELECT VERSION()`,
 	)
 	cmd.Env = append(cmd.Env, "PGPASSWORD="+config.Password)
 	cmd.Stdout = &outb
 	cmd.Stderr = &errb
 	err := cmd.Run()
 	if err != nil {
-		log.Fatalln("Unable to check version of Postgres: %s", cmd.Stderr)
+		log.Fatalf("Unable to check version of Postgres: %v\n%s", err, errb.String())
 	}
 
 	version, _ := PostgresVersionParser(outb.String())
