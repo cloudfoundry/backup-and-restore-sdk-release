@@ -33,7 +33,7 @@ stemcells:
 instance_groups:
 - name: mysql
   instances: 1
-  vm_type: container
+  vm_type: small
   persistent_disk_type: fifty
   stemcell: trusty
   update:
@@ -60,7 +60,7 @@ instance_groups:
 
 - name: database-backup-restorer
   instances: 1
-  vm_type: container
+  vm_type: small
   persistent_disk_type: fifty
   stemcell: trusty
   networks:

@@ -33,7 +33,7 @@ stemcells:
 instance_groups:
 - name: postgres
   instances: 1
-  vm_type: container
+  vm_type: small
   persistent_disk_type: fifty
   stemcell: trusty
   networks:
@@ -50,7 +50,7 @@ instance_groups:
       port: 5432
 - name: database-backup-restorer
   instances: 1
-  vm_type: container
+  vm_type: small
   persistent_disk_type: fifty
   stemcell: trusty
   networks:
