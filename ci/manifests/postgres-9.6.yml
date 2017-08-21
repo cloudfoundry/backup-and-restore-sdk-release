@@ -41,7 +41,7 @@ instance_groups:
   jobs:
   - name: postgres
     release: postgres
-  azs: [lite]
+  azs: [z1]
   properties:
     databases:
       roles:
@@ -58,7 +58,7 @@ instance_groups:
   jobs:
   - name: database-backup-restorer
     release: backup-and-restore-sdk
-  azs: [lite]
+  azs: [z1]
 
 update:
   canaries: 1

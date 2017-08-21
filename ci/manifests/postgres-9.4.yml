@@ -41,7 +41,7 @@ instance_groups:
   jobs:
   - name: postgres-9.4
     release: bosh
-  azs: [lite]
+  azs: [z1]
   properties:
     postgres:
       user: test_user
@@ -57,7 +57,7 @@ instance_groups:
   jobs:
   - name: database-backup-restorer
     release: backup-and-restore-sdk
-  azs: [lite]
+  azs: [z1]
 
 update:
   canaries: 1
