@@ -64,12 +64,11 @@ func forDeployment(deploymentName string) string {
 
 func getSSHCommand(instanceName, instanceIndex string) string {
 	return fmt.Sprintf(
-		"ssh --gw-user=%s --gw-host=%s --gw-private-key=%s %s/%s",
+		"ssh --gw-user=%s --gw-host=%s --gw-private-key=%s %s",
 		MustHaveEnv("BOSH_GATEWAY_USER"),
 		MustHaveEnv("BOSH_GATEWAY_HOST"),
 		MustHaveEnv("BOSH_GATEWAY_KEY"),
 		instanceName,
-		instanceIndex,
 	)
 }
 
