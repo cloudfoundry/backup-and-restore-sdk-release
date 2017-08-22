@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 
 # Copyright (C) 2017-Present Pivotal Software, Inc. All rights reserved.
