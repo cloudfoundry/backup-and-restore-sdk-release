@@ -1,6 +1,6 @@
 # Backup and Restore SDK BOSH release
 
-A SDK BOSH release used to backup and restore databases for BOSH deployed Cloud Foundry components
+A SDK BOSH release used to backup and restore databases for BOSH deployed Cloud Foundry components.
 
 * [Release Author Guide](http://www.boshbackuprestore.io/bosh-backup-and-restore/release_author_guide.html)
 
@@ -73,6 +73,8 @@ In your release restore script, call `database-backup-restorer/bin/restore`:
 ```bash
 /var/vcap/jobs/database-backup-restorer/bin/restore --config /path/to/config.json --artifact-file $BBR_ARTIFACT_DIRECTORY/artifactFile
 ```
+
+The `restore` script will assume that the database schema has already been created, and matches the one of the backup. For BOSH releases, this usually means `restore` can be called after a successful deploy of the release, at the same version as the backup was taken.
 
 #### Usage with [bbr](https://github.com/cloudfoundry-incubator/bosh-backup-and-restore)
 
