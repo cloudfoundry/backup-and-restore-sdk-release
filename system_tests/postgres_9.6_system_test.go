@@ -55,6 +55,8 @@ var _ = Describe("postgres-9.6", func() {
 				postgresPackage, databaseName))
 		dbJob.runPostgresSqlCommand("CREATE TABLE people (name varchar);", databaseName, postgresPackage)
 		dbJob.runPostgresSqlCommand("INSERT INTO people VALUES ('Derik');", databaseName, postgresPackage)
+		dbJob.runPostgresSqlCommand("CREATE TABLE places (name varchar);", databaseName, postgresPackage)
+		dbJob.runPostgresSqlCommand("INSERT INTO places VALUES ('London');", databaseName, postgresPackage)
 
 		configPath = "/tmp/config.json" + strconv.FormatInt(time.Now().Unix(), 10)
 		dbDumpPath = "/tmp/sql_dump" + strconv.FormatInt(time.Now().Unix(), 10)
@@ -85,6 +87,7 @@ var _ = Describe("postgres-9.6", func() {
 			brJob.runOnVMAndSucceed(fmt.Sprintf("ls -l %s", dbDumpPath))
 
 			dbJob.runPostgresSqlCommand("UPDATE people SET NAME = 'Dave';", databaseName, postgresPackage)
+			dbJob.runPostgresSqlCommand("UPDATE places SET NAME = 'Rome';", databaseName, postgresPackage)
 
 			brJob.runOnVMAndSucceed(
 				fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
@@ -92,6 +95,8 @@ var _ = Describe("postgres-9.6", func() {
 
 			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM people;", databaseName, postgresPackage)).To(gbytes.Say("Derik"))
 			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM people;", databaseName, postgresPackage)).NotTo(gbytes.Say("Dave"))
+			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM places;", databaseName, postgresPackage)).To(gbytes.Say("London"))
+			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM places;", databaseName, postgresPackage)).NotTo(gbytes.Say("Rome"))
 		})
 	})
 })
