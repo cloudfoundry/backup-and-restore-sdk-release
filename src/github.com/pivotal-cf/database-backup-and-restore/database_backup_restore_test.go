@@ -208,7 +208,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				Expect(session).Should(gexec.Exit(0))
 			})
 
-			Context("and mysqldump fails", func() {
+			Context("when mysqldump fails", func() {
 				BeforeEach(func() {
 					fakeDump = binmock.NewBinMock(Fail)
 					fakeDump.WhenCalled().WillExitWith(1)
@@ -219,7 +219,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				})
 			})
 
-			Context("mysqldump has a different major version than the server", func() {
+			Context("when mysqldump has a different major version than the server", func() {
 				BeforeEach(func() {
 					fakeClient = binmock.NewBinMock(Fail)
 					fakeClient.WhenCalledWith(
@@ -239,7 +239,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				})
 			})
 
-			Context("mysqldump has a different minor version than the server", func() {
+			Context("when mysqldump has a different minor version than the server", func() {
 				BeforeEach(func() {
 					fakeClient = binmock.NewBinMock(Fail)
 					fakeClient.WhenCalledWith(
@@ -259,7 +259,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				})
 			})
 
-			Context("mysqldump has a different patch version than the server", func() {
+			Context("when mysqldump has a different patch version than the server", func() {
 				BeforeEach(func() {
 					fakeClient = binmock.NewBinMock(Fail)
 					fakeClient.WhenCalledWith(

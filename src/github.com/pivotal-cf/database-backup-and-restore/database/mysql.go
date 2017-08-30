@@ -61,10 +61,10 @@ func (a mysqlAdapter) Backup(config Config, artifactFilePath string) *exec.Cmd {
 		"-v",
 		"--single-transaction",
 		"--skip-add-locks",
-		"--user="+config.Username,
-		"--host="+config.Host,
+		"--user=" + config.Username,
+		"--host=" + config.Host,
 		fmt.Sprintf("--port=%d", config.Port),
-		"--result-file="+artifactFilePath,
+		"--result-file=" + artifactFilePath,
 		config.Database,
 	)
 	cmd.Env = append(cmd.Env, "MYSQL_PWD="+config.Password)
