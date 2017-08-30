@@ -27,7 +27,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("mysql-restore", func() {
+var _ = Describe("mysql", func() {
 	var dbDumpPath string
 	var configPath string
 	var databaseName string
@@ -37,10 +37,9 @@ var _ = Describe("mysql-restore", func() {
 		configPath = "/tmp/config.json" + strconv.FormatInt(time.Now().Unix(), 10)
 		dbDumpPath = "/tmp/sql_dump" + strconv.FormatInt(time.Now().Unix(), 10)
 		databaseName = "db" + strconv.FormatInt(time.Now().Unix(), 10)
-
 	})
 
-	Context("backups a database", func() {
+	Context("when the mysql server version matches", func() {
 		BeforeEach(func() {
 			brJob = JobInstance{
 				deployment:    "mysql-dev",
@@ -58,14 +57,12 @@ var _ = Describe("mysql-restore", func() {
 			dbJob.runMysqlSqlCommand("CREATE TABLE people (name varchar(255));", databaseName)
 			dbJob.runMysqlSqlCommand("INSERT INTO people VALUES ('Derik');", databaseName)
 
-			ip := dbJob.getIPOfInstance()
 			configJson := fmt.Sprintf(
 				`{"username":"root","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql"}`,
 				MustHaveEnv("MYSQL_PASSWORD"),
-				ip,
+				dbJob.getIPOfInstance(),
 				databaseName,
 			)
-
 			brJob.RunOnInstance(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 		})
 
@@ -74,7 +71,7 @@ var _ = Describe("mysql-restore", func() {
 			brJob.RunOnInstance(fmt.Sprintf("rm -rf %s %s", configPath, dbDumpPath))
 		})
 
-		It("restores the MySQL database", func() {
+		It("backs up and restores the database", func() {
 			backupSession := brJob.RunOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
 			Expect(backupSession).To(gexec.Exit(0))
 
@@ -88,7 +85,7 @@ var _ = Describe("mysql-restore", func() {
 		})
 	})
 
-	Context("mysql server is different version", func() {
+	Context("when the mysql server version doesn't match", func() {
 		BeforeEach(func() {
 			brJob = JobInstance{
 				deployment:    "mysql-dev-old",
