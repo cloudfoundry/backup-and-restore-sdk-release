@@ -33,11 +33,10 @@ import (
 	"github.com/pivotal-cf-experimental/go-binmock"
 )
 
-type GeneratorFunction func() (string, error)
 type TestEntry struct {
 	arguments       string
 	expectedOutput  string
-	configGenerator GeneratorFunction
+	configGenerator func() (string, error)
 }
 
 var _ = Describe("Backup and Restore DB Utility", func() {
