@@ -17,6 +17,7 @@
 package database_backup_and_restore
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -50,14 +51,20 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 	var port = 1234
 	var databaseName = "mycooldb"
 	var password = "password"
-	var adapter string
 	var artifactFile string
 	var path string
 	var err error
+	var configFile *os.File
 
 	BeforeEach(func() {
 		path, err = gexec.Build("github.com/pivotal-cf/database-backup-and-restore/cmd/database-backup-restore")
 		Expect(err).NotTo(HaveOccurred())
+
+		artifactFile = tempFilePath()
+	})
+
+	AfterEach(func() {
+		os.Remove(artifactFile)
 	})
 
 	Context("incorrect cli usage", func() {
@@ -138,38 +145,22 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 	})
 
 	Context("--backup", func() {
-		var configFile *os.File
-		var cmdActionFlag = "--backup"
-
-		JustBeforeEach(func() {
-			artifactFile = tempFilePath()
-			configFile, err = ioutil.TempFile(os.TempDir(), time.Now().String())
-			Expect(err).NotTo(HaveOccurred())
-			fmt.Fprintf(
-				configFile,
-				`{"username":"%s","password":"%s","host":"%s","port":%d,"database":"%s","adapter":"%s"}`,
-				username,
-				password,
-				host,
-				port,
-				databaseName,
-				adapter,
-			)
-		})
-
-		AfterEach(func() {
-			os.Remove(artifactFile)
-		})
-
 		Context("mysql", func() {
 			BeforeEach(func() {
-				adapter = "mysql"
+				configFile = buildConfigFile(Config{
+					Adapter:  "mysql",
+					Username: username,
+					Password: password,
+					Host:     host,
+					Port:     port,
+					Database: databaseName,
+				})
+
 				fakeDump = binmock.NewBinMock(Fail)
 				fakeDump.WhenCalledWith("-V").WillPrintToStdOut("mysqldump  Ver 10.16 Distrib 10.1.24-MariaDB, for Linux (x86_64)")
 				fakeDump.WhenCalled().WillExitWith(0)
 
 				fakeClient = binmock.NewBinMock(Fail)
-				// fakeClient.WhenCalled().WillPrintToStdOut("10.1.24-MariaDB-wsrep")
 				fakeClient.WhenCalledWith("--skip-column-names",
 					"--silent",
 					fmt.Sprintf("--user=%s", username),
@@ -180,7 +171,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 			})
 
 			JustBeforeEach(func() {
-				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
+				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), "--backup")
 				cmd.Env = append(cmd.Env, fmt.Sprintf("MYSQL_DUMP_PATH=%s", fakeDump.Path))
 				cmd.Env = append(cmd.Env, fmt.Sprintf("MYSQL_CLIENT_PATH=%s", fakeClient.Path))
 
@@ -289,7 +280,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 
 		Context("postgres", func() {
 			JustBeforeEach(func() {
-				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
+				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), "--backup")
 				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_DUMP_9_4_PATH=%s", fakeDump.Path))
 				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_DUMP_9_6_PATH=%s", fakeDumpPostgres96.Path))
 				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_CLIENT_PATH=%s", fakeClient.Path))
@@ -300,20 +291,28 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 			})
 
 			BeforeEach(func() {
-				adapter = "postgres"
+				configFile = buildConfigFile(Config{
+					Adapter:  "postgres",
+					Username: username,
+					Password: password,
+					Host:     host,
+					Port:     port,
+					Database: databaseName,
+				})
+
 				fakeDump = binmock.NewBinMock(Fail)
 				fakeDump.WhenCalled().WillExitWith(0)
 				fakeDumpPostgres96 = binmock.NewBinMock(Fail)
 				fakeDumpPostgres96.WhenCalled().WillExitWith(0)
 
 				fakeClient = binmock.NewBinMock(Fail)
-
 			})
 
 			Context("9.4", func() {
 				BeforeEach(func() {
 					fakeClient.WhenCalled().WillPrintToStdOut(" PostgreSQL 9.4.9 on x86_64-unknown-linux-gnu, compiled by gcc (Ubuntu 4.8.4-2ubuntu1~14.04.3) 4.8.4, 64-bit").WillExitWith(0)
 				})
+
 				It("calls psql with the correct arguments", func() {
 					expectedArgs := []string{
 						"--tuples-only",
@@ -327,7 +326,6 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 					Expect(fakeClient.Invocations()).To(HaveLen(1))
 					Expect(fakeClient.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
 					Expect(fakeClient.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
-
 				})
 
 				It("calls pg_dump with the correct arguments", func() {
@@ -427,32 +425,17 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 	})
 
 	Context("--restore", func() {
-		var configFile *os.File
-		var cmdActionFlag = "--restore"
-
-		JustBeforeEach(func() {
-			artifactFile = tempFilePath()
-			configFile, err = ioutil.TempFile(os.TempDir(), time.Now().String())
-			Expect(err).NotTo(HaveOccurred())
-			fmt.Fprintf(
-				configFile,
-				`{"username":"%s","password":"%s","host":"%s","port":%d,"database":"%s","adapter":"%s"}`,
-				username,
-				password,
-				host,
-				port,
-				databaseName,
-				adapter,
-			)
-		})
-
-		AfterEach(func() {
-			os.Remove(artifactFile)
-		})
-
 		Context("mysql", func() {
 			BeforeEach(func() {
-				adapter = "mysql"
+				configFile = buildConfigFile(Config{
+					Adapter:  "mysql",
+					Username: username,
+					Password: password,
+					Host:     host,
+					Port:     port,
+					Database: databaseName,
+				})
+
 				fakeRestore = binmock.NewBinMock(Fail)
 				fakeRestore.WhenCalled().WillExitWith(0)
 			})
@@ -463,7 +446,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 					log.Fatalln("Failed to write to artifact file, %s", err)
 				}
 
-				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
+				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), "--restore")
 				cmd.Env = append(cmd.Env, fmt.Sprintf("MYSQL_CLIENT_PATH=%s", fakeRestore.Path))
 
 				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
@@ -504,13 +487,21 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 
 		Context("postgres", func() {
 			BeforeEach(func() {
-				adapter = "postgres"
+				configFile = buildConfigFile(Config{
+					Adapter:  "postgres",
+					Username: username,
+					Password: password,
+					Host:     host,
+					Port:     port,
+					Database: databaseName,
+				})
+
 				fakeRestore = binmock.NewBinMock(Fail)
 				fakeRestore.WhenCalled().WillExitWith(0)
 			})
 
 			JustBeforeEach(func() {
-				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), cmdActionFlag)
+				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), "--restore")
 				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_RESTORE_9_4_PATH=%s", fakeRestore.Path))
 
 				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
@@ -600,4 +591,24 @@ func validPgConfig() (string, error) {
 		`{"username":"testuser","password":"password","host":"127.0.0.1","port":1234,"database":"mycooldb","adapter":"postgres"}`,
 	)
 	return validConfig.Name(), nil
+}
+
+type Config struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	Database string `json:"database"`
+	Adapter  string `json:"adapter"`
+}
+
+func buildConfigFile(config Config) *os.File {
+	configFile, err := ioutil.TempFile(os.TempDir(), time.Now().String())
+	Expect(err).NotTo(HaveOccurred())
+
+	encoder := json.NewEncoder(configFile)
+	err = encoder.Encode(config)
+	Expect(err).NotTo(HaveOccurred())
+
+	return configFile
 }
