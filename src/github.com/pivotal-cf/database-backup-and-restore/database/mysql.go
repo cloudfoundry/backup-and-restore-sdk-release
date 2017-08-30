@@ -57,7 +57,7 @@ func (a mysqlAdapter) Backup(config Config, artifactFilePath string) *exec.Cmd {
 			mysqlServerVersion)
 	}
 
-	cmd := exec.Command(mysqlDumpPath,
+	cmdArgs := []string{
 		"-v",
 		"--single-transaction",
 		"--skip-add-locks",
@@ -66,7 +66,10 @@ func (a mysqlAdapter) Backup(config Config, artifactFilePath string) *exec.Cmd {
 		fmt.Sprintf("--port=%d", config.Port),
 		"--result-file=" + artifactFilePath,
 		config.Database,
-	)
+	}
+	cmdArgs = append(cmdArgs, config.Tables...)
+
+	cmd := exec.Command(mysqlDumpPath, cmdArgs...)
 	cmd.Env = append(cmd.Env, "MYSQL_PWD="+config.Password)
 
 	return cmd

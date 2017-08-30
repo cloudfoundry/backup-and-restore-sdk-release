@@ -88,6 +88,37 @@ var _ = Describe("mysql", func() {
 			Expect(dbJob.runMysqlSqlCommand("SELECT name FROM places;", databaseName)).To(gbytes.Say("London"))
 			Expect(dbJob.runMysqlSqlCommand("SELECT name FROM places;", databaseName)).NotTo(gbytes.Say("Rome"))
 		})
+
+		Context("and 'tables' are specified in config", func() {
+			BeforeEach(func() {
+				configJson := fmt.Sprintf(
+					`{"username":"root","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["people"]}`,
+					MustHaveEnv("MYSQL_PASSWORD"),
+					dbJob.getIPOfInstance(),
+					databaseName,
+				)
+				brJob.RunOnInstance(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+			})
+
+			It("backs up and restores only the specified tables", func() {
+				backupSession := brJob.RunOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
+				Expect(backupSession).To(gexec.Exit(0))
+
+				dbJob.runMysqlSqlCommand("UPDATE people SET NAME = 'Dave';", databaseName)
+				dbJob.runMysqlSqlCommand("UPDATE places SET NAME = 'Rome';", databaseName)
+
+				testSession := brJob.RunOnInstance(fmt.Sprintf("cat %s", dbDumpPath))
+				Expect(testSession).To(gexec.Exit(0))
+
+				restoreSession := brJob.RunOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
+				Expect(restoreSession).To(gexec.Exit(0))
+
+				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM people;", databaseName)).To(gbytes.Say("Derik"))
+				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM people;", databaseName)).NotTo(gbytes.Say("Dave"))
+				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM places;", databaseName)).To(gbytes.Say("Rome"))
+				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM places;", databaseName)).NotTo(gbytes.Say("London"))
+			})
+		})
 	})
 
 	Context("when the mysql server version doesn't match", func() {

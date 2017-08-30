@@ -208,6 +208,47 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				Expect(session).Should(gexec.Exit(0))
 			})
 
+			Context("when 'tables' are specified in the configFile", func() {
+				BeforeEach(func() {
+					configFile = buildConfigFile(Config{
+						Adapter:  "mysql",
+						Username: username,
+						Password: password,
+						Host:     host,
+						Port:     port,
+						Database: databaseName,
+						Tables:   []string{"table1", "table2", "table3"},
+					})
+				})
+
+				It("calls mysqldump with the correct arguments", func() {
+					Expect(fakeDump.Invocations()).To(HaveLen(2))
+
+					By("first checking the version", func() {
+						Expect(fakeDump.Invocations()[0].Args()).Should(ConsistOf("-V"))
+					})
+
+					By("then calling dump", func() {
+						expectedArgs := []string{
+							"-v",
+							"--single-transaction",
+							"--skip-add-locks",
+							fmt.Sprintf("--user=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							fmt.Sprintf("--result-file=%s", artifactFile),
+							databaseName,
+							"table1",
+							"table2",
+							"table3",
+						}
+
+						Expect(fakeDump.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+						Expect(fakeDump.Invocations()[1].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					})
+				})
+			})
+
 			Context("when mysqldump fails", func() {
 				BeforeEach(func() {
 					fakeDump = binmock.NewBinMock(Fail)
@@ -594,12 +635,13 @@ func validPgConfig() (string, error) {
 }
 
 type Config struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	Database string `json:"database"`
-	Adapter  string `json:"adapter"`
+	Username string   `json:"username"`
+	Password string   `json:"password"`
+	Host     string   `json:"host"`
+	Port     int      `json:"port"`
+	Database string   `json:"database"`
+	Adapter  string   `json:"adapter"`
+	Tables   []string `json:"tables,omitempty"`
 }
 
 func buildConfigFile(config Config) *os.File {
