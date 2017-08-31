@@ -1,5 +1,5 @@
 hash: b536424c8da472c97f7a86c795c02e1fdf6e0626eedfb7e099b73c1300d54c63
-updated: 2017-07-25T12:22:16.060829711+01:00
+updated: 2017-08-31T13:58:41.056992359+01:00
 imports: []
 testImports:
 - name: github.com/onsi/ginkgo
@@ -40,7 +40,7 @@ testImports:
   - matchers/support/goraph/util
   - types
 - name: github.com/pivotal-cf-experimental/go-binmock
-  version: b0b1f2b60a119950c67513310af0fafff355aae5
+  version: 71f12403ea9554eeb68b5a494c83ab7f85876eec
 - name: golang.org/x/sys
   version: b90f89a1e7a9c1f6b918820b3daa7f08488c8594
   subpackages:
