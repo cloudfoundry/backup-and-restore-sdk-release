@@ -59,6 +59,7 @@ An example of templating using BOSH Links can be seen in the [cf networking rele
 #### Supported Database Adapters
 * `postgres`
 * `mysql`
+Note that these have been tested with internal databases only. 
 
 ### Usage
 
