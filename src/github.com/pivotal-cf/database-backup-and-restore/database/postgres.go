@@ -46,7 +46,7 @@ func ispg94(config Config) bool {
 		log.Fatalf("Unable to check version of Postgres: %v\n%s", err, errb.String())
 	}
 
-	version, _ := PostgresVersionParser(outb.String())
+	version, _ := ParsePostgresVersion(outb.String())
 
 	return semVer_9_4.MinorVersionMatches(version)
 }
@@ -92,7 +92,6 @@ func pgDump(pgDumpPath string, config Config, artifactFilePath string) *exec.Cmd
 
 func (a postgresAdapter) Restore(config Config, artifactFilePath string) *exec.Cmd {
 	pgRestorePath, pgRestorePathVariableSet := os.LookupEnv("PG_RESTORE_9_4_PATH")
-
 	if !pgRestorePathVariableSet {
 		log.Fatalln("PG_RESTORE_9_4_PATH must be set")
 	}

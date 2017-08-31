@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func PostgresVersionParser(str string) (semanticVersion, error) {
+func ParsePostgresVersion(str string) (semanticVersion, error) {
 	trimmed := strings.TrimSpace(str)
 	words := strings.Split(trimmed, " ")
 	if len(words) < 2 {
