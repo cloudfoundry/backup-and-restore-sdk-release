@@ -55,9 +55,9 @@ var _ = Describe("mysql", func() {
 
 			dbJob.runOnVMAndSucceed(fmt.Sprintf(`echo 'CREATE DATABASE %s;' | /var/vcap/packages/mariadb/bin/mysql -u root -h localhost --password='%s'`, databaseName, MustHaveEnv("MYSQL_PASSWORD")))
 			dbJob.runMysqlSqlCommand("CREATE TABLE people (name varchar(255));", databaseName)
-			dbJob.runMysqlSqlCommand("INSERT INTO people VALUES ('Derik');", databaseName)
+			dbJob.runMysqlSqlCommand("INSERT INTO people VALUES ('Old Person');", databaseName)
 			dbJob.runMysqlSqlCommand("CREATE TABLE places (name varchar(255));", databaseName)
-			dbJob.runMysqlSqlCommand("INSERT INTO places VALUES ('London');", databaseName)
+			dbJob.runMysqlSqlCommand("INSERT INTO places VALUES ('Old Place');", databaseName)
 
 			configJson := fmt.Sprintf(
 				`{"username":"root","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql"}`,
@@ -77,16 +77,16 @@ var _ = Describe("mysql", func() {
 			backupSession := brJob.RunOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
 			Expect(backupSession).To(gexec.Exit(0))
 
-			dbJob.runMysqlSqlCommand("UPDATE people SET NAME = 'Dave';", databaseName)
-			dbJob.runMysqlSqlCommand("UPDATE places SET NAME = 'Rome';", databaseName)
+			dbJob.runMysqlSqlCommand("UPDATE people SET NAME = 'New Person';", databaseName)
+			dbJob.runMysqlSqlCommand("UPDATE places SET NAME = 'New Place';", databaseName)
 
 			restoreSession := brJob.RunOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
 			Expect(restoreSession).To(gexec.Exit(0))
 
-			Expect(dbJob.runMysqlSqlCommand("SELECT name FROM people;", databaseName)).To(gbytes.Say("Derik"))
-			Expect(dbJob.runMysqlSqlCommand("SELECT name FROM people;", databaseName)).NotTo(gbytes.Say("Dave"))
-			Expect(dbJob.runMysqlSqlCommand("SELECT name FROM places;", databaseName)).To(gbytes.Say("London"))
-			Expect(dbJob.runMysqlSqlCommand("SELECT name FROM places;", databaseName)).NotTo(gbytes.Say("Rome"))
+			Expect(dbJob.runMysqlSqlCommand("SELECT name FROM people;", databaseName)).To(gbytes.Say("Old Person"))
+			Expect(dbJob.runMysqlSqlCommand("SELECT name FROM people;", databaseName)).NotTo(gbytes.Say("New Person"))
+			Expect(dbJob.runMysqlSqlCommand("SELECT name FROM places;", databaseName)).To(gbytes.Say("Old Place"))
+			Expect(dbJob.runMysqlSqlCommand("SELECT name FROM places;", databaseName)).NotTo(gbytes.Say("New Place"))
 		})
 
 		Context("and 'tables' are specified in config", func() {
@@ -104,8 +104,8 @@ var _ = Describe("mysql", func() {
 				backupSession := brJob.RunOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
 				Expect(backupSession).To(gexec.Exit(0))
 
-				dbJob.runMysqlSqlCommand("UPDATE people SET NAME = 'Dave';", databaseName)
-				dbJob.runMysqlSqlCommand("UPDATE places SET NAME = 'Rome';", databaseName)
+				dbJob.runMysqlSqlCommand("UPDATE people SET NAME = 'New Person';", databaseName)
+				dbJob.runMysqlSqlCommand("UPDATE places SET NAME = 'New Place';", databaseName)
 
 				testSession := brJob.RunOnInstance(fmt.Sprintf("cat %s", dbDumpPath))
 				Expect(testSession).To(gexec.Exit(0))
@@ -113,10 +113,10 @@ var _ = Describe("mysql", func() {
 				restoreSession := brJob.RunOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
 				Expect(restoreSession).To(gexec.Exit(0))
 
-				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM people;", databaseName)).To(gbytes.Say("Derik"))
-				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM people;", databaseName)).NotTo(gbytes.Say("Dave"))
-				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM places;", databaseName)).To(gbytes.Say("Rome"))
-				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM places;", databaseName)).NotTo(gbytes.Say("London"))
+				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM people;", databaseName)).To(gbytes.Say("Old Person"))
+				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM people;", databaseName)).NotTo(gbytes.Say("New Person"))
+				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM places;", databaseName)).To(gbytes.Say("New Place"))
+				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM places;", databaseName)).NotTo(gbytes.Say("Old Place"))
 			})
 		})
 	})

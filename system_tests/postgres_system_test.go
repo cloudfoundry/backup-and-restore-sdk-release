@@ -54,9 +54,9 @@ func PostgresTests(postgresPackage, postgresDeployment string) func() {
 				fmt.Sprintf(`/var/vcap/packages/%s/bin/createdb -U test_user "%s"`,
 					postgresPackage, databaseName))
 			dbJob.runPostgresSqlCommand("CREATE TABLE people (name varchar);", databaseName, postgresPackage)
-			dbJob.runPostgresSqlCommand("INSERT INTO people VALUES ('Derik');", databaseName, postgresPackage)
+			dbJob.runPostgresSqlCommand("INSERT INTO people VALUES ('Old Person');", databaseName, postgresPackage)
 			dbJob.runPostgresSqlCommand("CREATE TABLE places (name varchar);", databaseName, postgresPackage)
-			dbJob.runPostgresSqlCommand("INSERT INTO places VALUES ('London');", databaseName, postgresPackage)
+			dbJob.runPostgresSqlCommand("INSERT INTO places VALUES ('Old Place');", databaseName, postgresPackage)
 
 			configPath = "/tmp/config.json" + strconv.FormatInt(time.Now().Unix(), 10)
 			dbDumpPath = "/tmp/sql_dump" + strconv.FormatInt(time.Now().Unix(), 10)
@@ -85,17 +85,17 @@ func PostgresTests(postgresPackage, postgresDeployment string) func() {
 					configPath, dbDumpPath))
 			brJob.runOnVMAndSucceed(fmt.Sprintf("ls -l %s", dbDumpPath))
 
-			dbJob.runPostgresSqlCommand("UPDATE people SET NAME = 'Dave';", databaseName, postgresPackage)
-			dbJob.runPostgresSqlCommand("UPDATE places SET NAME = 'Rome';", databaseName, postgresPackage)
+			dbJob.runPostgresSqlCommand("UPDATE people SET NAME = 'New Person';", databaseName, postgresPackage)
+			dbJob.runPostgresSqlCommand("UPDATE places SET NAME = 'New Place';", databaseName, postgresPackage)
 
 			brJob.runOnVMAndSucceed(
 				fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
 					configPath, dbDumpPath))
 
-			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM people;", databaseName, postgresPackage)).To(gbytes.Say("Derik"))
-			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM people;", databaseName, postgresPackage)).NotTo(gbytes.Say("Dave"))
-			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM places;", databaseName, postgresPackage)).To(gbytes.Say("London"))
-			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM places;", databaseName, postgresPackage)).NotTo(gbytes.Say("Rome"))
+			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM people;", databaseName, postgresPackage)).To(gbytes.Say("Old Person"))
+			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM people;", databaseName, postgresPackage)).NotTo(gbytes.Say("New Person"))
+			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM places;", databaseName, postgresPackage)).To(gbytes.Say("Old Place"))
+			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM places;", databaseName, postgresPackage)).NotTo(gbytes.Say("New Place"))
 		})
 	}
 }
