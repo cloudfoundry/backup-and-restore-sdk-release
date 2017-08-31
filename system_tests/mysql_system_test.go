@@ -65,23 +65,21 @@ var _ = Describe("mysql", func() {
 				dbJob.getIPOfInstance(),
 				databaseName,
 			)
-			brJob.RunOnInstance(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+			brJob.runOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 		})
 
 		AfterEach(func() {
 			dbJob.runOnVMAndSucceed(fmt.Sprintf(`echo 'DROP DATABASE %s;' | /var/vcap/packages/mariadb/bin/mysql -u root -h localhost --password='%s'`, databaseName, MustHaveEnv("MYSQL_PASSWORD")))
-			brJob.RunOnInstance(fmt.Sprintf("rm -rf %s %s", configPath, dbDumpPath))
+			brJob.runOnVMAndSucceed(fmt.Sprintf("rm -rf %s %s", configPath, dbDumpPath))
 		})
 
 		It("backs up and restores the database", func() {
-			backupSession := brJob.RunOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
-			Expect(backupSession).To(gexec.Exit(0))
+			brJob.runOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
 
 			dbJob.runMysqlSqlCommand("UPDATE people SET NAME = 'New Person';", databaseName)
 			dbJob.runMysqlSqlCommand("UPDATE places SET NAME = 'New Place';", databaseName)
 
-			restoreSession := brJob.RunOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
-			Expect(restoreSession).To(gexec.Exit(0))
+			brJob.runOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
 
 			Expect(dbJob.runMysqlSqlCommand("SELECT name FROM people;", databaseName)).To(gbytes.Say("Old Person"))
 			Expect(dbJob.runMysqlSqlCommand("SELECT name FROM people;", databaseName)).NotTo(gbytes.Say("New Person"))
@@ -97,21 +95,18 @@ var _ = Describe("mysql", func() {
 					dbJob.getIPOfInstance(),
 					databaseName,
 				)
-				brJob.RunOnInstance(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+				brJob.runOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 			})
 
 			It("backs up and restores only the specified tables", func() {
-				backupSession := brJob.RunOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
-				Expect(backupSession).To(gexec.Exit(0))
+				brJob.runOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
 
 				dbJob.runMysqlSqlCommand("UPDATE people SET NAME = 'New Person';", databaseName)
 				dbJob.runMysqlSqlCommand("UPDATE places SET NAME = 'New Place';", databaseName)
 
-				testSession := brJob.RunOnInstance(fmt.Sprintf("cat %s", dbDumpPath))
-				Expect(testSession).To(gexec.Exit(0))
+				brJob.runOnVMAndSucceed(fmt.Sprintf("cat %s", dbDumpPath))
 
-				restoreSession := brJob.RunOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
-				Expect(restoreSession).To(gexec.Exit(0))
+				brJob.runOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
 
 				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM people;", databaseName)).To(gbytes.Say("Old Person"))
 				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM people;", databaseName)).NotTo(gbytes.Say("New Person"))
@@ -135,20 +130,17 @@ var _ = Describe("mysql", func() {
 				instanceIndex: "0",
 			}
 
-			ip := dbJob.getIPOfInstance()
 			configJson := fmt.Sprintf(
 				`{"username":"root","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql"}`,
 				MustHaveEnv("MYSQL_PASSWORD"),
-				ip,
+				dbJob.getIPOfInstance(),
 				databaseName,
 			)
-
-			brJob.RunOnInstance(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
-
+			brJob.runOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 		})
 
 		It("fails with a helpful message", func() {
-			backupSession := brJob.RunOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
+			backupSession := brJob.runOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
 			Expect(backupSession).To(gexec.Exit(1))
 			Expect(backupSession).To(gbytes.Say("Version mismatch"))
 		})

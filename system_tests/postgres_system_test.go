@@ -61,15 +61,13 @@ func PostgresTests(postgresPackage, postgresDeployment string) func() {
 			configPath = "/tmp/config.json" + strconv.FormatInt(time.Now().Unix(), 10)
 			dbDumpPath = "/tmp/sql_dump" + strconv.FormatInt(time.Now().Unix(), 10)
 
-			ip := dbJob.getIPOfInstance()
 			configJson := fmt.Sprintf(
 				`{"username":"test_user","password":"%s","host":"%s","port":5432,
 					"database":"%s","adapter":"postgres"}`,
 				MustHaveEnv("POSTGRES_PASSWORD"),
-				ip,
+				dbJob.getIPOfInstance(),
 				databaseName,
 			)
-
 			brJob.runOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 		})
 
