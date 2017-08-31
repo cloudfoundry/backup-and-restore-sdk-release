@@ -41,8 +41,9 @@ type TestEntry struct {
 }
 
 var _ = Describe("Backup and Restore DB Utility", func() {
-	var fakeDump94 *binmock.Mock
-	var fakeDump96 *binmock.Mock
+	var fakeMysqlDump *binmock.Mock
+	var fakePgDump94 *binmock.Mock
+	var fakePgDump96 *binmock.Mock
 	var fakeRestore *binmock.Mock
 	var fakeClient *binmock.Mock
 	var session *gexec.Session
@@ -156,9 +157,9 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 					Database: databaseName,
 				})
 
-				fakeDump94 = binmock.NewBinMock(Fail)
-				fakeDump94.WhenCalledWith("-V").WillPrintToStdOut("mysqldump  Ver 10.16 Distrib 10.1.24-MariaDB, for Linux (x86_64)")
-				fakeDump94.WhenCalled().WillExitWith(0)
+				fakeMysqlDump = binmock.NewBinMock(Fail)
+				fakeMysqlDump.WhenCalledWith("-V").WillPrintToStdOut("mysqldump  Ver 10.16 Distrib 10.1.24-MariaDB, for Linux (x86_64)")
+				fakeMysqlDump.WhenCalled().WillExitWith(0)
 
 				fakeClient = binmock.NewBinMock(Fail)
 				fakeClient.WhenCalledWith("--skip-column-names",
@@ -172,7 +173,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 
 			JustBeforeEach(func() {
 				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), "--backup")
-				cmd.Env = append(cmd.Env, fmt.Sprintf("MYSQL_DUMP_PATH=%s", fakeDump94.Path))
+				cmd.Env = append(cmd.Env, fmt.Sprintf("MYSQL_DUMP_PATH=%s", fakeMysqlDump.Path))
 				cmd.Env = append(cmd.Env, fmt.Sprintf("MYSQL_CLIENT_PATH=%s", fakeClient.Path))
 
 				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
@@ -181,10 +182,10 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 			})
 
 			It("calls mysqldump with the correct arguments", func() {
-				Expect(fakeDump94.Invocations()).To(HaveLen(2))
+				Expect(fakeMysqlDump.Invocations()).To(HaveLen(2))
 
 				By("first checking the version", func() {
-					Expect(fakeDump94.Invocations()[0].Args()).Should(ConsistOf("-V"))
+					Expect(fakeMysqlDump.Invocations()[0].Args()).Should(ConsistOf("-V"))
 				})
 
 				By("then calling dump", func() {
@@ -199,8 +200,8 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 						databaseName,
 					}
 
-					Expect(fakeDump94.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
-					Expect(fakeDump94.Invocations()[1].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					Expect(fakeMysqlDump.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+					Expect(fakeMysqlDump.Invocations()[1].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
 				})
 
 				Expect(session).Should(gexec.Exit(0))
@@ -235,15 +236,15 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 							"table3",
 						}
 
-						Expect(fakeDump94.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+						Expect(fakeMysqlDump.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
 					})
 				})
 			})
 
 			Context("when mysqldump fails", func() {
 				BeforeEach(func() {
-					fakeDump94 = binmock.NewBinMock(Fail)
-					fakeDump94.WhenCalled().WillExitWith(1)
+					fakeMysqlDump = binmock.NewBinMock(Fail)
+					fakeMysqlDump.WhenCalled().WillExitWith(1)
 				})
 
 				It("also fails", func() {
@@ -321,18 +322,18 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 					Database: databaseName,
 				})
 
-				fakeDump94 = binmock.NewBinMock(Fail)
-				fakeDump94.WhenCalled().WillExitWith(0)
-				fakeDump96 = binmock.NewBinMock(Fail)
-				fakeDump96.WhenCalled().WillExitWith(0)
+				fakePgDump94 = binmock.NewBinMock(Fail)
+				fakePgDump94.WhenCalled().WillExitWith(0)
+				fakePgDump96 = binmock.NewBinMock(Fail)
+				fakePgDump96.WhenCalled().WillExitWith(0)
 
 				fakeClient = binmock.NewBinMock(Fail)
 			})
 
 			JustBeforeEach(func() {
 				cmd := exec.Command(path, "--artifact-file", artifactFile, "--config", configFile.Name(), "--backup")
-				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_DUMP_9_4_PATH=%s", fakeDump94.Path))
-				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_DUMP_9_6_PATH=%s", fakeDump96.Path))
+				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_DUMP_9_4_PATH=%s", fakePgDump94.Path))
+				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_DUMP_9_6_PATH=%s", fakePgDump96.Path))
 				cmd.Env = append(cmd.Env, fmt.Sprintf("PG_CLIENT_PATH=%s", fakeClient.Path))
 
 				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
@@ -372,9 +373,9 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 							databaseName,
 						}
 
-						Expect(fakeDump94.Invocations()).To(HaveLen(1))
-						Expect(fakeDump94.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-						Expect(fakeDump94.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+						Expect(fakePgDump94.Invocations()).To(HaveLen(1))
+						Expect(fakePgDump94.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+						Expect(fakePgDump94.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 					})
 
 					Expect(session).Should(gexec.Exit(0))
@@ -407,14 +408,14 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 							"-t", "table3",
 						}
 
-						Expect(fakeDump94.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+						Expect(fakePgDump94.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
 					})
 				})
 
 				Context("and pg_dump fails", func() {
 					BeforeEach(func() {
-						fakeDump94 = binmock.NewBinMock(Fail)
-						fakeDump94.WhenCalled().WillExitWith(1)
+						fakePgDump94 = binmock.NewBinMock(Fail)
+						fakePgDump94.WhenCalled().WillExitWith(1)
 					})
 
 					It("also fails", func() {
@@ -455,9 +456,9 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 							databaseName,
 						}
 
-						Expect(fakeDump96.Invocations()).To(HaveLen(1))
-						Expect(fakeDump96.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-						Expect(fakeDump96.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+						Expect(fakePgDump96.Invocations()).To(HaveLen(1))
+						Expect(fakePgDump96.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+						Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 					})
 
 					Expect(session).Should(gexec.Exit(0))
@@ -490,14 +491,14 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 							"-t", "table3",
 						}
 
-						Expect(fakeDump96.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+						Expect(fakePgDump96.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
 					})
 				})
 
 				Context("and pg_dump fails", func() {
 					BeforeEach(func() {
-						fakeDump96 = binmock.NewBinMock(Fail)
-						fakeDump96.WhenCalled().WillExitWith(1)
+						fakePgDump96 = binmock.NewBinMock(Fail)
+						fakePgDump96.WhenCalled().WillExitWith(1)
 					})
 
 					It("also fails", func() {
