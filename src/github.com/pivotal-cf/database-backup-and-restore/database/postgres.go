@@ -49,7 +49,6 @@ func ispg94(config Config) bool {
 	version, _ := PostgresVersionParser(outb.String())
 
 	return semVer_9_4.MinorVersionMatches(version)
-
 }
 
 func pgdump94(config Config, artifactFilePath string) *exec.Cmd {
@@ -57,17 +56,8 @@ func pgdump94(config Config, artifactFilePath string) *exec.Cmd {
 	if !pgDump94PathVariableSet {
 		log.Fatalln("PG_DUMP_9_4_PATH must be set")
 	}
-	cmd := exec.Command(pgDump94Path,
-		"-v",
-		"--user="+config.Username,
-		"--host="+config.Host,
-		fmt.Sprintf("--port=%d", config.Port),
-		"--format=custom",
-		"--file="+artifactFilePath,
-		config.Database,
-	)
-	cmd.Env = append(cmd.Env, "PGPASSWORD="+config.Password)
-	return cmd
+
+	return pgDump(pgDump94Path, config, artifactFilePath)
 }
 
 func pgdump96(config Config, artifactFilePath string) *exec.Cmd {
@@ -75,16 +65,28 @@ func pgdump96(config Config, artifactFilePath string) *exec.Cmd {
 	if !pgDump96PathVariableSet {
 		log.Fatalln("PG_DUMP_9_6_PATH must be set")
 	}
-	cmd := exec.Command(pgDump96Path,
+
+	return pgDump(pgDump96Path, config, artifactFilePath)
+}
+
+func pgDump(pgDumpPath string, config Config, artifactFilePath string) *exec.Cmd {
+	cmdArgs := []string{
 		"-v",
-		"--user="+config.Username,
-		"--host="+config.Host,
+		"--user=" + config.Username,
+		"--host=" + config.Host,
 		fmt.Sprintf("--port=%d", config.Port),
 		"--format=custom",
-		"--file="+artifactFilePath,
+		"--file=" + artifactFilePath,
 		config.Database,
-	)
+	}
+
+	for _, tableName := range config.Tables {
+		cmdArgs = append(cmdArgs, "-t", tableName)
+	}
+
+	cmd := exec.Command(pgDumpPath, cmdArgs...)
 	cmd.Env = append(cmd.Env, "PGPASSWORD="+config.Password)
+
 	return cmd
 }
 

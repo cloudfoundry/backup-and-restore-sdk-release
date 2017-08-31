@@ -380,6 +380,35 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 					Expect(session).Should(gexec.Exit(0))
 				})
 
+				Context("when 'tables' are specified in the configFile", func() {
+					BeforeEach(func() {
+						configFile = buildConfigFile(Config{
+							Adapter:  "postgres",
+							Username: username,
+							Password: password,
+							Host:     host,
+							Port:     port,
+							Database: databaseName,
+							Tables:   []string{"table1", "table2", "table3"},
+						})
+					})
+
+					It("calls pg_dump with the correct arguments", func() {
+						expectedArgs := []string{
+							"-v",
+							fmt.Sprintf("--user=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							"--format=custom",
+							fmt.Sprintf("--file=%s", artifactFile),
+							databaseName,
+							"-t", "table1",
+							"-t", "table2",
+							"-t", "table3",
+						}
+
+						Expect(fakeDump94.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+					})
 				})
 
 				Context("and pg_dump fails", func() {
@@ -434,6 +463,35 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 					Expect(session).Should(gexec.Exit(0))
 				})
 
+				Context("when 'tables' are specified in the configFile", func() {
+					BeforeEach(func() {
+						configFile = buildConfigFile(Config{
+							Adapter:  "postgres",
+							Username: username,
+							Password: password,
+							Host:     host,
+							Port:     port,
+							Database: databaseName,
+							Tables:   []string{"table1", "table2", "table3"},
+						})
+					})
+
+					It("calls pg_dump with the correct arguments", func() {
+						expectedArgs := []string{
+							"-v",
+							fmt.Sprintf("--user=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							"--format=custom",
+							fmt.Sprintf("--file=%s", artifactFile),
+							databaseName,
+							"-t", "table1",
+							"-t", "table2",
+							"-t", "table3",
+						}
+
+						Expect(fakeDump96.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+					})
 				})
 
 				Context("and pg_dump fails", func() {

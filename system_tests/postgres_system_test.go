@@ -90,10 +90,47 @@ func PostgresTests(postgresPackage, postgresDeployment string) func() {
 				fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
 					configPath, dbDumpPath))
 
-			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM people;", databaseName, postgresPackage)).To(gbytes.Say("Old Person"))
-			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM people;", databaseName, postgresPackage)).NotTo(gbytes.Say("New Person"))
-			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM places;", databaseName, postgresPackage)).To(gbytes.Say("Old Place"))
-			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM places;", databaseName, postgresPackage)).NotTo(gbytes.Say("New Place"))
+			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM people;", databaseName, postgresPackage)).
+				To(gbytes.Say("Old Person"))
+			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM people;", databaseName, postgresPackage)).
+				NotTo(gbytes.Say("New Person"))
+			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM places;", databaseName, postgresPackage)).
+				To(gbytes.Say("Old Place"))
+			Expect(dbJob.runPostgresSqlCommand("SELECT name FROM places;", databaseName, postgresPackage)).
+				NotTo(gbytes.Say("New Place"))
+		})
+
+		Context("and 'tables' are specified in config", func() {
+			BeforeEach(func() {
+				configJson := fmt.Sprintf(
+					`{"username":"test_user","password":"%s","host":"%s","port":5432,
+						"database":"%s","adapter":"postgres", "tables":["people"]}`,
+					MustHaveEnv("POSTGRES_PASSWORD"),
+					dbJob.getIPOfInstance(),
+					databaseName,
+				)
+				brJob.runOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+			})
+
+			It("backs up and restores only the specified tables", func() {
+				brJob.runOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
+
+				dbJob.runPostgresSqlCommand("UPDATE people SET NAME = 'New Person';", databaseName, postgresPackage)
+				dbJob.runPostgresSqlCommand("UPDATE places SET NAME = 'New Place';", databaseName, postgresPackage)
+
+				brJob.runOnVMAndSucceed(fmt.Sprintf("cat %s", dbDumpPath))
+
+				brJob.runOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
+
+				Expect(dbJob.runPostgresSqlCommand("SELECT name FROM people;", databaseName, postgresPackage)).
+					To(gbytes.Say("Old Person"))
+				Expect(dbJob.runPostgresSqlCommand("SELECT name FROM people;", databaseName, postgresPackage)).
+					NotTo(gbytes.Say("New Person"))
+				Expect(dbJob.runPostgresSqlCommand("SELECT name FROM places;", databaseName, postgresPackage)).
+					To(gbytes.Say("New Place"))
+				Expect(dbJob.runPostgresSqlCommand("SELECT name FROM places;", databaseName, postgresPackage)).
+					NotTo(gbytes.Say("Old Place"))
+			})
 		})
 	}
 }
