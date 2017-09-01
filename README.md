@@ -49,10 +49,11 @@ Template a `config.json` as follows:
   "port": 3306, 
   "adapter": "db adapter; see 'Supported database adapters'",
   "database": "name of database to back up"
+  "tables": ["list", "of", "tables", "to", "back", "up"]
 }
 ```
 
-Note: all fields in `config.json` need to be strings except `port` which is an int.
+Note: all fields in `config.json` need to be strings except `port` which is an int, and `tables` which is a list of strings.
 
 An example of templating using BOSH Links can be seen in the [cf networking release](https://github.com/cloudfoundry-incubator/cf-networking-release/blob/647f7a71b442c25ec29b1cc6484410946f41935c/jobs/bbr-cfnetworkingdb/templates/config.json.erb).
 
