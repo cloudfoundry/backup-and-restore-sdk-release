@@ -55,6 +55,13 @@ Template a `config.json` as follows:
 
 Note: all fields in `config.json` need to be strings except `port` which is an int, and `tables` which is a list of strings.
 
+`tables` is an optional field. If you don't specify it, the entire database will be backed up and restored. If you specify
+a list of tables, only the tables in that list will be included in the backup, and on restore the other tables in the database
+will be left as is.
+
+We have not tested this with foreign key relationships or triggers spanning between tables specified in the `tables` list and other
+tables in the database not listed there. It's possible those relationships would be lost on restore.
+
 An example of templating using BOSH Links can be seen in the [cf networking release](https://github.com/cloudfoundry-incubator/cf-networking-release/blob/647f7a71b442c25ec29b1cc6484410946f41935c/jobs/bbr-cfnetworkingdb/templates/config.json.erb).
 
 #### Supported Database Adapters
