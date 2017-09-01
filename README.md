@@ -48,7 +48,7 @@ Template a `config.json` as follows:
   "host": "db host",
   "port": 3306, 
   "adapter": "db adapter; see 'Supported database adapters'",
-  "database": "name of database to back up"
+  "database": "name of database to back up",
   "tables": ["list", "of", "tables", "to", "back", "up"]
 }
 ```
