@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package database_backup_and_restore
+package integration_tests
 
 import (
 	. "github.com/onsi/ginkgo"
