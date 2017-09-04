@@ -9,12 +9,22 @@ import (
 	"regexp"
 )
 
-type mysqlAdapter struct {
+type mysqlRestorer struct {
+	artifactFilePath string
+	config           Config
+	clientBinary     string
 }
 
-func (a mysqlAdapter) Backup(config Config, artifactFilePath string) *exec.Cmd {
-	mysqlDumpPath, mysqlDumpPathVariableSet := os.LookupEnv("MYSQL_DUMP_PATH")
+type mysqlBackuper struct {
+	artifactFilePath string
+	config           Config
+	backupBinary     string
+	clientBinary     string
+}
+
+func NewMysqlBackuper(config Config, artifactFilePath string) *mysqlBackuper {
 	mysqlClientPath, mysqlClientPathVariableSet := os.LookupEnv("MYSQL_CLIENT_PATH")
+	mysqlDumpPath, mysqlDumpPathVariableSet := os.LookupEnv("MYSQL_DUMP_PATH")
 
 	if !mysqlDumpPathVariableSet {
 		log.Fatalln("MYSQL_DUMP_PATH must be set")
@@ -24,27 +34,50 @@ func (a mysqlAdapter) Backup(config Config, artifactFilePath string) *exec.Cmd {
 		log.Fatalln("MYSQL_CLIENT_PATH must be set")
 	}
 
+	return &mysqlBackuper{
+		artifactFilePath: artifactFilePath,
+		config:           config,
+		backupBinary:     mysqlDumpPath,
+		clientBinary:     mysqlClientPath,
+	}
+}
+
+func NewMysqlRestorer(config Config, artifactFilePath string) *mysqlRestorer {
+	mysqlClientPath, mysqlClientPathVariableSet := os.LookupEnv("MYSQL_CLIENT_PATH")
+
+	if !mysqlClientPathVariableSet {
+		log.Fatalln("MYSQL_CLIENT_PATH must be set")
+	}
+
+	return &mysqlRestorer{
+		artifactFilePath: artifactFilePath,
+		config:           config,
+		clientBinary:     mysqlClientPath,
+	}
+}
+
+func (b mysqlBackuper) Action() *exec.Cmd {
 	// sample output: "mysqldump  Ver 10.16 Distrib 10.1.22-MariaDB, for Linux (x86_64)"
 	// /mysqldump\s+Ver\s+[^ ]+\s+Distrib\s+([^ ]+),/
-	mysqldumpCmd := exec.Command(mysqlDumpPath, "-V")
+	mysqldumpCmd := exec.Command(b.backupBinary, "-V")
 	mysqldumpVersion := extractVersionUsingCommand(
 		mysqldumpCmd,
 		`^mysqldump\s+Ver\s+[^ ]+\s+Distrib\s+([^ ]+),`)
 
-	log.Printf("%s version %v\n", mysqlDumpPath, mysqldumpVersion)
+	log.Printf("%s version %v\n", b.backupBinary, mysqldumpVersion)
 
 	// extract version from mysql server
-	mysqlClientCmd := exec.Command(mysqlClientPath,
+	mysqlClientCmd := exec.Command(b.clientBinary,
 		"--skip-column-names",
 		"--silent",
-		fmt.Sprintf("--user=%s", config.Username),
-		fmt.Sprintf("--password=%s", config.Password),
-		fmt.Sprintf("--host=%s", config.Host),
-		fmt.Sprintf("--port=%d", config.Port),
+		fmt.Sprintf("--user=%s", b.config.Username),
+		fmt.Sprintf("--password=%s", b.config.Password),
+		fmt.Sprintf("--host=%s", b.config.Host),
+		fmt.Sprintf("--port=%d", b.config.Port),
 		"--execute=SELECT VERSION()")
 	mysqlServerVersion := extractVersionUsingCommand(mysqlClientCmd, `(.+)`)
 
-	log.Printf("MYSQL server (%s:%d) version %v\n", config.Host, config.Port, mysqlServerVersion)
+	log.Printf("MYSQL server (%s:%d) version %v\n", b.config.Host, b.config.Port, mysqlServerVersion)
 
 	// compare versions: for ServerX.ServerY.ServerZ and DumpX.DumpY.DumpZ
 	// 	=> ServerX != DumpX => error
@@ -61,40 +94,34 @@ func (a mysqlAdapter) Backup(config Config, artifactFilePath string) *exec.Cmd {
 		"-v",
 		"--single-transaction",
 		"--skip-add-locks",
-		"--user=" + config.Username,
-		"--host=" + config.Host,
-		fmt.Sprintf("--port=%d", config.Port),
-		"--result-file=" + artifactFilePath,
-		config.Database,
+		"--user=" + b.config.Username,
+		"--host=" + b.config.Host,
+		fmt.Sprintf("--port=%d", b.config.Port),
+		"--result-file=" + b.artifactFilePath,
+		b.config.Database,
 	}
-	cmdArgs = append(cmdArgs, config.Tables...)
+	cmdArgs = append(cmdArgs, b.config.Tables...)
 
-	cmd := exec.Command(mysqlDumpPath, cmdArgs...)
-	cmd.Env = append(cmd.Env, "MYSQL_PWD="+config.Password)
+	cmd := exec.Command(b.backupBinary, cmdArgs...)
+	cmd.Env = append(cmd.Env, "MYSQL_PWD="+b.config.Password)
 
 	return cmd
 }
 
-func (a mysqlAdapter) Restore(config Config, artifactFilePath string) *exec.Cmd {
-	mysqlClientPath, mysqlClientPathVariableSet := os.LookupEnv("MYSQL_CLIENT_PATH")
-
-	if !mysqlClientPathVariableSet {
-		log.Fatalln("MYSQL_CLIENT_PATH must be set")
-	}
-
-	artifactFile, err := os.Open(artifactFilePath)
+func (r mysqlRestorer) Action() *exec.Cmd {
+	artifactFile, err := os.Open(r.artifactFilePath)
 	checkErr("Error reading from artifact file,", err)
 
-	cmd := exec.Command(mysqlClientPath,
+	cmd := exec.Command(r.clientBinary,
 		"-v",
-		"--user="+config.Username,
-		"--host="+config.Host,
-		fmt.Sprintf("--port=%d", config.Port),
-		config.Database,
+		"--user="+r.config.Username,
+		"--host="+r.config.Host,
+		fmt.Sprintf("--port=%d", r.config.Port),
+		r.config.Database,
 	)
 
 	cmd.Stdin = bufio.NewReader(artifactFile)
-	cmd.Env = append(cmd.Env, "MYSQL_PWD="+config.Password)
+	cmd.Env = append(cmd.Env, "MYSQL_PWD="+r.config.Password)
 
 	return cmd
 }

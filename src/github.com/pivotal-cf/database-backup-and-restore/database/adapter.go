@@ -5,11 +5,6 @@ import (
 	"os/exec"
 )
 
-type Adapter interface {
-	Backup(config Config, artifactFilePath string) *exec.Cmd
-	Restore(config Config, artifactFilePath string) *exec.Cmd
-}
-
 type Config struct {
 	Username string   `json:"username"`
 	Password string   `json:"password"`
@@ -20,16 +15,12 @@ type Config struct {
 	Tables   []string `json:"tables,omitempty"`
 }
 
-func GetAdapter(adapter string) Adapter {
-	if adapter == "postgres" {
-		return postgresAdapter{}
-	} else {
-		return mysqlAdapter{}
-	}
-}
-
 func checkErr(msg string, err error) {
 	if err != nil {
 		log.Fatalln(msg, err)
 	}
+}
+
+type DBInteractor interface {
+	Action() *exec.Cmd
 }

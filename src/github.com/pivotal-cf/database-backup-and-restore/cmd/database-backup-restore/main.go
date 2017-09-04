@@ -23,7 +23,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 
 	"github.com/pivotal-cf/database-backup-and-restore/database"
 )
@@ -77,15 +76,14 @@ func main() {
 		log.Fatalf("Unsupported adapter %s\n", config.Adapter)
 	}
 
-	adapter := database.GetAdapter(config.Adapter)
-
-	var cmd *exec.Cmd
+	var interactor database.DBInteractor
 	if *restoreAction {
-		cmd = adapter.Restore(config, *artifactFilePath)
+		interactor = getRestorer(config, artifactFilePath)
 	} else {
-		cmd = adapter.Backup(config, *artifactFilePath)
+		interactor = getBackuper(config, artifactFilePath)
 	}
 
+	cmd := interactor.Action()
 	fmt.Println(cmd.Args)
 
 	cmd.Stdout = os.Stdout
@@ -99,4 +97,28 @@ func main() {
 
 func failAndPrintUsage(message string) {
 	log.Fatalf("%s\nUsage: database-backup-restorer [--backup|--restore] --config <config-file> --artifact-file <artifact-file>\n", message)
+}
+
+func getRestorer(config database.Config, artifactFilePath *string) database.DBInteractor {
+	if config.Adapter == "postgres" {
+		return database.NewPostgresRestorer(
+			config, *artifactFilePath,
+		)
+	} else {
+		return database.NewMysqlRestorer(
+			config, *artifactFilePath,
+		)
+	}
+}
+
+func getBackuper(config database.Config, artifactFilePath *string) database.DBInteractor {
+	if config.Adapter == "postgres" {
+		return database.NewPostgresBackuper(
+			config, *artifactFilePath,
+		)
+	} else {
+		return database.NewMysqlBackuper(
+			config, *artifactFilePath,
+		)
+	}
 }

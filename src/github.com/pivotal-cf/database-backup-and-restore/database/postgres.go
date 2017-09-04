@@ -8,25 +8,97 @@ import (
 	"os/exec"
 )
 
-type postgresAdapter struct {
+type postgresRestorer struct {
+	artifactFilePath string
+	config           Config
+	restoreBinary    string
 }
 
-func (a postgresAdapter) Backup(config Config, artifactFilePath string) *exec.Cmd {
-	var cmd *exec.Cmd
-	if ispg94(config) {
-		cmd = pgdump94(config, artifactFilePath)
-	} else {
-		cmd = pgdump96(config, artifactFilePath)
-	}
-
-	return cmd
+type postgresBackuper struct {
+	artifactFilePath string
+	config           Config
+	backupBinary     string
 }
 
-func ispg94(config Config) bool {
+func NewPostgresBackuper(config Config, artifactFilePath string) *postgresBackuper {
 	psqlPath, psqlPathVariableSet := os.LookupEnv("PG_CLIENT_PATH")
 	if !psqlPathVariableSet {
 		log.Fatalln("PG_CLIENT_PATH must be set")
 	}
+
+	var pgDumpPath string
+	var ok bool
+	if ispg94(config, psqlPath) {
+		pgDumpPath, ok = os.LookupEnv("PG_DUMP_9_4_PATH")
+		if !ok {
+			log.Fatalln("PG_DUMP_9_4_PATH must be set")
+		}
+	} else {
+		pgDumpPath, ok = os.LookupEnv("PG_DUMP_9_6_PATH")
+		if !ok {
+			log.Fatalln("PG_DUMP_9_6_PATH must be set")
+		}
+	}
+
+	return &postgresBackuper{
+		artifactFilePath: artifactFilePath,
+		config:           config,
+		backupBinary:     pgDumpPath,
+	}
+}
+
+func NewPostgresRestorer(config Config, artifactFilePath string) *postgresRestorer {
+	pgRestorePath, pgRestorePathVariableSet := os.LookupEnv("PG_RESTORE_9_4_PATH")
+	if !pgRestorePathVariableSet {
+		log.Fatalln("PG_RESTORE_9_4_PATH must be set")
+	}
+	return &postgresRestorer{
+		artifactFilePath: artifactFilePath,
+		config:           config,
+		restoreBinary:    pgRestorePath,
+	}
+}
+
+func (r postgresRestorer) Action() *exec.Cmd {
+
+	cmd := exec.Command(r.restoreBinary,
+		"-v",
+		"--user="+r.config.Username,
+		"--host="+r.config.Host,
+		fmt.Sprintf("--port=%d", r.config.Port),
+		"--format=custom",
+		"--dbname="+r.config.Database,
+		"--clean",
+		r.artifactFilePath,
+	)
+
+	cmd.Env = append(cmd.Env, "PGPASSWORD="+r.config.Password)
+
+	return cmd
+}
+
+func (b postgresBackuper) Action() *exec.Cmd {
+	cmdArgs := []string{
+		"-v",
+		"--user=" + b.config.Username,
+		"--host=" + b.config.Host,
+		fmt.Sprintf("--port=%d", b.config.Port),
+		"--format=custom",
+		"--file=" + b.artifactFilePath,
+		b.config.Database,
+	}
+
+	for _, tableName := range b.config.Tables {
+		cmdArgs = append(cmdArgs, "-t", tableName)
+	}
+
+	cmd := exec.Command(b.backupBinary, cmdArgs...)
+	cmd.Env = append(cmd.Env, "PGPASSWORD="+b.config.Password)
+
+	return cmd
+}
+
+func ispg94(config Config, psqlPath string) bool {
 
 	var outb, errb bytes.Buffer
 
@@ -49,65 +121,4 @@ func ispg94(config Config) bool {
 	version, _ := ParsePostgresVersion(outb.String())
 
 	return semVer_9_4.MinorVersionMatches(version)
-}
-
-func pgdump94(config Config, artifactFilePath string) *exec.Cmd {
-	pgDump94Path, pgDump94PathVariableSet := os.LookupEnv("PG_DUMP_9_4_PATH")
-	if !pgDump94PathVariableSet {
-		log.Fatalln("PG_DUMP_9_4_PATH must be set")
-	}
-
-	return pgDump(pgDump94Path, config, artifactFilePath)
-}
-
-func pgdump96(config Config, artifactFilePath string) *exec.Cmd {
-	pgDump96Path, pgDump96PathVariableSet := os.LookupEnv("PG_DUMP_9_6_PATH")
-	if !pgDump96PathVariableSet {
-		log.Fatalln("PG_DUMP_9_6_PATH must be set")
-	}
-
-	return pgDump(pgDump96Path, config, artifactFilePath)
-}
-
-func pgDump(pgDumpPath string, config Config, artifactFilePath string) *exec.Cmd {
-	cmdArgs := []string{
-		"-v",
-		"--user=" + config.Username,
-		"--host=" + config.Host,
-		fmt.Sprintf("--port=%d", config.Port),
-		"--format=custom",
-		"--file=" + artifactFilePath,
-		config.Database,
-	}
-
-	for _, tableName := range config.Tables {
-		cmdArgs = append(cmdArgs, "-t", tableName)
-	}
-
-	cmd := exec.Command(pgDumpPath, cmdArgs...)
-	cmd.Env = append(cmd.Env, "PGPASSWORD="+config.Password)
-
-	return cmd
-}
-
-func (a postgresAdapter) Restore(config Config, artifactFilePath string) *exec.Cmd {
-	pgRestorePath, pgRestorePathVariableSet := os.LookupEnv("PG_RESTORE_9_4_PATH")
-	if !pgRestorePathVariableSet {
-		log.Fatalln("PG_RESTORE_9_4_PATH must be set")
-	}
-
-	cmd := exec.Command(pgRestorePath,
-		"-v",
-		"--user="+config.Username,
-		"--host="+config.Host,
-		fmt.Sprintf("--port=%d", config.Port),
-		"--format=custom",
-		"--dbname="+config.Database,
-		"--clean",
-		artifactFilePath,
-	)
-
-	cmd.Env = append(cmd.Env, "PGPASSWORD="+config.Password)
-
-	return cmd
 }
