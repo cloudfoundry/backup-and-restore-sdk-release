@@ -113,7 +113,10 @@ func PostgresTests(postgresPackage, postgresDeployment string) func() {
 			})
 
 			It("backs up and restores only the specified tables", func() {
-				brJob.runOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
+				brJob.runOnVMAndSucceed(fmt.Sprintf(
+					"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+					dbDumpPath,
+					configPath))
 
 				dbJob.runPostgresSqlCommand("UPDATE people SET NAME = 'New Person';", databaseName, postgresPackage)
 				dbJob.runPostgresSqlCommand("UPDATE places SET NAME = 'New Place';", databaseName, postgresPackage)

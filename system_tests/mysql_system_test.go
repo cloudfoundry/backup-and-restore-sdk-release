@@ -87,7 +87,7 @@ var _ = Describe("mysql", func() {
 			Expect(dbJob.runMysqlSqlCommand("SELECT name FROM places;", databaseName)).NotTo(gbytes.Say("New Place"))
 		})
 
-		Context("and 'tables' are specified in config", func() {
+		Context("and some existing 'tables' are specified in config", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
 					`{"username":"root","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["people"]}`,
@@ -112,6 +112,30 @@ var _ = Describe("mysql", func() {
 				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM people;", databaseName)).NotTo(gbytes.Say("New Person"))
 				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM places;", databaseName)).To(gbytes.Say("New Place"))
 				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM places;", databaseName)).NotTo(gbytes.Say("Old Place"))
+			})
+		})
+
+		Context("and 'tables' are specified in config only some of which exist", func() {
+			BeforeEach(func() {
+				configJson := fmt.Sprintf(
+					`{"username":"root","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["people", "not there"]}`,
+					MustHaveEnv("MYSQL_PASSWORD"),
+					dbJob.getIPOfInstance(),
+					databaseName,
+				)
+				brJob.runOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+			})
+
+			It("raises an error about the non-existent tables", func() {
+				session := brJob.runOnInstance(fmt.Sprintf(
+					"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+					dbDumpPath,
+					configPath))
+
+				Expect(session.ExitCode()).NotTo(BeZero())
+				Expect(session).To(gbytes.Say("mysqldump: Couldn't find table: \"not there\""))
+				Expect(session).To(gbytes.Say(
+					"You may need to delete the artifact-file that was created before re-running"))
 			})
 		})
 	})
