@@ -90,8 +90,7 @@ func main() {
 	cmd.Stderr = os.Stderr
 
 	if err := cmd.Run(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatalf("You may need to delete the artifact-file that was created before re-running.\n%s\n", err)
 	}
 }
 
