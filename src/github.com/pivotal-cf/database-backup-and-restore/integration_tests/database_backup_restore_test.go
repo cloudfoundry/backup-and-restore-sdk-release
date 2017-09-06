@@ -90,6 +90,11 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				configGenerator: invalidAdapterConfig,
 				expectedOutput:  "Unsupported adapter foo-server",
 			}),
+			Entry("empty list of tables field", TestEntry{
+				arguments:       "--backup --artifact-file /foo --config %s",
+				configGenerator: emptyTablesConfig,
+				expectedOutput:  "Tables specified but empty",
+			}),
 		}
 
 		DescribeTable("raises the appropriate error when",
@@ -143,7 +148,7 @@ func invalidAdapterConfig() (string, error) {
 	return invalidAdapterConfig.Name(), nil
 }
 
-func validMysqlConfig() (string, error) {
+func emptyTablesConfig() (string, error) {
 	validConfig, err := ioutil.TempFile(os.TempDir(), "")
 	if err != nil {
 		return "", err
@@ -157,7 +162,8 @@ func validMysqlConfig() (string, error) {
 			  "host":"127.0.0.1",
 			  "port":1234,
 			  "database":"mycooldb",
-			  "adapter":"mysql"
+			  "adapter":"mysql",
+			  "tables": []
 			}`,
 	)
 	return validConfig.Name(), nil

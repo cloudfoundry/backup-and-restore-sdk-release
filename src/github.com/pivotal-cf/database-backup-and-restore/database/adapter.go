@@ -12,7 +12,7 @@ type Config struct {
 	Adapter  string   `json:"adapter"`
 	Host     string   `json:"host"`
 	Database string   `json:"database"`
-	Tables   []string `json:"tables,omitempty"`
+	Tables   []string `json:"tables"`
 }
 
 func checkErr(msg string, err error) {

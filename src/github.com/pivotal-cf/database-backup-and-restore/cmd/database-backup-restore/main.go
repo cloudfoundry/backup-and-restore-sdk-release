@@ -46,35 +46,9 @@ func main() {
 
 	flag.Parse()
 
-	if *backupAction && *restoreAction {
-		failAndPrintUsage("Only one of: --backup or --restore can be provided")
-	}
+	validateFlags(backupAction, restoreAction, configPath, artifactFilePath)
 
-	if *configPath == "" {
-		failAndPrintUsage("Missing --config flag")
-	}
-
-	if !*backupAction && !*restoreAction {
-		failAndPrintUsage("Missing --backup or --restore flag")
-	}
-
-	if *artifactFilePath == "" {
-		failAndPrintUsage("Missing --artifact-file flag")
-	}
-
-	configString, err := ioutil.ReadFile(*configPath)
-	if err != nil {
-		log.Fatalf("Fail reading config file: %s\n", err)
-	}
-
-	var config database.Config
-	if err := json.Unmarshal(configString, &config); err != nil {
-		log.Fatalf("Could not parse config json: %s\n", err)
-	}
-
-	if !isSupported(config.Adapter) {
-		log.Fatalf("Unsupported adapter %s\n", config.Adapter)
-	}
+	config := readAndValidateConfig(configPath)
 
 	var interactor database.DBInteractor
 	if *restoreAction {
@@ -91,6 +65,37 @@ func main() {
 
 	if err := cmd.Run(); err != nil {
 		log.Fatalf("You may need to delete the artifact-file that was created before re-running.\n%s\n", err)
+	}
+}
+func readAndValidateConfig(configPath *string) database.Config {
+	configString, err := ioutil.ReadFile(*configPath)
+	if err != nil {
+		log.Fatalf("Fail reading config file: %s\n", err)
+	}
+	var config database.Config
+	if err := json.Unmarshal(configString, &config); err != nil {
+		log.Fatalf("Could not parse config json: %s\n", err)
+	}
+	if !isSupported(config.Adapter) {
+		log.Fatalf("Unsupported adapter %s\n", config.Adapter)
+	}
+	if config.Tables != nil && len(config.Tables) == 0 {
+		log.Fatalf("Tables specified but empty\n")
+	}
+	return config
+}
+func validateFlags(backupAction *bool, restoreAction *bool, configPath *string, artifactFilePath *string) {
+	if *backupAction && *restoreAction {
+		failAndPrintUsage("Only one of: --backup or --restore can be provided")
+	}
+	if *configPath == "" {
+		failAndPrintUsage("Missing --config flag")
+	}
+	if !*backupAction && !*restoreAction {
+		failAndPrintUsage("Missing --backup or --restore flag")
+	}
+	if *artifactFilePath == "" {
+		failAndPrintUsage("Missing --artifact-file flag")
 	}
 }
 
