@@ -138,6 +138,30 @@ var _ = Describe("mysql", func() {
 					"You may need to delete the artifact-file that was created before re-running"))
 			})
 		})
+
+		Context("and 'tables' are specified in config none of them exist", func() {
+			BeforeEach(func() {
+				configJson := fmt.Sprintf(
+					`{"username":"root","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["lizards", "form-shifting-people"]}`,
+					MustHaveEnv("MYSQL_PASSWORD"),
+					dbJob.getIPOfInstance(),
+					databaseName,
+				)
+				brJob.runOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+			})
+
+			It("raises an error about the non-existent tables", func() {
+				session := brJob.runOnInstance(fmt.Sprintf(
+					"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+					dbDumpPath,
+					configPath))
+
+				Expect(session.ExitCode()).NotTo(BeZero())
+				Expect(session).To(gbytes.Say("mysqldump: Couldn't find table: \"lizards\""))
+				Expect(session).To(gbytes.Say(
+					"You may need to delete the artifact-file that was created before re-running"))
+			})
+		})
 	})
 
 	Context("when the mysql server version doesn't match", func() {
