@@ -24,7 +24,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/pivotal-cf/database-backup-and-restore/database"
+	"github.com/cloudfoundry-incubator/database-backup-and-restore/database"
 )
 
 var supportedAdapters = []string{"postgres", "mysql"}

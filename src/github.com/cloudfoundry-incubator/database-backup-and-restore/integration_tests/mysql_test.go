@@ -47,7 +47,7 @@ var _ = Describe("MySQL", func() {
 
 	BeforeEach(func() {
 		compiledSDKPath, err = gexec.Build(
-			"github.com/pivotal-cf/database-backup-and-restore/cmd/database-backup-restore")
+			"github.com/cloudfoundry-incubator/database-backup-and-restore/cmd/database-backup-restore")
 		Expect(err).NotTo(HaveOccurred())
 
 		artifactFile = tempFilePath()

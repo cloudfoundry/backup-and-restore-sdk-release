@@ -33,6 +33,6 @@ export BOSH_GW_USER=vcap
 export BOSH_GW_HOST=lite-bosh.backup-and-restore.cf-app.com
 export BOSH_GW_PRIVATE_KEY=`pwd`/bosh-backup-and-restore-meta/genesis-bosh/bosh.pem
 
-cd src/github.com/pivotal-cf/backup-and-restore-sdk-release
+cd src/github.com/cloudfoundry-incubator/backup-and-restore-sdk-release
 glide install
 ginkgo --focus=postgres system_tests

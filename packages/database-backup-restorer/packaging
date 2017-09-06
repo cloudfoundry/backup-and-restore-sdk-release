@@ -23,6 +23,6 @@ export GOPATH=$BOSH_INSTALL_TARGET
 export GOROOT=$(readlink -nf /var/vcap/packages/database-backup-restorer-golang)
 export PATH=$GOROOT/bin:$PATH
 
-go install github.com/pivotal-cf/database-backup-and-restore/cmd/database-backup-restore
+go install github.com/cloudfoundry-incubator/database-backup-and-restore/cmd/database-backup-restore
 
 rm -rf ${BOSH_INSTALL_TARGET}/src ${BOSH_INSTALL_TARGET}/pkg

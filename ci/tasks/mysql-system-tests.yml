@@ -23,11 +23,11 @@ image_resource:
 
 inputs:
 - name: backup-and-restore-sdk-release
-  path: src/github.com/pivotal-cf/backup-and-restore-sdk-release
+  path: src/github.com/cloudfoundry-incubator/backup-and-restore-sdk-release
 - name: bosh-backup-and-restore-meta
 
 run:
-  path: src/github.com/pivotal-cf/backup-and-restore-sdk-release/ci/scripts/mysql-system-tests.sh
+  path: src/github.com/cloudfoundry-incubator/backup-and-restore-sdk-release/ci/scripts/mysql-system-tests.sh
 
 params:
   TEAM_GPG_KEY:
