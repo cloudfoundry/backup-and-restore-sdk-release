@@ -27,11 +27,11 @@ chmod 400 bosh-backup-and-restore-meta/genesis-bosh/bosh.pem
 
 export GOPATH=$PWD
 export PATH=$PATH:$GOPATH/bin
-export BOSH_URL="https://lite-bosh.backup-and-restore.cf-app.com"
-export BOSH_CERT_PATH=`pwd`/bosh-backup-and-restore-meta/certs/lite-bosh.backup-and-restore.cf-app.com.crt
-export BOSH_GATEWAY_USER=vcap
-export BOSH_GATEWAY_HOST=lite-bosh.backup-and-restore.cf-app.com
-export BOSH_GATEWAY_KEY=`pwd`/bosh-backup-and-restore-meta/genesis-bosh/bosh.pem
+export BOSH_ENVIRONMENT="https://lite-bosh.backup-and-restore.cf-app.com"
+export BOSH_CA_CERT=`pwd`/bosh-backup-and-restore-meta/certs/lite-bosh.backup-and-restore.cf-app.com.crt
+export BOSH_GW_USER=vcap
+export BOSH_GW_HOST=lite-bosh.backup-and-restore.cf-app.com
+export BOSH_GW_PRIVATE_KEY=`pwd`/bosh-backup-and-restore-meta/genesis-bosh/bosh.pem
 
 cd src/github.com/pivotal-cf/backup-and-restore-sdk-release
 glide install

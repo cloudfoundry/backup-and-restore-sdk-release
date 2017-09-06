@@ -48,8 +48,8 @@ func RunCommandWithStream(stdout, stderr io.Writer, cmd string, args ...string) 
 
 func BoshCommand() string {
 	return fmt.Sprintf("bosh-cli --non-interactive --environment=%s --ca-cert=%s --client=%s --client-secret=%s",
-		MustHaveEnv("BOSH_URL"),
-		MustHaveEnv("BOSH_CERT_PATH"),
+		MustHaveEnv("BOSH_ENVIRONMENT"),
+		MustHaveEnv("BOSH_CA_CERT"),
 		MustHaveEnv("BOSH_CLIENT"),
 		MustHaveEnv("BOSH_CLIENT_SECRET"),
 	)
@@ -65,9 +65,9 @@ func forDeployment(deploymentName string) string {
 func getSSHCommand(instanceName, instanceIndex string) string {
 	return fmt.Sprintf(
 		"ssh --gw-user=%s --gw-host=%s --gw-private-key=%s %s",
-		MustHaveEnv("BOSH_GATEWAY_USER"),
-		MustHaveEnv("BOSH_GATEWAY_HOST"),
-		MustHaveEnv("BOSH_GATEWAY_KEY"),
+		MustHaveEnv("BOSH_GW_USER"),
+		MustHaveEnv("BOSH_GW_HOST"),
+		MustHaveEnv("BOSH_GW_PRIVATE_KEY"),
 		instanceName,
 	)
 }
@@ -75,9 +75,9 @@ func getSSHCommand(instanceName, instanceIndex string) string {
 func getUploadCommand(localPath, remotePath, instanceName, instanceIndex string) string {
 	return fmt.Sprintf(
 		"scp --gw-user=%s --gw-host=%s --gw-private-key=%s %s %s/%s:%s",
-		MustHaveEnv("BOSH_GATEWAY_USER"),
-		MustHaveEnv("BOSH_GATEWAY_HOST"),
-		MustHaveEnv("BOSH_GATEWAY_KEY"),
+		MustHaveEnv("BOSH_GW_USER"),
+		MustHaveEnv("BOSH_GW_HOST"),
+		MustHaveEnv("BOSH_GW_PRIVATE_KEY"),
 		localPath,
 		instanceName,
 		instanceIndex,
