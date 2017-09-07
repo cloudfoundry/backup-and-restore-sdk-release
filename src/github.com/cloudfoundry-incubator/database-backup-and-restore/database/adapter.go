@@ -24,3 +24,7 @@ func checkErr(msg string, err error) {
 type DBInteractor interface {
 	Action() *exec.Cmd
 }
+
+type Backuper interface {
+	Backup(config Config) error
+}

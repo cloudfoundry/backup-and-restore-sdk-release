@@ -19,6 +19,7 @@ package integration_tests
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gexec"
 
 	"testing"
 )
@@ -27,3 +28,24 @@ func TestDatabaseBackupAndRestore(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "DatabaseBackupAndRestore Suite")
 }
+
+var compiledSDKPath string
+var envVars map[string]string
+
+var _ = BeforeSuite(func() {
+	var err error
+	compiledSDKPath, err = gexec.Build(
+		"github.com/cloudfoundry-incubator/database-backup-and-restore/cmd/database-backup-restore")
+	Expect(err).NotTo(HaveOccurred())
+})
+
+var _ = BeforeEach(func() {
+	envVars = map[string]string{
+		"PG_CLIENT_PATH":      "non-existent",
+		"PG_DUMP_9_6_PATH":    "non-existent",
+		"PG_DUMP_9_4_PATH":    "non-existent",
+		"PG_RESTORE_9_4_PATH": "non-existent",
+		"MYSQL_CLIENT_PATH":   "non-existent",
+		"MYSQL_DUMP_PATH":     "non-existent",
+	}
+})

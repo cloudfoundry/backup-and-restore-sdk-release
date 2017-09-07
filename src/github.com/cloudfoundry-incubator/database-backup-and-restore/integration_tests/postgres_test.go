@@ -44,7 +44,6 @@ var _ = Describe("Postgres", func() {
 	var compiledSDKPath string
 	var err error
 	var configFile *os.File
-	var envVars map[string]string
 
 	BeforeEach(func() {
 		compiledSDKPath, err = gexec.Build(
@@ -52,7 +51,6 @@ var _ = Describe("Postgres", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		artifactFile = tempFilePath()
-
 	})
 
 	Context("backup", func() {
@@ -83,8 +81,6 @@ var _ = Describe("Postgres", func() {
 			fakePgDump94.WhenCalled().WillExitWith(0)
 			fakePgDump96 = binmock.NewBinMock(Fail)
 			fakePgDump96.WhenCalled().WillExitWith(0)
-
-			envVars = make(map[string]string)
 		})
 
 		JustBeforeEach(func() {
@@ -105,6 +101,10 @@ var _ = Describe("Postgres", func() {
 		})
 
 		Context("PG_CLIENT_PATH env var is missing", func() {
+			BeforeEach(func() {
+				delete(envVars, "PG_CLIENT_PATH")
+			})
+
 			It("raises an appropriate error", func() {
 				Expect(session.Err).To(gbytes.Say("PG_CLIENT_PATH must be set"))
 			})
@@ -118,6 +118,10 @@ var _ = Describe("Postgres", func() {
 				})
 
 				Context("PG_DUMP_9_4 env var is missing", func() {
+					BeforeEach(func() {
+						delete(envVars, "PG_DUMP_9_4_PATH")
+					})
+
 					It("raises an appropriate error", func() {
 						Expect(session.Err).To(gbytes.Say("PG_DUMP_9_4_PATH must be set"))
 					})
@@ -219,6 +223,10 @@ var _ = Describe("Postgres", func() {
 				})
 
 				Context("PG_DUMP_9_6 env var is missing", func() {
+					BeforeEach(func() {
+						delete(envVars, "PG_DUMP_9_6_PATH")
+					})
+
 					It("raises an appropriate error", func() {
 						Expect(session.Err).To(gbytes.Say("PG_DUMP_9_6_PATH must be set"))
 					})
@@ -278,6 +286,25 @@ var _ = Describe("Postgres", func() {
 								Database: databaseName,
 								Tables:   []string{"table1", "table2", "table3"},
 							})
+							clientIsConnectedTo96.WhenCalled().WillPrintToStdOut(
+								" public | table1 | table | vcap\n public | table2 | table | vcap\n public | foo1 | table3 | vcap\n").
+								WillExitWith(0)
+						})
+
+						XIt("checks if the tables exist", func() {
+							expectedArgs := []string{
+								"--tuples-only",
+								fmt.Sprintf("--username=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								databaseName,
+								`--command="\dt"`,
+							}
+
+							Expect(clientIsConnectedTo96.Invocations()).To(HaveLen(2))
+							Expect(clientIsConnectedTo96.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+							Expect(clientIsConnectedTo96.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+
 						})
 
 						It("calls pg_dump with the correct arguments", func() {
@@ -329,7 +356,6 @@ var _ = Describe("Postgres", func() {
 
 			fakeRestore = binmock.NewBinMock(Fail)
 			fakeRestore.WhenCalled().WillExitWith(0)
-			envVars = make(map[string]string)
 
 		})
 
@@ -351,6 +377,10 @@ var _ = Describe("Postgres", func() {
 		})
 
 		Context("PG_RESTORE_9_4_PATH env var is missing", func() {
+			BeforeEach(func() {
+				delete(envVars, "PG_RESTORE_9_4_PATH")
+			})
+
 			It("raises an appropriate error", func() {
 				Expect(session.Err).To(gbytes.Say("PG_RESTORE_9_4_PATH must be set"))
 			})

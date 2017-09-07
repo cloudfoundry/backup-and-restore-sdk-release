@@ -41,20 +41,14 @@ var _ = Describe("MySQL", func() {
 	var databaseName = "mycooldb"
 	var password = "password"
 	var artifactFile string
-	var compiledSDKPath string
 	var err error
 	var configFile *os.File
 
 	BeforeEach(func() {
-		compiledSDKPath, err = gexec.Build(
-			"github.com/cloudfoundry-incubator/database-backup-and-restore/cmd/database-backup-restore")
-		Expect(err).NotTo(HaveOccurred())
-
 		artifactFile = tempFilePath()
 	})
 
 	Context("backup", func() {
-		var envVars = make(map[string]string)
 
 		BeforeEach(func() {
 			configFile = buildConfigFile(Config{
@@ -81,6 +75,7 @@ var _ = Describe("MySQL", func() {
 				fmt.Sprintf("--port=%d", port),
 				`--execute=SELECT VERSION()`,
 			).WillPrintToStdOut("10.1.24-MariaDB-wsrep")
+
 		})
 
 		JustBeforeEach(func() {
@@ -103,6 +98,9 @@ var _ = Describe("MySQL", func() {
 		})
 
 		Context("MYSQL_DUMP_PATH env var is missing", func() {
+			BeforeEach(func() {
+				delete(envVars, "MYSQL_DUMP_PATH")
+			})
 			It("raises an appropriate error", func() {
 				Expect(session.Err).To(gbytes.Say("MYSQL_DUMP_PATH must be set"))
 			})
@@ -250,8 +248,6 @@ var _ = Describe("MySQL", func() {
 	})
 
 	Context("restore", func() {
-		var envVars = make(map[string]string)
-
 		BeforeEach(func() {
 			configFile = buildConfigFile(Config{
 				Adapter:  "mysql",
@@ -290,6 +286,10 @@ var _ = Describe("MySQL", func() {
 		})
 
 		Context("MYSQL_CLIENT_PATH env var is missing", func() {
+			BeforeEach(func() {
+				delete(envVars, "MYSQL_CLIENT_PATH")
+			})
+
 			It("raises an appropriate error", func() {
 				Expect(session.Err).To(gbytes.Say("MYSQL_CLIENT_PATH must be set"))
 			})

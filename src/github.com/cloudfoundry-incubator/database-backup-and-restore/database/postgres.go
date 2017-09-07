@@ -1,11 +1,11 @@
 package database
 
 import (
-	"bytes"
 	"fmt"
 	"log"
-	"os"
 	"os/exec"
+
+	"github.com/cloudfoundry-incubator/database-backup-and-restore/runner"
 )
 
 type postgresRestorer struct {
@@ -21,23 +21,15 @@ type postgresBackuper struct {
 }
 
 func NewPostgresBackuper(config Config, artifactFilePath string) *postgresBackuper {
-	psqlPath, psqlPathVariableSet := os.LookupEnv("PG_CLIENT_PATH")
-	if !psqlPathVariableSet {
-		log.Fatalln("PG_CLIENT_PATH must be set")
-	}
+	psqlPath := lookupEnv("PG_CLIENT_PATH")
 
 	var pgDumpPath string
-	var ok bool
+
 	if ispg94(config, psqlPath) {
-		pgDumpPath, ok = os.LookupEnv("PG_DUMP_9_4_PATH")
-		if !ok {
-			log.Fatalln("PG_DUMP_9_4_PATH must be set")
-		}
+		pgDumpPath = lookupEnv("PG_DUMP_9_4_PATH")
+
 	} else {
-		pgDumpPath, ok = os.LookupEnv("PG_DUMP_9_6_PATH")
-		if !ok {
-			log.Fatalln("PG_DUMP_9_6_PATH must be set")
-		}
+		pgDumpPath = lookupEnv("PG_DUMP_9_6_PATH")
 	}
 
 	return &postgresBackuper{
@@ -48,10 +40,8 @@ func NewPostgresBackuper(config Config, artifactFilePath string) *postgresBackup
 }
 
 func NewPostgresRestorer(config Config, artifactFilePath string) *postgresRestorer {
-	pgRestorePath, pgRestorePathVariableSet := os.LookupEnv("PG_RESTORE_9_4_PATH")
-	if !pgRestorePathVariableSet {
-		log.Fatalln("PG_RESTORE_9_4_PATH must be set")
-	}
+	pgRestorePath := lookupEnv("PG_RESTORE_9_4_PATH")
+
 	return &postgresRestorer{
 		artifactFilePath: artifactFilePath,
 		config:           config,
@@ -99,26 +89,19 @@ func (b postgresBackuper) Action() *exec.Cmd {
 }
 
 func ispg94(config Config, psqlPath string) bool {
-
-	var outb, errb bytes.Buffer
-
-	cmd := exec.Command(psqlPath,
-		"--tuples-only",
+	stdout, stderr, err := runner.Run(psqlPath, []string{"--tuples-only",
 		fmt.Sprintf("--username=%s", config.Username),
 		fmt.Sprintf("--host=%s", config.Host),
 		fmt.Sprintf("--port=%d", config.Port),
 		config.Database,
-		`--command=SELECT VERSION()`,
-	)
-	cmd.Env = append(cmd.Env, "PGPASSWORD="+config.Password)
-	cmd.Stdout = &outb
-	cmd.Stderr = &errb
-	err := cmd.Run()
+		`--command=SELECT VERSION()`},
+		map[string]string{"PGPASSWORD": config.Password})
+
 	if err != nil {
-		log.Fatalf("Unable to check version of Postgres: %v\n%s", err, errb.String())
+		log.Fatalf("Unable to check version of Postgres: %v\n%s\n%s", err, string(stdout), string(stderr))
 	}
 
-	version, _ := ParsePostgresVersion(outb.String())
+	version, _ := ParsePostgresVersion(string(stdout)) // TODO: err
 
 	return semVer_9_4.MinorVersionMatches(version)
 }

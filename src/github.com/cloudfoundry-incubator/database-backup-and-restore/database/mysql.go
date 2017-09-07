@@ -22,23 +22,12 @@ type mysqlBackuper struct {
 	clientBinary     string
 }
 
-func NewMysqlBackuper(config Config, artifactFilePath string) *mysqlBackuper {
-	mysqlClientPath, mysqlClientPathVariableSet := os.LookupEnv("MYSQL_CLIENT_PATH")
-	mysqlDumpPath, mysqlDumpPathVariableSet := os.LookupEnv("MYSQL_DUMP_PATH")
-
-	if !mysqlDumpPathVariableSet {
-		log.Fatalln("MYSQL_DUMP_PATH must be set")
-	}
-
-	if !mysqlClientPathVariableSet {
-		log.Fatalln("MYSQL_CLIENT_PATH must be set")
-	}
-
+func NewMysqlBackuper(config Config, artifactFilePath string, utilitiesConfig DatabaseUtilitiesConfig) *mysqlBackuper {
 	return &mysqlBackuper{
 		artifactFilePath: artifactFilePath,
 		config:           config,
-		backupBinary:     mysqlDumpPath,
-		clientBinary:     mysqlClientPath,
+		backupBinary:     utilitiesConfig.Mysql.Dump,
+		clientBinary:     utilitiesConfig.Mysql.Client,
 	}
 }
 

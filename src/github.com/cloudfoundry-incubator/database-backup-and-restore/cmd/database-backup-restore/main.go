@@ -50,11 +50,13 @@ func main() {
 
 	config := readAndValidateConfig(configPath)
 
+	utilitiesConfig := database.GetDependencies()
+
 	var interactor database.DBInteractor
 	if *restoreAction {
 		interactor = getRestorer(config, artifactFilePath)
 	} else {
-		interactor = getBackuper(config, artifactFilePath)
+		interactor = getBackuper(config, artifactFilePath, utilitiesConfig)
 	}
 
 	cmd := interactor.Action()
@@ -115,14 +117,14 @@ func getRestorer(config database.Config, artifactFilePath *string) database.DBIn
 	}
 }
 
-func getBackuper(config database.Config, artifactFilePath *string) database.DBInteractor {
+func getBackuper(config database.Config, artifactFilePath *string, utilitiesConfig database.DatabaseUtilitiesConfig) database.DBInteractor {
 	if config.Adapter == "postgres" {
 		return database.NewPostgresBackuper(
 			config, *artifactFilePath,
 		)
 	} else {
 		return database.NewMysqlBackuper(
-			config, *artifactFilePath,
+			config, *artifactFilePath, utilitiesConfig,
 		)
 	}
 }
