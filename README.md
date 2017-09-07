@@ -52,10 +52,11 @@ Template a `config.json` as follows:
 }
 ```
 
-Note: all fields in `config.json` need to be strings except `port` which is an int, and `tables` which is a list of strings.
+Note: all fields in `config.json` need to be strings except `port` which is an int.
 
-`tables` is an optional field. If you don't specify it, the entire database will be backed up and restored. If you specify
-a list of tables, only the tables in that list will be included in the backup, and on restore the other tables in the database will be left as is. If the json field is specified and empty, the utility will fail. If the json field contains non-existent tables the utility will fail.
+`tables` is an optional field (a list of strings). If you don't specify it, the entire database will be backed up and restored. If you specify
+a list of tables, only the tables in that list will be included in the backup, and on restore the other tables in the database will be left as is. If the field is specified and empty, the utility will fail. If the field contains non-existent tables the utility will fail.
+
 ```json
 {
   "username": "db user",
