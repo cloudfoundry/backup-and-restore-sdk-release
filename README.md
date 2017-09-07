@@ -49,15 +49,24 @@ Template a `config.json` as follows:
   "port": 3306, 
   "adapter": "db adapter; see 'Supported database adapters'",
   "database": "name of database to back up",
-  "tables": ["list", "of", "tables", "to", "back", "up"]
 }
 ```
 
 Note: all fields in `config.json` need to be strings except `port` which is an int, and `tables` which is a list of strings.
 
 `tables` is an optional field. If you don't specify it, the entire database will be backed up and restored. If you specify
-a list of tables, only the tables in that list will be included in the backup, and on restore the other tables in the database
-will be left as is.
+a list of tables, only the tables in that list will be included in the backup, and on restore the other tables in the database will be left as is. If the json field is specified and empty, the utility will fail. If the json field contains non-existent tables the utility will fail.
+```json
+{
+  "username": "db user",
+  "password": "db password",
+  "host": "db host",
+  "port": 3306, 
+  "adapter": "db adapter; see 'Supported database adapters'",
+  "database": "name of database to back up",
+  "tables": ["list", "of", "tables", "to", "back", "up"]
+}
+```
 
 We have not tested this with foreign key relationships or triggers spanning between tables specified in the `tables` list and other
 tables in the database not listed there. It's possible those relationships would be lost on restore.
