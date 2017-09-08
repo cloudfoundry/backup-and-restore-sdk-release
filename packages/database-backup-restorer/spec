@@ -22,4 +22,9 @@ dependencies:
 
 files:
 - github.com/cloudfoundry-incubator/database-backup-and-restore/cmd/database-backup-restore/main.go
+- github.com/cloudfoundry-incubator/database-backup-and-restore/config/*
 - github.com/cloudfoundry-incubator/database-backup-and-restore/database/*
+- github.com/cloudfoundry-incubator/database-backup-and-restore/mysql/*
+- github.com/cloudfoundry-incubator/database-backup-and-restore/postgres/*
+- github.com/cloudfoundry-incubator/database-backup-and-restore/version/*
+- github.com/cloudfoundry-incubator/database-backup-and-restore/runner/*
