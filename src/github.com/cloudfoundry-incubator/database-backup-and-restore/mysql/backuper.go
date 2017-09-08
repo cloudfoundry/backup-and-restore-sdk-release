@@ -1,4 +1,4 @@
-package database
+package mysql
 
 import (
 	"fmt"
@@ -6,24 +6,26 @@ import (
 	"os/exec"
 	"regexp"
 
+	"github.com/cloudfoundry-incubator/database-backup-and-restore/config"
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/runner"
+	"github.com/cloudfoundry-incubator/database-backup-and-restore/version"
 )
 
-type mysqlBackuper struct {
-	config       ConnectionConfig
+type Backuper struct {
+	config       config.ConnectionConfig
 	backupBinary string
 	clientBinary string
 }
 
-func NewMysqlBackuper(config ConnectionConfig, utilitiesConfig UtilitiesConfig) *mysqlBackuper {
-	return &mysqlBackuper{
+func NewBackuper(config config.ConnectionConfig, utilitiesConfig config.UtilitiesConfig) Backuper {
+	return Backuper{
 		config:       config,
 		backupBinary: utilitiesConfig.Mysql.Dump,
 		clientBinary: utilitiesConfig.Mysql.Client,
 	}
 }
 
-func (b mysqlBackuper) Action(artifactFilePath string) error {
+func (b Backuper) Action(artifactFilePath string) error {
 	// sample output: "mysqldump  Ver 10.16 Distrib 10.1.22-MariaDB, for Linux (x86_64)"
 	// /mysqldump\s+Ver\s+[^ ]+\s+Distrib\s+([^ ]+),/
 	mysqldumpCmd := exec.Command(b.backupBinary, "-V")
@@ -50,7 +52,7 @@ func (b mysqlBackuper) Action(artifactFilePath string) error {
 	// 	=> ServerX != DumpX => error
 	//	=> ServerY != DumpY => error
 	// ServerZ and DumpZ are regarded as patch version and compatibility is assumed
-	if mysqlServerVersion.major != mysqldumpVersion.major || mysqlServerVersion.minor != mysqldumpVersion.minor {
+	if !mysqlServerVersion.MinorVersionMatches( mysqldumpVersion){
 		log.Fatalf("Version mismatch between mysqldump %s and the MYSQL server %s\n"+
 			"mysqldump utility and the MYSQL server must be at the same major and minor version.\n",
 			mysqldumpVersion,
@@ -75,9 +77,11 @@ func (b mysqlBackuper) Action(artifactFilePath string) error {
 	return err
 }
 
-func extractVersionUsingCommand(cmd *exec.Cmd, searchPattern string) semanticVersion {
+func extractVersionUsingCommand(cmd *exec.Cmd, searchPattern string) version.SemanticVersion {
 	stdout, err := cmd.Output()
-	checkErr("Error running command.", err)
+	if err != nil {
+		log.Fatalln("Error running command.", err)
+	}
 
 	r := regexp.MustCompile(searchPattern)
 	matches := r.FindSubmatch(stdout)
@@ -93,9 +97,9 @@ func extractVersionUsingCommand(cmd *exec.Cmd, searchPattern string) semanticVer
 		log.Fatalln("Could not determine version by using search pattern:", searchPattern)
 	}
 
-	return semanticVersion{
-		major: string(matches[1]),
-		minor: string(matches[2]),
-		patch: string(matches[3]),
+	return version.SemanticVersion{
+		Major: string(matches[1]),
+		Minor: string(matches[2]),
+		Patch: string(matches[3]),
 	}
 }

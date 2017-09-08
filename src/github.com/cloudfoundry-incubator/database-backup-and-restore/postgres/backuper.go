@@ -1,24 +1,25 @@
-package database
+package postgres
 
 import (
 	"fmt"
 
+	"github.com/cloudfoundry-incubator/database-backup-and-restore/config"
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/runner"
 )
 
-type postgresBackuper struct {
-	config       ConnectionConfig
+type Backuper struct {
+	config       config.ConnectionConfig
 	backupBinary string
 }
 
-func NewPostgresBackuper(config ConnectionConfig, backupBinary string) *postgresBackuper {
-	return &postgresBackuper{
+func NewBackuper(config config.ConnectionConfig, backupBinary string) Backuper {
+	return Backuper{
 		config:       config,
 		backupBinary: backupBinary,
 	}
 }
 
-func (b postgresBackuper) Action(artifactFilePath string) error {
+func (b Backuper) Action(artifactFilePath string) error {
 	cmdArgs := []string{
 		"-v",
 		"--user=" + b.config.Username,

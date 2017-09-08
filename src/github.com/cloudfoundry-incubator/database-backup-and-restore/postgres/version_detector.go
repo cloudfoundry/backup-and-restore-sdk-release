@@ -1,21 +1,23 @@
-package database
+package postgres
 
 import (
 	"fmt"
 	"log"
 
+	"github.com/cloudfoundry-incubator/database-backup-and-restore/config"
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/runner"
+	"github.com/cloudfoundry-incubator/database-backup-and-restore/version"
 )
 
-type PostgresVersionDetector struct {
+type VersionDetector struct {
 	psqlPath string
 }
 
-func NewPostgresVersionDetector(psqlPath string) PostgresVersionDetector {
-	return PostgresVersionDetector{psqlPath: psqlPath}
+func NewVersionDetector(psqlPath string) VersionDetector {
+	return VersionDetector{psqlPath: psqlPath}
 }
 
-func (d PostgresVersionDetector) GetVersion(config ConnectionConfig) (semanticVersion, error) {
+func (d VersionDetector) GetVersion(config config.ConnectionConfig) (version.SemanticVersion, error) {
 	stdout, stderr, err := runner.Run(d.psqlPath, []string{"--tuples-only",
 		fmt.Sprintf("--username=%s", config.Username),
 		fmt.Sprintf("--host=%s", config.Host),
@@ -28,5 +30,5 @@ func (d PostgresVersionDetector) GetVersion(config ConnectionConfig) (semanticVe
 		log.Fatalf("Unable to check version of Postgres: %v\n%s\n%s", err, string(stdout), string(stderr))
 	}
 
-	return ParsePostgresVersion(string(stdout))
+	return ParseVersion(string(stdout))
 }

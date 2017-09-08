@@ -1,27 +1,32 @@
-package database
+package mysql
 
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
+
+	"github.com/cloudfoundry-incubator/database-backup-and-restore/config"
 )
 
-type mysqlRestorer struct {
-	config       ConnectionConfig
+type Restorer struct {
+	config       config.ConnectionConfig
 	clientBinary string
 }
 
-func NewMysqlRestorer(config ConnectionConfig, utilitiesConfig UtilitiesConfig) *mysqlRestorer {
-	return &mysqlRestorer{
+func NewRestorer(config config.ConnectionConfig, utilitiesConfig config.UtilitiesConfig) Restorer {
+	return Restorer{
 		config:       config,
 		clientBinary: utilitiesConfig.Mysql.Restore,
 	}
 }
 
-func (r mysqlRestorer) Action(artifactFilePath string) error {
+func (r Restorer) Action(artifactFilePath string) error {
 	artifactFile, err := os.Open(artifactFilePath)
-	checkErr("Error reading from artifact file,", err)
+	if err != nil {
+		log.Fatalln("Error reading from artifact file,", err)
+	}
 
 	cmd := exec.Command(r.clientBinary,
 		"-v",

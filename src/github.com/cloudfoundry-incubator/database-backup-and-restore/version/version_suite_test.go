@@ -1,4 +1,4 @@
-package database
+package version_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestDatabase(t *testing.T) {
+func TestVersion(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Database Suite")
+	RunSpecs(t, "Version Suite")
 }

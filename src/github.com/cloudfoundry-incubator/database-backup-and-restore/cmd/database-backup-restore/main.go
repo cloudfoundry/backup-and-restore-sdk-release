@@ -22,7 +22,9 @@ import (
 	"io/ioutil"
 	"log"
 
+	"github.com/cloudfoundry-incubator/database-backup-and-restore/config"
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/database"
+	"github.com/cloudfoundry-incubator/database-backup-and-restore/postgres"
 )
 
 var supportedAdapters = []string{"postgres", "mysql"}
@@ -40,21 +42,21 @@ func main() {
 	configPath, backupAction, restoreAction, artifactFilePath := parseFlags()
 	validateFlags(backupAction, restoreAction, configPath, artifactFilePath)
 
-	config := readAndValidateConfig(configPath)
-	utilitiesConfig := database.GetDependencies()
+	connectionConfig := readAndValidateConfig(configPath)
+	utilitiesConfig := config.GetDependencies()
+	interactor := makeInteractor(restoreAction, utilitiesConfig, connectionConfig)
 
-	interactor := makeInteractor(restoreAction, utilitiesConfig, config)
-
-	if err := interactor.Action(*artifactFilePath); err != nil {
+	err := interactor.Action(*artifactFilePath)
+	if err != nil {
 		log.Fatalf("You may need to delete the artifact-file that was created before re-running.\n%s\n", err)
 	}
 }
 
-func makeInteractor(restoreAction *bool, utilitiesConfig database.UtilitiesConfig, config database.ConnectionConfig) database.DBInteractor {
+func makeInteractor(restoreAction *bool, utilitiesConfig config.UtilitiesConfig, config config.ConnectionConfig) database.Interactor {
 	if *restoreAction {
 		return database.NewRestorerFactory(utilitiesConfig).Make(config)
 	} else {
-		postgresVersionDetector := database.NewPostgresVersionDetector(utilitiesConfig.Postgres_9_6.Client)
+		postgresVersionDetector := postgres.NewVersionDetector(utilitiesConfig.Postgres_9_6.Client)
 		return database.NewBackuperFactory(utilitiesConfig, postgresVersionDetector).Make(config)
 	}
 }
@@ -68,22 +70,22 @@ func parseFlags() (*string, *bool, *bool, *string) {
 	return configPath, backupAction, restoreAction, artifactFilePath
 }
 
-func readAndValidateConfig(configPath *string) database.ConnectionConfig {
+func readAndValidateConfig(configPath *string) config.ConnectionConfig {
 	configString, err := ioutil.ReadFile(*configPath)
 	if err != nil {
 		log.Fatalf("Fail reading config file: %s\n", err)
 	}
-	var config database.ConnectionConfig
-	if err := json.Unmarshal(configString, &config); err != nil {
+	var connectionConfig config.ConnectionConfig
+	if err := json.Unmarshal(configString, &connectionConfig); err != nil {
 		log.Fatalf("Could not parse config json: %s\n", err)
 	}
-	if !isSupported(config.Adapter) {
-		log.Fatalf("Unsupported adapter %s\n", config.Adapter)
+	if !isSupported(connectionConfig.Adapter) {
+		log.Fatalf("Unsupported adapter %s\n", connectionConfig.Adapter)
 	}
-	if config.Tables != nil && len(config.Tables) == 0 {
+	if connectionConfig.Tables != nil && len(connectionConfig.Tables) == 0 {
 		log.Fatalf("Tables specified but empty\n")
 	}
-	return config
+	return connectionConfig
 }
 
 func validateFlags(backupAction *bool, restoreAction *bool, configPath *string, artifactFilePath *string) {

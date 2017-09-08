@@ -1,8 +1,4 @@
-package database
-
-import (
-	"log"
-)
+package config
 
 type ConnectionConfig struct {
 	Username string   `json:"username"`
@@ -12,14 +8,4 @@ type ConnectionConfig struct {
 	Host     string   `json:"host"`
 	Database string   `json:"database"`
 	Tables   []string `json:"tables"`
-}
-
-func checkErr(msg string, err error) {
-	if err != nil {
-		log.Fatalln(msg, err)
-	}
-}
-
-type DBInteractor interface {
-	Action(artifactFilePath string) error
 }
