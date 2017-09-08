@@ -7,45 +7,37 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+
+	"github.com/cloudfoundry-incubator/database-backup-and-restore/runner"
 )
 
 type mysqlRestorer struct {
-	artifactFilePath string
-	config           Config
-	clientBinary     string
+	config       Config
+	clientBinary string
 }
 
 type mysqlBackuper struct {
-	artifactFilePath string
-	config           Config
-	backupBinary     string
-	clientBinary     string
+	config       Config
+	backupBinary string
+	clientBinary string
 }
 
-func NewMysqlBackuper(config Config, artifactFilePath string, utilitiesConfig DatabaseUtilitiesConfig) *mysqlBackuper {
+func NewMysqlBackuper(config Config, utilitiesConfig DatabaseUtilitiesConfig) *mysqlBackuper {
 	return &mysqlBackuper{
-		artifactFilePath: artifactFilePath,
-		config:           config,
-		backupBinary:     utilitiesConfig.Mysql.Dump,
-		clientBinary:     utilitiesConfig.Mysql.Client,
+		config:       config,
+		backupBinary: utilitiesConfig.Mysql.Dump,
+		clientBinary: utilitiesConfig.Mysql.Client,
 	}
 }
 
-func NewMysqlRestorer(config Config, artifactFilePath string) *mysqlRestorer {
-	mysqlClientPath, mysqlClientPathVariableSet := os.LookupEnv("MYSQL_CLIENT_PATH")
-
-	if !mysqlClientPathVariableSet {
-		log.Fatalln("MYSQL_CLIENT_PATH must be set")
-	}
-
+func NewMysqlRestorer(config Config, utilitiesConfig DatabaseUtilitiesConfig) *mysqlRestorer {
 	return &mysqlRestorer{
-		artifactFilePath: artifactFilePath,
-		config:           config,
-		clientBinary:     mysqlClientPath,
+		config:       config,
+		clientBinary: utilitiesConfig.Mysql.Restore,
 	}
 }
 
-func (b mysqlBackuper) Action() *exec.Cmd {
+func (b mysqlBackuper) Action(artifactFilePath string) error {
 	// sample output: "mysqldump  Ver 10.16 Distrib 10.1.22-MariaDB, for Linux (x86_64)"
 	// /mysqldump\s+Ver\s+[^ ]+\s+Distrib\s+([^ ]+),/
 	mysqldumpCmd := exec.Command(b.backupBinary, "-V")
@@ -86,19 +78,19 @@ func (b mysqlBackuper) Action() *exec.Cmd {
 		"--user=" + b.config.Username,
 		"--host=" + b.config.Host,
 		fmt.Sprintf("--port=%d", b.config.Port),
-		"--result-file=" + b.artifactFilePath,
+		"--result-file=" + artifactFilePath,
 		b.config.Database,
 	}
+
 	cmdArgs = append(cmdArgs, b.config.Tables...)
 
-	cmd := exec.Command(b.backupBinary, cmdArgs...)
-	cmd.Env = append(cmd.Env, "MYSQL_PWD="+b.config.Password)
+	_, _, err := runner.Run(b.backupBinary, cmdArgs, map[string]string{"MYSQL_PWD": b.config.Password})
 
-	return cmd
+	return err
 }
 
-func (r mysqlRestorer) Action() *exec.Cmd {
-	artifactFile, err := os.Open(r.artifactFilePath)
+func (r mysqlRestorer) Action(artifactFilePath string) error {
+	artifactFile, err := os.Open(artifactFilePath)
 	checkErr("Error reading from artifact file,", err)
 
 	cmd := exec.Command(r.clientBinary,
@@ -112,7 +104,7 @@ func (r mysqlRestorer) Action() *exec.Cmd {
 	cmd.Stdin = bufio.NewReader(artifactFile)
 	cmd.Env = append(cmd.Env, "MYSQL_PWD="+r.config.Password)
 
-	return cmd
+	return cmd.Run()
 }
 
 func extractVersionUsingCommand(cmd *exec.Cmd, searchPattern string) semanticVersion {

@@ -3,89 +3,78 @@ package database
 import (
 	"fmt"
 	"log"
-	"os/exec"
 
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/runner"
 )
 
 type postgresRestorer struct {
-	artifactFilePath string
-	config           Config
-	restoreBinary    string
+	config        Config
+	restoreBinary string
 }
 
 type postgresBackuper struct {
-	artifactFilePath string
-	config           Config
-	backupBinary     string
+	config       Config
+	backupBinary string
 }
 
-func NewPostgresBackuper(config Config, artifactFilePath string) *postgresBackuper {
-	psqlPath := lookupEnv("PG_CLIENT_PATH")
+func NewPostgresBackuper(config Config, utilitiesConfig DatabaseUtilitiesConfig) *postgresBackuper {
+	psqlPath := utilitiesConfig.Postgres_9_6.Client
 
 	var pgDumpPath string
 
 	if ispg94(config, psqlPath) {
-		pgDumpPath = lookupEnv("PG_DUMP_9_4_PATH")
-
+		pgDumpPath = utilitiesConfig.Postgres_9_4.Dump
 	} else {
-		pgDumpPath = lookupEnv("PG_DUMP_9_6_PATH")
+		pgDumpPath = utilitiesConfig.Postgres_9_6.Dump
 	}
 
 	return &postgresBackuper{
-		artifactFilePath: artifactFilePath,
-		config:           config,
-		backupBinary:     pgDumpPath,
+		config:       config,
+		backupBinary: pgDumpPath,
 	}
 }
 
-func NewPostgresRestorer(config Config, artifactFilePath string) *postgresRestorer {
-	pgRestorePath := lookupEnv("PG_RESTORE_9_4_PATH")
-
+func NewPostgresRestorer(config Config, utilitiesConfig DatabaseUtilitiesConfig) *postgresRestorer {
 	return &postgresRestorer{
-		artifactFilePath: artifactFilePath,
-		config:           config,
-		restoreBinary:    pgRestorePath,
+		config:        config,
+		restoreBinary: utilitiesConfig.Postgres_9_4.Restore,
 	}
 }
 
-func (r postgresRestorer) Action() *exec.Cmd {
-
-	cmd := exec.Command(r.restoreBinary,
-		"-v",
-		"--user="+r.config.Username,
-		"--host="+r.config.Host,
+func (r postgresRestorer) Action(artifactFilePath string) error {
+	_, _, err := runner.Run(r.restoreBinary, []string{"-v",
+		"--user=" + r.config.Username,
+		"--host=" + r.config.Host,
 		fmt.Sprintf("--port=%d", r.config.Port),
 		"--format=custom",
-		"--dbname="+r.config.Database,
+		"--dbname=" + r.config.Database,
 		"--clean",
-		r.artifactFilePath,
-	)
+		artifactFilePath},
+		map[string]string{"PGPASSWORD": r.config.Password})
 
-	cmd.Env = append(cmd.Env, "PGPASSWORD="+r.config.Password)
-
-	return cmd
+	return err
 }
 
-func (b postgresBackuper) Action() *exec.Cmd {
+func (b postgresBackuper) Action(artifactFilePath string) error {
 	cmdArgs := []string{
 		"-v",
 		"--user=" + b.config.Username,
 		"--host=" + b.config.Host,
 		fmt.Sprintf("--port=%d", b.config.Port),
 		"--format=custom",
-		"--file=" + b.artifactFilePath,
+		"--file=" + artifactFilePath,
 		b.config.Database,
 	}
-
 	for _, tableName := range b.config.Tables {
 		cmdArgs = append(cmdArgs, "-t", tableName)
 	}
+	_, _, err := runner.Run(
+		b.backupBinary,
+		cmdArgs,
+		map[string]string{"PGPASSWORD": b.config.Password},
+	)
 
-	cmd := exec.Command(b.backupBinary, cmdArgs...)
-	cmd.Env = append(cmd.Env, "PGPASSWORD="+b.config.Password)
-
-	return cmd
+	return err
 }
 
 func ispg94(config Config, psqlPath string) bool {

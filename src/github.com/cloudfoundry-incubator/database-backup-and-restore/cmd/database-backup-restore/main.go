@@ -19,10 +19,8 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/database"
 )
@@ -54,18 +52,12 @@ func main() {
 
 	var interactor database.DBInteractor
 	if *restoreAction {
-		interactor = getRestorer(config, artifactFilePath)
+		interactor = getRestorer(config, utilitiesConfig)
 	} else {
-		interactor = getBackuper(config, artifactFilePath, utilitiesConfig)
+		interactor = getBackuper(config, utilitiesConfig)
 	}
 
-	cmd := interactor.Action()
-	fmt.Println(cmd.Args)
-
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
+	if err := interactor.Action(*artifactFilePath); err != nil {
 		log.Fatalf("You may need to delete the artifact-file that was created before re-running.\n%s\n", err)
 	}
 }
@@ -105,26 +97,26 @@ func failAndPrintUsage(message string) {
 	log.Fatalf("%s\nUsage: database-backup-restorer [--backup|--restore] --config <config-file> --artifact-file <artifact-file>\n", message)
 }
 
-func getRestorer(config database.Config, artifactFilePath *string) database.DBInteractor {
+func getRestorer(config database.Config, utilitiesConfig database.DatabaseUtilitiesConfig) database.DBInteractor {
 	if config.Adapter == "postgres" {
 		return database.NewPostgresRestorer(
-			config, *artifactFilePath,
+			config, utilitiesConfig,
 		)
 	} else {
 		return database.NewMysqlRestorer(
-			config, *artifactFilePath,
+			config, utilitiesConfig,
 		)
 	}
 }
 
-func getBackuper(config database.Config, artifactFilePath *string, utilitiesConfig database.DatabaseUtilitiesConfig) database.DBInteractor {
+func getBackuper(config database.Config, utilitiesConfig database.DatabaseUtilitiesConfig) database.DBInteractor {
 	if config.Adapter == "postgres" {
 		return database.NewPostgresBackuper(
-			config, *artifactFilePath,
+			config, utilitiesConfig,
 		)
 	} else {
 		return database.NewMysqlBackuper(
-			config, *artifactFilePath, utilitiesConfig,
+			config, utilitiesConfig,
 		)
 	}
 }
