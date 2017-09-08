@@ -11,8 +11,6 @@ type semanticVersion struct {
 	patch string
 }
 
-var semVer_9_4 = semanticVersion{major: "9", minor: "4"}
-
 func (v semanticVersion) String() string {
 	return strings.Join([]string{v.major, v.minor, v.patch}, ".")
 }

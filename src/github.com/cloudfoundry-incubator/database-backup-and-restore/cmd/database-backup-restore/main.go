@@ -37,36 +37,43 @@ func isSupported(adapter string) bool {
 }
 
 func main() {
-	var configPath = flag.String("config", "", "Path to JSON config file")
-	var backupAction = flag.Bool("backup", false, "Run database backup")
-	var restoreAction = flag.Bool("restore", false, "Run database restore")
-	var artifactFilePath = flag.String("artifact-file", "", "Path to output file")
-
-	flag.Parse()
-
+	configPath, backupAction, restoreAction, artifactFilePath := parseFlags()
 	validateFlags(backupAction, restoreAction, configPath, artifactFilePath)
 
 	config := readAndValidateConfig(configPath)
-
 	utilitiesConfig := database.GetDependencies()
 
-	var interactor database.DBInteractor
-	if *restoreAction {
-		interactor = getRestorer(config, utilitiesConfig)
-	} else {
-		interactor = getBackuper(config, utilitiesConfig)
-	}
+	interactor := makeInteractor(restoreAction, utilitiesConfig, config)
 
 	if err := interactor.Action(*artifactFilePath); err != nil {
 		log.Fatalf("You may need to delete the artifact-file that was created before re-running.\n%s\n", err)
 	}
 }
-func readAndValidateConfig(configPath *string) database.Config {
+
+func makeInteractor(restoreAction *bool, utilitiesConfig database.UtilitiesConfig, config database.ConnectionConfig) database.DBInteractor {
+	if *restoreAction {
+		return database.NewRestorerFactory(utilitiesConfig).Make(config)
+	} else {
+		postgresVersionDetector := database.NewPostgresVersionDetector(utilitiesConfig.Postgres_9_6.Client)
+		return database.NewBackuperFactory(utilitiesConfig, postgresVersionDetector).Make(config)
+	}
+}
+
+func parseFlags() (*string, *bool, *bool, *string) {
+	var configPath = flag.String("config", "", "Path to JSON config file")
+	var backupAction = flag.Bool("backup", false, "Run database backup")
+	var restoreAction = flag.Bool("restore", false, "Run database restore")
+	var artifactFilePath = flag.String("artifact-file", "", "Path to output file")
+	flag.Parse()
+	return configPath, backupAction, restoreAction, artifactFilePath
+}
+
+func readAndValidateConfig(configPath *string) database.ConnectionConfig {
 	configString, err := ioutil.ReadFile(*configPath)
 	if err != nil {
 		log.Fatalf("Fail reading config file: %s\n", err)
 	}
-	var config database.Config
+	var config database.ConnectionConfig
 	if err := json.Unmarshal(configString, &config); err != nil {
 		log.Fatalf("Could not parse config json: %s\n", err)
 	}
@@ -78,6 +85,7 @@ func readAndValidateConfig(configPath *string) database.Config {
 	}
 	return config
 }
+
 func validateFlags(backupAction *bool, restoreAction *bool, configPath *string, artifactFilePath *string) {
 	if *backupAction && *restoreAction {
 		failAndPrintUsage("Only one of: --backup or --restore can be provided")
@@ -95,28 +103,4 @@ func validateFlags(backupAction *bool, restoreAction *bool, configPath *string, 
 
 func failAndPrintUsage(message string) {
 	log.Fatalf("%s\nUsage: database-backup-restorer [--backup|--restore] --config <config-file> --artifact-file <artifact-file>\n", message)
-}
-
-func getRestorer(config database.Config, utilitiesConfig database.DatabaseUtilitiesConfig) database.DBInteractor {
-	if config.Adapter == "postgres" {
-		return database.NewPostgresRestorer(
-			config, utilitiesConfig,
-		)
-	} else {
-		return database.NewMysqlRestorer(
-			config, utilitiesConfig,
-		)
-	}
-}
-
-func getBackuper(config database.Config, utilitiesConfig database.DatabaseUtilitiesConfig) database.DBInteractor {
-	if config.Adapter == "postgres" {
-		return database.NewPostgresBackuper(
-			config, utilitiesConfig,
-		)
-	} else {
-		return database.NewMysqlBackuper(
-			config, utilitiesConfig,
-		)
-	}
 }

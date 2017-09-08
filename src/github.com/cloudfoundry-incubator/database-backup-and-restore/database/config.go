@@ -11,14 +11,14 @@ type UtilityPaths struct {
 	Restore string
 }
 
-type DatabaseUtilitiesConfig struct {
+type UtilitiesConfig struct {
 	Postgres_9_6 UtilityPaths
 	Postgres_9_4 UtilityPaths
 	Mysql        UtilityPaths
 }
 
-func GetDependencies() DatabaseUtilitiesConfig {
-	return DatabaseUtilitiesConfig{
+func GetDependencies() UtilitiesConfig {
+	return UtilitiesConfig{
 		Postgres_9_6: UtilityPaths{
 			Client: lookupEnv("PG_CLIENT_PATH"),
 			Dump:   lookupEnv("PG_DUMP_9_6_PATH"),

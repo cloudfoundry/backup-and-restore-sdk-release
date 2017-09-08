@@ -4,7 +4,7 @@ import (
 	"log"
 )
 
-type Config struct {
+type ConnectionConfig struct {
 	Username string   `json:"username"`
 	Password string   `json:"password"`
 	Port     int      `json:"port"`
