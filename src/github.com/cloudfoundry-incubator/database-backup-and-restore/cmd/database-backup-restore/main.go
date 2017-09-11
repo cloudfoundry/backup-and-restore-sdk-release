@@ -24,7 +24,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/config"
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/database"
-	"github.com/cloudfoundry-incubator/database-backup-and-restore/mysql"
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/postgres"
 )
 
@@ -57,13 +56,9 @@ func makeInteractor(isRestoreAction *bool, utilitiesConfig config.UtilitiesConfi
 	config config.ConnectionConfig) database.Interactor {
 
 	postgresServerVersionDetector := postgres.NewServerVersionDetector(utilitiesConfig.Postgres_9_6.Client)
-	mysqlServerVersionDetector := mysql.NewServerVersionDetector(utilitiesConfig.Mysql.Client)
-	mysqlDumpUtilityVersionDetector := mysql.NewMysqlDumpUtilityVersionDetector(utilitiesConfig.Mysql.Dump)
 	return database.NewInteractorFactory(
 		utilitiesConfig,
-		postgresServerVersionDetector,
-		mysqlServerVersionDetector,
-		mysqlDumpUtilityVersionDetector).Make(actionLabel(isRestoreAction), config)
+		postgresServerVersionDetector).Make(actionLabel(isRestoreAction), config)
 
 }
 func parseFlags() (*string, *bool, *bool, *string) {
