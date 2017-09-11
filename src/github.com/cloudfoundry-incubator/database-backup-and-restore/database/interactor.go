@@ -18,5 +18,7 @@ type DumpUtilityVersionDetector interface {
 }
 
 type Factory interface {
-	Make(config.ConnectionConfig) Interactor
+	Make(Action, config.ConnectionConfig) Interactor
 }
+
+type Action string

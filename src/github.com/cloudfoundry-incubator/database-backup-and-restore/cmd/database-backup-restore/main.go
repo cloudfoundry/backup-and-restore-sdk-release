@@ -53,22 +53,19 @@ func main() {
 	}
 }
 
-func makeInteractor(
-	restoreAction *bool, utilitiesConfig config.UtilitiesConfig, config config.ConnectionConfig) database.Interactor {
-	if *restoreAction {
-		return database.NewRestorerFactory(utilitiesConfig).Make(config)
-	} else {
-		postgresServerVersionDetector := postgres.NewServerVersionDetector(utilitiesConfig.Postgres_9_6.Client)
-		mysqlServerVersionDetector := mysql.NewServerVersionDetector(utilitiesConfig.Mysql.Client)
-		mysqlDumpUtilityVersionDetector := mysql.NewMysqlDumpUtilityVersionDetector(utilitiesConfig.Mysql.Dump)
-		return database.NewBackuperFactory(
-			utilitiesConfig,
-			postgresServerVersionDetector,
-			mysqlServerVersionDetector,
-			mysqlDumpUtilityVersionDetector).Make(config)
-	}
-}
+func makeInteractor(isRestoreAction *bool, utilitiesConfig config.UtilitiesConfig,
+	config config.ConnectionConfig) database.Interactor {
 
+	postgresServerVersionDetector := postgres.NewServerVersionDetector(utilitiesConfig.Postgres_9_6.Client)
+	mysqlServerVersionDetector := mysql.NewServerVersionDetector(utilitiesConfig.Mysql.Client)
+	mysqlDumpUtilityVersionDetector := mysql.NewMysqlDumpUtilityVersionDetector(utilitiesConfig.Mysql.Dump)
+	return database.NewInteractorFactory(
+		utilitiesConfig,
+		postgresServerVersionDetector,
+		mysqlServerVersionDetector,
+		mysqlDumpUtilityVersionDetector).Make(actionLabel(isRestoreAction), config)
+
+}
 func parseFlags() (*string, *bool, *bool, *string) {
 	var configPath = flag.String("config", "", "Path to JSON config file")
 	var backupAction = flag.Bool("backup", false, "Run database backup")
@@ -114,4 +111,14 @@ func validateFlags(backupAction *bool, restoreAction *bool, configPath *string, 
 func failAndPrintUsage(message string) {
 	log.Fatalf("%s\nUsage: database-backup-restorer [--backup|--restore] --config <config-file> "+
 		"--artifact-file <artifact-file>\n", message)
+}
+
+func actionLabel(restoreAction *bool) database.Action {
+	var action database.Action
+	if *restoreAction {
+		action = "restore"
+	} else {
+		action = "backup"
+	}
+	return action
 }

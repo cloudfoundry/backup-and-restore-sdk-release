@@ -12,10 +12,10 @@ type Restorer struct {
 	restoreBinary string
 }
 
-func NewRestorer(config config.ConnectionConfig, utilitiesConfig config.UtilitiesConfig) Restorer {
+func NewRestorer(config config.ConnectionConfig, restoreBinary string) Restorer {
 	return Restorer{
 		config:        config,
-		restoreBinary: utilitiesConfig.Postgres_9_4.Restore,
+		restoreBinary: restoreBinary,
 	}
 }
 

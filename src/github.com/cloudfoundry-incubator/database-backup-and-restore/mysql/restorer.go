@@ -15,10 +15,10 @@ type Restorer struct {
 	clientBinary string
 }
 
-func NewRestorer(config config.ConnectionConfig, utilitiesConfig config.UtilitiesConfig) Restorer {
+func NewRestorer(config config.ConnectionConfig, restoreBinary string) Restorer {
 	return Restorer{
 		config:       config,
-		clientBinary: utilitiesConfig.Mysql.Restore,
+		clientBinary: restoreBinary,
 	}
 }
 

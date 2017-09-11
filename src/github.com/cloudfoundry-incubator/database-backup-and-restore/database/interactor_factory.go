@@ -16,7 +16,7 @@ type BackuperFactory struct {
 	mysqlDumpUtilityVersionDetector DumpUtilityVersionDetector
 }
 
-func NewBackuperFactory(
+func NewInteractorFactory(
 	utilitiesConfig config.UtilitiesConfig,
 	postgresServerVersionDetector ServerVersionDetector,
 	mysqlServerVersionDetector ServerVersionDetector,
@@ -29,12 +29,18 @@ func NewBackuperFactory(
 	}
 }
 
-func (f BackuperFactory) Make(config config.ConnectionConfig) Interactor {
-	if config.Adapter == "postgres" {
+func (f BackuperFactory) Make(action Action, config config.ConnectionConfig) Interactor {
+	switch {
+	case config.Adapter == "postgres" && action == "backup":
 		return f.makePostgresBackuper(config)
-	} else {
+	case config.Adapter == "mysql" && action == "backup":
 		return f.makeMysqlBackuper(config)
+	case config.Adapter == "postgres" && action == "restore":
+		return postgres.NewRestorer(config, f.utilitiesConfig.Postgres_9_4.Restore)
+	case config.Adapter == "mysql" && action == "restore":
+		return mysql.NewRestorer(config, f.utilitiesConfig.Mysql.Restore)
 	}
+	return nil
 }
 
 func (f BackuperFactory) makeMysqlBackuper(config config.ConnectionConfig) mysql.Backuper {
@@ -49,7 +55,7 @@ func (f BackuperFactory) makeMysqlBackuper(config config.ConnectionConfig) mysql
 			serverVersion)
 	}
 	return mysql.NewBackuper(
-		config, f.utilitiesConfig,
+		config, f.utilitiesConfig.Mysql.Dump,
 	)
 }
 

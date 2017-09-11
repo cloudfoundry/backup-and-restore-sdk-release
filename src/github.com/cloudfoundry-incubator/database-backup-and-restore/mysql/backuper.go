@@ -14,14 +14,12 @@ import (
 type Backuper struct {
 	config       config.ConnectionConfig
 	backupBinary string
-	clientBinary string
 }
 
-func NewBackuper(config config.ConnectionConfig, utilitiesConfig config.UtilitiesConfig) Backuper {
+func NewBackuper(config config.ConnectionConfig, backupBinary string) Backuper {
 	return Backuper{
 		config:       config,
-		backupBinary: utilitiesConfig.Mysql.Dump,
-		clientBinary: utilitiesConfig.Mysql.Client,
+		backupBinary: backupBinary,
 	}
 }
 
