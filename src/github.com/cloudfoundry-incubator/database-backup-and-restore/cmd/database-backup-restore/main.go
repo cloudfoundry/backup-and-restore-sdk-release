@@ -17,9 +17,6 @@
 package main
 
 import (
-	"encoding/json"
-	"flag"
-	"io/ioutil"
 	"log"
 
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/config"
@@ -27,32 +24,28 @@ import (
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/postgres"
 )
 
-var supportedAdapters = []string{"postgres", "mysql"}
-
-func isSupported(adapter string) bool {
-	for _, el := range supportedAdapters {
-		if el == adapter {
-			return true
-		}
-	}
-	return false
-}
-
 func main() {
-	configPath, backupAction, restoreAction, artifactFilePath := parseFlags()
-	validateFlags(backupAction, restoreAction, configPath, artifactFilePath)
+	flags, err := config.ParseFlags()
+	if err != nil {
+		log.Fatalf("%s\nUsage: database-backup-restorer [--backup|--restore] --config <config-file> "+
+			"--artifact-file <artifact-file>\n", err)
+	}
 
-	connectionConfig := readAndValidateConfig(configPath)
+	connectionConfig, err := config.ParseAndValidateConnectionConfig(flags.ConfigPath)
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+
 	utilitiesConfig := config.GetDependencies()
-	interactor := makeInteractor(restoreAction, utilitiesConfig, connectionConfig)
+	interactor := makeInteractor(flags.IsRestore, utilitiesConfig, connectionConfig)
 
-	err := interactor.Action(*artifactFilePath)
+	err = interactor.Action(flags.ArtifactFilePath)
 	if err != nil {
 		log.Fatalf("You may need to delete the artifact-file that was created before re-running.\n%s\n", err)
 	}
 }
 
-func makeInteractor(isRestoreAction *bool, utilitiesConfig config.UtilitiesConfig,
+func makeInteractor(isRestoreAction bool, utilitiesConfig config.UtilitiesConfig,
 	config config.ConnectionConfig) database.Interactor {
 
 	postgresServerVersionDetector := postgres.NewServerVersionDetector(utilitiesConfig.Postgres_9_6.Client)
@@ -61,56 +54,10 @@ func makeInteractor(isRestoreAction *bool, utilitiesConfig config.UtilitiesConfi
 		postgresServerVersionDetector).Make(actionLabel(isRestoreAction), config)
 
 }
-func parseFlags() (*string, *bool, *bool, *string) {
-	var configPath = flag.String("config", "", "Path to JSON config file")
-	var backupAction = flag.Bool("backup", false, "Run database backup")
-	var restoreAction = flag.Bool("restore", false, "Run database restore")
-	var artifactFilePath = flag.String("artifact-file", "", "Path to output file")
-	flag.Parse()
-	return configPath, backupAction, restoreAction, artifactFilePath
-}
 
-func readAndValidateConfig(configPath *string) config.ConnectionConfig {
-	configString, err := ioutil.ReadFile(*configPath)
-	if err != nil {
-		log.Fatalf("Fail reading config file: %s\n", err)
-	}
-	var connectionConfig config.ConnectionConfig
-	if err := json.Unmarshal(configString, &connectionConfig); err != nil {
-		log.Fatalf("Could not parse config json: %s\n", err)
-	}
-	if !isSupported(connectionConfig.Adapter) {
-		log.Fatalf("Unsupported adapter %s\n", connectionConfig.Adapter)
-	}
-	if connectionConfig.Tables != nil && len(connectionConfig.Tables) == 0 {
-		log.Fatalf("Tables specified but empty\n")
-	}
-	return connectionConfig
-}
-
-func validateFlags(backupAction *bool, restoreAction *bool, configPath *string, artifactFilePath *string) {
-	if *backupAction && *restoreAction {
-		failAndPrintUsage("Only one of: --backup or --restore can be provided")
-	}
-	if *configPath == "" {
-		failAndPrintUsage("Missing --config flag")
-	}
-	if !*backupAction && !*restoreAction {
-		failAndPrintUsage("Missing --backup or --restore flag")
-	}
-	if *artifactFilePath == "" {
-		failAndPrintUsage("Missing --artifact-file flag")
-	}
-}
-
-func failAndPrintUsage(message string) {
-	log.Fatalf("%s\nUsage: database-backup-restorer [--backup|--restore] --config <config-file> "+
-		"--artifact-file <artifact-file>\n", message)
-}
-
-func actionLabel(restoreAction *bool) database.Action {
+func actionLabel(isRestoreAction bool) database.Action {
 	var action database.Action
-	if *restoreAction {
+	if isRestoreAction {
 		action = "restore"
 	} else {
 		action = "backup"

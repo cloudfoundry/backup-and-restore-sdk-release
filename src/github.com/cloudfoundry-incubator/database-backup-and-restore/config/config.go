@@ -43,3 +43,14 @@ func lookupEnv(key string) string {
 	}
 	return psqlPath
 }
+
+var supportedAdapters = []string{"postgres", "mysql"}
+
+func isSupported(adapter string) bool {
+	for _, el := range supportedAdapters {
+		if el == adapter {
+			return true
+		}
+	}
+	return false
+}
