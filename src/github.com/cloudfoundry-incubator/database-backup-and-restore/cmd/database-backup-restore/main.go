@@ -24,6 +24,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/config"
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/database"
+	"github.com/cloudfoundry-incubator/database-backup-and-restore/mysql"
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/postgres"
 )
 
@@ -52,12 +53,19 @@ func main() {
 	}
 }
 
-func makeInteractor(restoreAction *bool, utilitiesConfig config.UtilitiesConfig, config config.ConnectionConfig) database.Interactor {
+func makeInteractor(
+	restoreAction *bool, utilitiesConfig config.UtilitiesConfig, config config.ConnectionConfig) database.Interactor {
 	if *restoreAction {
 		return database.NewRestorerFactory(utilitiesConfig).Make(config)
 	} else {
-		postgresVersionDetector := postgres.NewVersionDetector(utilitiesConfig.Postgres_9_6.Client)
-		return database.NewBackuperFactory(utilitiesConfig, postgresVersionDetector).Make(config)
+		postgresServerVersionDetector := postgres.NewServerVersionDetector(utilitiesConfig.Postgres_9_6.Client)
+		mysqlServerVersionDetector := mysql.NewServerVersionDetector(utilitiesConfig.Mysql.Client)
+		mysqlDumpUtilityVersionDetector := mysql.NewMysqlDumpUtilityVersionDetector(utilitiesConfig.Mysql.Dump)
+		return database.NewBackuperFactory(
+			utilitiesConfig,
+			postgresServerVersionDetector,
+			mysqlServerVersionDetector,
+			mysqlDumpUtilityVersionDetector).Make(config)
 	}
 }
 
@@ -104,5 +112,6 @@ func validateFlags(backupAction *bool, restoreAction *bool, configPath *string, 
 }
 
 func failAndPrintUsage(message string) {
-	log.Fatalf("%s\nUsage: database-backup-restorer [--backup|--restore] --config <config-file> --artifact-file <artifact-file>\n", message)
+	log.Fatalf("%s\nUsage: database-backup-restorer [--backup|--restore] --config <config-file> "+
+		"--artifact-file <artifact-file>\n", message)
 }

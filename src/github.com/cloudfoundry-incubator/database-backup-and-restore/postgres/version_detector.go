@@ -9,15 +9,15 @@ import (
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/version"
 )
 
-type VersionDetector struct {
+type ServerVersionDetector struct {
 	psqlPath string
 }
 
-func NewVersionDetector(psqlPath string) VersionDetector {
-	return VersionDetector{psqlPath: psqlPath}
+func NewServerVersionDetector(psqlPath string) ServerVersionDetector {
+	return ServerVersionDetector{psqlPath: psqlPath}
 }
 
-func (d VersionDetector) GetVersion(config config.ConnectionConfig) (version.SemanticVersion, error) {
+func (d ServerVersionDetector) GetVersion(config config.ConnectionConfig) (version.SemanticVersion, error) {
 	stdout, stderr, err := runner.Run(d.psqlPath, []string{"--tuples-only",
 		fmt.Sprintf("--username=%s", config.Username),
 		fmt.Sprintf("--host=%s", config.Host),

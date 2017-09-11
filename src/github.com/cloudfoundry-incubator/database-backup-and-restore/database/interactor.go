@@ -9,8 +9,12 @@ type Interactor interface {
 	Action(artifactFilePath string) error
 }
 
-type VersionDetector interface {
+type ServerVersionDetector interface {
 	GetVersion(config.ConnectionConfig) (version.SemanticVersion, error)
+}
+
+type DumpUtilityVersionDetector interface {
+	GetVersion() (version.SemanticVersion, error)
 }
 
 type Factory interface {
