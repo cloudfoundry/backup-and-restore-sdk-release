@@ -135,6 +135,28 @@ func PostgresTests(postgresPackage, postgresDeployment string) func() {
 					NotTo(gbytes.Say("Old Place"))
 			})
 		})
+
+		XContext("and 'tables' are specified in config, with a non-existent table", func() {
+			BeforeEach(func() {
+				configJson := fmt.Sprintf(
+					`{"username":"test_user","password":"%s","host":"%s","port":5432,
+						"database":"%s","adapter":"postgres", "tables":["people", "lizards"]}`,
+					MustHaveEnv("POSTGRES_PASSWORD"),
+					dbJob.getIPOfInstance(),
+					databaseName,
+				)
+				brJob.runOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+			})
+
+			It("backs up and restores only the specified tables", func() {
+				session := brJob.runOnInstance(fmt.Sprintf(
+					"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+					dbDumpPath,
+					configPath))
+				Expect(session.ExitCode()).NotTo(BeZero())
+				Expect(session).To(gbytes.Say("Couldn't find table: \"lizards\""))
+			})
+		})
 	}
 }
 
