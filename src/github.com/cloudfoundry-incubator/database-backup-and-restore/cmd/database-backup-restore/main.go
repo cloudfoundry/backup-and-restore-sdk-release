@@ -53,7 +53,6 @@ func makeInteractor(isRestoreAction bool, utilitiesConfig config.UtilitiesConfig
 	return database.NewInteractorFactory(
 		utilitiesConfig,
 		postgresServerVersionDetector).Make(actionLabel(isRestoreAction), config)
-
 }
 
 func actionLabel(isRestoreAction bool) database.Action {

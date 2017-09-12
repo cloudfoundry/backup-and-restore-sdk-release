@@ -15,6 +15,7 @@ type BackuperFactory struct {
 func NewInteractorFactory(
 	utilitiesConfig config.UtilitiesConfig,
 	postgresServerVersionDetector ServerVersionDetector) BackuperFactory {
+
 	return BackuperFactory{
 		utilitiesConfig:               utilitiesConfig,
 		postgresServerVersionDetector: postgresServerVersionDetector,
@@ -32,11 +33,12 @@ func (f BackuperFactory) Make(action Action, config config.ConnectionConfig) Int
 	case config.Adapter == "mysql" && action == "restore":
 		return mysql.NewRestorer(config, f.utilitiesConfig.Mysql.Restore)
 	}
+
 	return nil
 }
 
 func (f BackuperFactory) makeMysqlBackuper(config config.ConnectionConfig) Interactor {
-	return NewCompoundMysqlInteractor(
+	return NewVersionSafeInteractor(
 		mysql.NewBackuper(config, f.utilitiesConfig.Mysql.Dump),
 		mysql.NewServerVersionDetector(f.utilitiesConfig.Mysql.Client),
 		mysql.NewMysqlDumpUtilityVersionDetector(f.utilitiesConfig.Mysql.Dump),

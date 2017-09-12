@@ -4,30 +4,30 @@ import (
 	"log"
 
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/config"
-	"github.com/cloudfoundry-incubator/database-backup-and-restore/mysql"
 )
 
-type ComplexMysqlInteractor struct {
-	mysql.Backuper
+type VersionSafeInteractor struct {
+	interactor                 Interactor
 	serverVersionDetector      ServerVersionDetector
 	dumpUtilityVersionDetector DumpUtilityVersionDetector
 	connectionConfig           config.ConnectionConfig
 }
 
-func NewCompoundMysqlInteractor(
-	backuper mysql.Backuper,
+func NewVersionSafeInteractor(
+	interactor Interactor,
 	serverVersionDetector ServerVersionDetector,
 	dumpUtilityVersionDetector DumpUtilityVersionDetector,
 	config config.ConnectionConfig,
-) ComplexMysqlInteractor {
-	return ComplexMysqlInteractor{
-		Backuper:                   backuper,
+) VersionSafeInteractor {
+	return VersionSafeInteractor{
+		interactor:                 interactor,
 		serverVersionDetector:      serverVersionDetector,
 		dumpUtilityVersionDetector: dumpUtilityVersionDetector,
 		connectionConfig:           config,
 	}
 }
-func (i ComplexMysqlInteractor) Action(artifactFilePath string) error {
+
+func (i VersionSafeInteractor) Action(artifactFilePath string) error {
 	mysqldumpVersion, _ := i.dumpUtilityVersionDetector.GetVersion()
 	log.Printf("Mysql dump version %v\n", mysqldumpVersion)
 	serverVersion, _ := i.serverVersionDetector.GetVersion(i.connectionConfig)
@@ -38,5 +38,5 @@ func (i ComplexMysqlInteractor) Action(artifactFilePath string) error {
 			mysqldumpVersion,
 			serverVersion)
 	}
-	return i.Backuper.Action(artifactFilePath)
+	return i.interactor.Action(artifactFilePath)
 }
