@@ -7,22 +7,22 @@ import (
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/version"
 )
 
-type BackuperFactory struct {
+type InteractorFactory struct {
 	utilitiesConfig               config.UtilitiesConfig
 	postgresServerVersionDetector ServerVersionDetector
 }
 
 func NewInteractorFactory(
 	utilitiesConfig config.UtilitiesConfig,
-	postgresServerVersionDetector ServerVersionDetector) BackuperFactory {
+	postgresServerVersionDetector ServerVersionDetector) InteractorFactory {
 
-	return BackuperFactory{
+	return InteractorFactory{
 		utilitiesConfig:               utilitiesConfig,
 		postgresServerVersionDetector: postgresServerVersionDetector,
 	}
 }
 
-func (f BackuperFactory) Make(action Action, config config.ConnectionConfig) Interactor {
+func (f InteractorFactory) Make(action Action, config config.ConnectionConfig) Interactor {
 	switch {
 	case config.Adapter == "postgres" && action == "backup":
 		return f.makePostgresBackuper(config)
@@ -37,7 +37,7 @@ func (f BackuperFactory) Make(action Action, config config.ConnectionConfig) Int
 	return nil
 }
 
-func (f BackuperFactory) makeMysqlBackuper(config config.ConnectionConfig) Interactor {
+func (f InteractorFactory) makeMysqlBackuper(config config.ConnectionConfig) Interactor {
 	return NewVersionSafeInteractor(
 		mysql.NewBackuper(config, f.utilitiesConfig.Mysql.Dump),
 		mysql.NewServerVersionDetector(f.utilitiesConfig.Mysql.Client),
@@ -45,7 +45,7 @@ func (f BackuperFactory) makeMysqlBackuper(config config.ConnectionConfig) Inter
 		config)
 }
 
-func (f BackuperFactory) makePostgresBackuper(config config.ConnectionConfig) Interactor {
+func (f InteractorFactory) makePostgresBackuper(config config.ConnectionConfig) Interactor {
 	// TODO: err
 	postgresVersion, _ := f.postgresServerVersionDetector.GetVersion(config)
 
