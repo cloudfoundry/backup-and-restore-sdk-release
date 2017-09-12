@@ -17,7 +17,7 @@ type UtilitiesConfig struct {
 	Mysql      UtilityPaths
 }
 
-func GetDependencies() UtilitiesConfig {
+func GetUtilitiesConfigFromEnv() UtilitiesConfig {
 	return UtilitiesConfig{
 		Postgres96: UtilityPaths{
 			Client: lookupEnv("PG_CLIENT_PATH"),
