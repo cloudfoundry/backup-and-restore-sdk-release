@@ -21,15 +21,30 @@ func ParseAndValidateConnectionConfig(configPath string) (ConnectionConfig, erro
 	if err != nil {
 		return ConnectionConfig{}, fmt.Errorf("Fail reading config file: %s\n", err)
 	}
+
 	var connectionConfig ConnectionConfig
 	if err := json.Unmarshal(configString, &connectionConfig); err != nil {
 		return ConnectionConfig{}, fmt.Errorf("Could not parse config json: %s\n", err)
 	}
+
 	if !isSupported(connectionConfig.Adapter) {
 		return ConnectionConfig{}, fmt.Errorf("Unsupported adapter %s\n", connectionConfig.Adapter)
 	}
+
 	if connectionConfig.Tables != nil && len(connectionConfig.Tables) == 0 {
 		return ConnectionConfig{}, fmt.Errorf("Tables specified but empty\n")
 	}
+
 	return connectionConfig, nil
+}
+
+var supportedAdapters = []string{"postgres", "mysql"}
+
+func isSupported(adapter string) bool {
+	for _, el := range supportedAdapters {
+		if el == adapter {
+			return true
+		}
+	}
+	return false
 }

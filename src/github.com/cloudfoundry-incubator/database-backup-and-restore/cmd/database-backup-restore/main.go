@@ -37,6 +37,7 @@ func main() {
 	}
 
 	utilitiesConfig := config.GetUtilitiesConfigFromEnv()
+
 	interactor := makeInteractor(flags.IsRestore, utilitiesConfig, connectionConfig)
 
 	err = interactor.Action(flags.ArtifactFilePath)
