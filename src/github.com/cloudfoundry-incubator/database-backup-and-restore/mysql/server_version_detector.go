@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"fmt"
+	"log"
 
 	"os/exec"
 
@@ -27,5 +28,9 @@ func (d ServerVersionDetector) GetVersion(config config.ConnectionConfig) (versi
 		fmt.Sprintf("--port=%d", config.Port),
 		"--execute=SELECT VERSION()")
 
-	return extractVersionUsingCommand(clientCmd, `(.+)`), nil
+	semanticVersion := extractVersionUsingCommand(clientCmd, `(.+)`)
+
+	log.Printf("MYSQL server version %v\n", semanticVersion)
+
+	return semanticVersion, nil
 }

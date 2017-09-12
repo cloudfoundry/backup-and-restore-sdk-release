@@ -44,9 +44,13 @@ func extractVersionUsingCommand(cmd *exec.Cmd, pattern string) version.SemanticV
 		log.Fatalln("Could not determine version by using search pattern:", pattern)
 	}
 
-	return version.SemanticVersion{
+	semanticVersion := version.SemanticVersion{
 		Major: string(matches[1]),
 		Minor: string(matches[2]),
 		Patch: string(matches[3]),
 	}
+
+	log.Printf("Mysql dump version %v\n", semanticVersion)
+
+	return semanticVersion
 }
