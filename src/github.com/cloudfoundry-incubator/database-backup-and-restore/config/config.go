@@ -12,18 +12,18 @@ type UtilityPaths struct {
 }
 
 type UtilitiesConfig struct {
-	Postgres_9_6 UtilityPaths
-	Postgres_9_4 UtilityPaths
-	Mysql        UtilityPaths
+	Postgres96 UtilityPaths
+	Postgres94 UtilityPaths
+	Mysql      UtilityPaths
 }
 
 func GetDependencies() UtilitiesConfig {
 	return UtilitiesConfig{
-		Postgres_9_6: UtilityPaths{
+		Postgres96: UtilityPaths{
 			Client: lookupEnv("PG_CLIENT_PATH"),
 			Dump:   lookupEnv("PG_DUMP_9_6_PATH"),
 		},
-		Postgres_9_4: UtilityPaths{
+		Postgres94: UtilityPaths{
 			Client:  lookupEnv("PG_CLIENT_PATH"),
 			Dump:    lookupEnv("PG_DUMP_9_4_PATH"),
 			Restore: lookupEnv("PG_RESTORE_9_4_PATH"),

@@ -28,7 +28,7 @@ func (f BackuperFactory) Make(action Action, config config.ConnectionConfig) Int
 	case config.Adapter == "mysql" && action == "backup":
 		return f.makeMysqlBackuper(config)
 	case config.Adapter == "postgres" && action == "restore":
-		return postgres.NewRestorer(config, f.utilitiesConfig.Postgres_9_4.Restore)
+		return postgres.NewRestorer(config, f.utilitiesConfig.Postgres94.Restore)
 	case config.Adapter == "mysql" && action == "restore":
 		return mysql.NewRestorer(config, f.utilitiesConfig.Mysql.Restore)
 	}
@@ -49,8 +49,8 @@ func (f BackuperFactory) makePostgresBackuper(config config.ConnectionConfig) In
 
 	postgres94Version := version.SemanticVersion{Major: "9", Minor: "4"}
 	if postgres94Version.MinorVersionMatches(postgresVersion) {
-		return postgres.NewBackuper(config, f.utilitiesConfig.Postgres_9_4.Dump)
+		return postgres.NewBackuper(config, f.utilitiesConfig.Postgres94.Dump)
 	} else {
-		return postgres.NewBackuper(config, f.utilitiesConfig.Postgres_9_6.Dump)
+		return postgres.NewBackuper(config, f.utilitiesConfig.Postgres96.Dump)
 	}
 }
