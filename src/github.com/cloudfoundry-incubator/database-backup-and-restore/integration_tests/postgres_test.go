@@ -181,23 +181,84 @@ var _ = Describe("Postgres", func() {
 								Database: databaseName,
 								Tables:   []string{"table1", "table2", "table3"},
 							})
+							clientIsConnectedTo94.WhenCalled().WillPrintToStdOut(
+								"table1\ntable2\ntable3\n\n\n").
+								WillExitWith(0)
 						})
 
-						It("calls pg_dump with the correct arguments", func() {
-							expectedArgs := []string{
-								"-v",
-								fmt.Sprintf("--user=%s", username),
-								fmt.Sprintf("--host=%s", host),
-								fmt.Sprintf("--port=%d", port),
-								"--format=custom",
-								fmt.Sprintf("--file=%s", artifactFile),
-								databaseName,
-								"-t", "table1",
-								"-t", "table2",
-								"-t", "table3",
-							}
+						It("backs up the specified tables", func() {
+							By("checking if the tables exist", func() {
+								expectedArgs := []string{
+									"--tuples-only",
+									fmt.Sprintf("--username=%s", username),
+									fmt.Sprintf("--host=%s", host),
+									fmt.Sprintf("--port=%d", port),
+									databaseName,
+									`--command="SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';"`,
+								}
 
-							Expect(fakePgDump94.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+								Expect(clientIsConnectedTo94.Invocations()).To(HaveLen(2))
+								Expect(clientIsConnectedTo94.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+								Expect(clientIsConnectedTo94.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+							})
+
+							By("calling pg_dump with the correct arguments", func() {
+								expectedArgs := []string{
+									"-v",
+									fmt.Sprintf("--user=%s", username),
+									fmt.Sprintf("--host=%s", host),
+									fmt.Sprintf("--port=%d", port),
+									"--format=custom",
+									fmt.Sprintf("--file=%s", artifactFile),
+									databaseName,
+									"-t", "table1",
+									"-t", "table2",
+									"-t", "table3",
+								}
+
+								Expect(fakePgDump94.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+							})
+
+							Expect(session).Should(gexec.Exit(0))
+						})
+					})
+
+					Context("when missing 'tables' are specified in the configFile", func() {
+						BeforeEach(func() {
+							configFile = buildConfigFile(Config{
+								Adapter:  "postgres",
+								Username: username,
+								Password: password,
+								Host:     host,
+								Port:     port,
+								Database: databaseName,
+								Tables:   []string{"table1", "table2", "table3"},
+							})
+							clientIsConnectedTo94.WhenCalled().WillPrintToStdOut(
+								"table1\ntable2\n\n\n").
+								WillExitWith(0)
+						})
+
+						It("fails", func() {
+							By("checking if the tables exist", func() {
+								expectedArgs := []string{
+									"--tuples-only",
+									fmt.Sprintf("--username=%s", username),
+									fmt.Sprintf("--host=%s", host),
+									fmt.Sprintf("--port=%d", port),
+									databaseName,
+									`--command="SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';"`,
+								}
+
+								Expect(clientIsConnectedTo94.Invocations()).To(HaveLen(2))
+								Expect(clientIsConnectedTo94.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+								Expect(clientIsConnectedTo94.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+							})
+
+							By("exiting with a helpful error message", func() {
+								Expect(session).Should(gexec.Exit(1))
+								Expect(session.Err).Should(gbytes.Say(`can't find specified table\(s\): table3`))
+							})
 						})
 					})
 
@@ -236,6 +297,7 @@ var _ = Describe("Postgres", func() {
 					BeforeEach(func() {
 						envVars["PG_DUMP_9_6_PATH"] = fakePgDump96.Path
 					})
+
 					It("takes a backup", func() {
 						By("getting the server version", func() {
 							expectedArgs := []string{
@@ -287,41 +349,83 @@ var _ = Describe("Postgres", func() {
 								Tables:   []string{"table1", "table2", "table3"},
 							})
 							clientIsConnectedTo96.WhenCalled().WillPrintToStdOut(
-								" public | table1 | table | vcap\n public | table2 | table | vcap\n public | foo1 | table3 | vcap\n").
+								"table1\ntable2\ntable3\n\n\n").
 								WillExitWith(0)
 						})
 
-						XIt("checks if the tables exist", func() {
-							expectedArgs := []string{
-								"--tuples-only",
-								fmt.Sprintf("--username=%s", username),
-								fmt.Sprintf("--host=%s", host),
-								fmt.Sprintf("--port=%d", port),
-								databaseName,
-								`--command="\dt"`,
-							}
+						It("backs up the specified tables", func() {
+							By("checking if the tables exist", func() {
+								expectedArgs := []string{
+									"--tuples-only",
+									fmt.Sprintf("--username=%s", username),
+									fmt.Sprintf("--host=%s", host),
+									fmt.Sprintf("--port=%d", port),
+									databaseName,
+									`--command="SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';"`,
+								}
 
-							Expect(clientIsConnectedTo96.Invocations()).To(HaveLen(2))
-							Expect(clientIsConnectedTo96.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
-							Expect(clientIsConnectedTo96.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+								Expect(clientIsConnectedTo96.Invocations()).To(HaveLen(2))
+								Expect(clientIsConnectedTo96.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+								Expect(clientIsConnectedTo96.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+							})
 
+							By("calling pg_dump with the correct arguments", func() {
+								expectedArgs := []string{
+									"-v",
+									fmt.Sprintf("--user=%s", username),
+									fmt.Sprintf("--host=%s", host),
+									fmt.Sprintf("--port=%d", port),
+									"--format=custom",
+									fmt.Sprintf("--file=%s", artifactFile),
+									databaseName,
+									"-t", "table1",
+									"-t", "table2",
+									"-t", "table3",
+								}
+
+								Expect(fakePgDump96.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+							})
+
+							Expect(session).Should(gexec.Exit(0))
+						})
+					})
+
+					Context("when missing 'tables' are specified in the configFile", func() {
+						BeforeEach(func() {
+							configFile = buildConfigFile(Config{
+								Adapter:  "postgres",
+								Username: username,
+								Password: password,
+								Host:     host,
+								Port:     port,
+								Database: databaseName,
+								Tables:   []string{"table1", "table2", "table3"},
+							})
+							clientIsConnectedTo96.WhenCalled().WillPrintToStdOut(
+								"table1\ntable2\n\n\n").
+								WillExitWith(0)
 						})
 
-						It("calls pg_dump with the correct arguments", func() {
-							expectedArgs := []string{
-								"-v",
-								fmt.Sprintf("--user=%s", username),
-								fmt.Sprintf("--host=%s", host),
-								fmt.Sprintf("--port=%d", port),
-								"--format=custom",
-								fmt.Sprintf("--file=%s", artifactFile),
-								databaseName,
-								"-t", "table1",
-								"-t", "table2",
-								"-t", "table3",
-							}
+						It("fails", func() {
+							By("checking if the tables exist", func() {
+								expectedArgs := []string{
+									"--tuples-only",
+									fmt.Sprintf("--username=%s", username),
+									fmt.Sprintf("--host=%s", host),
+									fmt.Sprintf("--port=%d", port),
+									databaseName,
+									`--command="SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';"`,
+								}
 
-							Expect(fakePgDump96.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+								Expect(clientIsConnectedTo96.Invocations()).To(HaveLen(2))
+								Expect(clientIsConnectedTo96.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+								Expect(clientIsConnectedTo96.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+							})
+
+							By("exiting with a helpful error message", func() {
+								Expect(session).Should(gexec.Exit(1))
+								Expect(session.Err).Should(gbytes.Say(`can't find specified table\(s\): table3`))
+							})
 						})
 					})
 				})

@@ -50,9 +50,16 @@ func (f InteractorFactory) makePostgresBackuper(config config.ConnectionConfig) 
 	postgresVersion, _ := f.postgresServerVersionDetector.GetVersion(config)
 
 	postgres94Version := version.SemanticVersion{Major: "9", Minor: "4"}
+	var pgDumpPath, psqlPath string
 	if postgres94Version.MinorVersionMatches(postgresVersion) {
-		return postgres.NewBackuper(config, f.utilitiesConfig.Postgres94.Dump)
+		psqlPath = f.utilitiesConfig.Postgres94.Client
+		pgDumpPath = f.utilitiesConfig.Postgres94.Dump
 	} else {
-		return postgres.NewBackuper(config, f.utilitiesConfig.Postgres96.Dump)
+		psqlPath = f.utilitiesConfig.Postgres96.Client
+		pgDumpPath = f.utilitiesConfig.Postgres96.Dump
 	}
+
+	postgresBackuper := postgres.NewBackuper(config, pgDumpPath)
+	tableChecker := postgres.NewTableChecker(config, psqlPath)
+	return NewTableCheckingInteractor(config, tableChecker, postgresBackuper)
 }
