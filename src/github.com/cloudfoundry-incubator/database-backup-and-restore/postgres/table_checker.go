@@ -25,7 +25,7 @@ func (c TableChecker) FindMissingTables(tableNames []string) ([]string, error) {
 			fmt.Sprintf("--host=%s", c.config.Host),
 			fmt.Sprintf("--port=%d", c.config.Port),
 			c.config.Database,
-			`--command="SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';"`,
+			`--command=SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';`,
 		}, map[string]string{"PGPASSWORD": c.config.Password})
 	if err != nil {
 		return nil, err

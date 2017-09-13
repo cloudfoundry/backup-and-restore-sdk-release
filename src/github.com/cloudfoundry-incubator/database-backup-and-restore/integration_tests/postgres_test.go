@@ -194,7 +194,7 @@ var _ = Describe("Postgres", func() {
 									fmt.Sprintf("--host=%s", host),
 									fmt.Sprintf("--port=%d", port),
 									databaseName,
-									`--command="SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';"`,
+									`--command=SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';`,
 								}
 
 								Expect(clientIsConnectedTo94.Invocations()).To(HaveLen(2))
@@ -247,7 +247,7 @@ var _ = Describe("Postgres", func() {
 									fmt.Sprintf("--host=%s", host),
 									fmt.Sprintf("--port=%d", port),
 									databaseName,
-									`--command="SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';"`,
+									`--command=SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';`,
 								}
 
 								Expect(clientIsConnectedTo94.Invocations()).To(HaveLen(2))
@@ -361,7 +361,7 @@ var _ = Describe("Postgres", func() {
 									fmt.Sprintf("--host=%s", host),
 									fmt.Sprintf("--port=%d", port),
 									databaseName,
-									`--command="SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';"`,
+									`--command=SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';`,
 								}
 
 								Expect(clientIsConnectedTo96.Invocations()).To(HaveLen(2))
@@ -414,7 +414,7 @@ var _ = Describe("Postgres", func() {
 									fmt.Sprintf("--host=%s", host),
 									fmt.Sprintf("--port=%d", port),
 									databaseName,
-									`--command="SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';"`,
+									`--command=SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';`,
 								}
 
 								Expect(clientIsConnectedTo96.Invocations()).To(HaveLen(2))
