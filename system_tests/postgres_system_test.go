@@ -136,7 +136,7 @@ func PostgresTests(postgresPackage, postgresDeployment string) func() {
 			})
 		})
 
-		XContext("and 'tables' are specified in config, with a non-existent table", func() {
+		Context("and 'tables' are specified in config, with a non-existent table", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
 					`{"username":"test_user","password":"%s","host":"%s","port":5432,
@@ -154,7 +154,7 @@ func PostgresTests(postgresPackage, postgresDeployment string) func() {
 					dbDumpPath,
 					configPath))
 				Expect(session.ExitCode()).NotTo(BeZero())
-				Expect(session).To(gbytes.Say("Couldn't find table: \"lizards\""))
+				Expect(session).To(gbytes.Say(`can't find specified table\(s\): lizards`))
 			})
 		})
 	}
