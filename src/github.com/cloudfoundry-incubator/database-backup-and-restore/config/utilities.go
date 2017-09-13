@@ -37,9 +37,9 @@ func GetUtilitiesConfigFromEnv() UtilitiesConfig {
 }
 
 func lookupEnv(key string) string {
-	psqlPath, psqlPathVariableSet := os.LookupEnv(key)
-	if !psqlPathVariableSet {
+	value, valueSet := os.LookupEnv(key)
+	if !valueSet {
 		log.Fatalln(key + " must be set")
 	}
-	return psqlPath
+	return value
 }
