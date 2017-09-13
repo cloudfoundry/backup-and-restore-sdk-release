@@ -1,6 +1,8 @@
 package database
 
 import (
+	"fmt"
+
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/config"
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/mysql"
 	"github.com/cloudfoundry-incubator/database-backup-and-restore/postgres"
@@ -22,19 +24,19 @@ func NewInteractorFactory(
 	}
 }
 
-func (f InteractorFactory) Make(action Action, config config.ConnectionConfig) Interactor {
+func (f InteractorFactory) Make(action Action, config config.ConnectionConfig) (Interactor, error) {
 	switch {
 	case config.Adapter == "postgres" && action == "backup":
 		return f.makePostgresBackuper(config)
 	case config.Adapter == "mysql" && action == "backup":
-		return f.makeMysqlBackuper(config)
+		return f.makeMysqlBackuper(config), nil
 	case config.Adapter == "postgres" && action == "restore":
-		return postgres.NewRestorer(config, f.utilitiesConfig.Postgres94.Restore)
+		return postgres.NewRestorer(config, f.utilitiesConfig.Postgres94.Restore), nil
 	case config.Adapter == "mysql" && action == "restore":
-		return mysql.NewRestorer(config, f.utilitiesConfig.Mysql.Restore)
+		return mysql.NewRestorer(config, f.utilitiesConfig.Mysql.Restore), nil
 	}
 
-	return nil
+	return nil, fmt.Errorf("unsupported adapter/action combination: %s/%s", config.Adapter, action)
 }
 
 func (f InteractorFactory) makeMysqlBackuper(config config.ConnectionConfig) Interactor {
@@ -45,9 +47,11 @@ func (f InteractorFactory) makeMysqlBackuper(config config.ConnectionConfig) Int
 		config)
 }
 
-func (f InteractorFactory) makePostgresBackuper(config config.ConnectionConfig) Interactor {
-	// TODO: err
-	postgresVersion, _ := f.postgresServerVersionDetector.GetVersion(config)
+func (f InteractorFactory) makePostgresBackuper(config config.ConnectionConfig) (Interactor, error) {
+	postgresVersion, err := f.postgresServerVersionDetector.GetVersion(config)
+	if err != nil {
+		return nil, err
+	}
 
 	postgres94Version := version.SemanticVersion{Major: "9", Minor: "4"}
 	var pgDumpPath, psqlPath string
@@ -61,5 +65,5 @@ func (f InteractorFactory) makePostgresBackuper(config config.ConnectionConfig) 
 
 	postgresBackuper := postgres.NewBackuper(config, pgDumpPath)
 	tableChecker := postgres.NewTableChecker(config, psqlPath)
-	return NewTableCheckingInteractor(config, tableChecker, postgresBackuper)
+	return NewTableCheckingInteractor(config, tableChecker, postgresBackuper), nil
 }

@@ -38,7 +38,10 @@ func main() {
 
 	utilitiesConfig := config.GetUtilitiesConfigFromEnv()
 
-	interactor := makeInteractor(flags.IsRestore, utilitiesConfig, connectionConfig)
+	interactor, err := makeInteractor(flags.IsRestore, utilitiesConfig, connectionConfig)
+	if err != nil{
+		log.Fatalf("%v", err)
+	}
 
 	err = interactor.Action(flags.ArtifactFilePath)
 	if err != nil {
@@ -47,7 +50,7 @@ func main() {
 }
 
 func makeInteractor(isRestoreAction bool, utilitiesConfig config.UtilitiesConfig,
-	config config.ConnectionConfig) database.Interactor {
+	config config.ConnectionConfig) (database.Interactor, error) {
 
 	postgresServerVersionDetector := postgres.NewServerVersionDetector(utilitiesConfig.Postgres96.Client)
 	return database.NewInteractorFactory(
