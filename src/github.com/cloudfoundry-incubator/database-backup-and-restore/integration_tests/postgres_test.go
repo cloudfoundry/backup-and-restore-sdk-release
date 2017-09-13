@@ -182,7 +182,7 @@ var _ = Describe("Postgres", func() {
 								Tables:   []string{"table1", "table2", "table3"},
 							})
 							clientIsConnectedTo94.WhenCalled().WillPrintToStdOut(
-								"table1\ntable2\ntable3\n\n\n").
+								" table1 \n table2 \n table3 \n\n\n").
 								WillExitWith(0)
 						})
 
@@ -235,7 +235,7 @@ var _ = Describe("Postgres", func() {
 								Tables:   []string{"table1", "table2", "table3"},
 							})
 							clientIsConnectedTo94.WhenCalled().WillPrintToStdOut(
-								"table1\ntable2\n\n\n").
+								" table1 \n table2 \n\n\n").
 								WillExitWith(0)
 						})
 
@@ -349,7 +349,7 @@ var _ = Describe("Postgres", func() {
 								Tables:   []string{"table1", "table2", "table3"},
 							})
 							clientIsConnectedTo96.WhenCalled().WillPrintToStdOut(
-								"table1\ntable2\ntable3\n\n\n").
+								" table1 \n table2 \n table3 \n\n\n").
 								WillExitWith(0)
 						})
 
@@ -402,7 +402,7 @@ var _ = Describe("Postgres", func() {
 								Tables:   []string{"table1", "table2", "table3"},
 							})
 							clientIsConnectedTo96.WhenCalled().WillPrintToStdOut(
-								"table1\ntable2\n\n\n").
+								" table1 \n table2 \n\n\n").
 								WillExitWith(0)
 						})
 

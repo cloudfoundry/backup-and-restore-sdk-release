@@ -31,7 +31,8 @@ func (c TableChecker) FindMissingTables(tableNames []string) ([]string, error) {
 		return nil, err
 	}
 
-	databaseTables := NewTableSet(strings.Split(string(stdout), "\n"))
+	tableList := parseTableList(string(stdout))
+	databaseTables := NewTableSet(tableList)
 
 	missingTables := []string{}
 	for _, tableName := range tableNames {
@@ -41,6 +42,16 @@ func (c TableChecker) FindMissingTables(tableNames []string) ([]string, error) {
 	}
 
 	return missingTables, nil
+}
+
+func parseTableList(tableColumn string) []string {
+	untrimmedTables := strings.Split(tableColumn, "\n")
+
+	var trimmedTables []string
+	for _, untrimmedTable := range untrimmedTables {
+		trimmedTables = append(trimmedTables, strings.TrimSpace(untrimmedTable))
+	}
+	return trimmedTables
 }
 
 type TableSet []string
