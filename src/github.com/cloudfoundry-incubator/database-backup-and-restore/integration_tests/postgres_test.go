@@ -31,7 +31,7 @@ import (
 var _ = Describe("Postgres", func() {
 	var fakePgDump94 *binmock.Mock
 	var fakePgDump96 *binmock.Mock
-	var fakeRestore *binmock.Mock
+	var fakePsql *binmock.Mock
 	var clientIsConnectedTo94 *binmock.Mock
 	var clientIsConnectedTo96 *binmock.Mock
 	var session *gexec.Session
@@ -354,8 +354,8 @@ var _ = Describe("Postgres", func() {
 				Database: databaseName,
 			})
 
-			fakeRestore = binmock.NewBinMock(Fail)
-			fakeRestore.WhenCalled().WillExitWith(0)
+			fakePsql = binmock.NewBinMock(Fail)
+			fakePsql.WhenCalled().WillExitWith(0)
 
 		})
 
@@ -388,7 +388,7 @@ var _ = Describe("Postgres", func() {
 
 		Context("PG_RESTORE_9_4_PATH is set", func() {
 			BeforeEach(func() {
-				envVars["PG_RESTORE_9_4_PATH"] = fakeRestore.Path
+				envVars["PG_RESTORE_9_4_PATH"] = fakePsql.Path
 			})
 
 			It("calls pg_restore with the correct arguments", func() {
@@ -403,9 +403,9 @@ var _ = Describe("Postgres", func() {
 					artifactFile,
 				}
 
-				Expect(fakeRestore.Invocations()).To(HaveLen(1))
-				Expect(fakeRestore.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-				Expect(fakeRestore.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+				Expect(fakePsql.Invocations()).To(HaveLen(1))
+				Expect(fakePsql.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+				Expect(fakePsql.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 			})
 
 			It("succeeds", func() {
@@ -414,9 +414,9 @@ var _ = Describe("Postgres", func() {
 
 			Context("and pg_restore fails", func() {
 				BeforeEach(func() {
-					fakeRestore = binmock.NewBinMock(Fail)
-					fakeRestore.WhenCalled().WillExitWith(1)
-					envVars["PG_RESTORE_9_4_PATH"] = fakeRestore.Path
+					fakePsql = binmock.NewBinMock(Fail)
+					fakePsql.WhenCalled().WillExitWith(1)
+					envVars["PG_RESTORE_9_4_PATH"] = fakePsql.Path
 				})
 
 				It("also fails", func() {
