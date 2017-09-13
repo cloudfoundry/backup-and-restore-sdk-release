@@ -54,17 +54,18 @@ func parseTableList(tableColumn string) []string {
 	return trimmedTables
 }
 
-type TableSet []string
+type TableSet map[string]bool
 
 func NewTableSet(tables []string) TableSet {
-	return tables
+	tableSet := map[string]bool{}
+
+	for _, table := range tables {
+		tableSet[table] = true
+	}
+
+	return tableSet
 }
 
 func (s TableSet) Contains(str string) bool {
-	for _, element := range s {
-		if element == str {
-			return true
-		}
-	}
-	return false
+	return s[str]
 }
