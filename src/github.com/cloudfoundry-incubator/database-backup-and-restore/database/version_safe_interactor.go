@@ -28,13 +28,13 @@ func NewVersionSafeInteractor(
 }
 
 func (i VersionSafeInteractor) Action(artifactFilePath string) error {
-	mysqldumpVersion, _ := i.dumpUtilityVersionDetector.GetVersion()
+	dumpUtilityVersion, _ := i.dumpUtilityVersionDetector.GetVersion()
 	serverVersion, _ := i.serverVersionDetector.GetVersion(i.connectionConfig)
 
-	if !serverVersion.MinorVersionMatches(mysqldumpVersion) {
-		return fmt.Errorf("Version mismatch between mysqldump %s and the MYSQL server %s\n"+
-			"mysqldump utility and the MYSQL server must be at the same major and minor version.\n",
-			mysqldumpVersion,
+	if !serverVersion.MinorVersionMatches(dumpUtilityVersion) {
+		return fmt.Errorf("Version mismatch between dump utility %s and the database server %s\n"+
+			"the dump utility and the database server must be at the same major and minor version.\n",
+			dumpUtilityVersion,
 			serverVersion)
 	}
 

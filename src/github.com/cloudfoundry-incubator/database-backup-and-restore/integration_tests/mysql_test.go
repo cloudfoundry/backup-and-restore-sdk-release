@@ -198,8 +198,8 @@ var _ = Describe("MySQL", func() {
 				It("fails because of a version mismatch", func() {
 					Expect(session).Should(gexec.Exit(1))
 					Expect(string(session.Err.Contents())).Should(ContainSubstring(
-						"Version mismatch between mysqldump 10.1.24-MariaDB and " +
-							"the MYSQL server 9.1.24-MariaDB-wsrep"),
+						"Version mismatch between dump utility 10.1.24-MariaDB and " +
+							"the database server 9.1.24-MariaDB-wsrep"),
 					)
 				})
 			})
@@ -220,8 +220,8 @@ var _ = Describe("MySQL", func() {
 				It("fails because of a version mismatch", func() {
 					Expect(session).Should(gexec.Exit(1))
 					Expect(string(session.Err.Contents())).Should(ContainSubstring(
-						"Version mismatch between mysqldump 10.1.24-MariaDB and " +
-							"the MYSQL server 10.0.24-MariaDB-wsrep"),
+						"Version mismatch between dump utility 10.1.24-MariaDB and " +
+							"the database server 10.0.24-MariaDB-wsrep"),
 					)
 				})
 			})
