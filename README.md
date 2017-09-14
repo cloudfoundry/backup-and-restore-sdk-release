@@ -2,7 +2,7 @@
 
 A SDK BOSH release used to backup and restore databases for BOSH deployed Cloud Foundry components.
 
-* [Release Author Guide](http://www.boshbackuprestore.io/bosh-backup-and-restore/release_author_guide.html)
+* [Release Author Guide](https://docs.pivotal.io/tiledev/bbr-devguide.html)
 
 ## Database Backup and Restore
 
