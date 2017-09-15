@@ -98,3 +98,6 @@ The `restore` script will assume that the database schema has already been creat
 #### Usage with [bbr](https://github.com/cloudfoundry-incubator/bosh-backup-and-restore)
 
 For an example of the sdk being used in a release that can be backed up by bbr see the [exemplar release](https://github.com/cloudfoundry-incubator/exemplar-backup-and-restore-release).
+
+### Developing
+This repository using master as the main branch, tested releases are tagged with their versions
