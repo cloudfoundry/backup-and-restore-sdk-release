@@ -48,7 +48,7 @@ func (r Restorer) Action(artifactFilePath string) error {
 		"--format=custom",
 		"--dbname=" + r.config.Database,
 		"--clean",
-		fmt.Sprintf("--list-file=%s", listFile.Name()),
+		fmt.Sprintf("--use-list=%s", listFile.Name()),
 		artifactFilePath},
 		map[string]string{"PGPASSWORD": r.config.Password})
 

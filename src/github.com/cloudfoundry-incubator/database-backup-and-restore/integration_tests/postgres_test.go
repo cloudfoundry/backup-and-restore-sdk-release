@@ -509,7 +509,7 @@ var _ = Describe("Postgres", func() {
 					"--format=custom",
 					fmt.Sprintf("--dbname=%s", databaseName),
 					"--clean",
-					HavePrefix("--list-file="),
+					HavePrefix("--use-list="),
 					artifactFile,
 				}
 
