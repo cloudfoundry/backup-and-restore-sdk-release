@@ -31,7 +31,7 @@ import (
 var _ = Describe("Postgres", func() {
 	var fakePgDump94 *binmock.Mock
 	var fakePgDump96 *binmock.Mock
-	var fakePsql *binmock.Mock
+	var fakePgRestore94 *binmock.Mock
 	var clientIsConnectedTo94 *binmock.Mock
 	var clientIsConnectedTo96 *binmock.Mock
 	var session *gexec.Session
@@ -149,7 +149,7 @@ var _ = Describe("Postgres", func() {
 
 						By("dumping the database with the correct dump binary", func() {
 							expectedArgs := []string{
-								"-v",
+								"--verbose",
 								fmt.Sprintf("--user=%s", username),
 								fmt.Sprintf("--host=%s", host),
 								fmt.Sprintf("--port=%d", port),
@@ -204,7 +204,7 @@ var _ = Describe("Postgres", func() {
 
 							By("calling pg_dump with the correct arguments", func() {
 								expectedArgs := []string{
-									"-v",
+									"--verbose",
 									fmt.Sprintf("--user=%s", username),
 									fmt.Sprintf("--host=%s", host),
 									fmt.Sprintf("--port=%d", port),
@@ -316,7 +316,7 @@ var _ = Describe("Postgres", func() {
 
 						By("dumping the database with the correct dump binary", func() {
 							expectedArgs := []string{
-								"-v",
+								"--verbose",
 								fmt.Sprintf("--user=%s", username),
 								fmt.Sprintf("--host=%s", host),
 								fmt.Sprintf("--port=%d", port),
@@ -371,7 +371,7 @@ var _ = Describe("Postgres", func() {
 
 							By("calling pg_dump with the correct arguments", func() {
 								expectedArgs := []string{
-									"-v",
+									"--verbose",
 									fmt.Sprintf("--user=%s", username),
 									fmt.Sprintf("--host=%s", host),
 									fmt.Sprintf("--port=%d", port),
@@ -458,8 +458,9 @@ var _ = Describe("Postgres", func() {
 				Database: databaseName,
 			})
 
-			fakePsql = binmock.NewBinMock(Fail)
-			fakePsql.WhenCalled().WillExitWith(0)
+			fakePgRestore94 = binmock.NewBinMock(Fail)
+			fakePgRestore94.WhenCalled().WillExitWith(0)
+			fakePgRestore94.WhenCalled().WillExitWith(0)
 
 		})
 
@@ -492,35 +493,52 @@ var _ = Describe("Postgres", func() {
 
 		Context("PG_RESTORE_9_4_PATH is set", func() {
 			BeforeEach(func() {
-				envVars["PG_RESTORE_9_4_PATH"] = fakePsql.Path
+				envVars["PG_RESTORE_9_4_PATH"] = fakePgRestore94.Path
 			})
 
-			It("calls pg_restore with the correct arguments", func() {
-				expectedArgs := []string{
-					"-v",
+			It("calls pg_restore to get information about the restore", func() {
+				Expect(fakePgRestore94.Invocations()).To(HaveLen(2))
+
+				Expect(fakePgRestore94.Invocations()[0].Args()).To(Equal([]string{"--list", artifactFile}))
+
+				expectedArgs := []interface{}{
+					"--verbose",
 					fmt.Sprintf("--user=%s", username),
 					fmt.Sprintf("--host=%s", host),
 					fmt.Sprintf("--port=%d", port),
 					"--format=custom",
 					fmt.Sprintf("--dbname=%s", databaseName),
 					"--clean",
+					HavePrefix("--list-file="),
 					artifactFile,
 				}
 
-				Expect(fakePsql.Invocations()).To(HaveLen(1))
-				Expect(fakePsql.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-				Expect(fakePsql.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+				Expect(fakePgRestore94.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+				Expect(fakePgRestore94.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 			})
 
 			It("succeeds", func() {
 				Expect(session).Should(gexec.Exit(0))
 			})
 
-			Context("and pg_restore fails", func() {
+			Context("and pg_restore fails when restoring", func() {
 				BeforeEach(func() {
-					fakePsql = binmock.NewBinMock(Fail)
-					fakePsql.WhenCalled().WillExitWith(1)
-					envVars["PG_RESTORE_9_4_PATH"] = fakePsql.Path
+					fakePgRestore94 = binmock.NewBinMock(Fail)
+					fakePgRestore94.WhenCalled().WillExitWith(0)
+					fakePgRestore94.WhenCalled().WillExitWith(1)
+					envVars["PG_RESTORE_9_4_PATH"] = fakePgRestore94.Path
+				})
+
+				It("also fails", func() {
+					Eventually(session).Should(gexec.Exit(1))
+				})
+			})
+
+			Context("and pg_restore fails to get file list", func() {
+				BeforeEach(func() {
+					fakePgRestore94 = binmock.NewBinMock(Fail)
+					fakePgRestore94.WhenCalled().WillExitWith(1)
+					envVars["PG_RESTORE_9_4_PATH"] = fakePgRestore94.Path
 				})
 
 				It("also fails", func() {

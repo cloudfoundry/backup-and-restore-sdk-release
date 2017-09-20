@@ -33,9 +33,9 @@ type JobInstance struct {
 	instanceIndex string
 }
 
-func (jobInstance *JobInstance) runPostgresSqlCommand(command, database, postgresPackage string) *gexec.Session {
+func (jobInstance *JobInstance) runPostgresSqlCommand(command, database, user, postgresPackage string) *gexec.Session {
 	return jobInstance.runOnVMAndSucceed(
-		fmt.Sprintf(`/var/vcap/packages/%s/bin/psql -U vcap "%s" --command="%s"`, postgresPackage, database, command),
+		fmt.Sprintf(`/var/vcap/packages/%s/bin/psql -U "%s" "%s" --command="%s"`, postgresPackage, user, database, command),
 	)
 }
 
