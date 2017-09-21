@@ -20,6 +20,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	binmock "github.com/pivotal-cf-experimental/go-binmock"
 
 	"testing"
 )
@@ -32,11 +33,26 @@ func TestDatabaseBackupAndRestore(t *testing.T) {
 var compiledSDKPath string
 var envVars map[string]string
 
+var fakePgDump94 *binmock.Mock
+var fakePgDump96 *binmock.Mock
+var fakePgRestore94 *binmock.Mock
+var fakePgClient *binmock.Mock
+var fakeMysqlClient *binmock.Mock
+var fakeMysqlDump *binmock.Mock
+
 var _ = BeforeSuite(func() {
 	var err error
 	compiledSDKPath, err = gexec.Build(
 		"github.com/cloudfoundry-incubator/database-backup-and-restore/cmd/database-backup-restore")
 	Expect(err).NotTo(HaveOccurred())
+
+	fakePgClient = binmock.NewBinMock(Fail)
+	fakePgDump94 = binmock.NewBinMock(Fail)
+	fakePgDump96 = binmock.NewBinMock(Fail)
+	fakePgRestore94 = binmock.NewBinMock(Fail)
+	fakeMysqlDump = binmock.NewBinMock(Fail)
+	fakeMysqlClient = binmock.NewBinMock(Fail)
+
 })
 
 var _ = BeforeEach(func() {
@@ -45,6 +61,7 @@ var _ = BeforeEach(func() {
 		"PG_DUMP_9_6_PATH":    "non-existent",
 		"PG_DUMP_9_4_PATH":    "non-existent",
 		"PG_RESTORE_9_4_PATH": "non-existent",
+		"PG_RESTORE_9_6_PATH": "non-existent",
 		"MYSQL_CLIENT_PATH":   "non-existent",
 		"MYSQL_DUMP_PATH":     "non-existent",
 	}

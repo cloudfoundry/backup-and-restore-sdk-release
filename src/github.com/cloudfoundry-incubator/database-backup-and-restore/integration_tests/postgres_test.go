@@ -25,15 +25,9 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
-	"github.com/pivotal-cf-experimental/go-binmock"
 )
 
 var _ = Describe("Postgres", func() {
-	var fakePgDump94 *binmock.Mock
-	var fakePgDump96 *binmock.Mock
-	var fakePgRestore94 *binmock.Mock
-	var clientIsConnectedTo94 *binmock.Mock
-	var clientIsConnectedTo96 *binmock.Mock
 	var session *gexec.Session
 	var username = "testuser"
 	var host = "127.0.0.1"
@@ -51,6 +45,12 @@ var _ = Describe("Postgres", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		artifactFile = tempFilePath()
+
+		fakePgClient.Reset()
+		fakePgDump94.Reset()
+		fakePgDump96.Reset()
+		fakePgRestore94.Reset()
+
 	})
 
 	Context("backup", func() {
@@ -65,21 +65,9 @@ var _ = Describe("Postgres", func() {
 				Database: databaseName,
 			})
 
-			clientIsConnectedTo96 = binmock.NewBinMock(Fail)
-			clientIsConnectedTo96.WhenCalled().WillPrintToStdOut(
-				" PostgreSQL 9.6.3 on x86_64-pc-linux-gnu, compiled by gcc " + "" +
-					"(Ubuntu 4.8.4-2ubuntu1~14.04.3) 4.8.4, 64-bit").
-				WillExitWith(0)
+			envVars["PG_CLIENT_PATH"] = fakePgClient.Path
 
-			clientIsConnectedTo94 = binmock.NewBinMock(Fail)
-			clientIsConnectedTo94.WhenCalled().WillPrintToStdOut(
-				" PostgreSQL 9.4.9 on x86_64-unknown-linux-gnu, compiled by gcc " +
-					"(Ubuntu 4.8.4-2ubuntu1~14.04.3) 4.8.4, 64-bit").
-				WillExitWith(0)
-
-			fakePgDump94 = binmock.NewBinMock(Fail)
 			fakePgDump94.WhenCalled().WillExitWith(0)
-			fakePgDump96 = binmock.NewBinMock(Fail)
 			fakePgDump96.WhenCalled().WillExitWith(0)
 		})
 
@@ -114,7 +102,10 @@ var _ = Describe("Postgres", func() {
 			Context("Postgres database server is version 9.4", func() {
 
 				BeforeEach(func() {
-					envVars["PG_CLIENT_PATH"] = clientIsConnectedTo94.Path
+					fakePgClient.WhenCalled().WillPrintToStdOut(
+						" PostgreSQL 9.4.9 on x86_64-unknown-linux-gnu, compiled by gcc " +
+							"(Ubuntu 4.8.4-2ubuntu1~14.04.3) 4.8.4, 64-bit").
+						WillExitWith(0)
 				})
 
 				Context("PG_DUMP_9_4 env var is missing", func() {
@@ -142,9 +133,9 @@ var _ = Describe("Postgres", func() {
 								`--command=SELECT VERSION()`,
 							}
 
-							Expect(clientIsConnectedTo94.Invocations()).To(HaveLen(1))
-							Expect(clientIsConnectedTo94.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-							Expect(clientIsConnectedTo94.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+							Expect(fakePgClient.Invocations()).To(HaveLen(1))
+							Expect(fakePgClient.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+							Expect(fakePgClient.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 						})
 
 						By("dumping the database with the correct dump binary", func() {
@@ -181,7 +172,7 @@ var _ = Describe("Postgres", func() {
 								Database: databaseName,
 								Tables:   []string{"table1", "table2", "table3"},
 							})
-							clientIsConnectedTo94.WhenCalled().WillPrintToStdOut(
+							fakePgClient.WhenCalled().WillPrintToStdOut(
 								" table1 \n table2 \n table3 \n\n\n").
 								WillExitWith(0)
 						})
@@ -197,9 +188,9 @@ var _ = Describe("Postgres", func() {
 									`--command=SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';`,
 								}
 
-								Expect(clientIsConnectedTo94.Invocations()).To(HaveLen(2))
-								Expect(clientIsConnectedTo94.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
-								Expect(clientIsConnectedTo94.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+								Expect(fakePgClient.Invocations()).To(HaveLen(2))
+								Expect(fakePgClient.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+								Expect(fakePgClient.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 							})
 
 							By("calling pg_dump with the correct arguments", func() {
@@ -234,7 +225,7 @@ var _ = Describe("Postgres", func() {
 								Database: databaseName,
 								Tables:   []string{"table1", "table2", "table3"},
 							})
-							clientIsConnectedTo94.WhenCalled().WillPrintToStdOut(
+							fakePgClient.WhenCalled().WillPrintToStdOut(
 								" table1 \n table2 \n\n\n").
 								WillExitWith(0)
 						})
@@ -250,9 +241,9 @@ var _ = Describe("Postgres", func() {
 									`--command=SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';`,
 								}
 
-								Expect(clientIsConnectedTo94.Invocations()).To(HaveLen(2))
-								Expect(clientIsConnectedTo94.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
-								Expect(clientIsConnectedTo94.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+								Expect(fakePgClient.Invocations()).To(HaveLen(2))
+								Expect(fakePgClient.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+								Expect(fakePgClient.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 							})
 
 							By("exiting with a helpful error message", func() {
@@ -262,17 +253,29 @@ var _ = Describe("Postgres", func() {
 						})
 					})
 
-					Context("and pg_dump fails", func() {
-						BeforeEach(func() {
-							fakePgDump94 = binmock.NewBinMock(Fail)
-							fakePgDump94.WhenCalled().WillExitWith(1)
+				})
 
-							envVars["PG_DUMP_9_4_PATH"] = fakePgDump94.Path
+				Context("PG_DUMP_9_4 env var is set but pg_dump fails", func() {
+					BeforeEach(func() {
+						configFile = buildConfigFile(Config{
+							Adapter:  "postgres",
+							Username: username,
+							Password: password,
+							Host:     host,
+							Port:     port,
+							Database: databaseName,
+							Tables:   []string{"table1", "table2", "table3"},
 						})
+						fakePgClient.WhenCalled().WillPrintToStdOut(
+							" table1 \n table2 \n\n\n").
+							WillExitWith(0)
+						fakePgDump94.WhenCalled().WillExitWith(1)
 
-						It("also fails", func() {
-							Eventually(session).Should(gexec.Exit(1))
-						})
+						envVars["PG_DUMP_9_4_PATH"] = fakePgDump94.Path
+					})
+
+					It("also fails", func() {
+						Eventually(session).Should(gexec.Exit(1))
 					})
 				})
 
@@ -280,7 +283,11 @@ var _ = Describe("Postgres", func() {
 
 			Context("Postgres database server is version 9.6", func() {
 				BeforeEach(func() {
-					envVars["PG_CLIENT_PATH"] = clientIsConnectedTo96.Path
+					fakePgClient.WhenCalled().WillPrintToStdOut(
+						" PostgreSQL 9.6.3 on x86_64-pc-linux-gnu, compiled by gcc " + "" +
+							"(Ubuntu 4.8.4-2ubuntu1~14.04.3) 4.8.4, 64-bit").
+						WillExitWith(0)
+
 				})
 
 				Context("PG_DUMP_9_6 env var is missing", func() {
@@ -309,9 +316,9 @@ var _ = Describe("Postgres", func() {
 								`--command=SELECT VERSION()`,
 							}
 
-							Expect(clientIsConnectedTo96.Invocations()).To(HaveLen(1))
-							Expect(clientIsConnectedTo96.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-							Expect(clientIsConnectedTo96.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+							Expect(fakePgClient.Invocations()).To(HaveLen(1))
+							Expect(fakePgClient.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+							Expect(fakePgClient.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 						})
 
 						By("dumping the database with the correct dump binary", func() {
@@ -348,7 +355,7 @@ var _ = Describe("Postgres", func() {
 								Database: databaseName,
 								Tables:   []string{"table1", "table2", "table3"},
 							})
-							clientIsConnectedTo96.WhenCalled().WillPrintToStdOut(
+							fakePgClient.WhenCalled().WillPrintToStdOut(
 								" table1 \n table2 \n table3 \n\n\n").
 								WillExitWith(0)
 						})
@@ -364,9 +371,9 @@ var _ = Describe("Postgres", func() {
 									`--command=SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';`,
 								}
 
-								Expect(clientIsConnectedTo96.Invocations()).To(HaveLen(2))
-								Expect(clientIsConnectedTo96.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
-								Expect(clientIsConnectedTo96.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+								Expect(fakePgClient.Invocations()).To(HaveLen(2))
+								Expect(fakePgClient.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+								Expect(fakePgClient.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 							})
 
 							By("calling pg_dump with the correct arguments", func() {
@@ -401,7 +408,7 @@ var _ = Describe("Postgres", func() {
 								Database: databaseName,
 								Tables:   []string{"table1", "table2", "table3"},
 							})
-							clientIsConnectedTo96.WhenCalled().WillPrintToStdOut(
+							fakePgClient.WhenCalled().WillPrintToStdOut(
 								" table1 \n table2 \n\n\n").
 								WillExitWith(0)
 						})
@@ -417,9 +424,9 @@ var _ = Describe("Postgres", func() {
 									`--command=SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';`,
 								}
 
-								Expect(clientIsConnectedTo96.Invocations()).To(HaveLen(2))
-								Expect(clientIsConnectedTo96.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
-								Expect(clientIsConnectedTo96.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+								Expect(fakePgClient.Invocations()).To(HaveLen(2))
+								Expect(fakePgClient.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+								Expect(fakePgClient.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 							})
 
 							By("exiting with a helpful error message", func() {
@@ -432,10 +439,13 @@ var _ = Describe("Postgres", func() {
 
 				Context("and pg_dump fails", func() {
 					BeforeEach(func() {
-						fakePgDump96 = binmock.NewBinMock(Fail)
 						fakePgDump96.WhenCalled().WillExitWith(1)
 
-						envVars["PG_DUMP_9_6_PATH"] = fakePgDump96.Path
+						fakePgClient.WhenCalled().WillPrintToStdOut(
+							" PostgreSQL 9.6.3 on x86_64-pc-linux-gnu, compiled by gcc " + "" +
+								"(Ubuntu 4.8.4-2ubuntu1~14.04.3) 4.8.4, 64-bit").
+							WillExitWith(0)
+
 					})
 
 					It("also fails", func() {
@@ -457,10 +467,6 @@ var _ = Describe("Postgres", func() {
 				Port:     port,
 				Database: databaseName,
 			})
-
-			fakePgRestore94 = binmock.NewBinMock(Fail)
-			fakePgRestore94.WhenCalled().WillExitWith(0)
-			fakePgRestore94.WhenCalled().WillExitWith(0)
 
 		})
 
@@ -495,35 +501,40 @@ var _ = Describe("Postgres", func() {
 			BeforeEach(func() {
 				envVars["PG_RESTORE_9_4_PATH"] = fakePgRestore94.Path
 			})
+			Context("pg_restore succeeds", func() {
+				BeforeEach(func() {
+					fakePgRestore94.WhenCalled().WillExitWith(0)
+					fakePgRestore94.WhenCalled().WillExitWith(0)
+				})
 
-			It("calls pg_restore to get information about the restore", func() {
-				Expect(fakePgRestore94.Invocations()).To(HaveLen(2))
+				It("calls pg_restore to get information about the restore", func() {
+					Expect(fakePgRestore94.Invocations()).To(HaveLen(2))
 
-				Expect(fakePgRestore94.Invocations()[0].Args()).To(Equal([]string{"--list", artifactFile}))
+					Expect(fakePgRestore94.Invocations()[0].Args()).To(Equal([]string{"--list", artifactFile}))
 
-				expectedArgs := []interface{}{
-					"--verbose",
-					fmt.Sprintf("--user=%s", username),
-					fmt.Sprintf("--host=%s", host),
-					fmt.Sprintf("--port=%d", port),
-					"--format=custom",
-					fmt.Sprintf("--dbname=%s", databaseName),
-					"--clean",
-					HavePrefix("--use-list="),
-					artifactFile,
-				}
+					expectedArgs := []interface{}{
+						"--verbose",
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--format=custom",
+						fmt.Sprintf("--dbname=%s", databaseName),
+						"--clean",
+						HavePrefix("--use-list="),
+						artifactFile,
+					}
 
-				Expect(fakePgRestore94.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
-				Expect(fakePgRestore94.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
-			})
+					Expect(fakePgRestore94.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+					Expect(fakePgRestore94.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+				})
 
-			It("succeeds", func() {
-				Expect(session).Should(gexec.Exit(0))
+				It("succeeds", func() {
+					Expect(session).Should(gexec.Exit(0))
+				})
 			})
 
 			Context("and pg_restore fails when restoring", func() {
 				BeforeEach(func() {
-					fakePgRestore94 = binmock.NewBinMock(Fail)
 					fakePgRestore94.WhenCalled().WillExitWith(0)
 					fakePgRestore94.WhenCalled().WillExitWith(1)
 					envVars["PG_RESTORE_9_4_PATH"] = fakePgRestore94.Path
@@ -536,7 +547,6 @@ var _ = Describe("Postgres", func() {
 
 			Context("and pg_restore fails to get file list", func() {
 				BeforeEach(func() {
-					fakePgRestore94 = binmock.NewBinMock(Fail)
 					fakePgRestore94.WhenCalled().WillExitWith(1)
 					envVars["PG_RESTORE_9_4_PATH"] = fakePgRestore94.Path
 				})

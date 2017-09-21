@@ -28,12 +28,9 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
-	binmock "github.com/pivotal-cf-experimental/go-binmock"
 )
 
 var _ = Describe("MySQL", func() {
-	var fakeMysqlDump *binmock.Mock
-	var mysqlClient *binmock.Mock
 	var session *gexec.Session
 	var username = "testuser"
 	var host = "127.0.0.1"
@@ -46,6 +43,8 @@ var _ = Describe("MySQL", func() {
 
 	BeforeEach(func() {
 		artifactFile = tempFilePath()
+		fakeMysqlDump.Reset()
+		fakeMysqlClient.Reset()
 	})
 
 	Context("backup", func() {
@@ -60,21 +59,7 @@ var _ = Describe("MySQL", func() {
 				Database: databaseName,
 			})
 
-			fakeMysqlDump = binmock.NewBinMock(Fail)
-			fakeMysqlDump.WhenCalledWith("-V").
-				WillPrintToStdOut("mysqldump  Ver 10.16 Distrib 10.1.24-MariaDB, for Linux (x86_64)")
-			fakeMysqlDump.WhenCalled().WillExitWith(0)
-
-			mysqlClient = binmock.NewBinMock(Fail)
-			mysqlClient.WhenCalledWith(
-				"--skip-column-names",
-				"--silent",
-				fmt.Sprintf("--user=%s", username),
-				fmt.Sprintf("--password=%s", password),
-				fmt.Sprintf("--host=%s", host),
-				fmt.Sprintf("--port=%d", port),
-				`--execute=SELECT VERSION()`,
-			).WillPrintToStdOut("10.1.24-MariaDB-wsrep")
+			envVars["MYSQL_DUMP_PATH"] = fakeMysqlDump.Path
 
 		})
 
@@ -86,7 +71,7 @@ var _ = Describe("MySQL", func() {
 				"--config",
 				configFile.Name(),
 				"--backup")
-			envVars["MYSQL_CLIENT_PATH"] = mysqlClient.Path
+			envVars["MYSQL_CLIENT_PATH"] = fakeMysqlClient.Path
 
 			for key, val := range envVars {
 				cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
@@ -107,49 +92,29 @@ var _ = Describe("MySQL", func() {
 		})
 
 		Context("MYSQL_DUMP_PATH is set", func() {
-			BeforeEach(func() {
-				envVars["MYSQL_DUMP_PATH"] = fakeMysqlDump.Path
-			})
-			It("calls mysqldump with the correct arguments", func() {
-				Expect(fakeMysqlDump.Invocations()).To(HaveLen(2))
-
-				By("first checking the version", func() {
-					Expect(fakeMysqlDump.Invocations()[0].Args()).Should(ConsistOf("-V"))
-				})
-
-				By("then calling dump", func() {
-					expectedArgs := []string{
-						"-v",
-						"--single-transaction",
-						"--skip-add-locks",
+			Context("when mysqldump succeeds", func() {
+				BeforeEach(func() {
+					fakeMysqlClient.WhenCalledWith(
+						"--skip-column-names",
+						"--silent",
 						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--password=%s", password),
 						fmt.Sprintf("--host=%s", host),
 						fmt.Sprintf("--port=%d", port),
-						fmt.Sprintf("--result-file=%s", artifactFile),
-						databaseName,
-					}
+						`--execute=SELECT VERSION()`,
+					).WillPrintToStdOut("10.1.24-MariaDB-wsrep")
+					fakeMysqlDump.WhenCalledWith("-V").
+						WillPrintToStdOut("mysqldump  Ver 10.16 Distrib 10.1.24-MariaDB, for Linux (x86_64)")
 
-					Expect(fakeMysqlDump.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
-					Expect(fakeMysqlDump.Invocations()[1].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					fakeMysqlDump.WhenCalled().WillExitWith(0)
 				})
-
-				Expect(session).Should(gexec.Exit(0))
-			})
-
-			Context("when 'tables' are specified in the configFile", func() {
-				BeforeEach(func() {
-					configFile = buildConfigFile(Config{
-						Adapter:  "mysql",
-						Username: username,
-						Password: password,
-						Host:     host,
-						Port:     port,
-						Database: databaseName,
-						Tables:   []string{"table1", "table2", "table3"},
-					})
-				})
-
 				It("calls mysqldump with the correct arguments", func() {
+					Expect(fakeMysqlDump.Invocations()).To(HaveLen(2))
+
+					By("first checking the version", func() {
+						Expect(fakeMysqlDump.Invocations()[0].Args()).Should(ConsistOf("-V"))
+					})
+
 					By("then calling dump", func() {
 						expectedArgs := []string{
 							"-v",
@@ -160,21 +125,52 @@ var _ = Describe("MySQL", func() {
 							fmt.Sprintf("--port=%d", port),
 							fmt.Sprintf("--result-file=%s", artifactFile),
 							databaseName,
-							"table1",
-							"table2",
-							"table3",
 						}
 
 						Expect(fakeMysqlDump.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+						Expect(fakeMysqlDump.Invocations()[1].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					})
+
+					Expect(session).Should(gexec.Exit(0))
+				})
+
+				Context("when 'tables' are specified in the configFile", func() {
+					BeforeEach(func() {
+						configFile = buildConfigFile(Config{
+							Adapter:  "mysql",
+							Username: username,
+							Password: password,
+							Host:     host,
+							Port:     port,
+							Database: databaseName,
+							Tables:   []string{"table1", "table2", "table3"},
+						})
+					})
+
+					It("calls mysqldump with the correct arguments", func() {
+						By("then calling dump", func() {
+							expectedArgs := []string{
+								"-v",
+								"--single-transaction",
+								"--skip-add-locks",
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								fmt.Sprintf("--result-file=%s", artifactFile),
+								databaseName,
+								"table1",
+								"table2",
+								"table3",
+							}
+
+							Expect(fakeMysqlDump.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+						})
 					})
 				})
 			})
-
 			Context("when mysqldump fails", func() {
 				BeforeEach(func() {
-					fakeMysqlDump = binmock.NewBinMock(Fail)
 					fakeMysqlDump.WhenCalled().WillExitWith(1)
-					envVars["MYSQL_DUMP_PATH"] = fakeMysqlDump.Path
 				})
 
 				It("also fails", func() {
@@ -184,8 +180,10 @@ var _ = Describe("MySQL", func() {
 
 			Context("when mysqldump has a different major version than the server", func() {
 				BeforeEach(func() {
-					mysqlClient = binmock.NewBinMock(Fail)
-					mysqlClient.WhenCalledWith(
+					fakeMysqlDump.WhenCalledWith("-V").
+						WillPrintToStdOut("mysqldump  Ver 10.16 Distrib 10.1.24-MariaDB, for Linux (x86_64)")
+					fakeMysqlDump.WhenCalled().WillExitWith(0)
+					fakeMysqlClient.WhenCalledWith(
 						"--skip-column-names",
 						"--silent",
 						fmt.Sprintf("--user=%s", username),
@@ -206,8 +204,9 @@ var _ = Describe("MySQL", func() {
 
 			Context("when mysqldump has a different minor version than the server", func() {
 				BeforeEach(func() {
-					mysqlClient = binmock.NewBinMock(Fail)
-					mysqlClient.WhenCalledWith(
+					fakeMysqlDump.WhenCalledWith("-V").
+						WillPrintToStdOut("mysqldump  Ver 10.16 Distrib 10.1.24-MariaDB, for Linux (x86_64)")
+					fakeMysqlClient.WhenCalledWith(
 						"--skip-column-names",
 						"--silent",
 						fmt.Sprintf("--user=%s", username),
@@ -228,8 +227,10 @@ var _ = Describe("MySQL", func() {
 
 			Context("when mysqldump has a different patch version than the server", func() {
 				BeforeEach(func() {
-					mysqlClient = binmock.NewBinMock(Fail)
-					mysqlClient.WhenCalledWith(
+					fakeMysqlDump.WhenCalledWith("-V").
+						WillPrintToStdOut("mysqldump  Ver 10.16 Distrib 10.1.24-MariaDB, for Linux (x86_64)")
+					fakeMysqlDump.WhenCalled().WillExitWith(0)
+					fakeMysqlClient.WhenCalledWith(
 						"--skip-column-names",
 						"--silent",
 						fmt.Sprintf("--user=%s", username),
@@ -258,8 +259,6 @@ var _ = Describe("MySQL", func() {
 				Database: databaseName,
 			})
 
-			mysqlClient = binmock.NewBinMock(Fail)
-			mysqlClient.WhenCalled().WillExitWith(0)
 		})
 
 		JustBeforeEach(func() {
@@ -297,7 +296,8 @@ var _ = Describe("MySQL", func() {
 
 		Context("MYSQL_CLIENT_PATH is set", func() {
 			BeforeEach(func() {
-				envVars["MYSQL_CLIENT_PATH"] = mysqlClient.Path
+				fakeMysqlClient.WhenCalled().WillExitWith(0)
+				envVars["MYSQL_CLIENT_PATH"] = fakeMysqlClient.Path
 			})
 
 			It("calls mysql with the correct arguments", func() {
@@ -309,26 +309,25 @@ var _ = Describe("MySQL", func() {
 					databaseName,
 				}
 
-				Expect(mysqlClient.Invocations()).To(HaveLen(1))
-				Expect(mysqlClient.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-				Expect(mysqlClient.Invocations()[0].Stdin()).Should(ConsistOf("SOME BACKUP SQL"))
-				Expect(mysqlClient.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+				Expect(fakeMysqlClient.Invocations()).To(HaveLen(1))
+				Expect(fakeMysqlClient.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+				Expect(fakeMysqlClient.Invocations()[0].Stdin()).Should(ConsistOf("SOME BACKUP SQL"))
+				Expect(fakeMysqlClient.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
 			})
 
 			It("succeeds", func() {
 				Expect(session).Should(gexec.Exit(0))
 			})
 
-			Context("and mysql fails", func() {
-				BeforeEach(func() {
-					mysqlClient = binmock.NewBinMock(Fail)
-					mysqlClient.WhenCalled().WillExitWith(1)
-					envVars["MYSQL_CLIENT_PATH"] = mysqlClient.Path
-				})
+		})
+		Context("and mysql fails", func() {
+			BeforeEach(func() {
+				fakeMysqlClient.WhenCalled().WillExitWith(1)
+				envVars["MYSQL_CLIENT_PATH"] = fakeMysqlClient.Path
+			})
 
-				It("also fails", func() {
-					Eventually(session).Should(gexec.Exit(1))
-				})
+			It("also fails", func() {
+				Eventually(session).Should(gexec.Exit(1))
 			})
 		})
 	})
