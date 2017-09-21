@@ -31,7 +31,7 @@ func (f InteractorFactory) Make(action Action, config config.ConnectionConfig) (
 	case config.Adapter == "mysql" && action == "backup":
 		return f.makeMysqlBackuper(config), nil
 	case config.Adapter == "postgres" && action == "restore":
-		return postgres.NewRestorer(config, f.utilitiesConfig.Postgres94.Restore), nil
+		return f.makePostgresRestorer(config)
 	case config.Adapter == "mysql" && action == "restore":
 		return mysql.NewRestorer(config, f.utilitiesConfig.Mysql.Restore), nil
 	}
@@ -66,4 +66,21 @@ func (f InteractorFactory) makePostgresBackuper(config config.ConnectionConfig) 
 	postgresBackuper := postgres.NewBackuper(config, pgDumpPath)
 	tableChecker := postgres.NewTableChecker(config, psqlPath)
 	return NewTableCheckingInteractor(config, tableChecker, postgresBackuper), nil
+}
+
+func (f InteractorFactory) makePostgresRestorer(config config.ConnectionConfig) (Interactor, error) {
+	postgresVersion, err := f.postgresServerVersionDetector.GetVersion(config)
+	if err != nil {
+		return nil, err
+	}
+
+	postgres94Version := version.SemanticVersion{Major: "9", Minor: "4"}
+	var pgRestorePath string
+	if postgres94Version.MinorVersionMatches(postgresVersion) {
+		pgRestorePath = f.utilitiesConfig.Postgres94.Restore
+	} else {
+		pgRestorePath = f.utilitiesConfig.Postgres96.Restore
+	}
+
+	return postgres.NewRestorer(config, pgRestorePath), nil
 }

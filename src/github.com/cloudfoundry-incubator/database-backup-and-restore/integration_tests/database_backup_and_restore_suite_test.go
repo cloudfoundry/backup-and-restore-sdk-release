@@ -36,6 +36,7 @@ var envVars map[string]string
 var fakePgDump94 *binmock.Mock
 var fakePgDump96 *binmock.Mock
 var fakePgRestore94 *binmock.Mock
+var fakePgRestore96 *binmock.Mock
 var fakePgClient *binmock.Mock
 var fakeMysqlClient *binmock.Mock
 var fakeMysqlDump *binmock.Mock
@@ -50,6 +51,7 @@ var _ = BeforeSuite(func() {
 	fakePgDump94 = binmock.NewBinMock(Fail)
 	fakePgDump96 = binmock.NewBinMock(Fail)
 	fakePgRestore94 = binmock.NewBinMock(Fail)
+	fakePgRestore96 = binmock.NewBinMock(Fail)
 	fakeMysqlDump = binmock.NewBinMock(Fail)
 	fakeMysqlClient = binmock.NewBinMock(Fail)
 
