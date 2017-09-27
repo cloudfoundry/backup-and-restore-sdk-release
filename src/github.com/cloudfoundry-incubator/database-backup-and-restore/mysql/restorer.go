@@ -38,6 +38,8 @@ func (r Restorer) Action(artifactFilePath string) error {
 
 	cmd.Stdin = bufio.NewReader(artifactFile)
 	cmd.Env = append(cmd.Env, "MYSQL_PWD="+r.config.Password)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
 	return cmd.Run()
 }

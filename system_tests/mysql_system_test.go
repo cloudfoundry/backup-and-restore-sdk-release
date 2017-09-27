@@ -106,7 +106,9 @@ var _ = Describe("mysql", func() {
 
 				brJob.runOnVMAndSucceed(fmt.Sprintf("cat %s", dbDumpPath))
 
-				brJob.runOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
+				restoreSession := brJob.runOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
+
+				Expect(restoreSession).To(gbytes.Say("CREATE TABLE `people`"))
 
 				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM people;", databaseName)).To(gbytes.Say("Old Person"))
 				Expect(dbJob.runMysqlSqlCommand("SELECT name FROM people;", databaseName)).NotTo(gbytes.Say("New Person"))
