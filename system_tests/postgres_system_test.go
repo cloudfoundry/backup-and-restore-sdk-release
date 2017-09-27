@@ -78,7 +78,7 @@ func PostgresTests(postgresPackage, postgresDeployment string) func() {
 			brJob.runOnVMAndSucceed(fmt.Sprintf("rm -rf %s %s", configPath, dbDumpPath))
 		})
 
-		FIt("backs up the Postgres database", func() {
+		It("backs up the Postgres database", func() {
 			brJob.runOnVMAndSucceed(
 				fmt.Sprintf(`/var/vcap/jobs/database-backup-restorer/bin/backup --config %s --artifact-file %s`,
 					configPath, dbDumpPath))
