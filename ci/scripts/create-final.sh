@@ -40,6 +40,9 @@ blobstore:
   git config --global user.email "cf-lazarus@pivotal.io"
 
   git commit -m "Add final release ${VERSION} [ci skip]"
+
+  git checkout master
+  git merge develop --ff-only
 popd
 
 cp -R backup-and-restore-sdk-release/. backup-and-restore-sdk-final-release
