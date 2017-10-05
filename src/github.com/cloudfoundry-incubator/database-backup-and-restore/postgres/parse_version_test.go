@@ -30,6 +30,6 @@ var _ = Describe("ParsePostgresVersion", func() {
 
 	It("fails if there is no version specified after 'PostgreSQL'", func() {
 		_, err := ParseVersion(" PostgreSQL on x86_64-unknown-linux-gnu, compiled by gcc (Ubuntu 4.8.4-2ubuntu1~14.04.3) 4.8.4, 64-bit")
-		Expect(err).To(HaveOccurred())
+		Expect(err).To(MatchError(ContainSubstring("can't parse semver")))
 	})
 })

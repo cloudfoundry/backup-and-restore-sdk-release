@@ -75,7 +75,7 @@ var _ = Describe("VersionSafeInteractor", func() {
 			Expect(wrappedInteractor.ActionCallCount()).To(Equal(0))
 
 			By("returning an error")
-			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(ContainSubstring("Version mismatch")))
 		})
 	})
 })
