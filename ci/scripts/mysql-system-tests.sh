@@ -35,4 +35,4 @@ export BOSH_GW_PRIVATE_KEY=`pwd`/bosh-backup-and-restore-meta/genesis-bosh/bosh.
 
 cd src/github.com/cloudfoundry-incubator/backup-and-restore-sdk-release
 glide install
-ginkgo --focus=mysql system_tests
+ginkgo -r --focus=mysql system_tests

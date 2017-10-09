@@ -14,17 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
----
-name: database-backup-restorer
+set -e
 
-dependencies:
-- backup-and-restore-release-golang
+mkdir -p ${BOSH_INSTALL_TARGET}/src
+cp -a . ${BOSH_INSTALL_TARGET}/src
 
-files:
-- github.com/cloudfoundry-incubator/database-backup-and-restore/cmd/database-backup-restore/main.go
-- github.com/cloudfoundry-incubator/database-backup-and-restore/config/*
-- github.com/cloudfoundry-incubator/database-backup-and-restore/database/*
-- github.com/cloudfoundry-incubator/database-backup-and-restore/mysql/*
-- github.com/cloudfoundry-incubator/database-backup-and-restore/postgres/*
-- github.com/cloudfoundry-incubator/database-backup-and-restore/version/*
-- github.com/cloudfoundry-incubator/database-backup-and-restore/runner/*
+export GOPATH=$BOSH_INSTALL_TARGET
+export GOROOT=$(readlink -nf /var/vcap/packages/backup-and-restore-release-golang)
+export PATH=$GOROOT/bin:$PATH
+
+go install github.com/cloudfoundry-incubator/blobstore-backup-restore/cmd/blobstore-backup-restore
+
+rm -rf ${BOSH_INSTALL_TARGET}/src ${BOSH_INSTALL_TARGET}/pkg
