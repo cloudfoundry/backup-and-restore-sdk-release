@@ -1,12 +1,7 @@
----
-go/go1.8.1.linux-amd64.tar.gz:
-  size: 91277742
-  object_id: aae713d6-4758-4486-7dd2-c34b45a7c9aa
-  sha: a433f76c569055ff8536d796995518dd91a9fa5b
-go/go1.8.3.linux-amd64.tar.gz:
-  size: 90029041
-  object_id: a5ce4ef9-a157-482a-5f43-a279fc7c366b
-  sha: 838c415896ef5ecd395dfabde5e7e6f8ac943c8e
+go/go1.9.1.linux-amd64.tar.gz:
+  size: 104197862
+  object_id: 37f70c04-37c9-401e-4686-a87dbca3e5b2
+  sha: 8ab67607ac917684560e699b76b3121f5799e24e
 mariadb/mariadb-10.1.24.tar.gz:
   size: 61780687
   object_id: fc23236c-5bbb-4661-9ebc-1f7bd072ca9d
@@ -16,6 +11,6 @@ postgres/postgresql-9.4.11.tar.gz:
   object_id: 9421c4cd-7954-42ab-6bbd-34217696d34b
   sha: 61eed4b0b7516f6a40e7483b9c3bc3d5398c14a4
 postgres/postgresql-9.6.3.tar.gz:
+  size: 25536998
   object_id: 0c2ebc06-e261-4bdb-a049-2c74fca31217
   sha: f596ca487e0c4d41ccc628b1d69b180fb23402db
-  size: 25536998
