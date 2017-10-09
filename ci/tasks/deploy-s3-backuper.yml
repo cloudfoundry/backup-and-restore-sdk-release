@@ -15,16 +15,31 @@
 # limitations under the License.
 
 ---
-name: database-backup-restorer
+platform: linux
 
-dependencies:
-- backup-and-restore-release-golang
+image_resource:
+  type: docker-image
+  source: {repository: cloudfoundrylondon/backup-and-restore}
 
-files:
-- github.com/cloudfoundry-incubator/database-backup-and-restore/cmd/database-backup-restore/main.go
-- github.com/cloudfoundry-incubator/database-backup-and-restore/config/*
-- github.com/cloudfoundry-incubator/database-backup-and-restore/database/*
-- github.com/cloudfoundry-incubator/database-backup-and-restore/mysql/*
-- github.com/cloudfoundry-incubator/database-backup-and-restore/postgres/*
-- github.com/cloudfoundry-incubator/database-backup-and-restore/version/*
-- github.com/cloudfoundry-incubator/database-backup-and-restore/runner/*
+inputs:
+- name: backup-and-restore-sdk-release
+- name: release-tarball
+- name: bosh-backup-and-restore-meta
+
+outputs:
+- name: backup-and-restore-sdk-release-build
+
+run:
+  path: backup-and-restore-sdk-release/ci/scripts/deploy-s3-backuper.sh
+
+params:
+  TEAM_GPG_KEY:
+  BOSH_ENVIRONMENT:
+  BOSH_CLIENT:
+  BOSH_CLIENT_SECRET:
+  BOSH_DEPLOYMENT:
+  MANIFEST_NAME:
+  AWS_ACCESS_KEY_ID:
+  AWS_SECRET_ACCESS_KEY:
+  S3_BUCKET_NAME:
+  S3_REGION:

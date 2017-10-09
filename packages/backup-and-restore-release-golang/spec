@@ -15,25 +15,9 @@
 # limitations under the License.
 
 ---
-name: blobstore-backup-restorer
+name: backup-and-restore-release-golang
 
-templates:
-  backup: bin/bbr/backup
-  restore: bin/bbr/restore
+dependencies: []
 
-packages: []
-
-properties:
-  s3_blobstore_enabled:
-    default: false
-    description: "Flag to backup and restore your s3 blobstore"
-  aws_access_key_id:
-    description: "AWS access key id to connect to s3 blobstore"
-  aws_secret_access_key:
-    description: "AWS secret key to connect to s3 blobstore"
-  droplets_bucket_name:
-    description: "Current droplet bucket name to backup from/restore to."
-  packages_bucket_name:
-    description: "Current package bucket name to backup from/restore to."
-  buildpacks_bucket_name:
-    description: "Current buildpack bucket name to backup from/restore to."
+files:
+- go/go1.8.3.linux-amd64.tar.gz

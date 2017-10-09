@@ -18,7 +18,7 @@
 name: blobstore-backup-restorer
 
 dependencies:
-- database-backup-restorer-golang
+- backup-and-restore-release-golang
 
 files:
-- github.com/cloudfoundry-incubator/database-backup-and-restore/cmd/blobstore-backup-restore/main.go
+- github.com/cloudfoundry-incubator/blobstore-backup-restore/cmd/blobstore-backup-restore/main.go

@@ -20,7 +20,7 @@ mkdir -p ${BOSH_INSTALL_TARGET}/src
 cp -a . ${BOSH_INSTALL_TARGET}/src
 
 export GOPATH=$BOSH_INSTALL_TARGET
-export GOROOT=$(readlink -nf /var/vcap/packages/database-backup-restorer-golang)
+export GOROOT=$(readlink -nf /var/vcap/packages/backup-and-restore-release-golang)
 export PATH=$GOROOT/bin:$PATH
 
 go install github.com/cloudfoundry-incubator/database-backup-and-restore/cmd/database-backup-restore

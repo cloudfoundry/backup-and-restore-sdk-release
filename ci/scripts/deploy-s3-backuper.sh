@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Copyright (C) 2017-Present Pivotal Software, Inc. All rights reserved.
 #
 # This program and the accompanying materials are made available under
@@ -14,10 +16,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
----
-name: database-backup-restorer-golang
+set -eu
 
-dependencies: []
+./bosh-backup-and-restore-meta/unlock-ci.sh
+export BOSH_CLIENT
+export BOSH_CLIENT_SECRET
+export BOSH_ENVIRONMENT
+export BOSH_CA_CERT="./bosh-backup-and-restore-meta/certs/${BOSH_ENVIRONMENT}.crt"
 
-files:
-- go/go1.8.3.linux-amd64.tar.gz
+bosh-cli --non-interactive \
+  --deployment ${BOSH_DEPLOYMENT} \
+  deploy "backup-and-restore-sdk-release/ci/manifests/${MANIFEST_NAME}" \
+  --var=backup-and-restore-sdk-release-version=$(cat release-tarball/version) \
+  --var=backup-and-restore-sdk-release-url=$(cat release-tarball/url) \
+  --var=aws-access-key-id=${AWS_ACCESS_KEY_ID} \
+  --var=aws-secret-access-key=${AWS_SECRET_ACCESS_KEY} \
+  --var=s3-bucket-name=${S3_BUCKET_NAME} \
+  --var=s3-region=${S3_REGION}
