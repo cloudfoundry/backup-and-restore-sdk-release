@@ -33,6 +33,8 @@ blobstore:
   mv releases/backup-and-restore-sdk/backup-and-restore-sdk-"${VERSION}".tgz \
     ../backup-and-restore-sdk-final-release-tarball
 
+  git remote add -f master-repo ../backup-and-restore-sdk-release-master
+
   git add ./releases
   git add ./.final_builds
 
@@ -41,7 +43,7 @@ blobstore:
 
   git commit -m "Add final release ${VERSION} [ci skip]"
 
-  git checkout master
+  git checkout -b master master-repo/master
   git merge develop --ff-only
 popd
 
