@@ -27,6 +27,7 @@ export BOSH_CA_CERT="./bosh-backup-and-restore-meta/certs/${BOSH_ENVIRONMENT}.cr
 bosh-cli --non-interactive \
   --deployment ${BOSH_DEPLOYMENT} \
   deploy "backup-and-restore-sdk-release/ci/manifests/${MANIFEST_NAME}" \
+  --var=deployment-name=${BOSH_DEPLOYMENT} \
   --var=backup-and-restore-sdk-release-version=$(cat release-tarball/version) \
   --var=backup-and-restore-sdk-release-url=$(cat release-tarball/url) \
   --var=aws-access-key-id=${AWS_ACCESS_KEY_ID} \
