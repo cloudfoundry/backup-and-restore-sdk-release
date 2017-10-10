@@ -5,7 +5,7 @@ import (
 )
 
 var _ = Describe("AWS versioned blobstore backuper", func() {
-	It("saves the version metadata", func() {
+	XIt("saves the version metadata", func() {
 		Fail("not yet implemented")
 	})
 })
