@@ -17,23 +17,16 @@ type FakeBucket struct {
 	nameReturnsOnCall map[int]struct {
 		result1 string
 	}
-	VersionsStub        func() []blobstore.Version
+	VersionsStub        func() ([]blobstore.Version, error)
 	versionsMutex       sync.RWMutex
 	versionsArgsForCall []struct{}
 	versionsReturns     struct {
 		result1 []blobstore.Version
+		result2 error
 	}
 	versionsReturnsOnCall map[int]struct {
 		result1 []blobstore.Version
-	}
-	BackupStub        func() blobstore.BucketBackup
-	backupMutex       sync.RWMutex
-	backupArgsForCall []struct{}
-	backupReturns     struct {
-		result1 blobstore.BucketBackup
-	}
-	backupReturnsOnCall map[int]struct {
-		result1 blobstore.BucketBackup
+		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -79,7 +72,7 @@ func (fake *FakeBucket) NameReturnsOnCall(i int, result1 string) {
 	}{result1}
 }
 
-func (fake *FakeBucket) Versions() []blobstore.Version {
+func (fake *FakeBucket) Versions() ([]blobstore.Version, error) {
 	fake.versionsMutex.Lock()
 	ret, specificReturn := fake.versionsReturnsOnCall[len(fake.versionsArgsForCall)]
 	fake.versionsArgsForCall = append(fake.versionsArgsForCall, struct{}{})
@@ -89,9 +82,9 @@ func (fake *FakeBucket) Versions() []blobstore.Version {
 		return fake.VersionsStub()
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.versionsReturns.result1
+	return fake.versionsReturns.result1, fake.versionsReturns.result2
 }
 
 func (fake *FakeBucket) VersionsCallCount() int {
@@ -100,63 +93,26 @@ func (fake *FakeBucket) VersionsCallCount() int {
 	return len(fake.versionsArgsForCall)
 }
 
-func (fake *FakeBucket) VersionsReturns(result1 []blobstore.Version) {
+func (fake *FakeBucket) VersionsReturns(result1 []blobstore.Version, result2 error) {
 	fake.VersionsStub = nil
 	fake.versionsReturns = struct {
 		result1 []blobstore.Version
-	}{result1}
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeBucket) VersionsReturnsOnCall(i int, result1 []blobstore.Version) {
+func (fake *FakeBucket) VersionsReturnsOnCall(i int, result1 []blobstore.Version, result2 error) {
 	fake.VersionsStub = nil
 	if fake.versionsReturnsOnCall == nil {
 		fake.versionsReturnsOnCall = make(map[int]struct {
 			result1 []blobstore.Version
+			result2 error
 		})
 	}
 	fake.versionsReturnsOnCall[i] = struct {
 		result1 []blobstore.Version
-	}{result1}
-}
-
-func (fake *FakeBucket) Backup() blobstore.BucketBackup {
-	fake.backupMutex.Lock()
-	ret, specificReturn := fake.backupReturnsOnCall[len(fake.backupArgsForCall)]
-	fake.backupArgsForCall = append(fake.backupArgsForCall, struct{}{})
-	fake.recordInvocation("Backup", []interface{}{})
-	fake.backupMutex.Unlock()
-	if fake.BackupStub != nil {
-		return fake.BackupStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.backupReturns.result1
-}
-
-func (fake *FakeBucket) BackupCallCount() int {
-	fake.backupMutex.RLock()
-	defer fake.backupMutex.RUnlock()
-	return len(fake.backupArgsForCall)
-}
-
-func (fake *FakeBucket) BackupReturns(result1 blobstore.BucketBackup) {
-	fake.BackupStub = nil
-	fake.backupReturns = struct {
-		result1 blobstore.BucketBackup
-	}{result1}
-}
-
-func (fake *FakeBucket) BackupReturnsOnCall(i int, result1 blobstore.BucketBackup) {
-	fake.BackupStub = nil
-	if fake.backupReturnsOnCall == nil {
-		fake.backupReturnsOnCall = make(map[int]struct {
-			result1 blobstore.BucketBackup
-		})
-	}
-	fake.backupReturnsOnCall[i] = struct {
-		result1 blobstore.BucketBackup
-	}{result1}
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeBucket) Invocations() map[string][][]interface{} {
@@ -166,8 +122,6 @@ func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	defer fake.nameMutex.RUnlock()
 	fake.versionsMutex.RLock()
 	defer fake.versionsMutex.RUnlock()
-	fake.backupMutex.RLock()
-	defer fake.backupMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

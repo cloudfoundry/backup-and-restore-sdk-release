@@ -54,15 +54,20 @@ var _ = Describe("FileArtifact", func() {
 			},
 		}
 
-		fileArtifact.Save(backup)
-
-		var savedBackup Backup
-		fileContents, err := ioutil.ReadFile(artifactPath)
-
+		err := fileArtifact.Save(backup)
 		Expect(err).NotTo(HaveOccurred())
 
-		json.Unmarshal(fileContents, &savedBackup)
-
+		savedBackup := parseBackupFile(artifactPath)
 		Expect(savedBackup).To(Equal(backup))
 	})
 })
+
+func parseBackupFile(filePath string) Backup {
+	fileContents, err := ioutil.ReadFile(filePath)
+	Expect(err).NotTo(HaveOccurred())
+
+	var backup Backup
+	json.Unmarshal(fileContents, &backup)
+
+	return backup
+}

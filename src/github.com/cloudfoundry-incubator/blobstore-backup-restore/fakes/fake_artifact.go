@@ -8,25 +8,36 @@ import (
 )
 
 type FakeArtifact struct {
-	SaveStub        func(backup blobstore.Backup)
+	SaveStub        func(backup blobstore.Backup) error
 	saveMutex       sync.RWMutex
 	saveArgsForCall []struct {
 		backup blobstore.Backup
+	}
+	saveReturns struct {
+		result1 error
+	}
+	saveReturnsOnCall map[int]struct {
+		result1 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeArtifact) Save(backup blobstore.Backup) {
+func (fake *FakeArtifact) Save(backup blobstore.Backup) error {
 	fake.saveMutex.Lock()
+	ret, specificReturn := fake.saveReturnsOnCall[len(fake.saveArgsForCall)]
 	fake.saveArgsForCall = append(fake.saveArgsForCall, struct {
 		backup blobstore.Backup
 	}{backup})
 	fake.recordInvocation("Save", []interface{}{backup})
 	fake.saveMutex.Unlock()
 	if fake.SaveStub != nil {
-		fake.SaveStub(backup)
+		return fake.SaveStub(backup)
 	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.saveReturns.result1
 }
 
 func (fake *FakeArtifact) SaveCallCount() int {
@@ -39,6 +50,25 @@ func (fake *FakeArtifact) SaveArgsForCall(i int) blobstore.Backup {
 	fake.saveMutex.RLock()
 	defer fake.saveMutex.RUnlock()
 	return fake.saveArgsForCall[i].backup
+}
+
+func (fake *FakeArtifact) SaveReturns(result1 error) {
+	fake.SaveStub = nil
+	fake.saveReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeArtifact) SaveReturnsOnCall(i int, result1 error) {
+	fake.SaveStub = nil
+	if fake.saveReturnsOnCall == nil {
+		fake.saveReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.saveReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeArtifact) Invocations() map[string][][]interface{} {

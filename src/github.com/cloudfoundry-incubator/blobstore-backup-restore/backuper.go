@@ -16,20 +16,35 @@ func NewBackuper(regionName string, dropletsBucket, buildpacksBucket, packagesBu
 	}
 }
 
-func (b Backuper) Backup() {
-	b.artifact.Save(Backup{
+func (b Backuper) Backup() error {
+	dropletVersions, err := b.dropletsBucket.Versions()
+	if err != nil {
+		return err
+	}
+
+	buildpackVersions, err := b.buildpacksBucket.Versions()
+	if err != nil {
+		return err
+	}
+
+	packageVersions, err := b.packagesBucket.Versions()
+	if err != nil {
+		return err
+	}
+
+	return b.artifact.Save(Backup{
 		RegionName: b.regionName,
 		DropletsBackup: BucketBackup{
 			BucketName: b.dropletsBucket.Name(),
-			Versions:   filterLatest(b.dropletsBucket.Versions()),
+			Versions:   filterLatest(dropletVersions),
 		},
 		BuildpacksBackup: BucketBackup{
 			BucketName: b.buildpacksBucket.Name(),
-			Versions:   filterLatest(b.buildpacksBucket.Versions()),
+			Versions:   filterLatest(buildpackVersions),
 		},
 		PackagesBackup: BucketBackup{
 			BucketName: b.packagesBucket.Name(),
-			Versions:   filterLatest(b.packagesBucket.Versions()),
+			Versions:   filterLatest(packageVersions),
 		},
 	})
 }
