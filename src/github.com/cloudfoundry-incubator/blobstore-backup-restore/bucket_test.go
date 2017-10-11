@@ -25,7 +25,7 @@ var _ = Describe("S3Bucket", func() {
 		var firstVersionOfTest2 string
 		var deletedVersionOfTest2 string
 
-		var creds s3AccessKey = s3AccessKey{
+		var creds = S3AccessKey{
 			Id:     os.Getenv("AWS_ACCESS_KEY_ID"),
 			Secret: os.Getenv("AWS_SECRET_ACCESS_KEY"),
 		}

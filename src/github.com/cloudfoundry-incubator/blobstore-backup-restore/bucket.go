@@ -21,10 +21,10 @@ type Bucket interface {
 type S3Bucket struct {
 	name      string
 	region    string
-	accessKey s3AccessKey
+	accessKey S3AccessKey
 }
 
-func NewS3Bucket(name, region string, accessKey s3AccessKey) S3Bucket {
+func NewS3Bucket(name, region string, accessKey S3AccessKey) S3Bucket {
 	return S3Bucket{name: name, region: region, accessKey: accessKey}
 }
 
@@ -45,17 +45,17 @@ func (b S3Bucket) Versions() []Version {
 	awsCmd.Stdout = outputBuffer
 	awsCmd.Run()
 
-	response := s3ListVersionsResponse{}
+	response := S3ListVersionsResponse{}
 	json.Unmarshal(outputBuffer.Bytes(), &response)
 
 	return response.Versions
 }
 
-type s3AccessKey struct {
+type S3AccessKey struct {
 	Id     string
 	Secret string
 }
 
-type s3ListVersionsResponse struct {
+type S3ListVersionsResponse struct {
 	Versions []Version
 }
