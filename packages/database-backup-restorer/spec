@@ -21,10 +21,10 @@ dependencies:
 - backup-and-restore-release-golang
 
 files:
-- github.com/cloudfoundry-incubator/database-backup-and-restore/cmd/database-backup-restore/main.go
-- github.com/cloudfoundry-incubator/database-backup-and-restore/config/*
-- github.com/cloudfoundry-incubator/database-backup-and-restore/database/*
-- github.com/cloudfoundry-incubator/database-backup-and-restore/mysql/*
-- github.com/cloudfoundry-incubator/database-backup-and-restore/postgres/*
-- github.com/cloudfoundry-incubator/database-backup-and-restore/version/*
-- github.com/cloudfoundry-incubator/database-backup-and-restore/runner/*
+- github.com/cloudfoundry-incubator/database-backup-restore/cmd/database-backup-restore/main.go
+- github.com/cloudfoundry-incubator/database-backup-restore/config/*
+- github.com/cloudfoundry-incubator/database-backup-restore/database/*
+- github.com/cloudfoundry-incubator/database-backup-restore/mysql/*
+- github.com/cloudfoundry-incubator/database-backup-restore/postgres/*
+- github.com/cloudfoundry-incubator/database-backup-restore/version/*
+- github.com/cloudfoundry-incubator/database-backup-restore/runner/*
