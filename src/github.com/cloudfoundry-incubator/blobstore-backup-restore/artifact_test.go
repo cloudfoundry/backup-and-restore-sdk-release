@@ -32,9 +32,9 @@ var _ = Describe("FileArtifact", func() {
 
 	It("Saves the artifact to a file", func() {
 		backup := Backup{
-			RegionName: "us-west-1",
 			DropletsBackup: BucketBackup{
 				BucketName: "my_droplets_bucket",
+				RegionName: "my_droplets_region",
 				Versions: []LatestVersion{
 					{BlobKey: "one", Id: "11"},
 					{BlobKey: "two", Id: "21"},
@@ -42,12 +42,14 @@ var _ = Describe("FileArtifact", func() {
 			},
 			BuildpacksBackup: BucketBackup{
 				BucketName: "my_buildpacks_bucket",
+				RegionName: "my_buildpacks_region",
 				Versions: []LatestVersion{
 					{BlobKey: "three", Id: "31"},
 				},
 			},
 			PackagesBackup: BucketBackup{
 				BucketName: "my_packages_bucket",
+				RegionName: "my_packages_region",
 				Versions: []LatestVersion{
 					{BlobKey: "four", Id: "41"},
 				},

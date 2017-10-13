@@ -29,7 +29,6 @@ func (a FileArtifact) Save(backup Backup) error {
 }
 
 type Backup struct {
-	RegionName       string       `json:"region_name"`
 	DropletsBackup   BucketBackup `json:"droplets"`
 	BuildpacksBackup BucketBackup `json:"buildpacks"`
 	PackagesBackup   BucketBackup `json:"packages"`
@@ -37,6 +36,7 @@ type Backup struct {
 
 type BucketBackup struct {
 	BucketName string          `json:"bucket_name"`
+	RegionName string          `json:"region_name"`
 	Versions   []LatestVersion `json:"version"`
 }
 

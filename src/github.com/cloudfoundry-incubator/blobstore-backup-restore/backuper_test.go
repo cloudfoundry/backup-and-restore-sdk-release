@@ -28,7 +28,7 @@ var _ = Describe("Backuper", func() {
 
 		artifact = new(fakes.FakeArtifact)
 
-		backuper = NewBackuper("eu-west-1", dropletsBucket, buildpacksBucket, packagesBucket, artifact)
+		backuper = NewBackuper(dropletsBucket, buildpacksBucket, packagesBucket, artifact)
 	})
 
 	JustBeforeEach(func() {
@@ -37,6 +37,8 @@ var _ = Describe("Backuper", func() {
 
 	Context("when the buckets have data", func() {
 		BeforeEach(func() {
+			dropletsBucket.NameReturns("my_droplets_bucket")
+			dropletsBucket.RegionNameReturns("my_droplets_region")
 			dropletsBucket.VersionsReturns([]Version{
 				{Key: "one", Id: "11", IsLatest: false},
 				{Key: "one", Id: "12", IsLatest: false},
@@ -44,27 +46,28 @@ var _ = Describe("Backuper", func() {
 				{Key: "two", Id: "21", IsLatest: false},
 				{Key: "two", Id: "22", IsLatest: true},
 			}, nil)
-			dropletsBucket.NameReturns("my_droplets_bucket")
 
+			buildpacksBucket.NameReturns("my_buildpacks_bucket")
+			buildpacksBucket.RegionNameReturns("my_buildpacks_region")
 			buildpacksBucket.VersionsReturns([]Version{
 				{Key: "three", Id: "31", IsLatest: false},
 				{Key: "three", Id: "32", IsLatest: true},
 			}, nil)
-			buildpacksBucket.NameReturns("my_buildpacks_bucket")
 
+			packagesBucket.NameReturns("my_packages_bucket")
+			packagesBucket.RegionNameReturns("my_packages_region")
 			packagesBucket.VersionsReturns([]Version{
 				{Key: "four", Id: "41", IsLatest: false},
 				{Key: "four", Id: "43", IsLatest: true},
 				{Key: "four", Id: "42", IsLatest: false},
 			}, nil)
-			packagesBucket.NameReturns("my_packages_bucket")
 		})
 
 		It("stores the latest versions in the artifact", func() {
 			Expect(artifact.SaveArgsForCall(0)).To(Equal(Backup{
-				RegionName: "eu-west-1",
 				DropletsBackup: BucketBackup{
 					BucketName: "my_droplets_bucket",
+					RegionName: "my_droplets_region",
 					Versions: []LatestVersion{
 						{BlobKey: "one", Id: "13"},
 						{BlobKey: "two", Id: "22"},
@@ -72,12 +75,14 @@ var _ = Describe("Backuper", func() {
 				},
 				BuildpacksBackup: BucketBackup{
 					BucketName: "my_buildpacks_bucket",
+					RegionName: "my_buildpacks_region",
 					Versions: []LatestVersion{
 						{BlobKey: "three", Id: "32"},
 					},
 				},
 				PackagesBackup: BucketBackup{
 					BucketName: "my_packages_bucket",
+					RegionName: "my_packages_region",
 					Versions: []LatestVersion{
 						{BlobKey: "four", Id: "43"},
 					},

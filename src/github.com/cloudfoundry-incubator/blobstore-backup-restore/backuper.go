@@ -1,14 +1,12 @@
 package blobstore
 
 type Backuper struct {
-	regionName                                       string
 	dropletsBucket, buildpacksBucket, packagesBucket Bucket
 	artifact                                         Artifact
 }
 
-func NewBackuper(regionName string, dropletsBucket, buildpacksBucket, packagesBucket Bucket, artifact Artifact) Backuper {
+func NewBackuper(dropletsBucket, buildpacksBucket, packagesBucket Bucket, artifact Artifact) Backuper {
 	return Backuper{
-		regionName:       regionName,
 		dropletsBucket:   dropletsBucket,
 		buildpacksBucket: buildpacksBucket,
 		packagesBucket:   packagesBucket,
@@ -33,17 +31,19 @@ func (b Backuper) Backup() error {
 	}
 
 	return b.artifact.Save(Backup{
-		RegionName: b.regionName,
 		DropletsBackup: BucketBackup{
 			BucketName: b.dropletsBucket.Name(),
+			RegionName: b.dropletsBucket.RegionName(),
 			Versions:   filterLatest(dropletVersions),
 		},
 		BuildpacksBackup: BucketBackup{
 			BucketName: b.buildpacksBucket.Name(),
+			RegionName: b.buildpacksBucket.RegionName(),
 			Versions:   filterLatest(buildpackVersions),
 		},
 		PackagesBackup: BucketBackup{
 			BucketName: b.packagesBucket.Name(),
+			RegionName: b.packagesBucket.RegionName(),
 			Versions:   filterLatest(packageVersions),
 		},
 	})

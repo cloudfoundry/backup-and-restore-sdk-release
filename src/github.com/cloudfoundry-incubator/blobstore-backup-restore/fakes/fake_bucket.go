@@ -17,6 +17,15 @@ type FakeBucket struct {
 	nameReturnsOnCall map[int]struct {
 		result1 string
 	}
+	RegionNameStub        func() string
+	regionNameMutex       sync.RWMutex
+	regionNameArgsForCall []struct{}
+	regionNameReturns     struct {
+		result1 string
+	}
+	regionNameReturnsOnCall map[int]struct {
+		result1 string
+	}
 	VersionsStub        func() ([]blobstore.Version, error)
 	versionsMutex       sync.RWMutex
 	versionsArgsForCall []struct{}
@@ -72,6 +81,46 @@ func (fake *FakeBucket) NameReturnsOnCall(i int, result1 string) {
 	}{result1}
 }
 
+func (fake *FakeBucket) RegionName() string {
+	fake.regionNameMutex.Lock()
+	ret, specificReturn := fake.regionNameReturnsOnCall[len(fake.regionNameArgsForCall)]
+	fake.regionNameArgsForCall = append(fake.regionNameArgsForCall, struct{}{})
+	fake.recordInvocation("RegionName", []interface{}{})
+	fake.regionNameMutex.Unlock()
+	if fake.RegionNameStub != nil {
+		return fake.RegionNameStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.regionNameReturns.result1
+}
+
+func (fake *FakeBucket) RegionNameCallCount() int {
+	fake.regionNameMutex.RLock()
+	defer fake.regionNameMutex.RUnlock()
+	return len(fake.regionNameArgsForCall)
+}
+
+func (fake *FakeBucket) RegionNameReturns(result1 string) {
+	fake.RegionNameStub = nil
+	fake.regionNameReturns = struct {
+		result1 string
+	}{result1}
+}
+
+func (fake *FakeBucket) RegionNameReturnsOnCall(i int, result1 string) {
+	fake.RegionNameStub = nil
+	if fake.regionNameReturnsOnCall == nil {
+		fake.regionNameReturnsOnCall = make(map[int]struct {
+			result1 string
+		})
+	}
+	fake.regionNameReturnsOnCall[i] = struct {
+		result1 string
+	}{result1}
+}
+
 func (fake *FakeBucket) Versions() ([]blobstore.Version, error) {
 	fake.versionsMutex.Lock()
 	ret, specificReturn := fake.versionsReturnsOnCall[len(fake.versionsArgsForCall)]
@@ -120,6 +169,8 @@ func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.nameMutex.RLock()
 	defer fake.nameMutex.RUnlock()
+	fake.regionNameMutex.RLock()
+	defer fake.regionNameMutex.RUnlock()
 	fake.versionsMutex.RLock()
 	defer fake.versionsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
