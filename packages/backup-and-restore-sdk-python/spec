@@ -1,0 +1,7 @@
+---
+name: backup-and-restore-sdk-python
+
+dependencies: []
+
+files:
+  - python/Python-3.6.2.tgz

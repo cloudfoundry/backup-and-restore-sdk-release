@@ -42,12 +42,21 @@ instance_groups:
     release: backup-and-restore-sdk
     properties:
       enabled: true
-      aws_access_key_id: ((aws-access-key-id))
-      aws_secret_access_key: ((aws-secret-access-key))
-      droplets_bucket_name: ((s3-bucket-name))
-      packages_bucket_name: ((s3-bucket-name))
-      buildpacks_bucket_name: ((s3-bucket-name))
-      region: ((s3-region))
+      droplets_bucket:
+        name: ((s3-bucket-name))
+        region: ((s3-region))
+        aws_access_key_id: ((aws-access-key-id))
+        aws_secret_access_key: ((aws-secret-access-key))
+      buildpacks_bucket:
+        name: ((s3-bucket-name))
+        region: ((s3-region))
+        aws_access_key_id: ((aws-access-key-id))
+        aws_secret_access_key: ((aws-secret-access-key))
+      packages_bucket:
+        name: ((s3-bucket-name))
+        region: ((s3-region))
+        aws_access_key_id: ((aws-access-key-id))
+        aws_secret_access_key: ((aws-secret-access-key))
   azs: [z1]
 
 update:

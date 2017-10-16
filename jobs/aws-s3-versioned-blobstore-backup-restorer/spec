@@ -18,24 +18,43 @@
 name: aws-s3-versioned-blobstore-backup-restorer
 
 templates:
-  backup: bin/bbr/backup
-  restore: bin/bbr/restore
+  backup.erb: bin/bbr/backup
+  restore.erb: bin/bbr/restore
 
-packages: []
+packages:
+- blobstore-backup-restorer
+- backup-and-restore-sdk-aws-cli
+- backup-and-restore-sdk-python
 
 properties:
   enabled:
     default: false
     description: "Enable backup and restore scripts in this job"
-  aws_access_key_id:
-    description: "AWS access key id to connect to s3 blobstore"
-  aws_secret_access_key:
-    description: "AWS secret key to connect to s3 blobstore"
-  droplets_bucket_name:
-    description: "Current droplet bucket name to backup from/restore to."
-  packages_bucket_name:
-    description: "Current package bucket name to backup from/restore to."
-  buildpacks_bucket_name:
-    description: "Current buildpack bucket name to backup from/restore to."
-  region:
-    description: "S3 bucket region"
+  droplets_bucket:
+    name:
+      description: "Current droplets bucket name to backup from/restore to."
+    region:
+      description: "S3 region for droplets bucket"
+    aws_access_key_id:
+      description: "AWS access key id to connect to the droplets bucket"
+    aws_secret_access_key:
+      description: "AWS secret key to connect to the droplets bucket"
+  buildpacks_bucket:
+    name:
+      description: "Current buildpacks bucket name to backup from/restore to."
+    region:
+      description: "S3 region for buildpacks bucket"
+    aws_access_key_id:
+      description: "AWS access key id to connect to the buildpacks bucket"
+    aws_secret_access_key:
+      description: "AWS secret key to connect to the buildpacks bucket"
+  packages_bucket:
+    name:
+      description: "Current packages bucket name to backup from/restore to."
+    region:
+      description: "S3 region for packages bucket"
+    aws_access_key_id:
+      description: "AWS access key id to connect to the packages bucket"
+    aws_secret_access_key:
+      description: "AWS secret key to connect to the packages bucket"
+

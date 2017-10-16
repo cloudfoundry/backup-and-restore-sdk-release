@@ -1,0 +1,8 @@
+---
+name: backup-and-restore-sdk-aws-cli
+
+dependencies:
+  - backup-and-restore-sdk-python
+
+files:
+  - aws-cli/awscli-bundle-1.11.91.zip

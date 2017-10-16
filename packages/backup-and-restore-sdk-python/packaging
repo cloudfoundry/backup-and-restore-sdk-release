@@ -1,0 +1,8 @@
+set -e
+
+name=Python-3.6.2
+tar zxf python/${name}.tgz
+
+cd $name
+
+./configure --prefix=${BOSH_INSTALL_TARGET} && make && make install

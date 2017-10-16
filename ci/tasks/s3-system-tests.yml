@@ -27,13 +27,14 @@ inputs:
 - name: bosh-backup-and-restore-meta
 
 run:
-  path: src/github.com/cloudfoundry-incubator/backup-and-restore-sdk-release/ci/scripts/aws-versioned-system-tests.sh
+  path: src/github.com/cloudfoundry-incubator/backup-and-restore-sdk-release/ci/scripts/s3-system-tests.sh
 
 params:
   TEAM_GPG_KEY:
+  BOSH_DEPLOYMENT:
   BOSH_CLIENT_SECRET:
   BOSH_CLIENT:
   AWS_ACCESS_KEY_ID:
   AWS_SECRET_ACCESS_KEY:
-  S3_BUCKET_NAME:
-  S3_REGION:
+  AWS_TEST_BUCKET_NAME:
+  AWS_TEST_BUCKET_REGION:

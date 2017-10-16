@@ -21,13 +21,14 @@ type Bucket interface {
 }
 
 type S3Bucket struct {
+	awsCliPath string
 	name       string
 	regionName string
 	accessKey  S3AccessKey
 }
 
-func NewS3Bucket(name, region string, accessKey S3AccessKey) S3Bucket {
-	return S3Bucket{name: name, regionName: region, accessKey: accessKey}
+func NewS3Bucket(awsCliPath, name, region string, accessKey S3AccessKey) S3Bucket {
+	return S3Bucket{awsCliPath: awsCliPath, name: name, regionName: region, accessKey: accessKey}
 }
 
 func (b S3Bucket) Name() string {
@@ -42,7 +43,7 @@ func (b S3Bucket) Versions() ([]Version, error) {
 	outputBuffer := new(bytes.Buffer)
 	errorBuffer := new(bytes.Buffer)
 
-	awsCmd := exec.Command("aws",
+	awsCmd := exec.Command(b.awsCliPath,
 		"--output", "json",
 		"--region", b.regionName,
 		"s3api",
