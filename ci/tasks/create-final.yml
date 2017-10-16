@@ -24,7 +24,6 @@ image_resource:
 inputs:
 - name: version
 - name: backup-and-restore-sdk-release
-- name: backup-and-restore-sdk-release-master
 - name: release-tarball
 
 outputs:
