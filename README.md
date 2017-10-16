@@ -37,7 +37,7 @@ instance_groups:
 ...
 ```
 
-Note: if you are using [cf-deployment](https://github.com/cloudfoundry/cf-deployment) then you can use the [backup-restore opsfile](https://github.com/cloudfoundry/cf-deployment/blob/master/operations/experimental/deploy-bosh-backup-restore.yml).
+Note: if you are using [cf-deployment](https://github.com/cloudfoundry/cf-deployment) then you can use the [backup-restore opsfile](https://github.com/cloudfoundry/cf-deployment/blob/master/operations/experimental/enable-backup-restore.yml).
 
 Template a `config.json` as follows:
 
