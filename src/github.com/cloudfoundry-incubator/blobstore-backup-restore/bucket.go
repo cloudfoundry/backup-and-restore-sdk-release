@@ -7,14 +7,9 @@ import (
 	"os/exec"
 )
 
-type Version struct {
-	Key      string
-	Id       string `json:"VersionId"`
-	IsLatest bool
-}
-
 //go:generate counterfeiter -o fakes/fake_bucket.go . Bucket
 type Bucket interface {
+	Identifier() string
 	Name() string
 	RegionName() string
 	Versions() ([]Version, error)
@@ -22,13 +17,29 @@ type Bucket interface {
 
 type S3Bucket struct {
 	awsCliPath string
+	identifier string
 	name       string
 	regionName string
 	accessKey  S3AccessKey
 }
 
-func NewS3Bucket(awsCliPath, name, region string, accessKey S3AccessKey) S3Bucket {
-	return S3Bucket{awsCliPath: awsCliPath, name: name, regionName: region, accessKey: accessKey}
+type S3AccessKey struct {
+	Id     string
+	Secret string
+}
+
+func NewS3Bucket(awsCliPath, identifier, name, region string, accessKey S3AccessKey) S3Bucket {
+	return S3Bucket{
+		awsCliPath: awsCliPath,
+		identifier: identifier,
+		name:       name,
+		regionName: region,
+		accessKey:  accessKey,
+	}
+}
+
+func (b S3Bucket) Identifier() string {
+	return b.identifier
 }
 
 func (b S3Bucket) Name() string {
@@ -68,11 +79,12 @@ func (b S3Bucket) Versions() ([]Version, error) {
 	return response.Versions, nil
 }
 
-type S3AccessKey struct {
-	Id     string
-	Secret string
-}
-
 type S3ListVersionsResponse struct {
 	Versions []Version
+}
+
+type Version struct {
+	Key      string
+	Id       string `json:"VersionId"`
+	IsLatest bool
 }

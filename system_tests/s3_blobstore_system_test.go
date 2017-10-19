@@ -8,8 +8,6 @@ import (
 
 	"strconv"
 
-	"fmt"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -31,7 +29,8 @@ var _ = Describe("S3 backuper", func() {
 		fileName1, fileVersion1 = uploadEmptyTimestampedFile("file1")
 		fileName2, fileVersion2 = uploadEmptyTimestampedFile("file2")
 
-		tmpDir = "/tmp/aws-s3-versioned-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
+		tmpDir = "/tmp/aws-s3-versioned-blobstore-backup-restorer" +
+			strconv.FormatInt(time.Now().Unix(), 10)
 		backuperInstance.runOnVMAndSucceed("mkdir -p " + tmpDir)
 	})
 
@@ -43,7 +42,8 @@ var _ = Describe("S3 backuper", func() {
 	})
 
 	It("saves the version metadata", func() {
-		backuperInstance.runOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + tmpDir + " /var/vcap/jobs/aws-s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
+		backuperInstance.runOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + tmpDir +
+			" /var/vcap/jobs/aws-s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
 
 		session := backuperInstance.runOnInstance("cat " + tmpDir + "/blobstore.json")
 		fileContents := session.Out.Contents()
@@ -84,6 +84,8 @@ func uploadEmptyFile(key string) string {
 	var response PutResponse
 	json.Unmarshal(outputBuffer.Bytes(), &response)
 
+	Expect(response.VersionId).NotTo(BeEmpty(), "Bucket must be versioned!")
+
 	return response.VersionId
 }
 
@@ -113,13 +115,6 @@ func deleteVersion(key, versionId string) {
 	region := MustHaveEnv("AWS_TEST_BUCKET_REGION")
 	bucket := MustHaveEnv("AWS_TEST_BUCKET_NAME")
 
-	fmt.Println("aws",
-		"--region", region,
-		"s3api",
-		"delete-object",
-		"--bucket", bucket,
-		"--key", key,
-		"--version-id", versionId)
 	err := exec.Command("aws",
 		"--region", region,
 		"s3api",

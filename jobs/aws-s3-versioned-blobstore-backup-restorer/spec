@@ -20,6 +20,7 @@ name: aws-s3-versioned-blobstore-backup-restorer
 templates:
   backup.erb: bin/bbr/backup
   restore.erb: bin/bbr/restore
+  buckets.json.erb: config/buckets.json
 
 packages:
 - blobstore-backup-restorer
@@ -30,31 +31,12 @@ properties:
   enabled:
     default: false
     description: "Enable backup and restore scripts in this job"
-  droplets_bucket:
-    name:
-      description: "Current droplets bucket name to backup from/restore to."
-    region:
-      description: "S3 region for droplets bucket"
-    aws_access_key_id:
-      description: "AWS access key id to connect to the droplets bucket"
-    aws_secret_access_key:
-      description: "AWS secret key to connect to the droplets bucket"
-  buildpacks_bucket:
-    name:
-      description: "Current buildpacks bucket name to backup from/restore to."
-    region:
-      description: "S3 region for buildpacks bucket"
-    aws_access_key_id:
-      description: "AWS access key id to connect to the buildpacks bucket"
-    aws_secret_access_key:
-      description: "AWS secret key to connect to the buildpacks bucket"
-  packages_bucket:
-    name:
-      description: "Current packages bucket name to backup from/restore to."
-    region:
-      description: "S3 region for packages bucket"
-    aws_access_key_id:
-      description: "AWS access key id to connect to the packages bucket"
-    aws_secret_access_key:
-      description: "AWS secret key to connect to the packages bucket"
-
+  buckets:
+    default: {}
+    description: "Hash of buckets to backup/restore to"
+    example: |
+      droplets:
+        name: "the_droplets_bucket"
+        region: "eu-west-1"
+        aws_access_key_id: "AWS_ACCESS_KEY_ID"
+        aws_secret_access_key: "AWS_SECRET_ACCESS_KEY"

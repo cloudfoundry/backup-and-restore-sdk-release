@@ -8,10 +8,10 @@ import (
 )
 
 type FakeArtifact struct {
-	SaveStub        func(backup blobstore.Backup) error
+	SaveStub        func(backup map[string]blobstore.BucketBackup) error
 	saveMutex       sync.RWMutex
 	saveArgsForCall []struct {
-		backup blobstore.Backup
+		backup map[string]blobstore.BucketBackup
 	}
 	saveReturns struct {
 		result1 error
@@ -23,11 +23,11 @@ type FakeArtifact struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeArtifact) Save(backup blobstore.Backup) error {
+func (fake *FakeArtifact) Save(backup map[string]blobstore.BucketBackup) error {
 	fake.saveMutex.Lock()
 	ret, specificReturn := fake.saveReturnsOnCall[len(fake.saveArgsForCall)]
 	fake.saveArgsForCall = append(fake.saveArgsForCall, struct {
-		backup blobstore.Backup
+		backup map[string]blobstore.BucketBackup
 	}{backup})
 	fake.recordInvocation("Save", []interface{}{backup})
 	fake.saveMutex.Unlock()
@@ -46,7 +46,7 @@ func (fake *FakeArtifact) SaveCallCount() int {
 	return len(fake.saveArgsForCall)
 }
 
-func (fake *FakeArtifact) SaveArgsForCall(i int) blobstore.Backup {
+func (fake *FakeArtifact) SaveArgsForCall(i int) map[string]blobstore.BucketBackup {
 	fake.saveMutex.RLock()
 	defer fake.saveMutex.RUnlock()
 	return fake.saveArgsForCall[i].backup

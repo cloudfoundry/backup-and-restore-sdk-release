@@ -2,19 +2,8 @@
 
 set -e
 
-export DROPLETS_BUCKET_NAME="<%= p('droplets_bucket.name') %>"
-export DROPLETS_BUCKET_REGION="<%= p('droplets_bucket.region') %>"
-export DROPLETS_BUCKET_ACCESS_KEY_ID="<%= p('droplets_bucket.aws_access_key_id') %>"
-export DROPLETS_BUCKET_SECRET_ACCESS_KEY="<%= p('droplets_bucket.aws_secret_access_key') %>"
-export BUILDPACKS_BUCKET_NAME="<%= p('buildpacks_bucket.name') %>"
-export BUILDPACKS_BUCKET_REGION="<%= p('buildpacks_bucket.region') %>"
-export BUILDPACKS_BUCKET_ACCESS_KEY_ID="<%= p('buildpacks_bucket.aws_access_key_id') %>"
-export BUILDPACKS_BUCKET_SECRET_ACCESS_KEY="<%= p('buildpacks_bucket.aws_secret_access_key') %>"
-export PACKAGES_BUCKET_NAME="<%= p('packages_bucket.name') %>"
-export PACKAGES_BUCKET_REGION="<%= p('packages_bucket.region') %>"
-export PACKAGES_BUCKET_ACCESS_KEY_ID="<%= p('packages_bucket.aws_access_key_id') %>"
-export PACKAGES_BUCKET_SECRET_ACCESS_KEY="<%= p('packages_bucket.aws_secret_access_key') %>"
-
 export AWS_CLI_PATH=/var/vcap/packages/backup-and-restore-sdk-aws-cli/bin/aws
 
-/var/vcap/packages/blobstore-backup-restorer/bin/blobstore-backup-restore
+/var/vcap/packages/blobstore-backup-restorer/bin/blobstore-backup-restore \
+    --config /var/vcap/jobs/aws-s3-versioned-blobstore-backup-restorer/config/buckets.json \
+    --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"

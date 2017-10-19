@@ -4,41 +4,40 @@ import (
 	"log"
 	"os"
 
+	"encoding/json"
+	"io/ioutil"
+
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore"
+	"flag"
+	"errors"
 )
 
 func main() {
+	configFilePath, artifactFilePath, err := parseFlags()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 	awsCliPath := getEnv("AWS_CLI_PATH")
-	dropletsBucketName := getEnv("DROPLETS_BUCKET_NAME")
-	dropletsBucketRegion := getEnv("DROPLETS_BUCKET_REGION")
-	dropletsBucketAccessKey := blobstore.S3AccessKey{
-		Id:     getEnv("DROPLETS_BUCKET_ACCESS_KEY_ID"),
-		Secret: getEnv("DROPLETS_BUCKET_SECRET_ACCESS_KEY"),
+
+	artifact := blobstore.NewFileArtifact(artifactFilePath)
+
+	config, err := ioutil.ReadFile(configFilePath)
+	if err != nil {
+		log.Fatal("Failed to read config")
 	}
 
-	buildpacksBucketName := getEnv("BUILDPACKS_BUCKET_NAME")
-	buildpacksBucketRegion := getEnv("BUILDPACKS_BUCKET_REGION")
-	buildpacksBucketAccessKey := blobstore.S3AccessKey{
-		Id:     getEnv("BUILDPACKS_BUCKET_ACCESS_KEY_ID"),
-		Secret: getEnv("BUILDPACKS_BUCKET_SECRET_ACCESS_KEY"),
+	var bucketsConfig map[string]BucketConfig
+	err = json.Unmarshal(config, &bucketsConfig)
+	if err != nil {
+		log.Fatal("Failed to parse config")
 	}
 
-	packagesBucketName := getEnv("PACKAGES_BUCKET_NAME")
-	packagesBucketRegion := getEnv("PACKAGES_BUCKET_REGION")
-	packagesBucketAccessKey := blobstore.S3AccessKey{
-		Id:     getEnv("PACKAGES_BUCKET_ACCESS_KEY_ID"),
-		Secret: getEnv("PACKAGES_BUCKET_SECRET_ACCESS_KEY"),
-	}
+	buckets := makeBuckets(awsCliPath, bucketsConfig)
 
-	dropletsBucket := blobstore.NewS3Bucket(awsCliPath, dropletsBucketName, dropletsBucketRegion, dropletsBucketAccessKey)
-	buildpacksBucket := blobstore.NewS3Bucket(awsCliPath, buildpacksBucketName, buildpacksBucketRegion, buildpacksBucketAccessKey)
-	packagesBucket := blobstore.NewS3Bucket(awsCliPath, packagesBucketName, packagesBucketRegion, packagesBucketAccessKey)
+	backuper := blobstore.NewBackuper(buckets, artifact)
 
-	artifact := blobstore.NewFileArtifact(getEnv("BBR_ARTIFACT_DIRECTORY") + "/blobstore.json")
-
-	backuper := blobstore.NewBackuper(dropletsBucket, buildpacksBucket, packagesBucket, artifact)
-
-	err := backuper.Backup()
+	err = backuper.Backup()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -50,4 +49,47 @@ func getEnv(varName string) string {
 		log.Fatalf("Missing environment variable '%s'", varName)
 	}
 	return value
+}
+
+func makeBuckets(awsCliPath string, config map[string]BucketConfig) []blobstore.Bucket {
+	var buckets = []blobstore.Bucket{}
+
+	for identifier, bucketConfig := range config {
+		buckets = append(buckets, blobstore.NewS3Bucket(
+			awsCliPath,
+			identifier,
+			bucketConfig.Name,
+			bucketConfig.Region,
+			blobstore.S3AccessKey{
+				Id:     bucketConfig.AwsAccessKeyId,
+				Secret: bucketConfig.AwsSecretAccessKey,
+			},
+		))
+	}
+
+	return buckets
+}
+
+type BucketConfig struct {
+	Name               string `json:"name"`
+	Region             string `json:"region"`
+	AwsAccessKeyId     string `json:"aws_access_key_id"`
+	AwsSecretAccessKey string `json:"aws_secret_access_key"`
+}
+
+func parseFlags() (string, string, error) {
+	var configFilePath = flag.String("config", "", "Path to JSON config file")
+	var artifactFilePath = flag.String("artifact-file", "", "Path to output file")
+
+	flag.Parse()
+
+	if *configFilePath == "" {
+		return "", "", errors.New("missing --config flag")
+	}
+
+	if *artifactFilePath == "" {
+		return "", "", errors.New("missing --artifact-file flag")
+	}
+
+	return *configFilePath, *artifactFilePath, nil
 }

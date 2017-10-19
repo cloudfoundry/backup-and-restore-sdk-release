@@ -1,52 +1,34 @@
 package blobstore
 
 type Backuper struct {
-	dropletsBucket, buildpacksBucket, packagesBucket Bucket
-	artifact                                         Artifact
+	buckets  []Bucket
+	artifact Artifact
 }
 
-func NewBackuper(dropletsBucket, buildpacksBucket, packagesBucket Bucket, artifact Artifact) Backuper {
+func NewBackuper(buckets []Bucket, artifact Artifact) Backuper {
 	return Backuper{
-		dropletsBucket:   dropletsBucket,
-		buildpacksBucket: buildpacksBucket,
-		packagesBucket:   packagesBucket,
-		artifact:         artifact,
+		buckets:  buckets,
+		artifact: artifact,
 	}
 }
 
 func (b Backuper) Backup() error {
-	dropletVersions, err := b.dropletsBucket.Versions()
-	if err != nil {
-		return err
+	backup := map[string]BucketBackup{}
+
+	for _, bucket := range b.buckets {
+		versions, err := bucket.Versions()
+		if err != nil {
+			return err
+		}
+
+		backup[bucket.Identifier()] = BucketBackup{
+			BucketName: bucket.Name(),
+			RegionName: bucket.RegionName(),
+			Versions:   filterLatest(versions),
+		}
 	}
 
-	buildpackVersions, err := b.buildpacksBucket.Versions()
-	if err != nil {
-		return err
-	}
-
-	packageVersions, err := b.packagesBucket.Versions()
-	if err != nil {
-		return err
-	}
-
-	return b.artifact.Save(Backup{
-		DropletsBackup: BucketBackup{
-			BucketName: b.dropletsBucket.Name(),
-			RegionName: b.dropletsBucket.RegionName(),
-			Versions:   filterLatest(dropletVersions),
-		},
-		BuildpacksBackup: BucketBackup{
-			BucketName: b.buildpacksBucket.Name(),
-			RegionName: b.buildpacksBucket.RegionName(),
-			Versions:   filterLatest(buildpackVersions),
-		},
-		PackagesBackup: BucketBackup{
-			BucketName: b.packagesBucket.Name(),
-			RegionName: b.packagesBucket.RegionName(),
-			Versions:   filterLatest(packageVersions),
-		},
-	})
+	return b.artifact.Save(backup)
 }
 
 func filterLatest(versions []Version) []LatestVersion {

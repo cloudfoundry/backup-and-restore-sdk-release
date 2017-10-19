@@ -45,7 +45,8 @@ func main() {
 
 	err = interactor.Action(flags.ArtifactFilePath)
 	if err != nil {
-		log.Fatalf("You may need to delete the artifact-file that was created before re-running.\n%s\n", err)
+		log.Fatalf(
+			"You may need to delete the artifact-file that was created before re-running.\n%s\n", err)
 	}
 }
 

@@ -7,7 +7,7 @@ import (
 
 //go:generate counterfeiter -o fakes/fake_artifact.go . Artifact
 type Artifact interface {
-	Save(backup Backup) error
+	Save(backup map[string]BucketBackup) error
 }
 
 type FileArtifact struct {
@@ -18,7 +18,7 @@ func NewFileArtifact(filePath string) FileArtifact {
 	return FileArtifact{filePath: filePath}
 }
 
-func (a FileArtifact) Save(backup Backup) error {
+func (a FileArtifact) Save(backup map[string]BucketBackup) error {
 	marshalledBackup, err := json.MarshalIndent(backup, "", "  ")
 	if err != nil {
 		return err
@@ -28,16 +28,10 @@ func (a FileArtifact) Save(backup Backup) error {
 	return nil
 }
 
-type Backup struct {
-	DropletsBackup   BucketBackup `json:"droplets"`
-	BuildpacksBackup BucketBackup `json:"buildpacks"`
-	PackagesBackup   BucketBackup `json:"packages"`
-}
-
 type BucketBackup struct {
 	BucketName string          `json:"bucket_name"`
 	RegionName string          `json:"region_name"`
-	Versions   []LatestVersion `json:"version"`
+	Versions   []LatestVersion `json:"versions"`
 }
 
 type LatestVersion struct {

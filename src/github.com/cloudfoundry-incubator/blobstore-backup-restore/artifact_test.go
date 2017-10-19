@@ -31,8 +31,8 @@ var _ = Describe("FileArtifact", func() {
 	})
 
 	It("Saves the artifact to a file", func() {
-		backup := Backup{
-			DropletsBackup: BucketBackup{
+		backup := map[string]BucketBackup{
+			"droplets": {
 				BucketName: "my_droplets_bucket",
 				RegionName: "my_droplets_region",
 				Versions: []LatestVersion{
@@ -40,14 +40,14 @@ var _ = Describe("FileArtifact", func() {
 					{BlobKey: "two", Id: "21"},
 				},
 			},
-			BuildpacksBackup: BucketBackup{
+			"buildpacks": {
 				BucketName: "my_buildpacks_bucket",
 				RegionName: "my_buildpacks_region",
 				Versions: []LatestVersion{
 					{BlobKey: "three", Id: "31"},
 				},
 			},
-			PackagesBackup: BucketBackup{
+			"packages": {
 				BucketName: "my_packages_bucket",
 				RegionName: "my_packages_region",
 				Versions: []LatestVersion{
@@ -64,11 +64,11 @@ var _ = Describe("FileArtifact", func() {
 	})
 })
 
-func parseBackupFile(filePath string) Backup {
+func parseBackupFile(filePath string) map[string]BucketBackup {
 	fileContents, err := ioutil.ReadFile(filePath)
 	Expect(err).NotTo(HaveOccurred())
 
-	var backup Backup
+	var backup map[string]BucketBackup
 	json.Unmarshal(fileContents, &backup)
 
 	return backup
