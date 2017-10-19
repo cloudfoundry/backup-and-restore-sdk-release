@@ -25,6 +25,9 @@ export BOSH_GW_HOST=lite-bosh.backup-and-restore.cf-app.com
 export BOSH_GW_PRIVATE_KEY=~/workspace/bosh-backup-and-restore-meta/genesis-bosh/bosh.pem
 export POSTGRES_PASSWORD=postgres_password
 export MYSQL_PASSWORD=mysql_password
+export BOSH_DEPLOYMENT="s3-backuper"
+export AWS_TEST_BUCKET_NAME="bbr-system-test-bucket"
+export AWS_TEST_BUCKET_REGION="eu-west-1"
 
 TEST_SUITE=""
 if [[ $# -ge 1 ]]; then
