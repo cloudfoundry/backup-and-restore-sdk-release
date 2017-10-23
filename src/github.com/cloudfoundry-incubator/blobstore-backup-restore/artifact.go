@@ -3,6 +3,7 @@ package blobstore
 import (
 	"encoding/json"
 	"io/ioutil"
+	"fmt"
 )
 
 //go:generate counterfeiter -o fakes/fake_artifact.go . Artifact
@@ -24,7 +25,11 @@ func (a FileArtifact) Save(backup map[string]BucketBackup) error {
 		return err
 	}
 
-	ioutil.WriteFile(a.filePath, marshalledBackup, 0666)
+	err = ioutil.WriteFile(a.filePath, marshalledBackup, 0666)
+	if err != nil {
+		return fmt.Errorf("could not write backup file: %s", err.Error())
+	}
+
 	return nil
 }
 

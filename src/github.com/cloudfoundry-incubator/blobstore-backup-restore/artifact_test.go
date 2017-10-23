@@ -62,6 +62,17 @@ var _ = Describe("FileArtifact", func() {
 		savedBackup := parseBackupFile(artifactPath)
 		Expect(savedBackup).To(Equal(backup))
 	})
+
+	Context("when saving the file fails", func() {
+		BeforeEach(func() {
+			os.Chmod(backupDir, 0500)
+		})
+
+		It("returns an error", func() {
+			err := fileArtifact.Save(map[string]BucketBackup{})
+			Expect(err).To(MatchError(ContainSubstring("could not write backup file")))
+		})
+	})
 })
 
 func parseBackupFile(filePath string) map[string]BucketBackup {
