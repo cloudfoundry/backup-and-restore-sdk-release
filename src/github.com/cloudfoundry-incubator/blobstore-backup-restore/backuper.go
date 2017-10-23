@@ -1,5 +1,7 @@
 package blobstore
 
+import "fmt"
+
 type Backuper struct {
 	buckets  []Bucket
 	artifact Artifact
@@ -21,14 +23,28 @@ func (b Backuper) Backup() error {
 			return err
 		}
 
+		latestVersions := filterLatest(versions)
+		if containsNullVersion(latestVersions) {
+			return fmt.Errorf("failed to retrieve versions; bucket '%s' has `null` VerionIds", bucket.Name())
+		}
+
 		backup[bucket.Identifier()] = BucketBackup{
 			BucketName: bucket.Name(),
 			RegionName: bucket.RegionName(),
-			Versions:   filterLatest(versions),
+			Versions:   latestVersions,
 		}
 	}
 
 	return b.artifact.Save(backup)
+}
+
+func containsNullVersion(latestVersions []LatestVersion) bool {
+	for _, version := range latestVersions {
+		if version.Id == "null" {
+			return true
+		}
+	}
+	return false
 }
 
 func filterLatest(versions []Version) []LatestVersion {

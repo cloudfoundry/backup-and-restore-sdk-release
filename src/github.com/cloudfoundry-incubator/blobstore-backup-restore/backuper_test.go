@@ -111,6 +111,40 @@ var _ = Describe("Backuper", func() {
 		})
 	})
 
+	Context("when there is a `null` VersionId", func() {
+		Context("when it's a latest version", func() {
+			BeforeEach(func() {
+				packagesBucket.VersionsReturns([]Version{
+					{Key: "one", Id: "11", IsLatest: true},
+					{Key: "one", Id: "12", IsLatest: false},
+					{Key: "two", Id: "null", IsLatest: true},
+					{Key: "two", Id: "21", IsLatest: false},
+				}, nil)
+				packagesBucket.NameReturns("my_packages_bucket")
+			})
+
+			It("returns the error", func() {
+				Expect(err).To(MatchError("failed to retrieve versions; bucket 'my_packages_bucket' has `null` VerionIds"))
+			})
+		})
+
+		Context("when it's not a latest version", func() {
+			BeforeEach(func() {
+				packagesBucket.VersionsReturns([]Version{
+					{Key: "one", Id: "11", IsLatest: true},
+					{Key: "one", Id: "12", IsLatest: false},
+					{Key: "two", Id: "21", IsLatest: true},
+					{Key: "two", Id: "null", IsLatest: false},
+				}, nil)
+				packagesBucket.NameReturns("my_packages_bucket")
+			})
+
+			It("does not return an error", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+	})
+
 	Context("when storing the versions in the artifact fails", func() {
 		BeforeEach(func() {
 			dropletsBucket.VersionsReturns([]Version{}, nil)
