@@ -65,7 +65,7 @@ var _ = Describe("FileArtifact", func() {
 
 	Context("when saving the file fails", func() {
 		BeforeEach(func() {
-			os.Chmod(backupDir, 0500)
+			fileArtifact = NewFileArtifact("/this/path/does/not/exist")
 		})
 
 		It("returns an error", func() {
