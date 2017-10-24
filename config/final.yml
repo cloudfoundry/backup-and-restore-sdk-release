@@ -15,7 +15,7 @@
 # limitations under the License.
 
 ---
-name: backup-and-restore-sdk
+final_name: backup-and-restore-sdk
 blobstore:
   provider: s3
   options:
