@@ -2,13 +2,14 @@ package blobstore
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"fmt"
+	"io/ioutil"
 )
 
 //go:generate counterfeiter -o fakes/fake_artifact.go . Artifact
 type Artifact interface {
 	Save(backup map[string]BucketBackup) error
+	Load() (map[string]BucketBackup, error)
 }
 
 type FileArtifact struct {
@@ -31,6 +32,21 @@ func (a FileArtifact) Save(backup map[string]BucketBackup) error {
 	}
 
 	return nil
+}
+
+func (a FileArtifact) Load() (map[string]BucketBackup, error) {
+	bytes, err := ioutil.ReadFile(a.filePath)
+	if err != nil {
+		return nil, fmt.Errorf("could not read backup file: %s", err.Error())
+	}
+
+	var backup map[string]BucketBackup
+	err = json.Unmarshal(bytes, &backup)
+	if err != nil {
+		return nil, fmt.Errorf("backup file has an invalid format: %s", err.Error())
+	}
+
+	return backup, nil
 }
 
 type BucketBackup struct {

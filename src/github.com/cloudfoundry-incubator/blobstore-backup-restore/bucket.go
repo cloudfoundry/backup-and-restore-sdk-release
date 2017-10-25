@@ -12,6 +12,7 @@ type Bucket interface {
 	Name() string
 	RegionName() string
 	Versions() ([]Version, error)
+	PutVersions(regionName, bucketName string, versions []LatestVersion) error
 }
 
 type S3Bucket struct {
@@ -70,6 +71,10 @@ func (b S3Bucket) Versions() ([]Version, error) {
 	}
 
 	return response.Versions, nil
+}
+
+func (b S3Bucket) PutVersions(regionName, bucketName string, versions []LatestVersion) error {
+	return nil
 }
 
 type S3ListVersionsResponse struct {

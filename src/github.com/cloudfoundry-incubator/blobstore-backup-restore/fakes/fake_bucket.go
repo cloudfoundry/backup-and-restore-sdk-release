@@ -37,6 +37,19 @@ type FakeBucket struct {
 		result1 []blobstore.Version
 		result2 error
 	}
+	PutVersionsStub        func(regionName, bucketName string, versions []blobstore.LatestVersion) error
+	putVersionsMutex       sync.RWMutex
+	putVersionsArgsForCall []struct {
+		regionName string
+		bucketName string
+		versions   []blobstore.LatestVersion
+	}
+	putVersionsReturns struct {
+		result1 error
+	}
+	putVersionsReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -164,6 +177,61 @@ func (fake *FakeBucket) VersionsReturnsOnCall(i int, result1 []blobstore.Version
 	}{result1, result2}
 }
 
+func (fake *FakeBucket) PutVersions(regionName string, bucketName string, versions []blobstore.LatestVersion) error {
+	var versionsCopy []blobstore.LatestVersion
+	if versions != nil {
+		versionsCopy = make([]blobstore.LatestVersion, len(versions))
+		copy(versionsCopy, versions)
+	}
+	fake.putVersionsMutex.Lock()
+	ret, specificReturn := fake.putVersionsReturnsOnCall[len(fake.putVersionsArgsForCall)]
+	fake.putVersionsArgsForCall = append(fake.putVersionsArgsForCall, struct {
+		regionName string
+		bucketName string
+		versions   []blobstore.LatestVersion
+	}{regionName, bucketName, versionsCopy})
+	fake.recordInvocation("PutVersions", []interface{}{regionName, bucketName, versionsCopy})
+	fake.putVersionsMutex.Unlock()
+	if fake.PutVersionsStub != nil {
+		return fake.PutVersionsStub(regionName, bucketName, versions)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.putVersionsReturns.result1
+}
+
+func (fake *FakeBucket) PutVersionsCallCount() int {
+	fake.putVersionsMutex.RLock()
+	defer fake.putVersionsMutex.RUnlock()
+	return len(fake.putVersionsArgsForCall)
+}
+
+func (fake *FakeBucket) PutVersionsArgsForCall(i int) (string, string, []blobstore.LatestVersion) {
+	fake.putVersionsMutex.RLock()
+	defer fake.putVersionsMutex.RUnlock()
+	return fake.putVersionsArgsForCall[i].regionName, fake.putVersionsArgsForCall[i].bucketName, fake.putVersionsArgsForCall[i].versions
+}
+
+func (fake *FakeBucket) PutVersionsReturns(result1 error) {
+	fake.PutVersionsStub = nil
+	fake.putVersionsReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBucket) PutVersionsReturnsOnCall(i int, result1 error) {
+	fake.PutVersionsStub = nil
+	if fake.putVersionsReturnsOnCall == nil {
+		fake.putVersionsReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.putVersionsReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -173,6 +241,8 @@ func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	defer fake.regionNameMutex.RUnlock()
 	fake.versionsMutex.RLock()
 	defer fake.versionsMutex.RUnlock()
+	fake.putVersionsMutex.RLock()
+	defer fake.putVersionsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

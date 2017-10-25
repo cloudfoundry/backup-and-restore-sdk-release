@@ -9,8 +9,6 @@ import (
 
 	"path/filepath"
 
-	"encoding/json"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -30,7 +28,7 @@ var _ = Describe("FileArtifact", func() {
 		os.RemoveAll(backupDir)
 	})
 
-	It("Saves the artifact to a file", func() {
+	It("saves the artifact to a file", func() {
 		backup := map[string]BucketBackup{
 			"droplets": {
 				BucketName: "my_droplets_bucket",
@@ -59,7 +57,8 @@ var _ = Describe("FileArtifact", func() {
 		err := fileArtifact.Save(backup)
 		Expect(err).NotTo(HaveOccurred())
 
-		savedBackup := parseBackupFile(artifactPath)
+		savedBackup, err := fileArtifact.Load()
+		Expect(err).NotTo(HaveOccurred())
 		Expect(savedBackup).To(Equal(backup))
 	})
 
@@ -73,14 +72,28 @@ var _ = Describe("FileArtifact", func() {
 			Expect(err).To(MatchError(ContainSubstring("could not write backup file")))
 		})
 	})
+
+	Context("when reading the file fails", func() {
+		BeforeEach(func() {
+			fileArtifact = NewFileArtifact("/this/path/does/not/exist")
+		})
+
+		It("returns an error", func() {
+			backup, err := fileArtifact.Load()
+			Expect(backup).To(BeNil())
+			Expect(err).To(MatchError(ContainSubstring("could not read backup file")))
+		})
+	})
+
+	Context("when the artifact has an invalid format", func() {
+		BeforeEach(func() {
+			ioutil.WriteFile(artifactPath, []byte("THIS IS NOT VALID JSON"), 0666)
+		})
+
+		It("returns an error", func() {
+			backup, err := fileArtifact.Load()
+			Expect(backup).To(BeNil())
+			Expect(err).To(MatchError(ContainSubstring("backup file has an invalid format")))
+		})
+	})
 })
-
-func parseBackupFile(filePath string) map[string]BucketBackup {
-	fileContents, err := ioutil.ReadFile(filePath)
-	Expect(err).NotTo(HaveOccurred())
-
-	var backup map[string]BucketBackup
-	json.Unmarshal(fileContents, &backup)
-
-	return backup
-}
