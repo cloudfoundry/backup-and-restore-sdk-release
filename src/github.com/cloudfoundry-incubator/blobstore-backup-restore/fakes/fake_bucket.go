@@ -8,15 +8,6 @@ import (
 )
 
 type FakeBucket struct {
-	IdentifierStub        func() string
-	identifierMutex       sync.RWMutex
-	identifierArgsForCall []struct{}
-	identifierReturns     struct {
-		result1 string
-	}
-	identifierReturnsOnCall map[int]struct {
-		result1 string
-	}
 	NameStub        func() string
 	nameMutex       sync.RWMutex
 	nameArgsForCall []struct{}
@@ -48,46 +39,6 @@ type FakeBucket struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
-}
-
-func (fake *FakeBucket) Identifier() string {
-	fake.identifierMutex.Lock()
-	ret, specificReturn := fake.identifierReturnsOnCall[len(fake.identifierArgsForCall)]
-	fake.identifierArgsForCall = append(fake.identifierArgsForCall, struct{}{})
-	fake.recordInvocation("Identifier", []interface{}{})
-	fake.identifierMutex.Unlock()
-	if fake.IdentifierStub != nil {
-		return fake.IdentifierStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.identifierReturns.result1
-}
-
-func (fake *FakeBucket) IdentifierCallCount() int {
-	fake.identifierMutex.RLock()
-	defer fake.identifierMutex.RUnlock()
-	return len(fake.identifierArgsForCall)
-}
-
-func (fake *FakeBucket) IdentifierReturns(result1 string) {
-	fake.IdentifierStub = nil
-	fake.identifierReturns = struct {
-		result1 string
-	}{result1}
-}
-
-func (fake *FakeBucket) IdentifierReturnsOnCall(i int, result1 string) {
-	fake.IdentifierStub = nil
-	if fake.identifierReturnsOnCall == nil {
-		fake.identifierReturnsOnCall = make(map[int]struct {
-			result1 string
-		})
-	}
-	fake.identifierReturnsOnCall[i] = struct {
-		result1 string
-	}{result1}
 }
 
 func (fake *FakeBucket) Name() string {
@@ -216,8 +167,6 @@ func (fake *FakeBucket) VersionsReturnsOnCall(i int, result1 []blobstore.Version
 func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.identifierMutex.RLock()
-	defer fake.identifierMutex.RUnlock()
 	fake.nameMutex.RLock()
 	defer fake.nameMutex.RUnlock()
 	fake.regionNameMutex.RLock()

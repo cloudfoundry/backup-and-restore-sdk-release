@@ -51,20 +51,19 @@ func getEnv(varName string) string {
 	return value
 }
 
-func makeBuckets(awsCliPath string, config map[string]BucketConfig) []blobstore.Bucket {
-	var buckets = []blobstore.Bucket{}
+func makeBuckets(awsCliPath string, config map[string]BucketConfig) map[string]blobstore.Bucket {
+	var buckets = map[string]blobstore.Bucket{}
 
 	for identifier, bucketConfig := range config {
-		buckets = append(buckets, blobstore.NewS3Bucket(
+		buckets[identifier] = blobstore.NewS3Bucket(
 			awsCliPath,
-			identifier,
 			bucketConfig.Name,
 			bucketConfig.Region,
 			blobstore.S3AccessKey{
 				Id:     bucketConfig.AwsAccessKeyId,
 				Secret: bucketConfig.AwsSecretAccessKey,
 			},
-		))
+		)
 	}
 
 	return buckets

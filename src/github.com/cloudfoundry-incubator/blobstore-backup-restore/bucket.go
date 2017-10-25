@@ -9,7 +9,6 @@ import (
 
 //go:generate counterfeiter -o fakes/fake_bucket.go . Bucket
 type Bucket interface {
-	Identifier() string
 	Name() string
 	RegionName() string
 	Versions() ([]Version, error)
@@ -17,7 +16,6 @@ type Bucket interface {
 
 type S3Bucket struct {
 	awsCliPath string
-	identifier string
 	name       string
 	regionName string
 	accessKey  S3AccessKey
@@ -28,18 +26,13 @@ type S3AccessKey struct {
 	Secret string
 }
 
-func NewS3Bucket(awsCliPath, identifier, name, region string, accessKey S3AccessKey) S3Bucket {
+func NewS3Bucket(awsCliPath, name, region string, accessKey S3AccessKey) S3Bucket {
 	return S3Bucket{
 		awsCliPath: awsCliPath,
-		identifier: identifier,
 		name:       name,
 		regionName: region,
 		accessKey:  accessKey,
 	}
-}
-
-func (b S3Bucket) Identifier() string {
-	return b.identifier
 }
 
 func (b S3Bucket) Name() string {

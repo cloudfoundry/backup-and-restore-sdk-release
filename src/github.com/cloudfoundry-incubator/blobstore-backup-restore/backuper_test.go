@@ -28,7 +28,11 @@ var _ = Describe("Backuper", func() {
 
 		artifact = new(fakes.FakeArtifact)
 
-		backuper = NewBackuper([]Bucket{dropletsBucket, buildpacksBucket, packagesBucket}, artifact)
+		backuper = NewBackuper(map[string]Bucket{
+			"droplets": dropletsBucket,
+			"buildpacks": buildpacksBucket,
+			"packages": packagesBucket,
+		}, artifact)
 	})
 
 	JustBeforeEach(func() {
@@ -37,7 +41,6 @@ var _ = Describe("Backuper", func() {
 
 	Context("when the buckets have data", func() {
 		BeforeEach(func() {
-			dropletsBucket.IdentifierReturns("droplets")
 			dropletsBucket.NameReturns("my_droplets_bucket")
 			dropletsBucket.RegionNameReturns("my_droplets_region")
 			dropletsBucket.VersionsReturns([]Version{
@@ -48,7 +51,6 @@ var _ = Describe("Backuper", func() {
 				{Key: "two", Id: "22", IsLatest: true},
 			}, nil)
 
-			buildpacksBucket.IdentifierReturns("buildpacks")
 			buildpacksBucket.NameReturns("my_buildpacks_bucket")
 			buildpacksBucket.RegionNameReturns("my_buildpacks_region")
 			buildpacksBucket.VersionsReturns([]Version{
@@ -56,7 +58,6 @@ var _ = Describe("Backuper", func() {
 				{Key: "three", Id: "32", IsLatest: true},
 			}, nil)
 
-			packagesBucket.IdentifierReturns("packages")
 			packagesBucket.NameReturns("my_packages_bucket")
 			packagesBucket.RegionNameReturns("my_packages_region")
 			packagesBucket.VersionsReturns([]Version{

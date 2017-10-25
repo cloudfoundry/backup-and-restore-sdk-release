@@ -3,11 +3,11 @@ package blobstore
 import "fmt"
 
 type Backuper struct {
-	buckets  []Bucket
+	buckets  map[string]Bucket
 	artifact Artifact
 }
 
-func NewBackuper(buckets []Bucket, artifact Artifact) Backuper {
+func NewBackuper(buckets map[string]Bucket, artifact Artifact) Backuper {
 	return Backuper{
 		buckets:  buckets,
 		artifact: artifact,
@@ -17,7 +17,7 @@ func NewBackuper(buckets []Bucket, artifact Artifact) Backuper {
 func (b Backuper) Backup() error {
 	backup := map[string]BucketBackup{}
 
-	for _, bucket := range b.buckets {
+	for identifier, bucket := range b.buckets {
 		versions, err := bucket.Versions()
 		if err != nil {
 			return err
@@ -28,7 +28,7 @@ func (b Backuper) Backup() error {
 			return fmt.Errorf("failed to retrieve versions; bucket '%s' has `null` VerionIds", bucket.Name())
 		}
 
-		backup[bucket.Identifier()] = BucketBackup{
+		backup[identifier] = BucketBackup{
 			BucketName: bucket.Name(),
 			RegionName: bucket.RegionName(),
 			Versions:   latestVersions,

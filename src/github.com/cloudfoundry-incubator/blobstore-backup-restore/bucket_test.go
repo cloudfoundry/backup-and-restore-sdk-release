@@ -37,7 +37,7 @@ var _ = Describe("S3Bucket", func() {
 
 		Context("when retrieving versions succeeds", func() {
 			BeforeEach(func() {
-				bucket = NewS3Bucket("aws", "bucket-id", "bbr-integration-test-bucket", "eu-west-1", creds)
+				bucket = NewS3Bucket("aws", "bbr-integration-test-bucket", "eu-west-1", creds)
 
 				firstVersionOfTest1 = uploadEmptyFile("eu-west-1", "bbr-integration-test-bucket", "test-1")
 				secondVersionOfTest1 = uploadEmptyFile("eu-west-1", "bbr-integration-test-bucket", "test-1")
@@ -67,7 +67,7 @@ var _ = Describe("S3Bucket", func() {
 
 		Context("when retrieving versions fails", func() {
 			BeforeEach(func() {
-				bucket = NewS3Bucket("aws", "bucket-id", "bbr-integration-test-bucket", "eu-west-1", S3AccessKey{})
+				bucket = NewS3Bucket("aws", "bbr-integration-test-bucket", "eu-west-1", S3AccessKey{})
 			})
 
 			It("returns the error", func() {
