@@ -7,22 +7,23 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/cloudfoundry-incubator/blobstore-backup-restore"
-	"flag"
 	"errors"
+	"flag"
+
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore"
 )
 
 func main() {
-	configFilePath, artifactFilePath, err := parseFlags()
+	commandFlags, err := parseFlags()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
 	awsCliPath := getEnv("AWS_CLI_PATH")
 
-	artifact := blobstore.NewFileArtifact(artifactFilePath)
+	artifact := blobstore.NewFileArtifact(commandFlags.ArtifactFilePath)
 
-	config, err := ioutil.ReadFile(configFilePath)
+	config, err := ioutil.ReadFile(commandFlags.ConfigPath)
 	if err != nil {
 		log.Fatal("Failed to read config")
 	}
@@ -35,9 +36,12 @@ func main() {
 
 	buckets := makeBuckets(awsCliPath, bucketsConfig)
 
-	backuper := blobstore.NewBackuper(buckets, artifact)
+	if commandFlags.IsRestore {
+		err = blobstore.NewRestorer(buckets, artifact).Restore()
+	} else {
+		err = blobstore.NewBackuper(buckets, artifact).Backup()
+	}
 
-	err = backuper.Backup()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -76,19 +80,39 @@ type BucketConfig struct {
 	AwsSecretAccessKey string `json:"aws_secret_access_key"`
 }
 
-func parseFlags() (string, string, error) {
+func parseFlags() (CommandFlags, error) {
 	var configFilePath = flag.String("config", "", "Path to JSON config file")
-	var artifactFilePath = flag.String("artifact-file", "", "Path to output file")
+	var backupAction = flag.Bool("backup", false, "Run blobstore backup")
+	var restoreAction = flag.Bool("restore", false, "Run blobstore restore")
+	var artifactFilePath = flag.String("artifact-file", "", "Path to the artifact file")
 
 	flag.Parse()
 
+	if *backupAction && *restoreAction {
+		return CommandFlags{}, errors.New("only one of: --backup or --restore can be provided")
+	}
+
+	if !*backupAction && !*restoreAction {
+		return CommandFlags{}, errors.New("missing --backup or --restore flag")
+	}
+
 	if *configFilePath == "" {
-		return "", "", errors.New("missing --config flag")
+		return CommandFlags{}, errors.New("missing --config flag")
 	}
 
 	if *artifactFilePath == "" {
-		return "", "", errors.New("missing --artifact-file flag")
+		return CommandFlags{}, errors.New("missing --artifact-file flag")
 	}
 
-	return *configFilePath, *artifactFilePath, nil
+	return CommandFlags{
+		ConfigPath:       *configFilePath,
+		IsRestore:        *restoreAction,
+		ArtifactFilePath: *artifactFilePath,
+	}, nil
+}
+
+type CommandFlags struct {
+	ConfigPath       string
+	IsRestore        bool
+	ArtifactFilePath string
 }

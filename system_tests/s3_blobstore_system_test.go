@@ -8,13 +8,19 @@ import (
 
 	"strconv"
 
+	"fmt"
+	"io/ioutil"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("S3 backuper", func() {
-	var fileName1, fileVersion1 string
-	var fileName2, fileVersion2 string
+	var region string
+	var bucket string
+	var fileName1 string
+	var fileName2 string
+	var fileName3 string
 	var tmpDir string
 
 	var backuperInstance JobInstance
@@ -26,60 +32,90 @@ var _ = Describe("S3 backuper", func() {
 			instanceIndex: "0",
 		}
 
-		fileName1, fileVersion1 = uploadEmptyTimestampedFile("file1")
-		fileName2, fileVersion2 = uploadEmptyTimestampedFile("file2")
+		region = MustHaveEnv("AWS_TEST_BUCKET_REGION")
+		bucket = MustHaveEnv("AWS_TEST_BUCKET_NAME")
 
-		tmpDir = "/tmp/aws-s3-versioned-blobstore-backup-restorer" +
-			strconv.FormatInt(time.Now().Unix(), 10)
+		tmpDir = "/tmp/aws-s3-versioned-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
 		backuperInstance.runOnVMAndSucceed("mkdir -p " + tmpDir)
 	})
 
 	AfterEach(func() {
-		deleteVersion(fileName1, fileVersion1)
-		deleteVersion(fileName2, fileVersion2)
-
+		deleteAllVersionsFromBucket(region, bucket)
 		backuperInstance.runOnVMAndSucceed("rm -rf " + tmpDir)
 	})
 
-	It("saves the version metadata", func() {
+	It("backs up and restores using versions", func() {
+		fileName1 = uploadTimestampedFileToBucket(region, bucket, "file1", "FILE1")
+		fileName2 = uploadTimestampedFileToBucket(region, bucket, "file2", "FILE2")
+
 		backuperInstance.runOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + tmpDir +
 			" /var/vcap/jobs/aws-s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
 
-		session := backuperInstance.runOnInstance("cat " + tmpDir + "/blobstore.json")
-		fileContents := session.Out.Contents()
+		deleteFileFromBucket(region, bucket, fileName1)
+		writeFileInBucket(region, bucket, fileName2, "FILE2_NEW")
+		fileName3 = uploadTimestampedFileToBucket(region, bucket, "file3", "FILE3")
 
-		Expect(fileContents).To(ContainSubstring(fileName1))
-		Expect(fileContents).To(ContainSubstring(fileName2))
-		Expect(fileContents).To(ContainSubstring(fileVersion1))
-		Expect(fileContents).To(ContainSubstring(fileVersion2))
-		Expect(fileContents).To(ContainSubstring(MustHaveEnv("AWS_TEST_BUCKET_NAME")))
-		Expect(fileContents).To(ContainSubstring(MustHaveEnv("AWS_TEST_BUCKET_REGION")))
+		backuperInstance.runOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + tmpDir +
+			" /var/vcap/jobs/aws-s3-versioned-blobstore-backup-restorer/bin/bbr/restore")
+
+		filesList := listFilesFromBucket(region, bucket)
+		Expect(filesList).To(ConsistOf(fileName1, fileName2))
+
+		Expect(getFileContentsFromBucket(fileName1)).To(Equal("FILE1"))
+		Expect(getFileContentsFromBucket(fileName2)).To(Equal("FILE2"))
 	})
 })
 
-func uploadEmptyTimestampedFile(prefix string) (string, string) {
-	fileName := prefix + strconv.FormatInt(time.Now().Unix(), 10)
-	return fileName, uploadEmptyFile(fileName)
-}
-
-func uploadEmptyFile(key string) string {
+func getFileContentsFromBucket(key string) string {
 	region := MustHaveEnv("AWS_TEST_BUCKET_REGION")
 	bucket := MustHaveEnv("AWS_TEST_BUCKET_NAME")
 
-	outputBuffer := new(bytes.Buffer)
-	errorBuffer := new(bytes.Buffer)
+	outputBuffer := runAwsCommandOnBucket(
+		"--region", region,
+		"s3",
+		"cp",
+		fmt.Sprintf("s3://%s/%s", bucket, key),
+		"-")
 
-	awsCmd := exec.Command("aws",
+	return outputBuffer.String()
+}
+
+func listFilesFromBucket(region, bucket string) []string {
+	outputBuffer := runAwsCommandOnBucket(
+		"--region", region,
+		"s3api",
+		"list-objects",
+		"--bucket", bucket)
+
+	var response ListResponse
+	json.Unmarshal(outputBuffer.Bytes(), &response)
+
+	keys := []string{}
+	for _, entry := range response.Contents {
+		keys = append(keys, entry.Key)
+	}
+
+	return keys
+}
+
+func uploadTimestampedFileToBucket(region, bucket, prefix, body string) string {
+	fileName := prefix + "_" + strconv.FormatInt(time.Now().Unix(), 10)
+	writeFileInBucket(region, bucket, fileName, body)
+	return fileName
+}
+
+func writeFileInBucket(region, bucket, key, body string) string {
+	bodyFile, _ := ioutil.TempFile("", key)
+	bodyFile.WriteString(body)
+	bodyFile.Close()
+
+	outputBuffer := runAwsCommandOnBucket(
 		"--region", region,
 		"s3api",
 		"put-object",
 		"--bucket", bucket,
-		"--key", key)
-	awsCmd.Stdout = outputBuffer
-	awsCmd.Stderr = errorBuffer
-
-	err := awsCmd.Run()
-	Expect(err).ToNot(HaveOccurred(), errorBuffer.String())
+		"--key", key,
+		"--body", bodyFile.Name())
 
 	var response PutResponse
 	json.Unmarshal(outputBuffer.Bytes(), &response)
@@ -89,21 +125,13 @@ func uploadEmptyFile(key string) string {
 	return response.VersionId
 }
 
-func deleteFile(key string) string {
-	region := MustHaveEnv("AWS_TEST_BUCKET_REGION")
-	bucket := MustHaveEnv("AWS_TEST_BUCKET_NAME")
-
-	outputBuffer := new(bytes.Buffer)
-
-	awsCmd := exec.Command("aws",
+func deleteFileFromBucket(region, bucket, key string) string {
+	outputBuffer := runAwsCommandOnBucket(
 		"--region", region,
 		"s3api",
 		"delete-object",
 		"--bucket", bucket,
 		"--key", key)
-	awsCmd.Stdout = outputBuffer
-	err := awsCmd.Run()
-	Expect(err).ToNot(HaveOccurred())
 
 	var response PutResponse
 	json.Unmarshal(outputBuffer.Bytes(), &response)
@@ -111,20 +139,72 @@ func deleteFile(key string) string {
 	return response.VersionId
 }
 
-func deleteVersion(key, versionId string) {
-	region := MustHaveEnv("AWS_TEST_BUCKET_REGION")
-	bucket := MustHaveEnv("AWS_TEST_BUCKET_NAME")
-
-	err := exec.Command("aws",
+func deleteVersionFromBucket(region, bucket, key, versionId string) string {
+	outputBuffer := runAwsCommandOnBucket(
 		"--region", region,
 		"s3api",
 		"delete-object",
 		"--bucket", bucket,
 		"--key", key,
-		"--version-id", versionId).Run()
-	Expect(err).NotTo(HaveOccurred())
+		"--version-id", versionId)
+
+	var response PutResponse
+	json.Unmarshal(outputBuffer.Bytes(), &response)
+
+	return response.VersionId
+}
+
+func deleteAllVersionsFromBucket(region, bucket string) {
+	outputBuffer := runAwsCommandOnBucket(
+		"--region", region,
+		"s3api",
+		"list-object-versions",
+		"--bucket", bucket)
+
+	var response VersionsResponse
+	json.Unmarshal(outputBuffer.Bytes(), &response)
+
+	for _, version := range response.Versions {
+		deleteVersionFromBucket(region, bucket, version.Key, version.VersionId)
+	}
+
+	for _, version := range response.DeleteMarkers {
+		deleteVersionFromBucket(region, bucket, version.Key, version.VersionId)
+	}
+}
+
+func runAwsCommandOnBucket(args ...string) *bytes.Buffer {
+	outputBuffer := new(bytes.Buffer)
+	errorBuffer := new(bytes.Buffer)
+
+	awsCmd := exec.Command("aws", args...)
+	awsCmd.Stdout = outputBuffer
+	awsCmd.Stderr = errorBuffer
+
+	err := awsCmd.Run()
+	Expect(err).ToNot(HaveOccurred(), errorBuffer.String())
+
+	return outputBuffer
 }
 
 type PutResponse struct {
+	VersionId string
+}
+
+type ListResponse struct {
+	Contents []ListResponseEntry
+}
+
+type ListResponseEntry struct {
+	Key string
+}
+
+type VersionsResponse struct {
+	Versions      []VersionItem
+	DeleteMarkers []VersionItem
+}
+
+type VersionItem struct {
+	Key       string
 	VersionId string
 }
