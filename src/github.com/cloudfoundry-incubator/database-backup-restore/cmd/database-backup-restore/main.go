@@ -39,7 +39,7 @@ func main() {
 	utilitiesConfig := config.GetUtilitiesConfigFromEnv()
 
 	interactor, err := makeInteractor(flags.IsRestore, utilitiesConfig, connectionConfig)
-	if err != nil{
+	if err != nil {
 		log.Fatalf("%v", err)
 	}
 

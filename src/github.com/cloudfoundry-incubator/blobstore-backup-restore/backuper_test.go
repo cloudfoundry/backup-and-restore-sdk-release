@@ -29,9 +29,9 @@ var _ = Describe("Backuper", func() {
 		artifact = new(fakes.FakeArtifact)
 
 		backuper = NewBackuper(map[string]Bucket{
-			"droplets": dropletsBucket,
+			"droplets":   dropletsBucket,
 			"buildpacks": buildpacksBucket,
-			"packages": packagesBucket,
+			"packages":   packagesBucket,
 		}, artifact)
 	})
 
