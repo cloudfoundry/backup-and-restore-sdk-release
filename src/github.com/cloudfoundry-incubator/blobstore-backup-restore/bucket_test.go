@@ -15,8 +15,13 @@ import (
 )
 
 var _ = Describe("S3Bucket", func() {
+	var bucket S3Bucket
+	var creds S3AccessKey
+
+	var region = "eu-west-1"
+	var bucketName = "bbr-integration-test-bucket"
+
 	Describe("Versions", func() {
-		var bucket S3Bucket
 		var versions []Version
 		var err error
 
@@ -26,32 +31,31 @@ var _ = Describe("S3Bucket", func() {
 		var firstVersionOfTest2 string
 		var deletedVersionOfTest2 string
 
-		var creds = S3AccessKey{
-			Id:     os.Getenv("AWS_ACCESS_KEY_ID"),
-			Secret: os.Getenv("AWS_SECRET_ACCESS_KEY"),
-		}
-
 		JustBeforeEach(func() {
+			bucket = NewS3Bucket("aws", bucketName, region, creds)
 			versions, err = bucket.Versions()
 		})
 
 		Context("when retrieving versions succeeds", func() {
 			BeforeEach(func() {
-				bucket = NewS3Bucket("aws", "bbr-integration-test-bucket", "eu-west-1", creds)
+				creds = S3AccessKey{
+					Id:     os.Getenv("AWS_ACCESS_KEY_ID"),
+					Secret: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+				}
 
-				firstVersionOfTest1 = uploadEmptyFile("eu-west-1", "bbr-integration-test-bucket", "test-1")
-				secondVersionOfTest1 = uploadEmptyFile("eu-west-1", "bbr-integration-test-bucket", "test-1")
-				thirdVersionOfTest1 = uploadEmptyFile("eu-west-1", "bbr-integration-test-bucket", "test-1")
-				firstVersionOfTest2 = uploadEmptyFile("eu-west-1", "bbr-integration-test-bucket", "test-2")
-				deletedVersionOfTest2 = deleteFile("eu-west-1", "bbr-integration-test-bucket", "test-2")
+				firstVersionOfTest1 = uploadEmptyFile(region, bucketName, "test-1")
+				secondVersionOfTest1 = uploadEmptyFile(region, bucketName, "test-1")
+				thirdVersionOfTest1 = uploadEmptyFile(region, bucketName, "test-1")
+				firstVersionOfTest2 = uploadEmptyFile(region, bucketName, "test-2")
+				deletedVersionOfTest2 = deleteFile(region, bucketName, "test-2")
 			})
 
 			AfterEach(func() {
-				deleteVersion("eu-west-1", "bbr-integration-test-bucket", "test-1", firstVersionOfTest1)
-				deleteVersion("eu-west-1", "bbr-integration-test-bucket", "test-1", secondVersionOfTest1)
-				deleteVersion("eu-west-1", "bbr-integration-test-bucket", "test-1", thirdVersionOfTest1)
-				deleteVersion("eu-west-1", "bbr-integration-test-bucket", "test-2", firstVersionOfTest2)
-				deleteVersion("eu-west-1", "bbr-integration-test-bucket", "test-2", deletedVersionOfTest2)
+				deleteVersion(region, bucketName, "test-1", firstVersionOfTest1)
+				deleteVersion(region, bucketName, "test-1", secondVersionOfTest1)
+				deleteVersion(region, bucketName, "test-1", thirdVersionOfTest1)
+				deleteVersion(region, bucketName, "test-2", firstVersionOfTest2)
+				deleteVersion(region, bucketName, "test-2", deletedVersionOfTest2)
 			})
 
 			It("returns a list of all versions in the bucket", func() {
@@ -67,7 +71,7 @@ var _ = Describe("S3Bucket", func() {
 
 		Context("when retrieving versions fails", func() {
 			BeforeEach(func() {
-				bucket = NewS3Bucket("aws", "bbr-integration-test-bucket", "eu-west-1", S3AccessKey{})
+				creds = S3AccessKey{}
 			})
 
 			It("returns the error", func() {
