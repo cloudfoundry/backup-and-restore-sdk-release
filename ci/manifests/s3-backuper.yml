@@ -48,7 +48,18 @@ instance_groups:
           region: ((s3-region))
           aws_access_key_id: ((aws-access-key-id))
           aws_secret_access_key: ((aws-secret-access-key))
-  - name: aws-s3-versioned-blobstore-clone-backup-restorer
+  azs: [z1]
+- name: clone-backuper
+  instances: 1
+  vm_type: small
+  persistent_disk_type: fifty
+  stemcell: trusty
+  update:
+    serial: true
+  networks:
+  - name: concourse
+  jobs:
+  - name: aws-s3-versioned-blobstore-backup-restorer
     release: backup-and-restore-sdk
     properties:
       enabled: true
