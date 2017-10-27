@@ -17,7 +17,7 @@
   branch = "master"
   name = "github.com/pivotal-cf-experimental/go-binmock"
   packages = ["."]
-  revision = "c65fd1972e0c0a309fe4861eb528b2549f9e173b"
+  revision = "f797157c64e9615c3bf85dbb00915153f0708458"
 
 [[projects]]
   name = "golang.org/x/sys"
