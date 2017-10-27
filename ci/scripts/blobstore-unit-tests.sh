@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Copyright (C) 2017-Present Pivotal Software, Inc. All rights reserved.
 #
 # This program and the accompanying materials are made available under
@@ -14,19 +16,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
----
-platform: linux
+set -eu
 
-image_resource:
-  type: docker-image
-  source: {repository: cloudfoundrylondon/backup-and-restore}
+export AWS_ACCESS_KEY_ID
+export AWS_SECRET_ACCESS_KEY_ID
 
-inputs:
-- name: backup-and-restore-sdk-release
-- name: bosh-backup-and-restore-meta
+export GOPATH=`pwd`/backup-and-restore-sdk-release:"$GOPATH"
 
-run:
-  path: backup-and-restore-sdk-release/ci/scripts/unit-tests.sh
-
-params:
-  TEAM_GPG_KEY:
+pushd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/blobstore-backup-restore
+  dep ensure
+  ginkgo -r -v
+popd
