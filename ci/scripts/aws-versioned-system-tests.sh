@@ -35,7 +35,9 @@ export BOSH_GW_PRIVATE_KEY=`pwd`/bosh-backup-and-restore-meta/genesis-bosh/bosh.
 export AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY
 export S3_BUCKET_NAME
+export S3_CLONED_BUCKET_NAME
 export S3_REGION
+export S3_CLONED_BUCKET_REGION
 
 cd src/github.com/cloudfoundry-incubator/backup-and-restore-sdk-release
 glide install

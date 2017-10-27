@@ -17,7 +17,9 @@ import (
 
 var _ = Describe("S3 backuper", func() {
 	var region string
+	var cloneRegion string
 	var bucket string
+	var cloneBucket string
 	var fileName1 string
 	var fileName2 string
 	var fileName3 string
@@ -34,6 +36,8 @@ var _ = Describe("S3 backuper", func() {
 
 		region = MustHaveEnv("AWS_TEST_BUCKET_REGION")
 		bucket = MustHaveEnv("AWS_TEST_BUCKET_NAME")
+		cloneRegion = MustHaveEnv("AWS_TEST_CLONE_BUCKET_REGION")
+		cloneBucket = MustHaveEnv("AWS_TEST_CLONE_BUCKET_NAME")
 
 		tmpDir = "/tmp/aws-s3-versioned-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
 		backuperInstance.runOnVMAndSucceed("mkdir -p " + tmpDir)
@@ -44,7 +48,7 @@ var _ = Describe("S3 backuper", func() {
 		backuperInstance.runOnVMAndSucceed("rm -rf " + tmpDir)
 	})
 
-	It("backs up and restores using versions", func() {
+	It("backs up and restores in-place", func() {
 		fileName1 = uploadTimestampedFileToBucket(region, bucket, "file1", "FILE1")
 		fileName2 = uploadTimestampedFileToBucket(region, bucket, "file2", "FILE2")
 
@@ -61,15 +65,29 @@ var _ = Describe("S3 backuper", func() {
 		filesList := listFilesFromBucket(region, bucket)
 		Expect(filesList).To(ConsistOf(fileName1, fileName2))
 
-		Expect(getFileContentsFromBucket(fileName1)).To(Equal("FILE1"))
-		Expect(getFileContentsFromBucket(fileName2)).To(Equal("FILE2"))
+		Expect(getFileContentsFromBucket(region, bucket, fileName1)).To(Equal("FILE1"))
+		Expect(getFileContentsFromBucket(region, bucket, fileName2)).To(Equal("FILE2"))
+	})
+
+	It("backs up and restores to a cloned bucket", func() {
+		fileName1 = uploadTimestampedFileToBucket(region, bucket, "file1", "FILE1")
+		fileName2 = uploadTimestampedFileToBucket(region, bucket, "file2", "FILE2")
+
+		backuperInstance.runOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + tmpDir +
+			" /var/vcap/jobs/aws-s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
+
+		backuperInstance.runOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + tmpDir +
+			" /var/vcap/jobs/aws-s3-versioned-blobstore-clone-backup-restorer/bin/bbr/restore")
+
+		filesList := listFilesFromBucket(cloneRegion, cloneBucket)
+		Expect(filesList).To(ConsistOf(fileName1, fileName2))
+
+		Expect(getFileContentsFromBucket(cloneRegion, cloneBucket, fileName1)).To(Equal("FILE1"))
+		Expect(getFileContentsFromBucket(cloneRegion, cloneBucket, fileName2)).To(Equal("FILE2"))
 	})
 })
 
-func getFileContentsFromBucket(key string) string {
-	region := MustHaveEnv("AWS_TEST_BUCKET_REGION")
-	bucket := MustHaveEnv("AWS_TEST_BUCKET_NAME")
-
+func getFileContentsFromBucket(region, bucket, key string) string {
 	outputBuffer := runAwsCommandOnBucket(
 		"--region", region,
 		"s3",

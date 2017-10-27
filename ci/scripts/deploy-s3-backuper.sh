@@ -33,4 +33,6 @@ bosh-cli --non-interactive \
   --var=aws-access-key-id=${AWS_ACCESS_KEY_ID} \
   --var=aws-secret-access-key=${AWS_SECRET_ACCESS_KEY} \
   --var=s3-bucket-name=${S3_BUCKET_NAME} \
-  --var=s3-region=${S3_REGION}
+  --var=s3-cloned-bucket-name=${S3_CLONED_BUCKET_NAME} \
+  --var=s3-region=${S3_REGION} \
+  --var=s3-cloned-bucket-region=${S3_CLONED_BUCKET_REGION}

@@ -30,7 +30,9 @@ export POSTGRES_PASSWORD=postgres_password
 export MYSQL_PASSWORD=mysql_password
 export BOSH_DEPLOYMENT="s3-backuper"
 export AWS_TEST_BUCKET_NAME="bbr-system-test-bucket"
+export AWS_TEST_CLONE_BUCKET_NAME="bbr-system-test-bucket-clone"
 export AWS_TEST_BUCKET_REGION="eu-west-1"
+export AWS_TEST_CLONE_BUCKET_REGION="eu-central-1"
 export AWS_ACCESS_KEY_ID="$(bosh-cli int --path=/aws-access-key-id secrets.yml)"
 export AWS_SECRET_ACCESS_KEY="$(bosh-cli int --path=/aws-secret-access-key secrets.yml)"
 
