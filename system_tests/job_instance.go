@@ -81,3 +81,23 @@ func (jobInstance *JobInstance) getIPOfInstance() string {
 	Fail("Cant find instances with name '" + jobInstance.instance + "' and deployment name '" + jobInstance.deployment + "'")
 	return ""
 }
+
+func (jobInstance *JobInstance) downloadFromInstance(remotePath, localPath string) *gexec.Session {
+	return RunCommand(
+		join(
+			BoshCommand(),
+			forDeployment(jobInstance.deployment),
+			getDownloadCommand(remotePath, localPath, jobInstance.instance, jobInstance.instanceIndex),
+		),
+	)
+}
+
+func (jobInstance *JobInstance) uploadToInstance(localPath, remotePath string) *gexec.Session {
+	return RunCommand(
+		join(
+			BoshCommand(),
+			forDeployment(jobInstance.deployment),
+			getUploadCommand(localPath, remotePath, jobInstance.instance, jobInstance.instanceIndex),
+		),
+	)
+}

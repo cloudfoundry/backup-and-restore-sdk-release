@@ -85,6 +85,19 @@ func getUploadCommand(localPath, remotePath, instanceName, instanceIndex string)
 	)
 }
 
+func getDownloadCommand(remotePath, localPath, instanceName, instanceIndex string) string {
+	return fmt.Sprintf(
+		"scp --gw-user=%s --gw-host=%s --gw-private-key=%s %s/%s:%s %s",
+		MustHaveEnv("BOSH_GW_USER"),
+		MustHaveEnv("BOSH_GW_HOST"),
+		MustHaveEnv("BOSH_GW_PRIVATE_KEY"),
+		instanceName,
+		instanceIndex,
+		remotePath,
+		localPath,
+	)
+}
+
 func MustHaveEnv(keyname string) string {
 	val := os.Getenv(keyname)
 	Expect(val).NotTo(BeEmpty(), "Need "+keyname+" for the test")
