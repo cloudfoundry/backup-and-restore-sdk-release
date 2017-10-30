@@ -21,7 +21,11 @@ func (d DumpUtilityVersionDetector) GetVersion() (version.SemanticVersion, error
 	// /mysqldump\s+Ver\s+[^ ]+\s+Distrib\s+([^ ]+),/
 	clientCmd := exec.Command(d.mysqldumpPath, "-V")
 
-	return extractVersionUsingCommand(clientCmd, `^mysqldump\s+Ver\s+[^ ]+\s+Distrib\s+([^ ]+),`), nil
+	semanticVersion := extractVersionUsingCommand(clientCmd, `^mysqldump\s+Ver\s+[^ ]+\s+Distrib\s+([^ ]+),`)
+
+	log.Printf("Mysql dump version %v\n", semanticVersion)
+
+	return semanticVersion, nil
 }
 
 func extractVersionUsingCommand(cmd *exec.Cmd, pattern string) version.SemanticVersion {
@@ -49,8 +53,6 @@ func extractVersionUsingCommand(cmd *exec.Cmd, pattern string) version.SemanticV
 		Minor: string(matches[2]),
 		Patch: string(matches[3]),
 	}
-
-	log.Printf("Mysql dump version %v\n", semanticVersion)
 
 	return semanticVersion
 }
