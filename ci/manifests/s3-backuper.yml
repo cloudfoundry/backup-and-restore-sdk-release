@@ -38,7 +38,7 @@ instance_groups:
   networks:
   - name: concourse
   jobs:
-  - name: aws-s3-versioned-blobstore-backup-restorer
+  - name: s3-versioned-blobstore-backup-restorer
     release: backup-and-restore-sdk
     properties:
       enabled: true
@@ -59,7 +59,7 @@ instance_groups:
   networks:
   - name: concourse
   jobs:
-  - name: aws-s3-versioned-blobstore-backup-restorer
+  - name: s3-versioned-blobstore-backup-restorer
     release: backup-and-restore-sdk
     properties:
       enabled: true

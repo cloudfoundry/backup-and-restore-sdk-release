@@ -3,7 +3,7 @@ version: 1.2.1
 commit_hash: 7dae1a0
 uncommitted_changes: false
 jobs:
-- name: aws-s3-versioned-blobstore-backup-restorer
+- name: s3-versioned-blobstore-backup-restorer
   version: 2b9fb75fb2e476ad5ce9e1913506a9bfcb1d10ba
   fingerprint: 2b9fb75fb2e476ad5ce9e1913506a9bfcb1d10ba
   sha1: 9c02ad88fbccdcc540a595cfb775c69b391e246b

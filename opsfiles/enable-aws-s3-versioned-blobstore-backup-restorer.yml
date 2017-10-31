@@ -2,7 +2,7 @@
 - type: replace
   path: /instance_groups/name=backup-restore/jobs/-
   value:
-    name: aws-s3-versioned-blobstore-backup-restorer
+    name: s3-versioned-blobstore-backup-restorer
     release: backup-and-restore-sdk
     properties:
       enabled: true

@@ -45,7 +45,7 @@ var _ = Describe("S3 backuper", func() {
 		cloneRegion = MustHaveEnv("AWS_TEST_CLONE_BUCKET_REGION")
 		cloneBucket = MustHaveEnv("AWS_TEST_CLONE_BUCKET_NAME")
 
-		artifactDirPath = "/tmp/aws-s3-versioned-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
+		artifactDirPath = "/tmp/s3-versioned-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
 		backuperInstance.runOnVMAndSucceed("mkdir -p " + artifactDirPath)
 		cloneBackuperInstance.runOnVMAndSucceed("mkdir -p " + artifactDirPath)
 	})
@@ -62,14 +62,14 @@ var _ = Describe("S3 backuper", func() {
 		fileName2 = uploadTimestampedFileToBucket(region, bucket, "file2", "FILE2")
 
 		backuperInstance.runOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
-			" /var/vcap/jobs/aws-s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
+			" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
 
 		deleteFileFromBucket(region, bucket, fileName1)
 		writeFileInBucket(region, bucket, fileName2, "FILE2_NEW")
 		fileName3 = uploadTimestampedFileToBucket(region, bucket, "file3", "FILE3")
 
 		backuperInstance.runOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
-			" /var/vcap/jobs/aws-s3-versioned-blobstore-backup-restorer/bin/bbr/restore")
+			" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/restore")
 
 		filesList := listFilesFromBucket(region, bucket)
 		Expect(filesList).To(ConsistOf(fileName1, fileName2))
@@ -83,13 +83,13 @@ var _ = Describe("S3 backuper", func() {
 		fileName2 = uploadTimestampedFileToBucket(region, bucket, "file2", "FILE2")
 
 		backuperInstance.runOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
-			" /var/vcap/jobs/aws-s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
+			" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
 
 		backuperInstance.downloadFromInstance(artifactDirPath+"/blobstore.json", "/tmp/blobstore.json")
 		cloneBackuperInstance.uploadToInstance("/tmp/blobstore.json", artifactDirPath+"/blobstore.json")
 
 		cloneBackuperInstance.runOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
-			" /var/vcap/jobs/aws-s3-versioned-blobstore-backup-restorer/bin/bbr/restore")
+			" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/restore")
 
 		filesList := listFilesFromBucket(cloneRegion, cloneBucket)
 		Expect(filesList).To(ConsistOf(fileName1, fileName2))
