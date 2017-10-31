@@ -63,6 +63,7 @@ func makeBuckets(awsCliPath string, config map[string]BucketConfig) map[string]b
 			awsCliPath,
 			bucketConfig.Name,
 			bucketConfig.Region,
+			bucketConfig.Endpoint,
 			blobstore.S3AccessKey{
 				Id:     bucketConfig.AwsAccessKeyId,
 				Secret: bucketConfig.AwsSecretAccessKey,
@@ -78,6 +79,7 @@ type BucketConfig struct {
 	Region             string `json:"region"`
 	AwsAccessKeyId     string `json:"aws_access_key_id"`
 	AwsSecretAccessKey string `json:"aws_secret_access_key"`
+	Endpoint           string `json:"endpoint"`
 }
 
 func parseFlags() (CommandFlags, error) {

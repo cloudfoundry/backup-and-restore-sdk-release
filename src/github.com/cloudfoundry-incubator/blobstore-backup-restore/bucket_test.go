@@ -28,21 +28,24 @@ var _ = Describe("S3Bucket", func() {
 	var firstVersionOfTest2 string
 	var deletedVersionOfTest2 string
 
-	RunBucketTests := func(region, bucketName string) {
+	RunBucketTests := func(region, bucketName, endpoint, accessKey, secretKey string) {
 		BeforeEach(func() {
-			firstVersionOfTest1 = uploadFile(region, bucketName, "", "test-1", "TEST-1-A")
-			secondVersionOfTest1 = uploadFile(region, bucketName, "", "test-1", "TEST-1-B")
-			thirdVersionOfTest1 = uploadFile(region, bucketName, "", "test-1", "TEST-1-C")
-			firstVersionOfTest2 = uploadFile(region, bucketName, "", "test-2", "TEST-2-A")
-			deletedVersionOfTest2 = deleteFile(region, bucketName, "", "test-2")
+			os.Setenv("AWS_ACCESS_KEY_ID", accessKey)
+			os.Setenv("AWS_SECRET_ACCESS_KEY", secretKey)
+
+			firstVersionOfTest1 = uploadFile(region, bucketName, endpoint, "test-1", "TEST-1-A")
+			secondVersionOfTest1 = uploadFile(region, bucketName, endpoint, "test-1", "TEST-1-B")
+			thirdVersionOfTest1 = uploadFile(region, bucketName, endpoint, "test-1", "TEST-1-C")
+			firstVersionOfTest2 = uploadFile(region, bucketName, endpoint, "test-2", "TEST-2-A")
+			deletedVersionOfTest2 = deleteFile(region, bucketName, endpoint, "test-2")
 		})
 
 		AfterEach(func() {
-			deleteAllVersions(region, bucketName, "")
+			deleteAllVersions(region, bucketName, endpoint)
 		})
 
 		JustBeforeEach(func() {
-			bucket = NewS3Bucket("aws", bucketName, region, creds)
+			bucket = NewS3Bucket("aws", bucketName, region, endpoint, creds)
 		})
 
 		Describe("Versions", func() {
@@ -56,8 +59,8 @@ var _ = Describe("S3Bucket", func() {
 			Context("when retrieving versions succeeds", func() {
 				BeforeEach(func() {
 					creds = S3AccessKey{
-						Id:     os.Getenv("AWS_ACCESS_KEY_ID"),
-						Secret: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+						Id:     accessKey,
+						Secret: secretKey,
 					}
 				})
 
@@ -88,7 +91,7 @@ var _ = Describe("S3Bucket", func() {
 			var err error
 
 			BeforeEach(func() {
-				uploadFile(region, bucketName, "", "test-3", "TEST-3-A")
+				uploadFile(region, bucketName, endpoint, "test-3", "TEST-3-A")
 			})
 
 			JustBeforeEach(func() {
@@ -101,17 +104,17 @@ var _ = Describe("S3Bucket", func() {
 			Context("when putting versions succeeds", func() {
 				BeforeEach(func() {
 					creds = S3AccessKey{
-						Id:     os.Getenv("AWS_ACCESS_KEY_ID"),
-						Secret: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+						Id:     accessKey,
+						Secret: secretKey,
 					}
 				})
 
 				It("restores the versions to the specified ones", func() {
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(listFiles(region, bucketName, "")).To(ConsistOf("test-1", "test-2"))
-					Expect(getFileContents(region, bucketName, "", "test-1")).To(Equal("TEST-1-B"))
-					Expect(getFileContents(region, bucketName, "", "test-2")).To(Equal("TEST-2-A"))
+					Expect(listFiles(region, bucketName, endpoint)).To(ConsistOf("test-1", "test-2"))
+					Expect(getFileContents(region, bucketName, endpoint, "test-1")).To(Equal("TEST-1-B"))
+					Expect(getFileContents(region, bucketName, endpoint, "test-2")).To(Equal("TEST-2-A"))
 				})
 			})
 
@@ -128,7 +131,23 @@ var _ = Describe("S3Bucket", func() {
 	}
 
 	Describe("AWS S3 bucket", func() {
-		RunBucketTests("eu-west-1", "bbr-integration-test-bucket")
+		RunBucketTests(
+			"eu-west-1",
+			"bbr-integration-test-bucket",
+			"",
+			os.Getenv("TEST_AWS_ACCESS_KEY_ID"),
+			os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
+		)
+	})
+
+	Describe("ECS S3-compatible bucket", func() {
+		RunBucketTests(
+			"eu-west-1",
+			"ecs-bbr-integration-test-bucket",
+			"https://object.ecstestdrive.com",
+			os.Getenv("TEST_ECS_ACCESS_KEY_ID"),
+			os.Getenv("TEST_ECS_SECRET_ACCESS_KEY"),
+		)
 	})
 })
 
