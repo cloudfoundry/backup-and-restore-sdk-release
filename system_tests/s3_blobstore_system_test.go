@@ -45,6 +45,9 @@ var _ = Describe("S3 backuper", func() {
 		cloneRegion = MustHaveEnv("AWS_TEST_CLONE_BUCKET_REGION")
 		cloneBucket = MustHaveEnv("AWS_TEST_CLONE_BUCKET_NAME")
 
+		deleteAllVersionsFromBucket(region, bucket)
+		deleteAllVersionsFromBucket(cloneRegion, cloneBucket)
+
 		artifactDirPath = "/tmp/aws-s3-versioned-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
 		backuperInstance.runOnVMAndSucceed("mkdir -p " + artifactDirPath)
 		cloneBackuperInstance.runOnVMAndSucceed("mkdir -p " + artifactDirPath)
