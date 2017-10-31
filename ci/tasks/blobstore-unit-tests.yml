@@ -26,8 +26,10 @@ inputs:
 - name: bosh-backup-and-restore-meta
 
 params:
-  AWS_ACCESS_KEY_ID:
-  AWS_SECRET_ACCESS_KEY_ID:
+  TEST_AWS_ACCESS_KEY_ID:
+  TEST_AWS_SECRET_ACCESS_KEY_ID:
+  TEST_ECS_ACCESS_KEY_ID:
+  TEST_ECS_SECRET_ACCESS_KEY_ID:
 
 run:
   path: backup-and-restore-sdk-release/ci/scripts/blobstore-unit-tests.sh

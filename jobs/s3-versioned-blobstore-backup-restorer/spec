@@ -15,7 +15,7 @@
 # limitations under the License.
 
 ---
-name: aws-s3-versioned-blobstore-backup-restorer
+name: s3-versioned-blobstore-backup-restorer
 
 templates:
   backup.erb: bin/bbr/backup

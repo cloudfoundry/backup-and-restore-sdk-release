@@ -19,7 +19,10 @@
 lpass show Shared-PCF-Backup-and-Restore/concourse-secrets --notes > \
   secrets.yml
 
-export AWS_ACCESS_KEY_ID="$(bosh-cli int --path=/aws-access-key-id secrets.yml)"
-export AWS_SECRET_ACCESS_KEY="$(bosh-cli int --path=/aws-secret-access-key secrets.yml)"
+export TEST_AWS_ACCESS_KEY_ID="$(bosh-cli int --path=/aws-access-key-id secrets.yml)"
+export TEST_AWS_SECRET_ACCESS_KEY="$(bosh-cli int --path=/aws-secret-access-key secrets.yml)"
+
+export TEST_ECS_ACCESS_KEY_ID="$(bosh-cli int --path=/ecs-access-key-id secrets.yml)"
+export TEST_ECS_SECRET_ACCESS_KEY="$(bosh-cli int --path=/ecs-secret-access-key secrets.yml)"
 
 ginkgo

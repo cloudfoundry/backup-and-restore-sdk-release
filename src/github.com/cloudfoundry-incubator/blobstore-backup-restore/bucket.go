@@ -21,6 +21,7 @@ type S3Bucket struct {
 	name       string
 	regionName string
 	accessKey  S3AccessKey
+	endpoint   string
 }
 
 type S3AccessKey struct {
@@ -28,12 +29,13 @@ type S3AccessKey struct {
 	Secret string
 }
 
-func NewS3Bucket(awsCliPath, name, region string, accessKey S3AccessKey) S3Bucket {
+func NewS3Bucket(awsCliPath, name, region, endpoint string, accessKey S3AccessKey) S3Bucket {
 	return S3Bucket{
 		awsCliPath: awsCliPath,
 		name:       name,
 		regionName: region,
 		accessKey:  accessKey,
+		endpoint:   endpoint,
 	}
 }
 
@@ -133,7 +135,13 @@ func (b S3Bucket) runS3ApiCommand(args ...string) ([]byte, error) {
 	outputBuffer := new(bytes.Buffer)
 	errorBuffer := new(bytes.Buffer)
 
-	baseArgs := []string{"--output", "json", "--region", b.regionName, "s3api"}
+	var baseArgs []string
+	if b.endpoint != "" {
+		baseArgs = []string{"--output", "json", "--region", b.regionName, "--endpoint", b.endpoint, "s3api"}
+	} else {
+		baseArgs = []string{"--output", "json", "--region", b.regionName, "s3api"}
+	}
+
 	awsCmd := exec.Command(b.awsCliPath, append(baseArgs, args...)...)
 	awsCmd.Env = append(awsCmd.Env, "AWS_ACCESS_KEY_ID="+b.accessKey.Id)
 	awsCmd.Env = append(awsCmd.Env, "AWS_SECRET_ACCESS_KEY="+b.accessKey.Secret)
