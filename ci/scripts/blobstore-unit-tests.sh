@@ -18,8 +18,10 @@
 
 set -eu
 
-export AWS_ACCESS_KEY_ID
-export AWS_SECRET_ACCESS_KEY_ID
+export TEST_AWS_ACCESS_KEY_ID
+export TEST_AWS_SECRET_ACCESS_KEY_ID
+export TEST_ECS_ACCESS_KEY_ID
+export TEST_ECS_SECRET_ACCESS_KEY_ID
 
 export GOPATH=`pwd`/backup-and-restore-sdk-release:"$GOPATH"
 
