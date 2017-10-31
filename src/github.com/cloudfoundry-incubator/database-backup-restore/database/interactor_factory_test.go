@@ -14,7 +14,18 @@ import (
 )
 
 var _ = Describe("InteractorFactory", func() {
-	var utilitiesConfig = config.UtilitiesConfig{}
+	var utilitiesConfig = config.UtilitiesConfig{
+		Postgres94: config.UtilityPaths{
+			Dump:    "pg_p4_dump",
+			Restore: "pg_p4_restore",
+			Client:  "pg_p4_client",
+		},
+		Postgres96: config.UtilityPaths{
+			Dump:    "pg_p6_dump",
+			Restore: "pg_p6_restore",
+			Client:  "pg_p6_client",
+		},
+	}
 	var postgresServerVersionDetector = new(fakes.FakeServerVersionDetector)
 	var interactorFactory = database.NewInteractorFactory(utilitiesConfig, postgresServerVersionDetector)
 
@@ -31,6 +42,7 @@ var _ = Describe("InteractorFactory", func() {
 	Context("when the configured adapter is postgres", func() {
 		BeforeEach(func() {
 			connectionConfig = config.ConnectionConfig{Adapter: "postgres"}
+
 		})
 
 		Context("when the action is 'backup'", func() {
@@ -38,9 +50,46 @@ var _ = Describe("InteractorFactory", func() {
 				action = "backup"
 			})
 
-			It("builds a database.TableCheckingInteractor", func() {
-				Expect(interactor).To(BeAssignableToTypeOf(database.TableCheckingInteractor{}))
-				Expect(factoryError).NotTo(HaveOccurred())
+			Context("when the version is detected as 9.6", func() {
+				BeforeEach(func() {
+					postgresServerVersionDetector.GetVersionReturns(version.SemanticVersion{Major: "9", Minor: "6", Patch: "1"}, nil)
+				})
+
+				It("builds a database.TableCheckingInteractor", func() {
+					Expect(interactor).To(Equal(
+						database.NewTableCheckingInteractor(connectionConfig,
+							postgres.NewTableChecker(connectionConfig, "pg_p6_client"),
+							postgres.NewBackuper(connectionConfig, "pg_p6_dump"),
+						),
+					))
+					Expect(factoryError).NotTo(HaveOccurred())
+				})
+			})
+
+			Context("when the version is detected as 9.4", func() {
+				BeforeEach(func() {
+					postgresServerVersionDetector.GetVersionReturns(version.SemanticVersion{Major: "9", Minor: "4", Patch: "1"}, nil)
+				})
+
+				It("builds a database.TableCheckingInteractor", func() {
+					Expect(interactor).To(Equal(
+						database.NewTableCheckingInteractor(connectionConfig,
+							postgres.NewTableChecker(connectionConfig, "pg_p4_client"),
+							postgres.NewBackuper(connectionConfig, "pg_p4_dump"),
+						),
+					))
+					Expect(factoryError).NotTo(HaveOccurred())
+				})
+			})
+
+			Context("when the version is detected as 9.5", func() {
+				BeforeEach(func() {
+					postgresServerVersionDetector.GetVersionReturns(version.SemanticVersion{Major: "9", Minor: "5", Patch: "1"}, nil)
+				})
+
+				It("fails to build database.TableCheckingInteractor", func() {
+					Expect(factoryError).To(MatchError(ContainSubstring("unsupported version of postgres")))
+				})
 			})
 		})
 
@@ -49,9 +98,40 @@ var _ = Describe("InteractorFactory", func() {
 				action = "restore"
 			})
 
-			It("builds a postgres.Restorer", func() {
-				Expect(interactor).To(BeAssignableToTypeOf(postgres.Restorer{}))
-				Expect(factoryError).NotTo(HaveOccurred())
+			Context("when the version is detected as 9.6", func() {
+				BeforeEach(func() {
+					postgresServerVersionDetector.GetVersionReturns(version.SemanticVersion{Major: "9", Minor: "6", Patch: "1"}, nil)
+				})
+
+				It("builds a database.TableCheckingInteractor", func() {
+					Expect(interactor).To(Equal(
+						postgres.NewRestorer(connectionConfig, "pg_p6_restore"),
+					))
+					Expect(factoryError).NotTo(HaveOccurred())
+				})
+			})
+
+			Context("when the version is detected as 9.4", func() {
+				BeforeEach(func() {
+					postgresServerVersionDetector.GetVersionReturns(version.SemanticVersion{Major: "9", Minor: "4", Patch: "1"}, nil)
+				})
+
+				It("builds a database.TableCheckingInteractor", func() {
+					Expect(interactor).To(Equal(
+						postgres.NewRestorer(connectionConfig, "pg_p4_restore"),
+					))
+					Expect(factoryError).NotTo(HaveOccurred())
+				})
+			})
+
+			Context("when the version is detected as 9.5", func() {
+				BeforeEach(func() {
+					postgresServerVersionDetector.GetVersionReturns(version.SemanticVersion{Major: "9", Minor: "5", Patch: "1"}, nil)
+				})
+
+				It("fails to build database.TableCheckingInteractor", func() {
+					Expect(factoryError).To(MatchError(ContainSubstring("unsupported version of postgres")))
+				})
 			})
 		})
 	})

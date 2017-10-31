@@ -53,14 +53,9 @@ func (f InteractorFactory) makePostgresBackuper(config config.ConnectionConfig) 
 		return nil, err
 	}
 
-	postgres94Version := version.SemanticVersion{Major: "9", Minor: "4"}
-	var pgDumpPath, psqlPath string
-	if postgres94Version.MinorVersionMatches(postgresVersion) {
-		psqlPath = f.utilitiesConfig.Postgres94.Client
-		pgDumpPath = f.utilitiesConfig.Postgres94.Dump
-	} else {
-		psqlPath = f.utilitiesConfig.Postgres96.Client
-		pgDumpPath = f.utilitiesConfig.Postgres96.Dump
+	psqlPath, pgDumpPath, _, err := f.getUtilitiesForPostgres(postgresVersion)
+	if err != nil {
+		return nil, err
 	}
 
 	postgresBackuper := postgres.NewBackuper(config, pgDumpPath)
@@ -74,13 +69,27 @@ func (f InteractorFactory) makePostgresRestorer(config config.ConnectionConfig) 
 		return nil, err
 	}
 
-	postgres94Version := version.SemanticVersion{Major: "9", Minor: "4"}
-	var pgRestorePath string
-	if postgres94Version.MinorVersionMatches(postgresVersion) {
-		pgRestorePath = f.utilitiesConfig.Postgres94.Restore
-	} else {
-		pgRestorePath = f.utilitiesConfig.Postgres96.Restore
+	_, _, pgRestorePath, err := f.getUtilitiesForPostgres(postgresVersion)
+	if err != nil {
+		return nil, err
 	}
 
 	return postgres.NewRestorer(config, pgRestorePath), nil
+}
+
+func (f InteractorFactory) getUtilitiesForPostgres(postgresVersion version.SemanticVersion) (string, string, string, error) {
+	var psqlPath, pgDumpPath, pgRestorePath string
+	if version.V_9_4.MinorVersionMatches(postgresVersion) {
+		psqlPath = f.utilitiesConfig.Postgres94.Client
+		pgDumpPath = f.utilitiesConfig.Postgres94.Dump
+		pgRestorePath = f.utilitiesConfig.Postgres94.Restore
+	} else if version.V_9_6.MinorVersionMatches(postgresVersion) {
+		psqlPath = f.utilitiesConfig.Postgres96.Client
+		pgDumpPath = f.utilitiesConfig.Postgres96.Dump
+		pgRestorePath = f.utilitiesConfig.Postgres96.Restore
+	} else {
+		return "", "", "", fmt.Errorf("unsupported version of postgresql: %s.%s", postgresVersion.Major, postgresVersion.Minor)
+	}
+
+	return psqlPath, pgDumpPath, pgRestorePath, nil
 }

@@ -33,3 +33,6 @@ func ParseFromString(stringVersion string) (SemanticVersion, error) {
 	}
 	return semVer, nil
 }
+
+var V_9_4 = SemanticVersion{Major: "9", Minor: "4"}
+var V_9_6 = SemanticVersion{Major: "9", Minor: "6"}
