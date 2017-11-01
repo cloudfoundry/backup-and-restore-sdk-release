@@ -27,5 +27,5 @@ export GOPATH=`pwd`/backup-and-restore-sdk-release:"$GOPATH"
 
 pushd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/blobstore-backup-restore
   dep ensure
-  ginkgo -r -v
+  ginkgo -r -v -skipPackage system_tests
 popd
