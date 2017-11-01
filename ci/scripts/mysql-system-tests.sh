@@ -36,4 +36,4 @@ export BOSH_GW_PRIVATE_KEY=$PWD/bosh-backup-and-restore-meta/genesis-bosh/bosh.p
 
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/database-backup-restore
 dep ensure
-ginkgo -r system_tests
+ginkgo -v -r system_tests -trace
