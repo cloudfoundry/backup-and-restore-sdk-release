@@ -9,7 +9,7 @@ chmod 400 bosh-backup-and-restore-meta/keys/github
 ssh-add bosh-backup-and-restore-meta/keys/github
 chmod 400 bosh-backup-and-restore-meta/genesis-bosh/bosh.pem
 
-export GOPATH=$PWD
+export GOPATH=$PWD/backup-and-restore-sdk-release
 export PATH=$PATH:$GOPATH/bin
 export BOSH_ENVIRONMENT="https://lite-bosh.backup-and-restore.cf-app.com"
 export BOSH_CA_CERT=`pwd`/bosh-backup-and-restore-meta/certs/lite-bosh.backup-and-restore.cf-app.com.crt
@@ -23,6 +23,6 @@ export AWS_TEST_BUCKET_REGION
 export AWS_TEST_CLONE_BUCKET_NAME
 export AWS_TEST_CLONE_BUCKET_REGION
 
-cd src/github.com/cloudfoundry-incubator/backup-and-restore-sdk-release
-glide install
-ginkgo -r --focus=S3 system_tests
+cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/blobstore-backup-restore
+dep ensure
+ginkgo -v -r system_tests -trace
