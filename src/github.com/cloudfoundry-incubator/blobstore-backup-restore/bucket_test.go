@@ -149,6 +149,42 @@ var _ = Describe("S3Bucket", func() {
 			os.Getenv("TEST_ECS_SECRET_ACCESS_KEY"),
 		)
 	})
+
+	Describe("Empty AWS S3 bucket", func() {
+		var region string
+		var bucketName string
+		var endpoint string
+
+		BeforeEach(func() {
+			region = "eu-west-1"
+			bucketName = "bbr-integration-test-bucket-empty"
+			endpoint = ""
+
+			creds = S3AccessKey{
+				Id:     os.Getenv("TEST_AWS_ACCESS_KEY_ID"),
+				Secret: os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
+			}
+
+			os.Setenv("AWS_ACCESS_KEY_ID", os.Getenv("TEST_AWS_ACCESS_KEY_ID"))
+			os.Setenv("AWS_SECRET_ACCESS_KEY", os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"))
+			deleteAllVersions(region, bucketName, endpoint)
+			bucket = NewS3Bucket("aws", bucketName, region, endpoint, creds)
+		})
+
+		Context("when backup an empty bucket", func() {
+			It("does not fail", func() {
+				_, err := bucket.Versions()
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+		Context("when restore from an empty bucket", func() {
+			It("does not fail", func() {
+				err := bucket.PutVersions(region, bucketName, []LatestVersion{})
+				Expect(err).NotTo(HaveOccurred())
+
+			})
+		})
+	})
 })
 
 func listFiles(region, bucket, endpoint string) []string {

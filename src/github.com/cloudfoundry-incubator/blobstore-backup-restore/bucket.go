@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"strings"
 )
 
 //go:generate counterfeiter -o fakes/fake_bucket.go . Bucket
@@ -49,8 +50,13 @@ func (b S3Bucket) RegionName() string {
 
 func (b S3Bucket) Versions() ([]Version, error) {
 	output, err := b.runS3ApiCommand("list-object-versions", "--bucket", b.name)
+
 	if err != nil {
 		return nil, err
+	}
+
+	if strings.TrimSpace(string(output)) == "" {
+		return []Version{}, nil
 	}
 
 	response := S3ListVersionsResponse{}
@@ -105,6 +111,10 @@ func (b S3Bucket) listFiles() ([]string, error) {
 	output, err := b.runS3ApiCommand("list-objects", "--bucket", b.name)
 	if err != nil {
 		return nil, err
+	}
+
+	if strings.TrimSpace(string(output)) == "" {
+		return []string{}, nil
 	}
 
 	response := S3ListResponse{}
