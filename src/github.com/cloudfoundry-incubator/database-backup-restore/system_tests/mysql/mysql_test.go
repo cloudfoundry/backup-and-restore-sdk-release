@@ -8,7 +8,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
-	"github.com/onsi/gomega/gexec"
 )
 
 var _ = Describe("mysql", func() {
@@ -147,36 +146,6 @@ var _ = Describe("mysql", func() {
 				Expect(session).To(gbytes.Say(
 					"You may need to delete the artifact-file that was created before re-running"))
 			})
-		})
-	})
-
-	Context("when the mysql server version doesn't match", func() {
-		BeforeEach(func() {
-			brJob = JobInstance{
-				deployment:    "mysql-dev-old",
-				instance:      "database-backup-restorer",
-				instanceIndex: "0",
-			}
-
-			dbJob = JobInstance{
-				deployment:    "mysql-dev-old",
-				instance:      "mysql",
-				instanceIndex: "0",
-			}
-
-			configJson := fmt.Sprintf(
-				`{"username":"root","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql"}`,
-				MustHaveEnv("MYSQL_PASSWORD"),
-				dbJob.getIPOfInstance(),
-				databaseName,
-			)
-			brJob.runOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
-		})
-
-		It("fails with a helpful message", func() {
-			backupSession := brJob.runOnInstance(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
-			Expect(backupSession).To(gexec.Exit(1))
-			Expect(backupSession).To(gbytes.Say("Version mismatch"))
 		})
 	})
 })
