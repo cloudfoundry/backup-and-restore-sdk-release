@@ -33,7 +33,6 @@ export BOSH_GW_USER=vcap
 export BOSH_GW_HOST=lite-bosh.backup-and-restore.cf-app.com
 export BOSH_GW_PRIVATE_KEY=$PWD/bosh-backup-and-restore-meta/genesis-bosh/bosh.pem
 
-
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/database-backup-restore
 dep ensure
-ginkgo -v -r system_tests -trace
+ginkgo -v -r system_tests/mysql -trace
