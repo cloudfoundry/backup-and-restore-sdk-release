@@ -11,24 +11,34 @@ import (
 
 	"database/sql"
 
+	"os/exec"
+
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/onsi/gomega/gexec"
 )
 
 var _ = Describe("mysql", func() {
 	var dbDumpPath string
 	var configPath string
 	var databaseName string
-	var brJob, dbJob JobInstance
+	var brJob JobInstance
 	var mysqlHostName string
-	var mysqlPassword string
+	var proxySession *gexec.Session
+	var connection *sql.DB
 
 	BeforeEach(func() {
-		mysqlHostName = MustHaveEnv("MYSQL_HOSTNAME")
-		mysqlPassword = MustHaveEnv("MYSQL_PASSWORD")
-
 		configPath = "/tmp/config.json" + strconv.FormatInt(time.Now().Unix(), 10)
 		dbDumpPath = "/tmp/sql_dump" + strconv.FormatInt(time.Now().Unix(), 10)
 		databaseName = "db" + strconv.FormatInt(time.Now().Unix(), 10)
+	})
+	BeforeSuite(func() {
+		mysqlHostName = MustHaveEnv("MYSQL_HOSTNAME")
+		connection, proxySession = connect()
+	})
+	AfterSuite(func() {
+		if proxySession != nil {
+			proxySession.Kill()
+		}
 	})
 
 	Context("when the mysql server version matches", func() {
@@ -39,27 +49,15 @@ var _ = Describe("mysql", func() {
 				instanceIndex: "0",
 			}
 
-			dbJob = JobInstance{
-				deployment:    "mysql-dev",
-				instance:      "mysql",
-				instanceIndex: "0",
-			}
+			runSQLCommand("CREATE DATABASE "+databaseName, connection)
 
-			connection, err := sql.Open("mysql", fmt.Sprintf("root:%s@tcp(%s:3306)/", mysqlPassword, mysqlHostName))
-			Expect(err).NotTo(HaveOccurred())
+			runSQLCommand("USE "+databaseName, connection)
 
-			_, err = connection.Exec("CREATE DATABASE %s", databaseName)
-			Expect(err).NotTo(HaveOccurred())
+			runSQLCommand("CREATE TABLE people (name varchar(255));", connection)
 
-			_, err = connection.Exec("USE %s", databaseName)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = connection.Exec("CREATE TABLE people (name varchar(255));")
-			Expect(err).NotTo(HaveOccurred())
-
-			dbJob.runMysqlSqlCommandOnDatabase(databaseName, "INSERT INTO people VALUES ('Old Person');")
-			dbJob.runMysqlSqlCommandOnDatabase(databaseName, "CREATE TABLE places (name varchar(255));")
-			dbJob.runMysqlSqlCommandOnDatabase(databaseName, "INSERT INTO places VALUES ('Old Place');")
+			runSQLCommand("INSERT INTO people VALUES ('Old Person');", connection)
+			runSQLCommand("CREATE TABLE places (name varchar(255));", connection)
+			runSQLCommand("INSERT INTO places VALUES ('Old Place');", connection)
 
 			configJson := fmt.Sprintf(
 				`{"username":"root","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql"}`,
@@ -71,22 +69,26 @@ var _ = Describe("mysql", func() {
 		})
 
 		AfterEach(func() {
-			dbJob.runMysqlSqlCommand(fmt.Sprintf(`echo 'DROP DATABASE %s;'`, databaseName))
+			runSQLCommand("DROP DATABASE "+databaseName, connection)
 			brJob.runOnVMAndSucceed(fmt.Sprintf("rm -rf %s %s", configPath, dbDumpPath))
 		})
 
-		FIt("backs up and restores the database", func() {
+		It("backs up and restores the database", func() {
 			brJob.runOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
 
-			dbJob.runMysqlSqlCommandOnDatabase(databaseName, "UPDATE people SET NAME = 'New Person';")
-			dbJob.runMysqlSqlCommandOnDatabase(databaseName, "UPDATE places SET NAME = 'New Place';")
+			runSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
+			runSQLCommand("UPDATE places SET NAME = 'New Place';", connection)
 
 			brJob.runOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
 
-			Expect(dbJob.runMysqlSqlCommandOnDatabase(databaseName, "SELECT name FROM people;")).To(gbytes.Say("Old Person"))
-			Expect(dbJob.runMysqlSqlCommandOnDatabase(databaseName, "SELECT name FROM people;")).NotTo(gbytes.Say("New Person"))
-			Expect(dbJob.runMysqlSqlCommandOnDatabase(databaseName, "SELECT name FROM places;")).To(gbytes.Say("Old Place"))
-			Expect(dbJob.runMysqlSqlCommandOnDatabase(databaseName, "SELECT name FROM places;")).NotTo(gbytes.Say("New Place"))
+			Expect(fetchSQLColumn("SELECT name FROM people;", connection)).To(
+				ConsistOf("Old Person"))
+			Expect(fetchSQLColumn("SELECT name FROM people;", connection)).NotTo(
+				ConsistOf("New Person"))
+			Expect(fetchSQLColumn("SELECT name FROM places;", connection)).To(
+				ConsistOf("Old Place"))
+			Expect(fetchSQLColumn("SELECT name FROM places;", connection)).NotTo(
+				ConsistOf("New Place"))
 		})
 
 		Context("and some existing 'tables' are specified in config", func() {
@@ -94,7 +96,7 @@ var _ = Describe("mysql", func() {
 				configJson := fmt.Sprintf(
 					`{"username":"root","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["people"]}`,
 					MustHaveEnv("MYSQL_PASSWORD"),
-					dbJob.getIPOfInstance(),
+					mysqlHostName,
 					databaseName,
 				)
 				brJob.runOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
@@ -103,8 +105,8 @@ var _ = Describe("mysql", func() {
 			It("backs up and restores only the specified tables", func() {
 				brJob.runOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
 
-				dbJob.runMysqlSqlCommandOnDatabase(databaseName, "UPDATE people SET NAME = 'New Person';")
-				dbJob.runMysqlSqlCommandOnDatabase(databaseName, "UPDATE places SET NAME = 'New Place';")
+				runSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
+				runSQLCommand("UPDATE places SET NAME = 'New Place';", connection)
 
 				brJob.runOnVMAndSucceed(fmt.Sprintf("cat %s", dbDumpPath))
 
@@ -112,10 +114,14 @@ var _ = Describe("mysql", func() {
 
 				Expect(restoreSession).To(gbytes.Say("CREATE TABLE `people`"))
 
-				Expect(dbJob.runMysqlSqlCommandOnDatabase(databaseName, "SELECT name FROM people;")).To(gbytes.Say("Old Person"))
-				Expect(dbJob.runMysqlSqlCommandOnDatabase(databaseName, "SELECT name FROM people;")).NotTo(gbytes.Say("New Person"))
-				Expect(dbJob.runMysqlSqlCommandOnDatabase(databaseName, "SELECT name FROM places;")).To(gbytes.Say("New Place"))
-				Expect(dbJob.runMysqlSqlCommandOnDatabase(databaseName, "SELECT name FROM places;")).NotTo(gbytes.Say("Old Place"))
+				Expect(fetchSQLColumn("SELECT name FROM people;", connection)).To(
+					ConsistOf("Old Person"))
+				Expect(fetchSQLColumn("SELECT name FROM people;", connection)).NotTo(
+					ConsistOf("New Person"))
+				Expect(fetchSQLColumn("SELECT name FROM places;", connection)).To(
+					ConsistOf("New Place"))
+				Expect(fetchSQLColumn("SELECT name FROM places;", connection)).NotTo(
+					ConsistOf("Old Place"))
 			})
 		})
 
@@ -124,7 +130,7 @@ var _ = Describe("mysql", func() {
 				configJson := fmt.Sprintf(
 					`{"username":"root","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["people", "not there"]}`,
 					MustHaveEnv("MYSQL_PASSWORD"),
-					dbJob.getIPOfInstance(),
+					mysqlHostName,
 					databaseName,
 				)
 				brJob.runOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
@@ -148,7 +154,7 @@ var _ = Describe("mysql", func() {
 				configJson := fmt.Sprintf(
 					`{"username":"root","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["lizards", "form-shifting-people"]}`,
 					MustHaveEnv("MYSQL_PASSWORD"),
-					dbJob.getIPOfInstance(),
+					mysqlHostName,
 					databaseName,
 				)
 				brJob.runOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
@@ -168,3 +174,53 @@ var _ = Describe("mysql", func() {
 		})
 	})
 })
+
+func connect() (*sql.DB, *gexec.Session) {
+	mysqlHostName := MustHaveEnv("MYSQL_HOSTNAME")
+	mysqlPassword := MustHaveEnv("MYSQL_PASSWORD")
+	mysqlPort := MustHaveEnv("MYSQL_PORT")
+
+	sshProxyHost := MustHaveEnv("SSH_PROXY_HOST")
+	sshProxyUser := MustHaveEnv("SSH_PROXY_USER")
+	sshProxyPemLocation := MustHaveEnv("SSH_PROXY_PEM_LOCATION")
+
+	proxiedMysqlHostName := "127.0.0.1"
+	proxiedMysqlPort := "13306"
+	var err error
+	proxySession, err := gexec.Start(exec.Command(
+		"ssh",
+		"-L",
+		fmt.Sprintf("%s:%s:%s", proxiedMysqlPort, mysqlHostName, mysqlPort),
+		sshProxyUser+"@"+sshProxyHost,
+		"-i", sshProxyPemLocation,
+		"-N",
+	), GinkgoWriter, GinkgoWriter)
+	Expect(err).NotTo(HaveOccurred())
+	time.Sleep(1 * time.Second)
+	connection, err := sql.Open("mysql", fmt.Sprintf(
+		"root:%s@tcp(%s:%s)/", mysqlPassword, proxiedMysqlHostName, proxiedMysqlPort))
+	Expect(err).NotTo(HaveOccurred())
+
+	return connection, proxySession
+}
+
+func runSQLCommand(command string, connection *sql.DB) {
+	_, err := connection.Exec(command)
+	Expect(err).NotTo(HaveOccurred())
+}
+
+func fetchSQLColumn(command string, connection *sql.DB) []string {
+	var returnValue []string
+	rows, err := connection.Query(command)
+	Expect(err).NotTo(HaveOccurred())
+
+	defer rows.Close()
+	for rows.Next() {
+		var rowData string
+		Expect(rows.Scan(&rowData)).NotTo(HaveOccurred())
+
+		returnValue = append(returnValue, rowData)
+	}
+	Expect(rows.Err()).NotTo(HaveOccurred())
+	return returnValue
+}
