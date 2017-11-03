@@ -60,7 +60,8 @@ var _ = Describe("mysql", func() {
 			runSQLCommand("INSERT INTO places VALUES ('Old Place');", connection)
 
 			configJson := fmt.Sprintf(
-				`{"username":"root","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql"}`,
+				`{"username":"%s","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql"}`,
+				MustHaveEnv("MYSQL_USERNAME"),
 				MustHaveEnv("MYSQL_PASSWORD"),
 				mysqlHostName,
 				databaseName,
@@ -94,7 +95,8 @@ var _ = Describe("mysql", func() {
 		Context("and some existing 'tables' are specified in config", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
-					`{"username":"root","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["people"]}`,
+					`{"username":"%s","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["people"]}`,
+					MustHaveEnv("MYSQL_USERNAME"),
 					MustHaveEnv("MYSQL_PASSWORD"),
 					mysqlHostName,
 					databaseName,
@@ -128,7 +130,8 @@ var _ = Describe("mysql", func() {
 		Context("and 'tables' are specified in config only some of which exist", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
-					`{"username":"root","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["people", "not there"]}`,
+					`{"username":"%s","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["people", "not there"]}`,
+					MustHaveEnv("MYSQL_USERNAME"),
 					MustHaveEnv("MYSQL_PASSWORD"),
 					mysqlHostName,
 					databaseName,
@@ -152,7 +155,8 @@ var _ = Describe("mysql", func() {
 		Context("and 'tables' are specified in config none of them exist", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
-					`{"username":"root","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["lizards", "form-shifting-people"]}`,
+					`{"username":"%s","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["lizards", "form-shifting-people"]}`,
+					MustHaveEnv("MYSQL_USERNAME"),
 					MustHaveEnv("MYSQL_PASSWORD"),
 					mysqlHostName,
 					databaseName,
@@ -178,11 +182,12 @@ var _ = Describe("mysql", func() {
 func connect() (*sql.DB, *gexec.Session) {
 	mysqlHostName := MustHaveEnv("MYSQL_HOSTNAME")
 	mysqlPassword := MustHaveEnv("MYSQL_PASSWORD")
+	mysqlUsername := MustHaveEnv("MYSQL_USERNAME")
 	mysqlPort := MustHaveEnv("MYSQL_PORT")
 
 	sshProxyHost := MustHaveEnv("SSH_PROXY_HOST")
 	sshProxyUser := MustHaveEnv("SSH_PROXY_USER")
-	sshProxyPemLocation := MustHaveEnv("SSH_PROXY_PEM_LOCATION")
+	sshProxyKeyFile := MustHaveEnv("SSH_PROXY_KEY_FILE")
 
 	proxiedMysqlHostName := "127.0.0.1"
 	proxiedMysqlPort := "13306"
@@ -192,13 +197,17 @@ func connect() (*sql.DB, *gexec.Session) {
 		"-L",
 		fmt.Sprintf("%s:%s:%s", proxiedMysqlPort, mysqlHostName, mysqlPort),
 		sshProxyUser+"@"+sshProxyHost,
-		"-i", sshProxyPemLocation,
+		"-i", sshProxyKeyFile,
 		"-N",
+		"-o",
+		"'UserKnownHostsFile=/dev/null'",
+		"-o",
+		"'StrictHostKeyChecking=no'",
 	), GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 	time.Sleep(1 * time.Second)
 	connection, err := sql.Open("mysql", fmt.Sprintf(
-		"root:%s@tcp(%s:%s)/", mysqlPassword, proxiedMysqlHostName, proxiedMysqlPort))
+		"%s:%s@tcp(%s:%s)/", mysqlUsername, mysqlPassword, proxiedMysqlHostName, proxiedMysqlPort))
 	Expect(err).NotTo(HaveOccurred())
 
 	return connection, proxySession

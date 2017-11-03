@@ -28,8 +28,6 @@ chmod 400 bosh-backup-and-restore-meta/genesis-bosh/bosh.pem
 echo -e "${SSH_PROXY_PRIVATE_KEY}" > /tmp/private.key
 chmod 0400 /tmp/private.key
 
-ssh -i ~/secrets/bosh.pem vcap@${SSH_PROXY_HOST} -L 3306:10.245.1.9:3306 -N  -f
-
 
 export GOPATH=$PWD/backup-and-restore-sdk-release
 export PATH=$PATH:$GOPATH/bin
@@ -38,6 +36,7 @@ export BOSH_CA_CERT=$PWD/bosh-backup-and-restore-meta/certs/lite-bosh.backup-and
 export BOSH_GW_USER=${SSH_PROXY_USER}
 export BOSH_GW_HOST=${SSH_PROXY_HOST}
 export BOSH_GW_PRIVATE_KEY=/tmp/private.key
+export SSH_PROXY_KEY_FILE=/tmp/private.key
 
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/database-backup-restore
 dep ensure
