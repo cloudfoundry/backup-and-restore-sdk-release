@@ -200,9 +200,9 @@ func connect() (*sql.DB, *gexec.Session) {
 		"-i", sshProxyKeyFile,
 		"-N",
 		"-o",
-		"'UserKnownHostsFile=/dev/null'",
+		"UserKnownHostsFile=/dev/null",
 		"-o",
-		"'StrictHostKeyChecking=no'",
+		"StrictHostKeyChecking=no",
 	), GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 	time.Sleep(1 * time.Second)
