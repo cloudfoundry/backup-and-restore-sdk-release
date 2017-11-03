@@ -39,7 +39,13 @@ func (jobInstance *JobInstance) runPostgresSqlCommand(command, database, user, p
 	)
 }
 
-func (jobInstance *JobInstance) runMysqlSqlCommand(command, database string) *gexec.Session {
+func (jobInstance *JobInstance) runMysqlSqlCommand(command string) *gexec.Session {
+	return jobInstance.runOnVMAndSucceed(
+		fmt.Sprintf(`echo -e "%s" | /var/vcap/packages/mariadb/bin/mysql -u root -h localhost --password='%s'`, command, MustHaveEnv("MYSQL_PASSWORD")),
+	)
+}
+
+func (jobInstance *JobInstance) runMysqlSqlCommandOnDatabase(database, command string) *gexec.Session {
 	return jobInstance.runOnVMAndSucceed(
 		fmt.Sprintf(`echo -e "%s" | /var/vcap/packages/mariadb/bin/mysql -u root -h localhost --password='%s' "%s"`, command, MustHaveEnv("MYSQL_PASSWORD"), database),
 	)
