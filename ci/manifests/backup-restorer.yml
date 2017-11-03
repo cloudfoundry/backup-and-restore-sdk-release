@@ -1,0 +1,31 @@
+---
+name: ((deployment-name))
+
+releases:
+- name: backup-and-restore-sdk
+  version: ((backup-and-restore-sdk-release-version))
+  url: ((backup-and-restore-sdk-release-url))
+
+stemcells:
+- alias: trusty
+  os: ubuntu-trusty
+  version: latest
+
+instance_groups:
+- name: database-backup-restorer
+  instances: 1
+  vm_type: small
+  persistent_disk_type: fifty
+  stemcell: trusty
+  networks:
+  - name: concourse
+  jobs:
+  - name: database-backup-restorer
+    release: backup-and-restore-sdk
+  azs: [z1]
+
+update:
+  canaries: 1
+  max_in_flight: 1
+  canary_watch_time: 30000
+  update_watch_time: 30000
