@@ -21,9 +21,6 @@ releases:
 - name: cf-mysql
   version: 35
   url: https://bosh.io/d/github.com/cloudfoundry/cf-mysql-release?v=35
-- name: backup-and-restore-sdk
-  version: ((backup-and-restore-sdk-release-version))
-  url: ((backup-and-restore-sdk-release-url))
 
 stemcells:
 - alias: trusty
@@ -57,18 +54,6 @@ instance_groups:
             db_password: "foo"
             endpoint_username: galera_healthcheck
             endpoint_password: "foo"
-
-- name: database-backup-restorer
-  instances: 1
-  vm_type: small
-  persistent_disk_type: fifty
-  stemcell: trusty
-  networks:
-  - name: concourse
-  jobs:
-  - name: database-backup-restorer
-    release: backup-and-restore-sdk
-  azs: [z1]
 
 update:
   canaries: 1

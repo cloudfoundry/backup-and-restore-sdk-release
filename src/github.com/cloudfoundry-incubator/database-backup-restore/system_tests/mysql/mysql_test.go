@@ -44,8 +44,8 @@ var _ = Describe("mysql", func() {
 	Context("when the mysql server version matches", func() {
 		BeforeEach(func() {
 			brJob = JobInstance{
-				deployment:    "mysql-dev",
-				instance:      "database-backup-restorer",
+				deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
+				instance:      MustHaveEnv("SDK_INSTANCE_GROUP"),
 				instanceIndex: "0",
 			}
 
