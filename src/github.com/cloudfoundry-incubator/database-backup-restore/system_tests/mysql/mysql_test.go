@@ -13,6 +13,8 @@ import (
 
 	"os/exec"
 
+	"os"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/onsi/gomega/gexec"
 )
@@ -185,32 +187,40 @@ func connect() (*sql.DB, *gexec.Session) {
 	mysqlUsername := MustHaveEnv("MYSQL_USERNAME")
 	mysqlPort := MustHaveEnv("MYSQL_PORT")
 
-	sshProxyHost := MustHaveEnv("SSH_PROXY_HOST")
-	sshProxyUser := MustHaveEnv("SSH_PROXY_USER")
-	sshProxyKeyFile := MustHaveEnv("SSH_PROXY_KEY_FILE")
+	sshProxyHost := os.Getenv("SSH_PROXY_HOST")
+	if sshProxyHost != "" {
+		sshProxyUser := MustHaveEnv("SSH_PROXY_USER")
+		sshProxyKeyFile := MustHaveEnv("SSH_PROXY_KEY_FILE")
 
-	proxiedMysqlHostName := "127.0.0.1"
-	proxiedMysqlPort := "13306"
-	var err error
-	proxySession, err := gexec.Start(exec.Command(
-		"ssh",
-		"-L",
-		fmt.Sprintf("%s:%s:%s", proxiedMysqlPort, mysqlHostName, mysqlPort),
-		sshProxyUser+"@"+sshProxyHost,
-		"-i", sshProxyKeyFile,
-		"-N",
-		"-o",
-		"UserKnownHostsFile=/dev/null",
-		"-o",
-		"StrictHostKeyChecking=no",
-	), GinkgoWriter, GinkgoWriter)
-	Expect(err).NotTo(HaveOccurred())
-	time.Sleep(1 * time.Second)
-	connection, err := sql.Open("mysql", fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/", mysqlUsername, mysqlPassword, proxiedMysqlHostName, proxiedMysqlPort))
-	Expect(err).NotTo(HaveOccurred())
+		proxiedMysqlHostName := "127.0.0.1"
+		proxiedMysqlPort := "13306"
+		var err error
+		proxySession, err := gexec.Start(exec.Command(
+			"ssh",
+			"-L",
+			fmt.Sprintf("%s:%s:%s", proxiedMysqlPort, mysqlHostName, mysqlPort),
+			sshProxyUser+"@"+sshProxyHost,
+			"-i", sshProxyKeyFile,
+			"-N",
+			"-o",
+			"UserKnownHostsFile=/dev/null",
+			"-o",
+			"StrictHostKeyChecking=no",
+		), GinkgoWriter, GinkgoWriter)
+		Expect(err).NotTo(HaveOccurred())
+		time.Sleep(1 * time.Second)
 
-	return connection, proxySession
+		connection, err := sql.Open("mysql", fmt.Sprintf(
+			"%s:%s@tcp(%s:%s)/", mysqlUsername, mysqlPassword, proxiedMysqlHostName, proxiedMysqlPort))
+		Expect(err).NotTo(HaveOccurred())
+		return connection, proxySession
+	} else {
+		connection, err := sql.Open("mysql", fmt.Sprintf(
+			"%s:%s@tcp(%s:%s)/", mysqlUsername, mysqlPassword, mysqlHostName, mysqlPort))
+		Expect(err).NotTo(HaveOccurred())
+		return connection, nil
+	}
+
 }
 
 func runSQLCommand(command string, connection *sql.DB) {
