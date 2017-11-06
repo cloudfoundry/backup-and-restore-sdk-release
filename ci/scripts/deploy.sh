@@ -23,11 +23,12 @@ export BOSH_CLIENT
 export BOSH_CLIENT_SECRET
 export BOSH_ENVIRONMENT
 export BOSH_CA_CERT="./bosh-backup-and-restore-meta/certs/${BOSH_ENVIRONMENT}.crt"
+export OPTIONAL_BOSH_VARS_db_password=${DB_PASSWORD}
 
 bosh-cli --non-interactive \
   --deployment ${BOSH_DEPLOYMENT} \
   deploy "backup-and-restore-sdk-release/ci/manifests/${MANIFEST_NAME}" \
   --var=backup-and-restore-sdk-release-version=$(cat release-tarball/version) \
   --var=backup-and-restore-sdk-release-url=$(cat release-tarball/url) \
-  --var=db-password=${DB_PASSWORD} \
+  --vars-env=OPTIONAL_BOSH_VARS \
   --var=deployment-name=${BOSH_DEPLOYMENT}

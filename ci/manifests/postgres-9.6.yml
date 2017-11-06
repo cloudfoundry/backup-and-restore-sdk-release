@@ -46,7 +46,7 @@ instance_groups:
     databases:
       roles:
       - name: test_user
-        password: ((db-password))
+        password: ((db_password))
         tag: admin
       port: 5432
 - name: database-backup-restorer

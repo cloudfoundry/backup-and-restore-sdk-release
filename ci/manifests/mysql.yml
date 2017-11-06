@@ -48,7 +48,7 @@ instance_groups:
     cf_mysql:
         mysql:
           startup_timeout: 120
-          admin_password: ((db-password))
+          admin_password: ((db_password))
           port: 3306
           binlog_enabled: false
           cluster_health:
