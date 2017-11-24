@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"os/exec"
 	"strings"
 )
@@ -72,7 +76,7 @@ func (b S3Bucket) PutVersions(regionName, bucketName string, versions []LatestVe
 	var err error
 
 	for _, version := range versions {
-		err = b.putVersion(regionName, bucketName, version)
+		err = b.putSdkVersion(regionName, bucketName, version)
 		if err != nil {
 			return err
 		}
@@ -96,13 +100,24 @@ func (b S3Bucket) PutVersions(regionName, bucketName string, versions []LatestVe
 	return nil
 }
 
-func (b S3Bucket) putVersion(regionName, bucketName string, version LatestVersion) error {
-	_, err := b.runS3ApiCommand(
-		"copy-object",
-		"--bucket", b.name,
-		"--key", version.BlobKey,
-		"--copy-source", fmt.Sprintf("/%s/%s?versionId=%s", bucketName, version.BlobKey, version.Id),
-	)
+func (b S3Bucket) putSdkVersion(regionName, bucketName string, version LatestVersion) error {
+	sess, err := session.NewSession(&aws.Config{
+		Region:      aws.String(regionName),
+		Credentials: credentials.NewStaticCredentials(b.accessKey.Id, b.accessKey.Secret, ""),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	svc := s3.New(sess)
+	input := s3.CopyObjectInput{
+		Bucket:     aws.String(bucketName),
+		Key:        aws.String(version.BlobKey),
+		CopySource: aws.String(fmt.Sprintf("/%s/%s?versionId=%s", bucketName, version.BlobKey, version.Id)),
+	}
+
+	_, err = svc.CopyObject(&input)
 
 	return err
 }
