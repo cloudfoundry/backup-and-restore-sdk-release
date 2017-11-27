@@ -26,10 +26,15 @@ export BOSH_CA_CERT="./bosh-backup-and-restore-meta/certs/${BOSH_ENVIRONMENT}.cr
 export OPTIONAL_BOSH_VARS_db_password=${DB_PASSWORD}
 export OPTIONAL_BOSH_VARS_db_host=${DB_HOST}
 
+local vars-store-argument=""
+if [-z "$VARS_STORE_PATH" ]; then
+  vars-store-argument="--vars-store bosh-backup-and-restore-meta/${VARS_STORE_PATH}"
+fi
+
 bosh-cli --non-interactive \
   --deployment ${BOSH_DEPLOYMENT} \
   deploy "backup-and-restore-sdk-release/ci/manifests/${MANIFEST_NAME}" \
   --var=backup-and-restore-sdk-release-version=$(cat release-tarball/version) \
   --var=backup-and-restore-sdk-release-url=$(cat release-tarball/url) \
-  --vars-env=OPTIONAL_BOSH_VARS \
+  --vars-env=OPTIONAL_BOSH_VARS "${vars-store-argument}" \
   --var=deployment-name=${BOSH_DEPLOYMENT}
