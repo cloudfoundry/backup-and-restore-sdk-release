@@ -26,7 +26,7 @@ export BOSH_CA_CERT="./bosh-backup-and-restore-meta/certs/${BOSH_ENVIRONMENT}.cr
 export OPTIONAL_BOSH_VARS_db_password=${DB_PASSWORD}
 export OPTIONAL_BOSH_VARS_db_host=${DB_HOST}
 
-local vars-store-argument=""
+vars-store-argument=""
 if [-z "$VARS_STORE_PATH" ]; then
   vars-store-argument="--vars-store bosh-backup-and-restore-meta/${VARS_STORE_PATH}"
 fi
