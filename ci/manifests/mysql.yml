@@ -36,7 +36,8 @@ instance_groups:
   update:
     serial: true
   networks:
-  - name: concourse
+  - name: mysql
+    static_ips: [((db_host))]
   jobs:
   - name: mysql
     release: cf-mysql

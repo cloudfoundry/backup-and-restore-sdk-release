@@ -24,6 +24,7 @@ export BOSH_CLIENT_SECRET
 export BOSH_ENVIRONMENT
 export BOSH_CA_CERT="./bosh-backup-and-restore-meta/certs/${BOSH_ENVIRONMENT}.crt"
 export OPTIONAL_BOSH_VARS_db_password=${DB_PASSWORD}
+export OPTIONAL_BOSH_VARS_db_host=${DB_HOST}
 
 bosh-cli --non-interactive \
   --deployment ${BOSH_DEPLOYMENT} \
