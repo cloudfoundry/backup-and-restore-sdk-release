@@ -7,6 +7,11 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 //go:generate counterfeiter -o fakes/fake_bucket.go . Bucket
@@ -49,7 +54,9 @@ func (b S3Bucket) RegionName() string {
 }
 
 func (b S3Bucket) Versions() ([]Version, error) {
-	output, err := b.runS3ApiCommand("list-object-versions", "--bucket", b.name)
+	s3Cli := NewS3CLI(b.awsCliPath, b.endpoint, b.regionName, b.accessKey.Id, b.accessKey.Secret)
+
+	output, err := s3Cli.ListObjectVersions(b.name)
 
 	if err != nil {
 		return nil, err
@@ -71,14 +78,21 @@ func (b S3Bucket) Versions() ([]Version, error) {
 func (b S3Bucket) PutVersions(regionName, bucketName string, versions []LatestVersion) error {
 	var err error
 
+	s3Cli := NewS3CLI(b.awsCliPath, b.endpoint, b.regionName, b.accessKey.Id, b.accessKey.Secret)
+	s3API, err := NewS3API(b.endpoint, b.regionName, b.accessKey.Id, b.accessKey.Secret)
+
+	if err != nil {
+		return err
+	}
+
 	for _, version := range versions {
-		err = b.putVersion(regionName, bucketName, version)
+		err = s3API.PutVersion(bucketName, version.BlobKey, version.Id)
 		if err != nil {
 			return err
 		}
 	}
 
-	files, err := b.listFiles()
+	files, err := s3Cli.ListObjects(bucketName)
 	if err != nil {
 		return err
 	}
@@ -86,7 +100,7 @@ func (b S3Bucket) PutVersions(regionName, bucketName string, versions []LatestVe
 	for _, file := range files {
 		included := versionsIncludeFile(file, versions)
 		if !included {
-			err = b.deleteFile(file)
+			err = s3API.DeleteObject(bucketName, file)
 			if err != nil {
 				return err
 			}
@@ -94,76 +108,6 @@ func (b S3Bucket) PutVersions(regionName, bucketName string, versions []LatestVe
 	}
 
 	return nil
-}
-
-func (b S3Bucket) putVersion(regionName, bucketName string, version LatestVersion) error {
-	_, err := b.runS3ApiCommand(
-		"copy-object",
-		"--bucket", b.name,
-		"--key", version.BlobKey,
-		"--copy-source", fmt.Sprintf("/%s/%s?versionId=%s", bucketName, version.BlobKey, version.Id),
-	)
-
-	return err
-}
-
-func (b S3Bucket) listFiles() ([]string, error) {
-	output, err := b.runS3ApiCommand("list-objects", "--bucket", b.name)
-	if err != nil {
-		return nil, err
-	}
-
-	if strings.TrimSpace(string(output)) == "" {
-		return []string{}, nil
-	}
-
-	response := S3ListResponse{}
-	err = json.Unmarshal(output, &response)
-	if err != nil {
-		return nil, err
-	}
-
-	files := []string{}
-	for _, object := range response.Contents {
-		files = append(files, object.Key)
-	}
-
-	return files, nil
-}
-
-func (b S3Bucket) deleteFile(key string) error {
-	_, err := b.runS3ApiCommand(
-		"delete-object",
-		"--bucket", b.name,
-		"--key", key,
-	)
-
-	return err
-}
-
-func (b S3Bucket) runS3ApiCommand(args ...string) ([]byte, error) {
-	outputBuffer := new(bytes.Buffer)
-	errorBuffer := new(bytes.Buffer)
-
-	var baseArgs []string
-	if b.endpoint != "" {
-		baseArgs = []string{"--output", "json", "--region", b.regionName, "--endpoint", b.endpoint, "s3api"}
-	} else {
-		baseArgs = []string{"--output", "json", "--region", b.regionName, "s3api"}
-	}
-
-	awsCmd := exec.Command(b.awsCliPath, append(baseArgs, args...)...)
-	awsCmd.Env = append(awsCmd.Env, "AWS_ACCESS_KEY_ID="+b.accessKey.Id)
-	awsCmd.Env = append(awsCmd.Env, "AWS_SECRET_ACCESS_KEY="+b.accessKey.Secret)
-	awsCmd.Stdout = outputBuffer
-	awsCmd.Stderr = errorBuffer
-
-	err := awsCmd.Run()
-	if err != nil {
-		return nil, errors.New(errorBuffer.String())
-	}
-
-	return outputBuffer.Bytes(), nil
 }
 
 type S3ListVersionsResponse struct {
