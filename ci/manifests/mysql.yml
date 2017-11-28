@@ -38,6 +38,7 @@ instance_groups:
   networks:
   - name: mysql
     static_ips: [((db_host))]
+    azs: [lite]
   jobs:
   - name: mysql
     release: cf-mysql
