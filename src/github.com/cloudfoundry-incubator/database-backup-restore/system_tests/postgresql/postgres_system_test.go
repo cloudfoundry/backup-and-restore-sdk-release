@@ -164,4 +164,5 @@ func PostgresTests(postgresPackage, postgresDeployment string) func() {
 var _ = Describe("postgres", func() {
 	Context("9.4", PostgresTests("postgres-9.4", "postgres-9.4-dev"))
 	Context("9.6", PostgresTests("postgres-9.6.3", "postgres-9.6-dev"))
+	Context("tls", PostgresTests("postgres-9.6.3", "postgres-with-tls"))
 })
