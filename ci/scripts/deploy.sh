@@ -36,5 +36,6 @@ bosh-cli --non-interactive \
   deploy "backup-and-restore-sdk-release/ci/manifests/${MANIFEST_NAME}" \
   --var=backup-and-restore-sdk-release-version=$(cat release-tarball/version) \
   --var=backup-and-restore-sdk-release-url=$(cat release-tarball/url) \
-  --vars-env=OPTIONAL_BOSH_VARS "${vars_store_argument}" \
+  --vars-env=OPTIONAL_BOSH_VARS \
+  ${vars_store_argument} \
   --var=deployment-name=${BOSH_DEPLOYMENT}
