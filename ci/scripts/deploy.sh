@@ -27,8 +27,8 @@ export OPTIONAL_BOSH_VARS_db_password=${DB_PASSWORD}
 export OPTIONAL_BOSH_VARS_db_host=${DB_HOST}
 
 export vars_store_argument=""
-if [ -z "$VARS_STORE_PATH" ]; then
-  vars_store_argument="--vars-store bosh-backup-and-restore-meta/${VARS_STORE_PATH}"
+if [ ! -z "$VARS_STORE_PATH" ]; then
+  vars_store_argument="--vars-store=bosh-backup-and-restore-meta/${VARS_STORE_PATH}"
 fi
 
 bosh-cli --non-interactive \
