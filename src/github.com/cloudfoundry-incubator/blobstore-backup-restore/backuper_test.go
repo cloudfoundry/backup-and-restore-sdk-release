@@ -68,11 +68,11 @@ var _ = Describe("Backuper", func() {
 		})
 
 		It("stores the latest versions in the artifact", func() {
-			Expect(artifact.SaveArgsForCall(0)).To(Equal(map[string]BucketBackup{
+			Expect(artifact.SaveArgsForCall(0)).To(Equal(map[string]BucketSnapshot{
 				"droplets": {
 					BucketName: "my_droplets_bucket",
 					RegionName: "my_droplets_region",
-					Versions: []LatestVersion{
+					Versions: []BlobVersion{
 						{BlobKey: "one", Id: "13"},
 						{BlobKey: "two", Id: "22"},
 					},
@@ -80,14 +80,14 @@ var _ = Describe("Backuper", func() {
 				"buildpacks": {
 					BucketName: "my_buildpacks_bucket",
 					RegionName: "my_buildpacks_region",
-					Versions: []LatestVersion{
+					Versions: []BlobVersion{
 						{BlobKey: "three", Id: "32"},
 					},
 				},
 				"packages": {
 					BucketName: "my_packages_bucket",
 					RegionName: "my_packages_region",
-					Versions: []LatestVersion{
+					Versions: []BlobVersion{
 						{BlobKey: "four", Id: "43"},
 					},
 				},

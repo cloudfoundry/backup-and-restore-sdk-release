@@ -41,11 +41,11 @@ var _ = Describe("Restorer", func() {
 
 	Context("when the artifact is valid and copying versions to buckets works", func() {
 		BeforeEach(func() {
-			artifact.LoadReturns(map[string]BucketBackup{
+			artifact.LoadReturns(map[string]BucketSnapshot{
 				"droplets": {
 					BucketName: "my_droplets_bucket",
 					RegionName: "my_droplets_region",
-					Versions: []LatestVersion{
+					Versions: []BlobVersion{
 						{BlobKey: "one", Id: "13"},
 						{BlobKey: "two", Id: "22"},
 					},
@@ -53,46 +53,46 @@ var _ = Describe("Restorer", func() {
 				"buildpacks": {
 					BucketName: "my_buildpacks_bucket",
 					RegionName: "my_buildpacks_region",
-					Versions: []LatestVersion{
+					Versions: []BlobVersion{
 						{BlobKey: "three", Id: "32"},
 					},
 				},
 				"packages": {
 					BucketName: "my_packages_bucket",
 					RegionName: "my_packages_region",
-					Versions: []LatestVersion{
+					Versions: []BlobVersion{
 						{BlobKey: "four", Id: "43"},
 					},
 				},
 			}, nil)
 
-			dropletsBucket.PutVersionsReturns(nil)
-			buildpacksBucket.PutVersionsReturns(nil)
-			packagesBucket.PutVersionsReturns(nil)
+			dropletsBucket.CopyVersionsAndPruneReturns(nil)
+			buildpacksBucket.CopyVersionsAndPruneReturns(nil)
+			packagesBucket.CopyVersionsAndPruneReturns(nil)
 		})
 
 		It("restores a backup to the corresponding buckets", func() {
 			Expect(err).NotTo(HaveOccurred())
 
-			expectedSourceRegionName, expectedSourceBucketName, expectedVersions := dropletsBucket.PutVersionsArgsForCall(0)
+			expectedSourceRegionName, expectedSourceBucketName, expectedVersions := dropletsBucket.CopyVersionsAndPruneArgsForCall(0)
 			Expect(expectedSourceBucketName).To(Equal("my_droplets_bucket"))
 			Expect(expectedSourceRegionName).To(Equal("my_droplets_region"))
-			Expect(expectedVersions).To(Equal([]LatestVersion{
+			Expect(expectedVersions).To(Equal([]BlobVersion{
 				{BlobKey: "one", Id: "13"},
 				{BlobKey: "two", Id: "22"},
 			}))
 
-			expectedSourceRegionName, expectedSourceBucketName, expectedVersions = buildpacksBucket.PutVersionsArgsForCall(0)
+			expectedSourceRegionName, expectedSourceBucketName, expectedVersions = buildpacksBucket.CopyVersionsAndPruneArgsForCall(0)
 			Expect(expectedSourceBucketName).To(Equal("my_buildpacks_bucket"))
 			Expect(expectedSourceRegionName).To(Equal("my_buildpacks_region"))
-			Expect(expectedVersions).To(Equal([]LatestVersion{
+			Expect(expectedVersions).To(Equal([]BlobVersion{
 				{BlobKey: "three", Id: "32"},
 			}))
 
-			expectedSourceRegionName, expectedSourceBucketName, expectedVersions = packagesBucket.PutVersionsArgsForCall(0)
+			expectedSourceRegionName, expectedSourceBucketName, expectedVersions = packagesBucket.CopyVersionsAndPruneArgsForCall(0)
 			Expect(expectedSourceBucketName).To(Equal("my_packages_bucket"))
 			Expect(expectedSourceRegionName).To(Equal("my_packages_region"))
-			Expect(expectedVersions).To(Equal([]LatestVersion{
+			Expect(expectedVersions).To(Equal([]BlobVersion{
 				{BlobKey: "four", Id: "43"},
 			}))
 		})
@@ -105,19 +105,19 @@ var _ = Describe("Restorer", func() {
 
 		It("stops and returns an error", func() {
 			Expect(err).To(MatchError("artifact failed to load"))
-			Expect(dropletsBucket.PutVersionsCallCount()).To(Equal(0))
-			Expect(buildpacksBucket.PutVersionsCallCount()).To(Equal(0))
-			Expect(packagesBucket.PutVersionsCallCount()).To(Equal(0))
+			Expect(dropletsBucket.CopyVersionsAndPruneCallCount()).To(Equal(0))
+			Expect(buildpacksBucket.CopyVersionsAndPruneCallCount()).To(Equal(0))
+			Expect(packagesBucket.CopyVersionsAndPruneCallCount()).To(Equal(0))
 		})
 	})
 
 	Context("when copying versions on a bucket fails", func() {
 		BeforeEach(func() {
-			artifact.LoadReturns(map[string]BucketBackup{
+			artifact.LoadReturns(map[string]BucketSnapshot{
 				"droplets": {
 					BucketName: "my_droplets_bucket",
 					RegionName: "my_droplets_region",
-					Versions: []LatestVersion{
+					Versions: []BlobVersion{
 						{BlobKey: "one", Id: "13"},
 						{BlobKey: "two", Id: "22"},
 					},
@@ -125,31 +125,31 @@ var _ = Describe("Restorer", func() {
 				"buildpacks": {
 					BucketName: "my_buildpacks_bucket",
 					RegionName: "my_buildpacks_region",
-					Versions: []LatestVersion{
+					Versions: []BlobVersion{
 						{BlobKey: "three", Id: "32"},
 					},
 				},
 				"packages": {
 					BucketName: "my_packages_bucket",
 					RegionName: "my_packages_region",
-					Versions: []LatestVersion{
+					Versions: []BlobVersion{
 						{BlobKey: "four", Id: "43"},
 					},
 				},
 			}, nil)
 
-			dropletsBucket.PutVersionsReturns(nil)
-			buildpacksBucket.PutVersionsReturns(errors.New("failed to put versions to bucket 'buildpacks'"))
-			packagesBucket.PutVersionsReturns(nil)
+			dropletsBucket.CopyVersionsAndPruneReturns(nil)
+			buildpacksBucket.CopyVersionsAndPruneReturns(errors.New("failed to put versions to bucket 'buildpacks'"))
+			packagesBucket.CopyVersionsAndPruneReturns(nil)
 		})
 
 		It("stops and returns an error", func() {
 			Expect(err).To(MatchError("failed to put versions to bucket 'buildpacks'"))
 
-			expectedSourceRegionName, expectedSourceBucketName, expectedVersions := buildpacksBucket.PutVersionsArgsForCall(0)
+			expectedSourceRegionName, expectedSourceBucketName, expectedVersions := buildpacksBucket.CopyVersionsAndPruneArgsForCall(0)
 			Expect(expectedSourceBucketName).To(Equal("my_buildpacks_bucket"))
 			Expect(expectedSourceRegionName).To(Equal("my_buildpacks_region"))
-			Expect(expectedVersions).To(Equal([]LatestVersion{
+			Expect(expectedVersions).To(Equal([]BlobVersion{
 				{BlobKey: "three", Id: "32"},
 			}))
 		})

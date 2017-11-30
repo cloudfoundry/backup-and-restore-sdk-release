@@ -10,7 +10,7 @@ type Bucket interface {
 	Name() string
 	RegionName() string
 	Versions() ([]Version, error)
-	PutVersions(regionName, bucketName string, versions []LatestVersion) error
+	CopyVersionsAndPrune(regionName, bucketName string, versions []BlobVersion) error
 }
 
 type S3Bucket struct {
@@ -36,18 +36,18 @@ func NewS3Bucket(awsCliPath, name, region, endpoint string, accessKey S3AccessKe
 	}
 }
 
-func (b S3Bucket) Name() string {
-	return b.name
+func (bucket S3Bucket) Name() string {
+	return bucket.name
 }
 
-func (b S3Bucket) RegionName() string {
-	return b.regionName
+func (bucket S3Bucket) RegionName() string {
+	return bucket.regionName
 }
 
-func (b S3Bucket) Versions() ([]Version, error) {
-	s3Cli := NewS3CLI(b.awsCliPath, b.endpoint, b.regionName, b.accessKey.Id, b.accessKey.Secret)
+func (bucket S3Bucket) Versions() ([]Version, error) {
+	s3Cli := NewS3CLI(bucket.awsCliPath, bucket.endpoint, bucket.regionName, bucket.accessKey.Id, bucket.accessKey.Secret)
 
-	output, err := s3Cli.ListObjectVersions(b.name)
+	output, err := s3Cli.ListObjectVersions(bucket.name)
 
 	if err != nil {
 		return nil, err
@@ -66,32 +66,36 @@ func (b S3Bucket) Versions() ([]Version, error) {
 	return response.Versions, nil
 }
 
-func (b S3Bucket) PutVersions(regionName, bucketName string, versions []LatestVersion) error {
+func (bucket S3Bucket) CopyVersionsAndPrune(sourceBucketRegion, sourceBucketName string, versionsToCopy []BlobVersion) error {
 	var err error
 
-	s3Cli := NewS3CLI(b.awsCliPath, b.endpoint, b.regionName, b.accessKey.Id, b.accessKey.Secret)
-	s3API, err := NewS3API(b.endpoint, b.regionName, b.accessKey.Id, b.accessKey.Secret)
+	s3Cli := NewS3CLI(bucket.awsCliPath, bucket.endpoint, bucket.regionName, bucket.accessKey.Id, bucket.accessKey.Secret)
+	s3API, err := NewS3API(bucket.endpoint, bucket.regionName, bucket.accessKey.Id, bucket.accessKey.Secret)
 
 	if err != nil {
 		return err
 	}
 
-	for _, version := range versions {
-		err = s3API.PutVersion(bucketName, version.BlobKey, version.Id)
+	for _, versionToCopy := range versionsToCopy {
+		err = s3API.CopyVersion(sourceBucketName, versionToCopy.BlobKey, versionToCopy.Id, bucket.name)
 		if err != nil {
 			return err
 		}
 	}
 
-	files, err := s3Cli.ListObjects(bucketName)
+	var keysThatShouldBePresentInBucket []string
+	for _, versionToCopy := range versionsToCopy {
+		keysThatShouldBePresentInBucket = append(keysThatShouldBePresentInBucket, versionToCopy.BlobKey)
+	}
+
+	keysThatArePresentInBucket, err := s3Cli.ListObjects(bucket.name)
 	if err != nil {
 		return err
 	}
 
-	for _, file := range files {
-		included := versionsIncludeFile(file, versions)
-		if !included {
-			err = s3API.DeleteObject(bucketName, file)
+	for _, key := range keysThatArePresentInBucket {
+		if !includes(keysThatShouldBePresentInBucket, key) {
+			err = s3API.DeleteObject(bucket.name, key)
 			if err != nil {
 				return err
 			}
@@ -99,6 +103,14 @@ func (b S3Bucket) PutVersions(regionName, bucketName string, versions []LatestVe
 	}
 
 	return nil
+}
+func includes(haystack []string, needle string) bool {
+	for _, value := range haystack {
+		if value == needle {
+			return true
+		}
+	}
+	return false
 }
 
 type S3ListVersionsResponse struct {
@@ -117,14 +129,4 @@ type S3ListResponse struct {
 
 type Object struct {
 	Key string
-}
-
-func versionsIncludeFile(file string, versions []LatestVersion) bool {
-	for _, version := range versions {
-		if version.BlobKey == file {
-			return true
-		}
-	}
-
-	return false
 }

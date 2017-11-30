@@ -8,10 +8,10 @@ import (
 )
 
 type FakeArtifact struct {
-	SaveStub        func(backup map[string]blobstore.BucketBackup) error
+	SaveStub        func(backup map[string]blobstore.BucketSnapshot) error
 	saveMutex       sync.RWMutex
 	saveArgsForCall []struct {
-		backup map[string]blobstore.BucketBackup
+		backup map[string]blobstore.BucketSnapshot
 	}
 	saveReturns struct {
 		result1 error
@@ -19,26 +19,26 @@ type FakeArtifact struct {
 	saveReturnsOnCall map[int]struct {
 		result1 error
 	}
-	LoadStub        func() (map[string]blobstore.BucketBackup, error)
+	LoadStub        func() (map[string]blobstore.BucketSnapshot, error)
 	loadMutex       sync.RWMutex
 	loadArgsForCall []struct{}
 	loadReturns     struct {
-		result1 map[string]blobstore.BucketBackup
+		result1 map[string]blobstore.BucketSnapshot
 		result2 error
 	}
 	loadReturnsOnCall map[int]struct {
-		result1 map[string]blobstore.BucketBackup
+		result1 map[string]blobstore.BucketSnapshot
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeArtifact) Save(backup map[string]blobstore.BucketBackup) error {
+func (fake *FakeArtifact) Save(backup map[string]blobstore.BucketSnapshot) error {
 	fake.saveMutex.Lock()
 	ret, specificReturn := fake.saveReturnsOnCall[len(fake.saveArgsForCall)]
 	fake.saveArgsForCall = append(fake.saveArgsForCall, struct {
-		backup map[string]blobstore.BucketBackup
+		backup map[string]blobstore.BucketSnapshot
 	}{backup})
 	fake.recordInvocation("Save", []interface{}{backup})
 	fake.saveMutex.Unlock()
@@ -57,7 +57,7 @@ func (fake *FakeArtifact) SaveCallCount() int {
 	return len(fake.saveArgsForCall)
 }
 
-func (fake *FakeArtifact) SaveArgsForCall(i int) map[string]blobstore.BucketBackup {
+func (fake *FakeArtifact) SaveArgsForCall(i int) map[string]blobstore.BucketSnapshot {
 	fake.saveMutex.RLock()
 	defer fake.saveMutex.RUnlock()
 	return fake.saveArgsForCall[i].backup
@@ -82,7 +82,7 @@ func (fake *FakeArtifact) SaveReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeArtifact) Load() (map[string]blobstore.BucketBackup, error) {
+func (fake *FakeArtifact) Load() (map[string]blobstore.BucketSnapshot, error) {
 	fake.loadMutex.Lock()
 	ret, specificReturn := fake.loadReturnsOnCall[len(fake.loadArgsForCall)]
 	fake.loadArgsForCall = append(fake.loadArgsForCall, struct{}{})
@@ -103,24 +103,24 @@ func (fake *FakeArtifact) LoadCallCount() int {
 	return len(fake.loadArgsForCall)
 }
 
-func (fake *FakeArtifact) LoadReturns(result1 map[string]blobstore.BucketBackup, result2 error) {
+func (fake *FakeArtifact) LoadReturns(result1 map[string]blobstore.BucketSnapshot, result2 error) {
 	fake.LoadStub = nil
 	fake.loadReturns = struct {
-		result1 map[string]blobstore.BucketBackup
+		result1 map[string]blobstore.BucketSnapshot
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeArtifact) LoadReturnsOnCall(i int, result1 map[string]blobstore.BucketBackup, result2 error) {
+func (fake *FakeArtifact) LoadReturnsOnCall(i int, result1 map[string]blobstore.BucketSnapshot, result2 error) {
 	fake.LoadStub = nil
 	if fake.loadReturnsOnCall == nil {
 		fake.loadReturnsOnCall = make(map[int]struct {
-			result1 map[string]blobstore.BucketBackup
+			result1 map[string]blobstore.BucketSnapshot
 			result2 error
 		})
 	}
 	fake.loadReturnsOnCall[i] = struct {
-		result1 map[string]blobstore.BucketBackup
+		result1 map[string]blobstore.BucketSnapshot
 		result2 error
 	}{result1, result2}
 }

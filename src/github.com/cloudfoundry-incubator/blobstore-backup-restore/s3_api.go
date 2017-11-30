@@ -2,6 +2,7 @@ package blobstore
 
 import (
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -28,11 +29,11 @@ type S3Api struct {
 	*s3.S3
 }
 
-func (s3Api S3Api) PutVersion(bucketName, blobKey, versionId string) error {
+func (s3Api S3Api) CopyVersion(sourceBucketName, blobKey, versionId, destinationBucketName string) error {
 	input := s3.CopyObjectInput{
-		Bucket:     aws.String(bucketName),
+		Bucket:     aws.String(destinationBucketName),
 		Key:        aws.String(blobKey),
-		CopySource: aws.String(fmt.Sprintf("/%s/%s?versionId=%s", bucketName, blobKey, versionId)),
+		CopySource: aws.String(fmt.Sprintf("/%s/%s?versionId=%s", sourceBucketName, blobKey, versionId)),
 	}
 
 	_, err := s3Api.S3.CopyObject(&input)

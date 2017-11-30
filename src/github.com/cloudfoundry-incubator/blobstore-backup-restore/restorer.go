@@ -1,23 +1,26 @@
 package blobstore
 
 type Restorer struct {
-	buckets  map[string]Bucket
-	artifact Artifact
+	destinationBuckets map[string]Bucket
+	sourceArtifact     Artifact
 }
 
-func NewRestorer(buckets map[string]Bucket, artifact Artifact) Restorer {
-	return Restorer{buckets: buckets, artifact: artifact}
+func NewRestorer(destinationBuckets map[string]Bucket, sourceArtifact Artifact) Restorer {
+	return Restorer{destinationBuckets: destinationBuckets, sourceArtifact: sourceArtifact}
 }
 
 func (r Restorer) Restore() error {
-	backup, err := r.artifact.Load()
+	bucketSnapshots, err := r.sourceArtifact.Load()
 	if err != nil {
 		return err
 	}
 
-	for identifier, bucket := range r.buckets {
-		bucketBackup := backup[identifier]
-		err = bucket.PutVersions(bucketBackup.RegionName, bucketBackup.BucketName, bucketBackup.Versions)
+	for identifier, destinationBucket := range r.destinationBuckets {
+		bucketSnapshot := bucketSnapshots[identifier]
+		err = destinationBucket.CopyVersionsAndPrune(
+			bucketSnapshot.RegionName,
+			bucketSnapshot.BucketName,
+			bucketSnapshot.Versions)
 		if err != nil {
 			return err
 		}

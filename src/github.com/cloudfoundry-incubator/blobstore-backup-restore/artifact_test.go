@@ -29,11 +29,11 @@ var _ = Describe("FileArtifact", func() {
 	})
 
 	It("saves the artifact to a file", func() {
-		backup := map[string]BucketBackup{
+		backup := map[string]BucketSnapshot{
 			"droplets": {
 				BucketName: "my_droplets_bucket",
 				RegionName: "my_droplets_region",
-				Versions: []LatestVersion{
+				Versions: []BlobVersion{
 					{BlobKey: "one", Id: "11"},
 					{BlobKey: "two", Id: "21"},
 				},
@@ -41,14 +41,14 @@ var _ = Describe("FileArtifact", func() {
 			"buildpacks": {
 				BucketName: "my_buildpacks_bucket",
 				RegionName: "my_buildpacks_region",
-				Versions: []LatestVersion{
+				Versions: []BlobVersion{
 					{BlobKey: "three", Id: "31"},
 				},
 			},
 			"packages": {
 				BucketName: "my_packages_bucket",
 				RegionName: "my_packages_region",
-				Versions: []LatestVersion{
+				Versions: []BlobVersion{
 					{BlobKey: "four", Id: "41"},
 				},
 			},
@@ -68,7 +68,7 @@ var _ = Describe("FileArtifact", func() {
 		})
 
 		It("returns an error", func() {
-			err := fileArtifact.Save(map[string]BucketBackup{})
+			err := fileArtifact.Save(map[string]BucketSnapshot{})
 			Expect(err).To(MatchError(ContainSubstring("could not write backup file")))
 		})
 	})

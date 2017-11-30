@@ -8,8 +8,8 @@ import (
 
 //go:generate counterfeiter -o fakes/fake_artifact.go . Artifact
 type Artifact interface {
-	Save(backup map[string]BucketBackup) error
-	Load() (map[string]BucketBackup, error)
+	Save(backup map[string]BucketSnapshot) error
+	Load() (map[string]BucketSnapshot, error)
 }
 
 type FileArtifact struct {
@@ -20,7 +20,7 @@ func NewFileArtifact(filePath string) FileArtifact {
 	return FileArtifact{filePath: filePath}
 }
 
-func (a FileArtifact) Save(backup map[string]BucketBackup) error {
+func (a FileArtifact) Save(backup map[string]BucketSnapshot) error {
 	marshalledBackup, err := json.MarshalIndent(backup, "", "  ")
 	if err != nil {
 		return err
@@ -34,13 +34,13 @@ func (a FileArtifact) Save(backup map[string]BucketBackup) error {
 	return nil
 }
 
-func (a FileArtifact) Load() (map[string]BucketBackup, error) {
+func (a FileArtifact) Load() (map[string]BucketSnapshot, error) {
 	bytes, err := ioutil.ReadFile(a.filePath)
 	if err != nil {
 		return nil, fmt.Errorf("could not read backup file: %s", err.Error())
 	}
 
-	var backup map[string]BucketBackup
+	var backup map[string]BucketSnapshot
 	err = json.Unmarshal(bytes, &backup)
 	if err != nil {
 		return nil, fmt.Errorf("backup file has an invalid format: %s", err.Error())
@@ -49,13 +49,13 @@ func (a FileArtifact) Load() (map[string]BucketBackup, error) {
 	return backup, nil
 }
 
-type BucketBackup struct {
-	BucketName string          `json:"bucket_name"`
-	RegionName string          `json:"region_name"`
-	Versions   []LatestVersion `json:"versions"`
+type BucketSnapshot struct {
+	BucketName string        `json:"bucket_name"`
+	RegionName string        `json:"region_name"`
+	Versions   []BlobVersion `json:"versions"`
 }
 
-type LatestVersion struct {
+type BlobVersion struct {
 	BlobKey string `json:"blob_key"`
 	Id      string `json:"version_id"`
 }

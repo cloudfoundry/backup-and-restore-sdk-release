@@ -25,4 +25,4 @@ export TEST_AWS_SECRET_ACCESS_KEY="$(bosh-cli int --path=/aws-secret-access-key 
 export TEST_ECS_ACCESS_KEY_ID="$(bosh-cli int --path=/ecs-access-key-id secrets.yml)"
 export TEST_ECS_SECRET_ACCESS_KEY="$(bosh-cli int --path=/ecs-secret-access-key secrets.yml)"
 
-ginkgo
+ginkgo -trace
