@@ -14,6 +14,9 @@ import (
 
 	"fmt"
 
+	"strconv"
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -28,18 +31,23 @@ var _ = Describe("S3Bucket", func() {
 	var firstVersionOfTest2 string
 	var deletedVersionOfTest2 string
 
-	RunBucketTests := func(region, bucketName, endpoint, accessKey, secretKey string) {
+	var bucketName string
+
+	RunBucketTests := func(region, endpoint, accessKey, secretKey string) {
 		BeforeEach(func() {
+			bucketName = "sdk-integration-test-" + strconv.FormatInt(time.Now().UnixNano(), 10)
+			createBucket(region, bucketName, endpoint, accessKey, secretKey)
+			enableBucketVersioning(region, bucketName, endpoint, accessKey, secretKey)
 			firstVersionOfTest1 = uploadFile(region, bucketName, endpoint, "test-1", "TEST-1-A", accessKey, secretKey)
 			secondVersionOfTest1 = uploadFile(region, bucketName, endpoint, "test-1", "TEST-1-B", accessKey, secretKey)
 			thirdVersionOfTest1 = uploadFile(region, bucketName, endpoint, "test-1", "TEST-1-C", accessKey, secretKey)
 			firstVersionOfTest2 = uploadFile(region, bucketName, endpoint, "test-2", "TEST-2-A", accessKey, secretKey)
 			deletedVersionOfTest2 = deleteFile(region, bucketName, endpoint, "test-2", accessKey, secretKey)
-
 		})
 
 		AfterEach(func() {
 			deleteAllVersions(region, bucketName, endpoint, accessKey, secretKey)
+			deleteBucket(region, bucketName, endpoint, accessKey, secretKey)
 		})
 
 		JustBeforeEach(func() {
@@ -131,7 +139,6 @@ var _ = Describe("S3Bucket", func() {
 	Describe("AWS S3 bucket", func() {
 		RunBucketTests(
 			"eu-west-1",
-			"bbr-integration-test-bucket",
 			"",
 			os.Getenv("TEST_AWS_ACCESS_KEY_ID"),
 			os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
@@ -141,7 +148,6 @@ var _ = Describe("S3Bucket", func() {
 	Describe("ECS S3-compatible bucket", func() {
 		RunBucketTests(
 			"eu-west-1",
-			"ecs-bbr-integration-test-bucket",
 			"https://object.ecstestdrive.com",
 			os.Getenv("TEST_ECS_ACCESS_KEY_ID"),
 			os.Getenv("TEST_ECS_SECRET_ACCESS_KEY"),
@@ -184,17 +190,13 @@ var _ = Describe("S3Bucket", func() {
 })
 
 func listFiles(region, bucket, endpoint string, accessKey string, secretKey string) []string {
-	outputBuffer := new(bytes.Buffer)
 
 	baseCmd := constructBaseCmd(region, endpoint)
 	baseCmd = append(baseCmd, "s3api",
 		"list-objects",
 		"--bucket", bucket)
 
-	awsCmd := newAwsCommand(accessKey, secretKey, baseCmd)
-	awsCmd.Stdout = outputBuffer
-	err := awsCmd.Run()
-	Expect(err).ToNot(HaveOccurred())
+	outputBuffer := runAwsCommand(accessKey, secretKey, baseCmd)
 
 	var response ListResponse
 	json.Unmarshal(outputBuffer.Bytes(), &response)
@@ -209,13 +211,12 @@ func listFiles(region, bucket, endpoint string, accessKey string, secretKey stri
 
 func constructBaseCmd(region, endpoint string) []string {
 	if endpoint != "" {
-		return []string{"--region", region, "--endpoint", endpoint}
+		return []string{"--endpoint", endpoint}
 	}
-	return []string{"--region", region}
+	return []string{}
 }
 
 func getFileContents(region, bucket, endpoint, key string, accessKey string, secretKey string) string {
-	outputBuffer := new(bytes.Buffer)
 
 	baseCmd := constructBaseCmd(region, endpoint)
 	baseCmd = append(baseCmd, "s3",
@@ -223,11 +224,7 @@ func getFileContents(region, bucket, endpoint, key string, accessKey string, sec
 		fmt.Sprintf("s3://%s/%s", bucket, key),
 		"-")
 
-	awsCmd := newAwsCommand(accessKey, secretKey, baseCmd)
-	awsCmd.Stdout = outputBuffer
-
-	err := awsCmd.Run()
-	Expect(err).ToNot(HaveOccurred())
+	outputBuffer := runAwsCommand(accessKey, secretKey, baseCmd)
 
 	return outputBuffer.String()
 }
@@ -237,19 +234,14 @@ func uploadFile(region, bucket, endpoint, key, body, accessKey, secretKey string
 	bodyFile.WriteString(body)
 	bodyFile.Close()
 
-	outputBuffer := new(bytes.Buffer)
-
 	baseCmd := constructBaseCmd(region, endpoint)
 	baseCmd = append(baseCmd, "s3api",
 		"put-object",
 		"--bucket", bucket,
 		"--key", key,
 		"--body", bodyFile.Name())
-	awsCmd := newAwsCommand(accessKey, secretKey, baseCmd)
-	awsCmd.Stdout = outputBuffer
 
-	err := awsCmd.Run()
-	Expect(err).ToNot(HaveOccurred())
+	outputBuffer := runAwsCommand(accessKey, secretKey, baseCmd)
 
 	var response PutResponse
 	json.Unmarshal(outputBuffer.Bytes(), &response)
@@ -257,24 +249,60 @@ func uploadFile(region, bucket, endpoint, key, body, accessKey, secretKey string
 	return response.VersionId
 }
 
+func createBucket(region, bucket, endpoint, accessKey, secretKey string) {
+
+	baseCmd := constructBaseCmd(region, endpoint)
+	baseCmd = append(baseCmd, "s3api",
+		"create-bucket",
+		"--bucket", bucket,
+		"--region", region,
+		"--create-bucket-configuration", "LocationConstraint="+region)
+
+	runAwsCommand(accessKey, secretKey, baseCmd)
+}
+
+func enableBucketVersioning(region, bucket, endpoint, accessKey, secretKey string) {
+	baseCmd := constructBaseCmd(region, endpoint)
+	baseCmd = append(baseCmd, "s3api",
+		"put-bucket-versioning",
+		"--bucket", bucket,
+		"--versioning-configuration", "Status=Enabled")
+
+	runAwsCommand(accessKey, secretKey, baseCmd)
+}
+
+func deleteBucket(region, bucket, endpoint, accessKey, secretKey string) {
+
+	baseCmd := constructBaseCmd(region, endpoint)
+	baseCmd = append(baseCmd, "s3api",
+		"delete-bucket",
+		"--bucket", bucket)
+
+	runAwsCommand(accessKey, secretKey, baseCmd)
+}
+
 func deleteFile(region, bucket, endpoint, key, accessKey, secretKey string) string {
-	outputBuffer := new(bytes.Buffer)
 
 	baseCmd := constructBaseCmd(region, endpoint)
 	baseCmd = append(baseCmd, "s3api",
 		"delete-object",
 		"--bucket", bucket,
 		"--key", key)
-	awsCmd := newAwsCommand(accessKey, secretKey, baseCmd)
 
-	awsCmd.Stdout = outputBuffer
-	err := awsCmd.Run()
-	Expect(err).ToNot(HaveOccurred())
+	outputBuffer := runAwsCommand(accessKey, secretKey, baseCmd)
 
 	var response PutResponse
 	json.Unmarshal(outputBuffer.Bytes(), &response)
 
 	return response.VersionId
+}
+func runAwsCommand(accessKey string, secretKey string, baseCmd []string) *bytes.Buffer {
+	outputBuffer := new(bytes.Buffer)
+	awsCmd := newAwsCommand(accessKey, secretKey, baseCmd)
+	awsCmd.Stdout = outputBuffer
+	err := awsCmd.Run()
+	Expect(err).ToNot(HaveOccurred())
+	return outputBuffer
 }
 
 func deleteVersion(region, bucket, endpoint, key, versionId string, accessKey string, secretKey string) {
@@ -285,23 +313,17 @@ func deleteVersion(region, bucket, endpoint, key, versionId string, accessKey st
 		"--bucket", bucket,
 		"--key", key,
 		"--version-id", versionId)
-	awsCmd := newAwsCommand(accessKey, secretKey, baseCmd)
-	err := awsCmd.Run()
-	Expect(err).ToNot(HaveOccurred())
+	runAwsCommand(accessKey, secretKey, baseCmd)
 }
 
 func deleteAllVersions(region, bucket, endpoint string, accessKey string, secretKey string) {
-	outputBuffer := new(bytes.Buffer)
 
 	baseCmd := constructBaseCmd(region, endpoint)
 	baseCmd = append(baseCmd, "s3api",
 		"list-object-versions",
 		"--bucket", bucket)
-	awsCmd := newAwsCommand(accessKey, secretKey, baseCmd)
 
-	awsCmd.Stdout = outputBuffer
-	err := awsCmd.Run()
-	Expect(err).ToNot(HaveOccurred())
+	outputBuffer := runAwsCommand(accessKey, secretKey, baseCmd)
 
 	var response VersionsResponse
 	json.Unmarshal(outputBuffer.Bytes(), &response)

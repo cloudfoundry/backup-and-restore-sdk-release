@@ -81,7 +81,7 @@ var _ = Describe("S3 backuper", func() {
 		Expect(getFileContentsFromBucket(region, bucket, fileName2)).To(Equal("FILE2"))
 	})
 
-	It("backs up and restores to a cloned bucket", func() {
+	It("backs up and restores to a different bucket", func() {
 		fileName1 = uploadTimestampedFileToBucket(region, bucket, "file1", "FILE1")
 		fileName2 = uploadTimestampedFileToBucket(region, bucket, "file2", "FILE2")
 
