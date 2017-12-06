@@ -41,7 +41,7 @@ instance_groups:
   jobs:
   - name: mysql
     release: cf-mysql
-  azs: [lite]
+  azs: [((availability_zone))]
   properties:
     cf_mysql:
         mysql:
