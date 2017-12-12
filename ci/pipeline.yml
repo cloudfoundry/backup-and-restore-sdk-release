@@ -1,0 +1,666 @@
+---
+resources:
+- name: backup-and-restore-sdk-release
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry-incubator/backup-and-restore-sdk-release.git
+    private_key: {{git-private-key}}
+    branch: develop
+
+- name: backup-and-restore-sdk-release-master
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry-incubator/backup-and-restore-sdk-release.git
+    private_key: {{git-private-key}}
+    branch: master
+- name: backup-and-restore-sdk-release-master-for-rebase
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry-incubator/backup-and-restore-sdk-release.git
+    private_key: {{git-private-key}}
+    branch: master
+- name: bosh-backup-and-restore-meta
+  type: git
+  source:
+    uri: git@github.com:pivotal-cf/bosh-backup-and-restore-meta.git
+    private_key: {{git-private-key}}
+    branch: master
+- name: version
+  type: semver
+  source:
+    bucket: backup-and-restore-sdk-releases
+    region_name: eu-west-1
+    key: current-dev-version
+    access_key_id: {{aws-access-key-id}}
+    secret_access_key: {{aws-secret-access-key}}
+- name: release
+  type: s3
+  source:
+    bucket: backup-and-restore-sdk-releases
+    regexp: backup-and-restore-sdk-(.*).tgz
+    region_name: eu-west-1
+    access_key_id: {{aws-access-key-id}}
+    secret_access_key: {{aws-secret-access-key}}
+- name: github-release
+  type: github-release
+  source:
+    user: cloudfoundry-incubator
+    repository: backup-and-restore-sdk-release
+    draft: true
+    access_token: {{github-access-token}}
+- name: cf-deployment-concourse-tasks
+  type: git
+  source:
+    branch: master
+    uri: https://github.com/cloudfoundry/cf-deployment-concourse-tasks.git
+    tag_filter: v4.*
+- name: cf-deployment-master
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry/cf-deployment.git
+    branch: master
+- name: cf-deployment-sdk-fork
+  type: git
+  source:
+    uri: https://github.com/ChunyiLyu/cf-deployment.git
+    branch: s3-blobstore-backups
+- name: aws-s3-bbl-state
+  type: git
+  source:
+    uri: git@github.com:pivotal-cf/bosh-backup-and-restore-meta.git
+    private_key: {{git-private-key}}
+    branch: master
+
+jobs:
+- name: unit-tests
+  serial: true
+  plan:
+  - aggregate:
+    - get: backup-and-restore-sdk-release
+      trigger: true
+    - get: bosh-backup-and-restore-meta
+  - aggregate:
+    - task: databases-unit-tests
+      file: backup-and-restore-sdk-release/ci/tasks/database-unit-tests.yml
+      privileged: true
+      params:
+        TEAM_GPG_KEY: {{team-gpg-key}}
+        DOCKER_HOST: "tcp://10.0.3.12:4243"
+    - task: blobstore-unit-tests
+      file: backup-and-restore-sdk-release/ci/tasks/blobstore-unit-tests.yml
+      params:
+        TEST_AWS_ACCESS_KEY_ID: {{aws-access-key-id}}
+        TEST_AWS_SECRET_ACCESS_KEY: {{aws-secret-access-key}}
+        TEST_ECS_ACCESS_KEY_ID: {{ecs-access-key-id}}
+        TEST_ECS_SECRET_ACCESS_KEY: {{ecs-secret-access-key}}
+
+- name: create-release
+  serial: true
+  serial_groups: [version]
+  plan:
+  - get: backup-and-restore-sdk-release
+    passed: [unit-tests]
+    trigger: true
+  - get: version
+    params: {pre: rc}
+  - task: create-release
+    file: backup-and-restore-sdk-release/ci/tasks/create-release.yml
+    params:
+      AWS_ACCESS_KEY_ID: {{aws-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{aws-secret-access-key}}
+  - put: release
+    params:
+      file: backup-and-restore-sdk-release-build/backup-and-restore-sdk-*.tgz
+  - put: version
+    params: {file: version/number}
+
+- name: deploy-backup-restore-sdk
+  serial: true
+  plan:
+  - aggregate:
+    - get: backup-and-restore-sdk-release
+      passed: [create-release]
+      trigger: true
+    - get: release-tarball
+      resource: release
+      passed: [create-release]
+    - get: bosh-backup-and-restore-meta
+  - task: deploy-backup-restore-sdk
+    file: backup-and-restore-sdk-release/ci/tasks/deploy.yml
+    params:
+      TEAM_GPG_KEY: {{team-gpg-key}}
+      BOSH_CLIENT_SECRET: {{lite-bosh-director-password}}
+      BOSH_CLIENT: {{lite-bosh-director-username}}
+      BOSH_DEPLOYMENT: backup-restorer
+      BOSH_ENVIRONMENT: lite-bosh.backup-and-restore.cf-app.com
+      MANIFEST_NAME: backup-restorer.yml
+
+- name: deploy-postgres-9.4
+  serial: true
+  plan:
+  - aggregate:
+    - get: backup-and-restore-sdk-release
+      passed: [create-release]
+      trigger: true
+    - get: release-tarball
+      resource: release
+      passed: [create-release]
+    - get: bosh-backup-and-restore-meta
+  - task: deploy-postgres-9.4
+    file: backup-and-restore-sdk-release/ci/tasks/deploy.yml
+    params:
+      TEAM_GPG_KEY: {{team-gpg-key}}
+      BOSH_CLIENT_SECRET: {{lite-bosh-director-password}}
+      BOSH_CLIENT: {{lite-bosh-director-username}}
+      BOSH_DEPLOYMENT: postgres-9.4-dev
+      BOSH_ENVIRONMENT: lite-bosh.backup-and-restore.cf-app.com
+      DB_PASSWORD: postgres_password
+      MANIFEST_NAME: postgres-9.4.yml
+
+- name: deploy-postgres-9.6
+  serial: true
+  plan:
+  - aggregate:
+    - get: backup-and-restore-sdk-release
+      passed: [create-release]
+      trigger: true
+    - get: release-tarball
+      resource: release
+      passed: [create-release]
+    - get: bosh-backup-and-restore-meta
+  - task: deploy-postgres-9.6
+    file: backup-and-restore-sdk-release/ci/tasks/deploy.yml
+    params:
+      TEAM_GPG_KEY: {{team-gpg-key}}
+      BOSH_CLIENT_SECRET: {{lite-bosh-director-password}}
+      BOSH_CLIENT: {{lite-bosh-director-username}}
+      BOSH_DEPLOYMENT: postgres-9.6-dev
+      BOSH_ENVIRONMENT: lite-bosh.backup-and-restore.cf-app.com
+      DB_PASSWORD: postgres_password
+      MANIFEST_NAME: postgres-9.6.yml
+
+- name: deploy-postgres-with-tls
+  serial: true
+  plan:
+  - aggregate:
+    - get: backup-and-restore-sdk-release
+      passed: [create-release]
+      trigger: true
+    - get: release-tarball
+      resource: release
+      passed: [create-release]
+    - get: bosh-backup-and-restore-meta
+  - task: deploy-postgres-with-tls
+    file: backup-and-restore-sdk-release/ci/tasks/deploy.yml
+    params:
+      TEAM_GPG_KEY: {{team-gpg-key}}
+      BOSH_CLIENT_SECRET: {{lite-bosh-director-password}}
+      BOSH_CLIENT: {{lite-bosh-director-username}}
+      BOSH_DEPLOYMENT: postgres-with-tls-dev
+      BOSH_ENVIRONMENT: lite-bosh.backup-and-restore.cf-app.com
+      DB_PASSWORD: postgres_password
+      MANIFEST_NAME: postgres-with-tls.yml
+      VARS_STORE_PATH: postgres-with-tls/vars.yml
+
+- name: deploy-mysql
+  serial: true
+  plan:
+  - aggregate:
+    - get: backup-and-restore-sdk-release
+      passed: [create-release]
+      trigger: true
+    - get: release-tarball
+      resource: release
+      passed: [create-release]
+    - get: bosh-backup-and-restore-meta
+  - task: deploy-mysql
+    file: backup-and-restore-sdk-release/ci/tasks/deploy.yml
+    params:
+      TEAM_GPG_KEY: {{team-gpg-key}}
+      BOSH_CLIENT_SECRET: {{lite-bosh-director-password}}
+      BOSH_CLIENT: {{lite-bosh-director-username}}
+      BOSH_DEPLOYMENT: mysql-dev
+      BOSH_ENVIRONMENT: lite-bosh.backup-and-restore.cf-app.com
+      DB_PASSWORD: mysql_password
+      MANIFEST_NAME: mysql.yml
+      DB_HOST: &mysql-host 10.244.7.9
+      AVAILABILITY_ZONE: lite
+
+- name: deploy-external-rds-mysqls
+  serial: true
+  plan:
+  - aggregate:
+    - get: backup-and-restore-sdk-release
+      passed: [create-release]
+      trigger: true
+    - get: release-tarball
+      resource: release
+      passed: [create-release]
+    - get: bosh-backup-and-restore-meta
+  - task: apply-rds-aws
+    file: bosh-backup-and-restore-meta/ci/tasks/apply-rds-aws.yml
+    params:
+      TEAM_GPG_KEY: {{team-gpg-key}}
+      AWS_ACCESS_KEY: {{aws-access-key-id}}
+      AWS_SECRET_KEY: {{aws-secret-access-key}}
+      AWS_REGION: eu-west-1
+      MYSQL_5_6_PASSWORD: {{rds-5-6-password}}
+      MYSQL_5_7_PASSWORD: {{rds-5-7-password}}
+  - put: bosh-backup-and-restore-meta
+    params:
+      repository: bosh-backup-and-restore-meta-output/bosh-backup-and-restore-meta
+      rebase: true
+
+- name: deploy-aws-blobstore-sdk
+  serial: true
+  plan:
+  - aggregate:
+    - get: backup-and-restore-sdk-release
+      passed: [create-release]
+      trigger: true
+    - get: release-tarball
+      resource: release
+      passed: [create-release]
+    - get: bosh-backup-and-restore-meta
+  - task: deploy-aws-blobstore-sdk
+    file: backup-and-restore-sdk-release/ci/tasks/deploy-s3-backuper.yml
+    params:
+      TEAM_GPG_KEY: {{team-gpg-key}}
+      BOSH_CLIENT_SECRET: {{lite-bosh-director-password}}
+      BOSH_CLIENT: {{lite-bosh-director-username}}
+      BOSH_DEPLOYMENT: s3-backuper
+      BOSH_ENVIRONMENT: lite-bosh.backup-and-restore.cf-app.com
+      MANIFEST_NAME: s3-backuper.yml
+      AWS_ACCESS_KEY_ID: {{aws-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{aws-secret-access-key}}
+      S3_BUCKET_NAME: bbr-system-test-bucket
+      S3_REGION: eu-west-1
+      S3_CLONED_BUCKET_NAME: bbr-system-test-bucket-clone
+      S3_CLONED_BUCKET_REGION: eu-central-1
+
+- name: postgres-system-tests
+  serial: true
+  plan:
+  - get: backup-and-restore-sdk-release
+    passed:
+    - deploy-postgres-9.4
+    - deploy-postgres-9.6
+    - deploy-postgres-with-tls
+    trigger: true
+  - get: bosh-backup-and-restore-meta
+  - get: release-tarball
+    resource: release
+    passed:
+    - deploy-postgres-9.4
+    - deploy-postgres-9.6
+    - deploy-postgres-with-tls
+  - task: postgres-system-tests
+    file: backup-and-restore-sdk-release/ci/tasks/postgres-system-tests.yml
+    params:
+      TEAM_GPG_KEY: {{team-gpg-key}}
+      BOSH_CLIENT_SECRET: {{lite-bosh-director-password}}
+      BOSH_CLIENT: {{lite-bosh-director-username}}
+      POSTGRES_PASSWORD: postgres_password
+
+- name: mysql-system-tests
+  serial: true
+  plan:
+  - get: backup-and-restore-sdk-release
+    passed:
+    - deploy-mysql
+    - deploy-backup-restore-sdk
+    trigger: true
+  - get: bosh-backup-and-restore-meta
+  - get: release-tarball
+    resource: release
+    passed: [deploy-mysql]
+  - task: mysql-system-tests
+    file: backup-and-restore-sdk-release/ci/tasks/mysql-system-tests.yml
+    params:
+      TEAM_GPG_KEY: {{team-gpg-key}}
+      BOSH_CLIENT_SECRET: {{lite-bosh-director-password}}
+      BOSH_CLIENT: {{lite-bosh-director-username}}
+      MYSQL_PASSWORD: mysql_password
+      MYSQL_HOSTNAME: *mysql-host
+      MYSQL_PORT: 3306
+      MYSQL_USERNAME: root
+      SSH_PROXY_HOST: 104.199.27.23
+      SSH_PROXY_USER: vcap
+      SSH_PROXY_PRIVATE_KEY: {{lite-bosh-ssh-key}}
+- name: rds-mysql-5.6-system-tests
+  serial: true
+  plan:
+  - get: backup-and-restore-sdk-release
+    passed:
+    - deploy-external-rds-mysqls
+    - deploy-backup-restore-sdk
+    trigger: true
+  - get: bosh-backup-and-restore-meta
+  - get: release-tarball
+    resource: release
+    passed: [deploy-mysql]
+  - task: mysql-system-tests
+    file: backup-and-restore-sdk-release/ci/tasks/mysql-system-tests.yml
+    params:
+      TEAM_GPG_KEY: {{team-gpg-key}}
+      BOSH_CLIENT_SECRET: {{lite-bosh-director-password}}
+      BOSH_CLIENT: {{lite-bosh-director-username}}
+      MYSQL_PASSWORD: {{rds-5-6-password}}
+      MYSQL_HOSTNAME: {{rds-5-6-hostname}}
+      MYSQL_PORT: 3306
+      MYSQL_USERNAME: root
+      SSH_PROXY_HOST: 104.199.27.23
+      SSH_PROXY_USER: vcap
+      SSH_PROXY_PRIVATE_KEY: {{lite-bosh-ssh-key}}
+- name: rds-mysql-5.7-system-tests
+  serial: true
+  plan:
+  - get: backup-and-restore-sdk-release
+    passed:
+    - deploy-external-rds-mysqls
+    - deploy-backup-restore-sdk
+    trigger: true
+  - get: bosh-backup-and-restore-meta
+  - get: release-tarball
+    resource: release
+    passed: [deploy-mysql]
+  - task: mysql-system-tests
+    file: backup-and-restore-sdk-release/ci/tasks/mysql-system-tests.yml
+    params:
+      TEAM_GPG_KEY: {{team-gpg-key}}
+      BOSH_CLIENT_SECRET: {{lite-bosh-director-password}}
+      BOSH_CLIENT: {{lite-bosh-director-username}}
+      MYSQL_PASSWORD: {{rds-5-7-password}}
+      MYSQL_HOSTNAME: {{rds-5-7-hostname}}
+      MYSQL_PORT: 3306
+      MYSQL_USERNAME: root
+      SSH_PROXY_HOST: 104.199.27.23
+      SSH_PROXY_USER: vcap
+      SSH_PROXY_PRIVATE_KEY: {{lite-bosh-ssh-key}}
+
+
+
+- name: s3-blobstore-backuper-system-tests
+  serial: true
+  plan:
+  - get: backup-and-restore-sdk-release
+    passed:
+    - deploy-aws-blobstore-sdk
+    trigger: true
+  - get: bosh-backup-and-restore-meta
+  - get: release-tarball
+    resource: release
+    passed:
+    - deploy-aws-blobstore-sdk
+  - task: s3-blobstore-backuper-system-tests
+    file: backup-and-restore-sdk-release/ci/tasks/s3-system-tests.yml
+    params:
+      TEAM_GPG_KEY: {{team-gpg-key}}
+      BOSH_CLIENT_SECRET: {{lite-bosh-director-password}}
+      BOSH_CLIENT: {{lite-bosh-director-username}}
+      BOSH_DEPLOYMENT: s3-backuper
+      AWS_ACCESS_KEY_ID: {{aws-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{aws-secret-access-key}}
+      AWS_TEST_BUCKET_NAME: bbr-system-test-bucket
+      AWS_TEST_BUCKET_REGION: eu-west-1
+      AWS_TEST_CLONE_BUCKET_NAME: bbr-system-test-bucket-clone
+      AWS_TEST_CLONE_BUCKET_REGION: eu-central-1
+
+- name: deploy-to-acceptance
+  serial: true
+  plan:
+  - aggregate:
+    - get: backup-and-restore-sdk-release
+      passed:
+      - postgres-system-tests
+      - mysql-system-tests
+    - get: release-tarball
+      resource: release
+      passed:
+      - postgres-system-tests
+      - mysql-system-tests
+    - get: bosh-backup-and-restore-meta
+  - aggregate:
+    - task: deploy-postgres-9.4
+      file: backup-and-restore-sdk-release/ci/tasks/deploy.yml
+      params:
+        TEAM_GPG_KEY: {{team-gpg-key}}
+        BOSH_CLIENT_SECRET: {{genesis-bosh-director-password}}
+        BOSH_CLIENT: {{genesis-bosh-director-username}}
+        BOSH_DEPLOYMENT: postgres-9.4-acceptance
+        BOSH_ENVIRONMENT: genesis-bosh.backup-and-restore.cf-app.com
+        DB_PASSWORD: postgres_password
+        MANIFEST_NAME: postgres-9.4.yml
+    - task: deploy-postgres-9.6
+      file: backup-and-restore-sdk-release/ci/tasks/deploy.yml
+      params:
+        TEAM_GPG_KEY: {{team-gpg-key}}
+        BOSH_CLIENT_SECRET: {{genesis-bosh-director-password}}
+        BOSH_CLIENT: {{genesis-bosh-director-username}}
+        BOSH_DEPLOYMENT: postgres-9.6-acceptance
+        BOSH_ENVIRONMENT: genesis-bosh.backup-and-restore.cf-app.com
+        DB_PASSWORD: postgres_password
+        MANIFEST_NAME: postgres-9.6.yml
+    - task: deploy-mysql
+      file: backup-and-restore-sdk-release/ci/tasks/deploy.yml
+      params:
+        TEAM_GPG_KEY: {{team-gpg-key}}
+        BOSH_CLIENT_SECRET: {{genesis-bosh-director-password}}
+        BOSH_CLIENT: {{genesis-bosh-director-username}}
+        BOSH_DEPLOYMENT: mysql-acceptance
+        BOSH_ENVIRONMENT: genesis-bosh.backup-and-restore.cf-app.com
+        DB_PASSWORD: mysql_password
+        MANIFEST_NAME: mysql.yml
+        DB_HOST: 10.0.7.2
+        AVAILABILITY_ZONE: z1
+
+- name: deploy-cf-with-external-s3-blobstore
+  serial: true
+  plan:
+  - aggregate:
+    - get: cf-deployment-sdk-fork
+    - get: backup-and-restore-sdk-release
+      passed:
+      - s3-blobstore-backuper-system-tests
+    - get: release-tarball
+      resource: release
+      passed:
+      - postgres-system-tests
+      - mysql-system-tests
+      - s3-blobstore-backuper-system-tests
+    - get: cf-deployment-concourse-tasks
+    - get: cf-deployment-master
+    - get: aws-s3-bbl-state
+    - get: bosh-backup-and-restore-meta
+  - task: upload-stemcell
+    file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+    input_mapping:
+      bbl-state: aws-s3-bbl-state
+      cf-deployment: cf-deployment-master
+    params:
+      INFRASTRUCTURE: google
+      BBL_STATE_DIR: external-blobstore-directors/aws-s3/
+  - task: upload-latest-sdk-release
+    file: bosh-backup-and-restore-meta/ci/tasks/upload-release.yml
+    input_mapping:
+      release-tarball: release-tarball
+      bbl-state: aws-s3-bbl-state
+      meta: bosh-backup-and-restore-meta
+    params:
+      BBL_STATE_DIR: external-blobstore-directors/aws-s3
+      RELEASE_TARBALL_PATH: backup-and-restore-sdk-*.tgz
+  - task: collect-ops-files-from-sdk-release
+    file: cf-deployment-concourse-tasks/collect-ops-files/task.yml
+    input_mapping:
+      base-ops-files: cf-deployment-master
+      new-ops-files: backup-and-restore-sdk-release
+    params:
+      BASE_OPS_FILE_DIR: operations
+      NEW_OPS_FILES:  "opsfiles/use-latest-backup-and-restore-sdk.yml"
+  - task: collect-ops-files-from-cf-deployment-fork
+    file: cf-deployment-concourse-tasks/collect-ops-files/task.yml
+    input_mapping:
+      base-ops-files: collected-ops-files
+      new-ops-files: cf-deployment-sdk-fork
+    params:
+      BASE_OPS_FILE_DIR: operations
+      NEW_OPS_FILES:  "operations/experimental/enable-backup-restore-s3.yml"
+  - task: deploy-cf-with-external-s3
+    file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+    input_mapping:
+      bbl-state: aws-s3-bbl-state
+      cf-deployment: cf-deployment-master
+      ops-files: collected-ops-files
+      vars-store: bosh-backup-and-restore-meta
+      vars-files: bosh-backup-and-restore-meta
+      release: cf-deployment-sdk-fork
+    params:
+      BBL_IAAS: gcp
+      BBL_GCP_SERVICE_ACCOUNT_KEY: gcp_service_account_key.json
+      BBL_GCP_PROJECT_ID: cf-backup-and-restore
+      BBL_STATE_DIR: external-blobstore-directors/aws-s3/
+      SYSTEM_DOMAIN: bbr-s3.cf-app.com
+      OPS_FILES: "operations/scale-to-one-az.yml operations/experimental/enable-backup-restore.yml operations/use-s3-blobstore.yml operations/use-compiled-releases.yml operations/enable-backup-restore-s3.yml operations/use-latest-backup-and-restore-sdk.yml"
+      VARS_STORE_FILE: external-blobstore-directors/aws-s3/cf-deployment-variables.yml
+      GIT_COMMIT_EMAIL: cf-lazarus@pivotal.io
+      GIT_COMMIT_USERNAME: "Backup & Restore Concourse"
+    ensure:
+      put: bosh-backup-and-restore-meta
+      params:
+        repository: updated-vars-store
+        rebase: true
+
+- name: create-final-major
+  serial: true
+  serial_groups: [version]
+  plan:
+  - get: backup-and-restore-sdk-release
+    passed:
+    - deploy-to-acceptance
+  - get: backup-and-restore-sdk-release-master
+  - get: release-tarball
+    resource: release
+    passed:
+    - deploy-to-acceptance
+  - get: version
+    params: {bump: major}
+  - task: create-final-release
+    file: backup-and-restore-sdk-release/ci/tasks/create-final.yml
+    params:
+      AWS_ACCESS_KEY_ID: {{aws-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{aws-secret-access-key}}
+  - put: backup-and-restore-sdk-release-master
+    params:
+      repository: backup-and-restore-sdk-final-release
+      merge: true
+      tag: version/number
+      tag_prefix: v
+  - get: backup-and-restore-sdk-release-master-for-rebase
+  - put: backup-and-restore-sdk-release
+    params:
+      repository: backup-and-restore-sdk-release-master-for-rebase
+      rebase: true
+  - put: release
+    params:
+      file: backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
+  - put: github-release
+    params:
+      name: version/number
+      tag: version/number
+      body: version/number
+      tag_prefix: v
+      commitish: backup-and-restore-sdk-release/.git/HEAD
+      globs:
+      - backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
+  - put: version
+    params: {file: version/number}
+
+- name: create-final-minor
+  serial: true
+  serial_groups: [version]
+  plan:
+  - get: backup-and-restore-sdk-release
+    passed:
+    - deploy-to-acceptance
+  - get: backup-and-restore-sdk-release-master
+  - get: release-tarball
+    resource: release
+    passed:
+    - deploy-to-acceptance
+  - get: version
+    params: {bump: minor}
+  - task: create-final-release
+    file: backup-and-restore-sdk-release/ci/tasks/create-final.yml
+    params:
+      AWS_ACCESS_KEY_ID: {{aws-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{aws-secret-access-key}}
+  - put: backup-and-restore-sdk-release-master
+    params:
+      repository: backup-and-restore-sdk-final-release
+      merge: true
+      tag: version/number
+      tag_prefix: v
+  - get: backup-and-restore-sdk-release-master-for-rebase
+  - put: backup-and-restore-sdk-release
+    params:
+      repository: backup-and-restore-sdk-release-master-for-rebase
+      rebase: true
+  - put: release
+    params:
+      file: backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
+  - put: github-release
+    params:
+      name: version/number
+      tag: version/number
+      body: version/number
+      tag_prefix: v
+      commitish: backup-and-restore-sdk-release/.git/HEAD
+      globs:
+      - backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
+  - put: version
+    params: {file: version/number}
+
+- name: create-final-patch
+  serial: true
+  serial_groups: [version]
+  plan:
+  - get: backup-and-restore-sdk-release
+    passed:
+    - deploy-to-acceptance
+  - get: backup-and-restore-sdk-release-master
+  - get: release-tarball
+    resource: release
+    passed:
+    - deploy-to-acceptance
+  - get: version
+    params: {bump: patch}
+  - task: create-final-release
+    file: backup-and-restore-sdk-release/ci/tasks/create-final.yml
+    params:
+      AWS_ACCESS_KEY_ID: {{aws-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{aws-secret-access-key}}
+  - put: backup-and-restore-sdk-release-master
+    params:
+      repository: backup-and-restore-sdk-final-release
+      merge: true
+      tag: version/number
+      tag_prefix: v
+  - get: backup-and-restore-sdk-release-master-for-rebase
+  - put: backup-and-restore-sdk-release
+    params:
+      repository: backup-and-restore-sdk-release-master-for-rebase
+      rebase: true
+  - put: release
+    params:
+      file: backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
+  - put: github-release
+    params:
+      name: version/number
+      tag: version/number
+      body: version/number
+      tag_prefix: v
+      commitish: backup-and-restore-sdk-release/.git/HEAD
+      globs:
+      - backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
+  - put: version
+    params: {file: version/number}
