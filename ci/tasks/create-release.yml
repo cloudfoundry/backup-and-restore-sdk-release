@@ -31,6 +31,7 @@ outputs:
 params:
   AWS_ACCESS_KEY_ID:
   AWS_SECRET_ACCESS_KEY:
+  RELEASE_NAME:
 
 run:
   path: backup-and-restore-sdk-release/ci/scripts/create-release.sh
