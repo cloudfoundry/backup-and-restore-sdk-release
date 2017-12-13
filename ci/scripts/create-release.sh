@@ -22,13 +22,16 @@ set -x
 export VERSION=$(cat version/number)
 
 export release_name_argument=""
+export tarball_name_argument="backup-and-restore-sdk"
+
 if [ ! -z "$RELEASE_NAME" ]; then
   release_name_argument="--name ${RELEASE_NAME}"
+  tarball_name_argument="${RELEASE_NAME}"
 fi
 
 pushd backup-and-restore-sdk-release
   bosh-cli create-release \
     --version $VERSION \
     "${release_name_argument}" \
-    --tarball=../backup-and-restore-sdk-release-build/backup-and-restore-sdk-$VERSION.tgz --force
+    "--tarball=../backup-and-restore-sdk-release-build/${tarball_name_argument}-$VERSION.tgz --force"
 popd
