@@ -25,6 +25,6 @@ packages:
 - database-backup-restorer
 - database-backup-restorer-postgres-9.6
 - database-backup-restorer-postgres-9.4
-- database-backup-restorer-mysql
+- database-backup-restorer-mariadb
 
 properties: {}
