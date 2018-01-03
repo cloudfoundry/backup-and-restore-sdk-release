@@ -15,19 +15,9 @@
 # limitations under the License.
 
 ---
-name: database-backup-restorer
+name: database-backup-restorer-mysql-5.6
 
-templates:
-  backup: bin/backup
-  restore: bin/restore
+dependencies: []
 
-packages:
-- database-backup-restorer
-- database-backup-restorer-postgres-9.6
-- database-backup-restorer-postgres-9.4
-- database-backup-restorer-mariadb
-- database-backup-restorer-mysql-5.5
-- database-backup-restorer-mysql-5.6
-- database-backup-restorer-mysql-5.7
-
-properties: {}
+files:
+- mysql/mysql-5.6.38.tar.gz
