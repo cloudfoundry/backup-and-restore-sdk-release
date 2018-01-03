@@ -27,7 +27,11 @@ var _ = Describe("InteractorFactory", func() {
 		},
 	}
 	var postgresServerVersionDetector = new(fakes.FakeServerVersionDetector)
-	var interactorFactory = database.NewInteractorFactory(utilitiesConfig, postgresServerVersionDetector)
+	var mariadbServerVersionDetector = new(fakes.FakeServerVersionDetector)
+	var interactorFactory = database.NewInteractorFactory(
+		utilitiesConfig,
+		postgresServerVersionDetector,
+		mariadbServerVersionDetector)
 
 	var action database.Action
 	var connectionConfig config.ConnectionConfig
@@ -42,7 +46,6 @@ var _ = Describe("InteractorFactory", func() {
 	Context("when the configured adapter is postgres", func() {
 		BeforeEach(func() {
 			connectionConfig = config.ConnectionConfig{Adapter: "postgres"}
-
 		})
 
 		Context("when the action is 'backup'", func() {
@@ -56,13 +59,13 @@ var _ = Describe("InteractorFactory", func() {
 				})
 
 				It("builds a database.TableCheckingInteractor", func() {
+					Expect(factoryError).NotTo(HaveOccurred())
 					Expect(interactor).To(Equal(
 						database.NewTableCheckingInteractor(connectionConfig,
 							postgres.NewTableChecker(connectionConfig, "pg_p6_client"),
 							postgres.NewBackuper(connectionConfig, "pg_p6_dump"),
 						),
 					))
-					Expect(factoryError).NotTo(HaveOccurred())
 				})
 			})
 
@@ -72,13 +75,13 @@ var _ = Describe("InteractorFactory", func() {
 				})
 
 				It("builds a database.TableCheckingInteractor", func() {
+					Expect(factoryError).NotTo(HaveOccurred())
 					Expect(interactor).To(Equal(
 						database.NewTableCheckingInteractor(connectionConfig,
 							postgres.NewTableChecker(connectionConfig, "pg_p4_client"),
 							postgres.NewBackuper(connectionConfig, "pg_p4_dump"),
 						),
 					))
-					Expect(factoryError).NotTo(HaveOccurred())
 				})
 			})
 
@@ -134,6 +137,20 @@ var _ = Describe("InteractorFactory", func() {
 				})
 			})
 		})
+
+		Context("when the server version detection fails", func() {
+			BeforeEach(func() {
+				action = "backup"
+				connectionConfig = config.ConnectionConfig{Adapter: "postgres"}
+
+				postgresServerVersionDetector.GetVersionReturns(version.SemanticVersion{}, fmt.Errorf("server version detection test error"))
+			})
+
+			It("fails", func() {
+				Expect(interactor).To(BeNil())
+				Expect(factoryError).To(MatchError("server version detection test error"))
+			})
+		})
 	})
 
 	Context("when the configured adapter is mysql", func() {
@@ -146,9 +163,15 @@ var _ = Describe("InteractorFactory", func() {
 				action = "backup"
 			})
 
-			It("builds a database.VersionSafeInteractor", func() {
-				Expect(interactor).To(BeAssignableToTypeOf(database.VersionSafeInteractor{}))
-				Expect(factoryError).NotTo(HaveOccurred())
+			Context("when the version is detected as MariaDB 10.1.24", func() {
+				BeforeEach(func() {
+					mariadbServerVersionDetector.GetVersionReturns(version.SemanticVersion{Major: "10", Minor: "1", Patch: "24"}, nil)
+				})
+
+				It("builds a mysql.Backuper", func() {
+					Expect(factoryError).NotTo(HaveOccurred())
+					Expect(interactor).To(BeAssignableToTypeOf(mysql.Backuper{}))
+				})
 			})
 		})
 
@@ -158,8 +181,8 @@ var _ = Describe("InteractorFactory", func() {
 			})
 
 			It("builds a mysql.Restorer", func() {
-				Expect(interactor).To(BeAssignableToTypeOf(mysql.Restorer{}))
 				Expect(factoryError).NotTo(HaveOccurred())
+				Expect(interactor).To(BeAssignableToTypeOf(mysql.Restorer{}))
 			})
 		})
 	})
@@ -184,20 +207,6 @@ var _ = Describe("InteractorFactory", func() {
 		It("fails", func() {
 			Expect(interactor).To(BeNil())
 			Expect(factoryError).To(MatchError("unsupported adapter/action combination: postgres/unsupported"))
-		})
-	})
-
-	Context("when the postgres server version detection fails", func() {
-		BeforeEach(func() {
-			action = "backup"
-			connectionConfig = config.ConnectionConfig{Adapter: "postgres"}
-
-			postgresServerVersionDetector.GetVersionReturns(version.SemanticVersion{}, fmt.Errorf("server version detection test error"))
-		})
-
-		It("fails", func() {
-			Expect(interactor).To(BeNil())
-			Expect(factoryError).To(MatchError("server version detection test error"))
 		})
 	})
 })
