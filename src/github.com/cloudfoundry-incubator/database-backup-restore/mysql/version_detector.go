@@ -1,29 +1,38 @@
 package mysql
 
 import (
+	"fmt"
 	"log"
+
 	"os/exec"
+
 	"regexp"
 
+	"github.com/cloudfoundry-incubator/database-backup-restore/config"
 	"github.com/cloudfoundry-incubator/database-backup-restore/version"
 )
 
-type DumpUtilityVersionDetector struct {
-	mysqldumpPath string
+type ServerVersionDetector struct {
+	mysqlPath string
 }
 
-func NewMysqlDumpUtilityVersionDetector(mysqldumpPath string) DumpUtilityVersionDetector {
-	return DumpUtilityVersionDetector{mysqldumpPath: mysqldumpPath}
+func NewServerVersionDetector(mysqlPath string) ServerVersionDetector {
+	return ServerVersionDetector{mysqlPath: mysqlPath}
 }
 
-func (d DumpUtilityVersionDetector) GetVersion() (version.SemanticVersion, error) {
-	// sample output: "mysqldump  Ver 10.16 Distrib 10.1.22-MariaDB, for Linux (x86_64)"
-	// /mysqldump\s+Ver\s+[^ ]+\s+Distrib\s+([^ ]+),/
-	clientCmd := exec.Command(d.mysqldumpPath, "-V")
+func (d ServerVersionDetector) GetVersion(config config.ConnectionConfig) (version.SemanticVersion, error) {
+	clientCmd := exec.Command(d.mysqlPath,
+		"--skip-column-names",
+		"--silent",
+		fmt.Sprintf("--user=%s", config.Username),
+		fmt.Sprintf("--password=%s", config.Password),
+		fmt.Sprintf("--host=%s", config.Host),
+		fmt.Sprintf("--port=%d", config.Port),
+		"--execute=SELECT VERSION()")
 
-	semanticVersion := extractVersionUsingCommand(clientCmd, `^mysqldump\s+Ver\s+[^ ]+\s+Distrib\s+([^ ]+),`)
+	semanticVersion := extractVersionUsingCommand(clientCmd, `(.+)`)
 
-	log.Printf("Mysql dump version %v\n", semanticVersion)
+	log.Printf("MYSQL server version %v\n", semanticVersion)
 
 	return semanticVersion, nil
 }

@@ -21,6 +21,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/database-backup-restore/config"
 	"github.com/cloudfoundry-incubator/database-backup-restore/database"
+	"github.com/cloudfoundry-incubator/database-backup-restore/mysql"
 	"github.com/cloudfoundry-incubator/database-backup-restore/postgres"
 )
 
@@ -54,7 +55,8 @@ func makeInteractor(isRestoreAction bool, utilitiesConfig config.UtilitiesConfig
 	connectionConfig config.ConnectionConfig) (database.Interactor, error) {
 
 	postgresServerVersionDetector := postgres.NewServerVersionDetector(utilitiesConfig.Postgres96.Client)
-	interactorFactory := database.NewInteractorFactory(utilitiesConfig, postgresServerVersionDetector)
+	mariadbServerVersionDetector := mysql.NewServerVersionDetector(utilitiesConfig.Mariadb.Client)
+	interactorFactory := database.NewInteractorFactory(utilitiesConfig, postgresServerVersionDetector, mariadbServerVersionDetector)
 	return interactorFactory.Make(actionLabel(isRestoreAction), connectionConfig)
 }
 
