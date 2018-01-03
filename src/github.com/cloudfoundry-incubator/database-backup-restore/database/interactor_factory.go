@@ -79,11 +79,11 @@ func (f InteractorFactory) makePostgresRestorer(config config.ConnectionConfig) 
 
 func (f InteractorFactory) getUtilitiesForPostgres(postgresVersion version.SemanticVersion) (string, string, string, error) {
 	var psqlPath, pgDumpPath, pgRestorePath string
-	if version.V_9_4.MinorVersionMatches(postgresVersion) {
+	if postgresVersion.MinorVersionMatches(version.SemVer("9", "4", "11")) {
 		psqlPath = f.utilitiesConfig.Postgres94.Client
 		pgDumpPath = f.utilitiesConfig.Postgres94.Dump
 		pgRestorePath = f.utilitiesConfig.Postgres94.Restore
-	} else if version.V_9_6.MinorVersionMatches(postgresVersion) {
+	} else if postgresVersion.MinorVersionMatches(version.SemVer("9", "6", "3")) {
 		psqlPath = f.utilitiesConfig.Postgres96.Client
 		pgDumpPath = f.utilitiesConfig.Postgres96.Dump
 		pgRestorePath = f.utilitiesConfig.Postgres96.Restore
