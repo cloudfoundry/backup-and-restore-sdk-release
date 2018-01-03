@@ -24,26 +24,26 @@ func NewInteractorFactory(
 	}
 }
 
-func (f InteractorFactory) Make(action Action, config config.ConnectionConfig) (Interactor, error) {
+func (f InteractorFactory) Make(action Action, connectionConfig config.ConnectionConfig) (Interactor, error) {
 	switch {
-	case config.Adapter == "postgres" && action == "backup":
-		return f.makePostgresBackuper(config)
-	case config.Adapter == "mysql" && action == "backup":
-		return f.makeMysqlBackuper(config), nil
-	case config.Adapter == "postgres" && action == "restore":
-		return f.makePostgresRestorer(config)
-	case config.Adapter == "mysql" && action == "restore":
-		return mysql.NewRestorer(config, f.utilitiesConfig.Mysql.Restore), nil
+	case connectionConfig.Adapter == "postgres" && action == "backup":
+		return f.makePostgresBackuper(connectionConfig)
+	case connectionConfig.Adapter == "mysql" && action == "backup":
+		return f.makeMysqlBackuper(connectionConfig), nil
+	case connectionConfig.Adapter == "postgres" && action == "restore":
+		return f.makePostgresRestorer(connectionConfig)
+	case connectionConfig.Adapter == "mysql" && action == "restore":
+		return mysql.NewRestorer(connectionConfig, f.utilitiesConfig.Mariadb.Restore), nil
 	}
 
-	return nil, fmt.Errorf("unsupported adapter/action combination: %s/%s", config.Adapter, action)
+	return nil, fmt.Errorf("unsupported adapter/action combination: %s/%s", connectionConfig.Adapter, action)
 }
 
 func (f InteractorFactory) makeMysqlBackuper(config config.ConnectionConfig) Interactor {
 	return NewVersionSafeInteractor(
-		mysql.NewBackuper(config, f.utilitiesConfig.Mysql.Dump),
-		mysql.NewServerVersionDetector(f.utilitiesConfig.Mysql.Client),
-		mysql.NewMysqlDumpUtilityVersionDetector(f.utilitiesConfig.Mysql.Dump),
+		mysql.NewBackuper(config, f.utilitiesConfig.Mariadb.Dump),
+		mysql.NewServerVersionDetector(f.utilitiesConfig.Mariadb.Client),
+		mysql.NewMysqlDumpUtilityVersionDetector(f.utilitiesConfig.Mariadb.Dump),
 		config)
 }
 

@@ -64,7 +64,7 @@ var _ = BeforeEach(func() {
 		"PG_DUMP_9_4_PATH":    "non-existent",
 		"PG_RESTORE_9_4_PATH": "non-existent",
 		"PG_RESTORE_9_6_PATH": "non-existent",
-		"MYSQL_CLIENT_PATH":   "non-existent",
-		"MYSQL_DUMP_PATH":     "non-existent",
+		"MARIADB_CLIENT_PATH": "non-existent",
+		"MARIADB_DUMP_PATH":   "non-existent",
 	}
 })

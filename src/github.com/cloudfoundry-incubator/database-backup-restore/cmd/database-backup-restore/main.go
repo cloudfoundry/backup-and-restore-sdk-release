@@ -51,12 +51,11 @@ func main() {
 }
 
 func makeInteractor(isRestoreAction bool, utilitiesConfig config.UtilitiesConfig,
-	config config.ConnectionConfig) (database.Interactor, error) {
+	connectionConfig config.ConnectionConfig) (database.Interactor, error) {
 
 	postgresServerVersionDetector := postgres.NewServerVersionDetector(utilitiesConfig.Postgres96.Client)
-	return database.NewInteractorFactory(
-		utilitiesConfig,
-		postgresServerVersionDetector).Make(actionLabel(isRestoreAction), config)
+	interactorFactory := database.NewInteractorFactory(utilitiesConfig, postgresServerVersionDetector)
+	return interactorFactory.Make(actionLabel(isRestoreAction), connectionConfig)
 }
 
 func actionLabel(isRestoreAction bool) database.Action {

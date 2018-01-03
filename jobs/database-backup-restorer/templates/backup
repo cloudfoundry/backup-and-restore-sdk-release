@@ -26,7 +26,7 @@ export PG_RESTORE_9_6_PATH="/var/vcap/packages/database-backup-restorer-postgres
 
 export PG_CLIENT_PATH="/var/vcap/packages/database-backup-restorer-postgres-9.6/bin/psql"
 
-export MYSQL_DUMP_PATH="/var/vcap/packages/database-backup-restorer-mariadb/bin/mysqldump"
-export MYSQL_CLIENT_PATH="/var/vcap/packages/database-backup-restorer-mariadb/bin/mysql"
+export MARIADB_DUMP_PATH="/var/vcap/packages/database-backup-restorer-mariadb/bin/mysqldump"
+export MARIADB_CLIENT_PATH="/var/vcap/packages/database-backup-restorer-mariadb/bin/mysql"
 
 /var/vcap/packages/database-backup-restorer/bin/database-backup-restore --backup $*

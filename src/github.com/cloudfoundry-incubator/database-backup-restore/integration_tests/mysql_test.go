@@ -59,7 +59,7 @@ var _ = Describe("MySQL", func() {
 				Database: databaseName,
 			})
 
-			envVars["MYSQL_DUMP_PATH"] = fakeMysqlDump.Path
+			envVars["MARIADB_DUMP_PATH"] = fakeMysqlDump.Path
 
 		})
 
@@ -71,7 +71,7 @@ var _ = Describe("MySQL", func() {
 				"--config",
 				configFile.Name(),
 				"--backup")
-			envVars["MYSQL_CLIENT_PATH"] = fakeMysqlClient.Path
+			envVars["MARIADB_CLIENT_PATH"] = fakeMysqlClient.Path
 
 			for key, val := range envVars {
 				cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
@@ -82,16 +82,16 @@ var _ = Describe("MySQL", func() {
 			Eventually(session).Should(gexec.Exit())
 		})
 
-		Context("MYSQL_DUMP_PATH env var is missing", func() {
+		Context("MARIADB_DUMP_PATH env var is missing", func() {
 			BeforeEach(func() {
-				delete(envVars, "MYSQL_DUMP_PATH")
+				delete(envVars, "MARIADB_DUMP_PATH")
 			})
 			It("raises an appropriate error", func() {
-				Expect(session.Err).To(gbytes.Say("MYSQL_DUMP_PATH must be set"))
+				Expect(session.Err).To(gbytes.Say("MARIADB_DUMP_PATH must be set"))
 			})
 		})
 
-		Context("MYSQL_DUMP_PATH is set", func() {
+		Context("MARIADB_DUMP_PATH is set", func() {
 			Context("when mysqldump succeeds", func() {
 				BeforeEach(func() {
 					fakeMysqlClient.WhenCalledWith(
@@ -284,20 +284,20 @@ var _ = Describe("MySQL", func() {
 			Eventually(session).Should(gexec.Exit())
 		})
 
-		Context("MYSQL_CLIENT_PATH env var is missing", func() {
+		Context("MARIADB_CLIENT_PATH env var is missing", func() {
 			BeforeEach(func() {
-				delete(envVars, "MYSQL_CLIENT_PATH")
+				delete(envVars, "MARIADB_CLIENT_PATH")
 			})
 
 			It("raises an appropriate error", func() {
-				Expect(session.Err).To(gbytes.Say("MYSQL_CLIENT_PATH must be set"))
+				Expect(session.Err).To(gbytes.Say("MARIADB_CLIENT_PATH must be set"))
 			})
 		})
 
-		Context("MYSQL_CLIENT_PATH is set", func() {
+		Context("MARIADB_CLIENT_PATH is set", func() {
 			BeforeEach(func() {
 				fakeMysqlClient.WhenCalled().WillExitWith(0)
-				envVars["MYSQL_CLIENT_PATH"] = fakeMysqlClient.Path
+				envVars["MARIADB_CLIENT_PATH"] = fakeMysqlClient.Path
 			})
 
 			It("calls mysql with the correct arguments", func() {
@@ -323,7 +323,7 @@ var _ = Describe("MySQL", func() {
 		Context("and mysql fails", func() {
 			BeforeEach(func() {
 				fakeMysqlClient.WhenCalled().WillExitWith(1)
-				envVars["MYSQL_CLIENT_PATH"] = fakeMysqlClient.Path
+				envVars["MARIADB_CLIENT_PATH"] = fakeMysqlClient.Path
 			})
 
 			It("also fails", func() {

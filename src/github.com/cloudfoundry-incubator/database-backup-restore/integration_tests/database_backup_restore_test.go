@@ -107,8 +107,8 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				}
 				args := strings.Split(entry.arguments, " ")
 				cmd := exec.Command(compiledSDKPath, args...)
-				cmd.Env = append(cmd.Env, "MYSQL_DUMP_PATH=somepath")
-				cmd.Env = append(cmd.Env, "MYSQL_CLIENT_PATH=somepath")
+				cmd.Env = append(cmd.Env, "MARIADB_DUMP_PATH=somepath")
+				cmd.Env = append(cmd.Env, "MARIADB_CLIENT_PATH=somepath")
 				cmd.Env = append(cmd.Env, "PG_RESTORE_9_4_PATH=somepath")
 				cmd.Env = append(cmd.Env, "PG_DUMP_9_4_PATH=somepath")
 				cmd.Env = append(cmd.Env, "PG_CLIENT_PATH=somepath")
