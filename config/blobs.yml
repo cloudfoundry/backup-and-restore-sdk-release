@@ -4,6 +4,7 @@ aws-cli/awscli-bundle-1.11.91.zip:
   sha: fb57bc0a89e755cc3016b4ec6767b0d5b82f1885
 boost/boost_1_59_0.tar.gz:
   size: 83709983
+  object_id: 2bb21a57-51e9-471f-660a-edc788238fee
   sha: 5123209db194d66d69a9cfa5af8ff473d5941d97
 go/go1.9.1.linux-amd64.tar.gz:
   size: 104197862
@@ -15,12 +16,15 @@ mariadb/mariadb-10.1.24.tar.gz:
   sha: 77bf12f253bc4397fa0379dcdba81ae8f6f03d17
 mysql/mysql-5.5.58.tar.gz:
   size: 21045852
+  object_id: d223a137-55e1-420e-4987-db5aebf27ed7
   sha: 37be5e62011113e4c5c1b3095d714cc9800b11df
 mysql/mysql-5.6.38.tar.gz:
   size: 32197625
+  object_id: d980d7c9-21a0-4f66-6b1b-0266f077aef9
   sha: bbd89dc891799b84ca0228e996bda1ec5365b38a
 mysql/mysql-5.7.20.tar.gz:
   size: 51725558
+  object_id: bc2091eb-1157-4b8a-46ea-f641ccb11be7
   sha: 567061d786d89fe65cb6fb70d0e70e36278e9ef2
 postgres/postgresql-9.4.11.tar.gz:
   size: 23380382
