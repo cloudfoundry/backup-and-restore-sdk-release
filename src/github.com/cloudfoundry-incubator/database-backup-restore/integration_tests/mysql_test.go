@@ -368,10 +368,10 @@ var _ = Describe("MySQL", func() {
 					databaseName,
 				}
 
-				Expect(fakeMysqlClient.Invocations()).To(HaveLen(1))
-				Expect(fakeMysqlClient.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-				Expect(fakeMysqlClient.Invocations()[0].Stdin()).Should(ConsistOf("SOME BACKUP SQL"))
-				Expect(fakeMysqlClient.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+				Expect(fakeMysqlClient.Invocations()).To(HaveLen(3))
+				Expect(fakeMysqlClient.Invocations()[2].Args()).Should(ConsistOf(expectedArgs))
+				Expect(fakeMysqlClient.Invocations()[2].Stdin()).Should(ConsistOf("SOME BACKUP SQL"))
+				Expect(fakeMysqlClient.Invocations()[2].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
 			})
 
 			It("succeeds", func() {
