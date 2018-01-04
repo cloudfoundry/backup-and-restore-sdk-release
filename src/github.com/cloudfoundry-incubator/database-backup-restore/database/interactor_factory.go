@@ -121,22 +121,21 @@ func (f InteractorFactory) getUtilitiesForMySQL(mysqldbVersion version.DatabaseS
 	}
 
 	return "", "", fmt.Errorf("unsupported version of %s: %s.%s", implementation, semVer.Major, semVer.Minor)
-
 }
 
 func (f InteractorFactory) getUtilitiesForPostgres(postgresVersion version.DatabaseServerVersion) (string, string, string, error) {
-	var psqlPath, pgDumpPath, pgRestorePath string
-	if postgresVersion.SemanticVersion.MinorVersionMatches(version.SemVer("9", "4", "11")) {
-		psqlPath = f.utilitiesConfig.Postgres94.Client
-		pgDumpPath = f.utilitiesConfig.Postgres94.Dump
-		pgRestorePath = f.utilitiesConfig.Postgres94.Restore
-	} else if postgresVersion.SemanticVersion.MinorVersionMatches(version.SemVer("9", "6", "3")) {
-		psqlPath = f.utilitiesConfig.Postgres96.Client
-		pgDumpPath = f.utilitiesConfig.Postgres96.Dump
-		pgRestorePath = f.utilitiesConfig.Postgres96.Restore
-	} else {
-		return "", "", "", fmt.Errorf("unsupported version of postgresql: %s.%s", postgresVersion.SemanticVersion.Major, postgresVersion.SemanticVersion.Minor)
+	semVer := postgresVersion.SemanticVersion
+	if semVer.MinorVersionMatches(version.SemVer("9", "4", "11")) {
+		return f.utilitiesConfig.Postgres94.Client,
+			f.utilitiesConfig.Postgres94.Dump,
+			f.utilitiesConfig.Postgres94.Restore,
+			nil
+	} else if semVer.MinorVersionMatches(version.SemVer("9", "6", "3")) {
+		return f.utilitiesConfig.Postgres96.Client,
+			f.utilitiesConfig.Postgres96.Dump,
+			f.utilitiesConfig.Postgres96.Restore,
+			nil
 	}
 
-	return psqlPath, pgDumpPath, pgRestorePath, nil
+	return "", "", "", fmt.Errorf("unsupported version of postgresql: %s.%s", semVer.Major, semVer.Minor)
 }
