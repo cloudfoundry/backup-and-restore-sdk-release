@@ -28,7 +28,6 @@ inputs:
 run:
   path: backup-and-restore-sdk-release/ci/scripts/bosh-cleanup.sh
 
-
 params:
   BOSH_ENVIRONMENT:
   BOSH_CLIENT:
