@@ -27,14 +27,17 @@ var _ = Describe("SemanticVersion", func() {
 			}))
 		})
 
-		It("fails if string has 4 parts", func() {
-			_, err := ParseFromString("1.2.4.4")
-			Expect(err).To(MatchError(`can't parse semver "1.2.4.4"`))
+		It("parses even if the patch version contains text", func() {
+			Expect(ParseFromString("1.2.3-MariaDB rest of stuff")).To(Equal(SemanticVersion{
+				Major: "1",
+				Minor: "2",
+				Patch: "3-MariaDB",
+			}))
 		})
 
 		It("fails if string has 2 parts", func() {
 			_, err := ParseFromString("1.2")
-			Expect(err).To(MatchError(`can't parse semver "1.2"`))
+			Expect(err).To(MatchError(`could not parse semver: "1.2"`))
 		})
 	})
 
