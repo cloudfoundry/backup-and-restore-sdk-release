@@ -12,18 +12,18 @@ import (
 type InteractorFactory struct {
 	utilitiesConfig               config.UtilitiesConfig
 	postgresServerVersionDetector ServerVersionDetector
-	mariadbServerVersionDetector  ServerVersionDetector
+	mysqlServerVersionDetector    ServerVersionDetector
 }
 
 func NewInteractorFactory(
 	utilitiesConfig config.UtilitiesConfig,
 	postgresServerVersionDetector ServerVersionDetector,
-	mariadbServerVersionDetector ServerVersionDetector) InteractorFactory {
+	mysqlServerVersionDetector ServerVersionDetector) InteractorFactory {
 
 	return InteractorFactory{
 		utilitiesConfig:               utilitiesConfig,
 		postgresServerVersionDetector: postgresServerVersionDetector,
-		mariadbServerVersionDetector:  mariadbServerVersionDetector,
+		mysqlServerVersionDetector:    mysqlServerVersionDetector,
 	}
 }
 
@@ -36,24 +36,38 @@ func (f InteractorFactory) Make(action Action, connectionConfig config.Connectio
 	case connectionConfig.Adapter == "postgres" && action == "restore":
 		return f.makePostgresRestorer(connectionConfig)
 	case connectionConfig.Adapter == "mysql" && action == "restore":
-		return mysql.NewRestorer(connectionConfig, f.utilitiesConfig.Mariadb.Restore), nil
+		return f.makeMysqlRestorer(connectionConfig)
 	}
 
 	return nil, fmt.Errorf("unsupported adapter/action combination: %s/%s", connectionConfig.Adapter, action)
 }
 
 func (f InteractorFactory) makeMysqlBackuper(config config.ConnectionConfig) (Interactor, error) {
-	mariadbVersion, err := f.mariadbServerVersionDetector.GetVersion(config)
+	mysqldbVersion, err := f.mysqlServerVersionDetector.GetVersion(config)
 	if err != nil {
 		return nil, err
 	}
 
-	_, mysqlDumpPath, _, err := f.getUtilitiesForMariadb(mariadbVersion)
+	mysqlDumpPath, _, err := f.getUtilitiesForMySQL(mysqldbVersion)
 	if err != nil {
 		return nil, err
 	}
 
 	return mysql.NewBackuper(config, mysqlDumpPath), nil
+}
+
+func (f InteractorFactory) makeMysqlRestorer(config config.ConnectionConfig) (Interactor, error) {
+	mysqldbVersion, err := f.mysqlServerVersionDetector.GetVersion(config)
+	if err != nil {
+		return nil, err
+	}
+
+	_, mysqlRestorePath, err := f.getUtilitiesForMySQL(mysqldbVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	return mysql.NewRestorer(config, mysqlRestorePath), nil
 }
 
 func (f InteractorFactory) makePostgresBackuper(config config.ConnectionConfig) (Interactor, error) {
@@ -86,31 +100,42 @@ func (f InteractorFactory) makePostgresRestorer(config config.ConnectionConfig) 
 	return postgres.NewRestorer(config, pgRestorePath), nil
 }
 
-func (f InteractorFactory) getUtilitiesForMariadb(mariadbVersion version.SemanticVersion) (string, string, string, error) {
-	var mysqlPath, mysqlDumpPath, mysqlRestorePath string
-	if mariadbVersion.MinorVersionMatches(version.SemVer("10", "1", "24")) {
-		mysqlPath = f.utilitiesConfig.Mariadb.Client
-		mysqlDumpPath = f.utilitiesConfig.Mariadb.Dump
-		mysqlRestorePath = f.utilitiesConfig.Mariadb.Restore
-	} else {
-		return "", "", "", fmt.Errorf("unsupported version of mariadb: %s.%s", mariadbVersion.Major, mariadbVersion.Minor)
+func (f InteractorFactory) getUtilitiesForMySQL(mysqldbVersion version.DatabaseServerVersion) (string, string, error) {
+	implementation := mysqldbVersion.Implementation
+	semVer := mysqldbVersion.SemanticVersion
+	switch {
+	case implementation == "mariadb" && semVer.MinorVersionMatches(version.SemVer("10", "1", "24")):
+		{
+			return f.utilitiesConfig.Mariadb.Dump, f.utilitiesConfig.Mariadb.Restore, nil
+		}
+	case implementation == "mysql":
+		if mysqldbVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "5", "58")) {
+			return f.utilitiesConfig.Mysql55.Dump, f.utilitiesConfig.Mysql55.Restore, nil
+		}
+		if mysqldbVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "6", "38")) {
+			return f.utilitiesConfig.Mysql56.Dump, f.utilitiesConfig.Mysql56.Restore, nil
+		}
+		if mysqldbVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "7", "20")) {
+			return f.utilitiesConfig.Mysql57.Dump, f.utilitiesConfig.Mysql57.Restore, nil
+		}
 	}
 
-	return mysqlPath, mysqlDumpPath, mysqlRestorePath, nil
+	return "", "", fmt.Errorf("unsupported version of %s: %s.%s", implementation, semVer.Major, semVer.Minor)
+
 }
 
-func (f InteractorFactory) getUtilitiesForPostgres(postgresVersion version.SemanticVersion) (string, string, string, error) {
+func (f InteractorFactory) getUtilitiesForPostgres(postgresVersion version.DatabaseServerVersion) (string, string, string, error) {
 	var psqlPath, pgDumpPath, pgRestorePath string
-	if postgresVersion.MinorVersionMatches(version.SemVer("9", "4", "11")) {
+	if postgresVersion.SemanticVersion.MinorVersionMatches(version.SemVer("9", "4", "11")) {
 		psqlPath = f.utilitiesConfig.Postgres94.Client
 		pgDumpPath = f.utilitiesConfig.Postgres94.Dump
 		pgRestorePath = f.utilitiesConfig.Postgres94.Restore
-	} else if postgresVersion.MinorVersionMatches(version.SemVer("9", "6", "3")) {
+	} else if postgresVersion.SemanticVersion.MinorVersionMatches(version.SemVer("9", "6", "3")) {
 		psqlPath = f.utilitiesConfig.Postgres96.Client
 		pgDumpPath = f.utilitiesConfig.Postgres96.Dump
 		pgRestorePath = f.utilitiesConfig.Postgres96.Restore
 	} else {
-		return "", "", "", fmt.Errorf("unsupported version of postgresql: %s.%s", postgresVersion.Major, postgresVersion.Minor)
+		return "", "", "", fmt.Errorf("unsupported version of postgresql: %s.%s", postgresVersion.SemanticVersion.Major, postgresVersion.SemanticVersion.Minor)
 	}
 
 	return psqlPath, pgDumpPath, pgRestorePath, nil

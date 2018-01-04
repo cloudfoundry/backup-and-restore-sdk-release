@@ -15,6 +15,9 @@ type UtilitiesConfig struct {
 	Postgres96 UtilityPaths
 	Postgres94 UtilityPaths
 	Mariadb    UtilityPaths
+	Mysql55    UtilityPaths
+	Mysql56    UtilityPaths
+	Mysql57    UtilityPaths
 }
 
 func GetUtilitiesConfigFromEnv() UtilitiesConfig {

@@ -2,8 +2,14 @@ package version
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
+
+type DatabaseServerVersion struct {
+	Implementation  string
+	SemanticVersion SemanticVersion
+}
 
 type SemanticVersion struct {
 	Major string
@@ -20,16 +26,16 @@ func (v SemanticVersion) MinorVersionMatches(v2 SemanticVersion) bool {
 }
 
 func ParseFromString(stringVersion string) (SemanticVersion, error) {
-	versionNums := strings.Split(stringVersion, ".")
-
-	if len(versionNums) != 3 {
-		return SemanticVersion{}, fmt.Errorf(`can't parse semver "%s"`, stringVersion)
+	r := regexp.MustCompile(`(\d+).(\d+).(\S+)`)
+	matches := r.FindSubmatch([]byte(stringVersion))
+	if matches == nil {
+		return SemanticVersion{}, fmt.Errorf(`could not parse semver: "%s"`, stringVersion)
 	}
 
 	semVer := SemanticVersion{
-		Major: versionNums[0],
-		Minor: versionNums[1],
-		Patch: versionNums[2],
+		Major: string(matches[1]),
+		Minor: string(matches[2]),
+		Patch: string(matches[3]),
 	}
 	return semVer, nil
 }

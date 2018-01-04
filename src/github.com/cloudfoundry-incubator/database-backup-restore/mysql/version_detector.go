@@ -20,8 +20,8 @@ func NewServerVersionDetector(mysqlPath string) ServerVersionDetector {
 	return ServerVersionDetector{mysqlPath: mysqlPath}
 }
 
-func (d ServerVersionDetector) GetVersion(config config.ConnectionConfig) (version.SemanticVersion, error) {
-	clientCmd := exec.Command(d.mysqlPath,
+func (d ServerVersionDetector) GetVersion(config config.ConnectionConfig) (version.DatabaseServerVersion, error) {
+	versionCmd := exec.Command(d.mysqlPath,
 		"--skip-column-names",
 		"--silent",
 		fmt.Sprintf("--user=%s", config.Username),
@@ -30,11 +30,33 @@ func (d ServerVersionDetector) GetVersion(config config.ConnectionConfig) (versi
 		fmt.Sprintf("--port=%d", config.Port),
 		"--execute=SELECT VERSION()")
 
-	semanticVersion := extractVersionUsingCommand(clientCmd, `(.+)`)
+	semanticVersion := extractVersionUsingCommand(versionCmd, `(.+)`)
 
 	log.Printf("MYSQL server version %v\n", semanticVersion)
 
-	return semanticVersion, nil
+	versionCommentCmd := exec.Command(d.mysqlPath,
+		"--skip-column-names",
+		"--silent",
+		fmt.Sprintf("--user=%s", config.Username),
+		fmt.Sprintf("--password=%s", config.Password),
+		fmt.Sprintf("--host=%s", config.Host),
+		fmt.Sprintf("--port=%d", config.Port),
+		"--execute=SELECT @@VERSION_COMMENT")
+
+	stdout, err := versionCommentCmd.Output()
+	if err != nil {
+		return version.DatabaseServerVersion{}, err
+	}
+
+	implementation, err := ParseImplementation(string(stdout))
+	if err != nil {
+		return version.DatabaseServerVersion{}, err
+	}
+
+	return version.DatabaseServerVersion{
+		Implementation:  implementation,
+		SemanticVersion: semanticVersion,
+	}, nil
 }
 
 func extractVersionUsingCommand(cmd *exec.Cmd, pattern string) version.SemanticVersion {
@@ -51,17 +73,10 @@ func extractVersionUsingCommand(cmd *exec.Cmd, pattern string) version.SemanticV
 
 	versionString := matches[1]
 
-	r = regexp.MustCompile(`(\d+).(\d+).(\S+)`)
-	matches = r.FindSubmatch(versionString)
+	semVer, err := version.ParseFromString(string(versionString))
 	if matches == nil {
-		log.Fatalln("Could not determine version by using search pattern:", pattern)
+		log.Fatalln(err)
 	}
 
-	semanticVersion := version.SemanticVersion{
-		Major: string(matches[1]),
-		Minor: string(matches[2]),
-		Patch: string(matches[3]),
-	}
-
-	return semanticVersion
+	return semVer
 }

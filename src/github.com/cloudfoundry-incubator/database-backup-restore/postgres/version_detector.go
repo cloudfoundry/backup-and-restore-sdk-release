@@ -17,7 +17,7 @@ func NewServerVersionDetector(psqlPath string) ServerVersionDetector {
 	return ServerVersionDetector{psqlPath: psqlPath}
 }
 
-func (d ServerVersionDetector) GetVersion(config config.ConnectionConfig) (version.SemanticVersion, error) {
+func (d ServerVersionDetector) GetVersion(config config.ConnectionConfig) (version.DatabaseServerVersion, error) {
 	stdout, stderr, err := runner.Run(d.psqlPath, []string{"--tuples-only",
 		fmt.Sprintf("--username=%s", config.Username),
 		fmt.Sprintf("--host=%s", config.Host),
@@ -30,5 +30,13 @@ func (d ServerVersionDetector) GetVersion(config config.ConnectionConfig) (versi
 		log.Fatalf("Unable to check version of Postgres: %v\n%s\n%s", err, string(stdout), string(stderr))
 	}
 
-	return ParseVersion(string(stdout))
+	semVer, err := ParseVersion(string(stdout))
+	if err != nil {
+		log.Fatalf("Unable to check version of Postgres: %v", err)
+	}
+
+	return version.DatabaseServerVersion{
+		Implementation:  "postgres",
+		SemanticVersion: semVer,
+	}, nil
 }

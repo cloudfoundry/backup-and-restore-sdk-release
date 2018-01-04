@@ -10,24 +10,24 @@ import (
 )
 
 type FakeServerVersionDetector struct {
-	GetVersionStub        func(config.ConnectionConfig) (version.SemanticVersion, error)
+	GetVersionStub        func(config.ConnectionConfig) (version.DatabaseServerVersion, error)
 	getVersionMutex       sync.RWMutex
 	getVersionArgsForCall []struct {
 		arg1 config.ConnectionConfig
 	}
 	getVersionReturns struct {
-		result1 version.SemanticVersion
+		result1 version.DatabaseServerVersion
 		result2 error
 	}
 	getVersionReturnsOnCall map[int]struct {
-		result1 version.SemanticVersion
+		result1 version.DatabaseServerVersion
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeServerVersionDetector) GetVersion(arg1 config.ConnectionConfig) (version.SemanticVersion, error) {
+func (fake *FakeServerVersionDetector) GetVersion(arg1 config.ConnectionConfig) (version.DatabaseServerVersion, error) {
 	fake.getVersionMutex.Lock()
 	ret, specificReturn := fake.getVersionReturnsOnCall[len(fake.getVersionArgsForCall)]
 	fake.getVersionArgsForCall = append(fake.getVersionArgsForCall, struct {
@@ -56,24 +56,24 @@ func (fake *FakeServerVersionDetector) GetVersionArgsForCall(i int) config.Conne
 	return fake.getVersionArgsForCall[i].arg1
 }
 
-func (fake *FakeServerVersionDetector) GetVersionReturns(result1 version.SemanticVersion, result2 error) {
+func (fake *FakeServerVersionDetector) GetVersionReturns(result1 version.DatabaseServerVersion, result2 error) {
 	fake.GetVersionStub = nil
 	fake.getVersionReturns = struct {
-		result1 version.SemanticVersion
+		result1 version.DatabaseServerVersion
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeServerVersionDetector) GetVersionReturnsOnCall(i int, result1 version.SemanticVersion, result2 error) {
+func (fake *FakeServerVersionDetector) GetVersionReturnsOnCall(i int, result1 version.DatabaseServerVersion, result2 error) {
 	fake.GetVersionStub = nil
 	if fake.getVersionReturnsOnCall == nil {
 		fake.getVersionReturnsOnCall = make(map[int]struct {
-			result1 version.SemanticVersion
+			result1 version.DatabaseServerVersion
 			result2 error
 		})
 	}
 	fake.getVersionReturnsOnCall[i] = struct {
-		result1 version.SemanticVersion
+		result1 version.DatabaseServerVersion
 		result2 error
 	}{result1, result2}
 }

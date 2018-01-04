@@ -12,7 +12,7 @@ type Interactor interface {
 
 //go:generate counterfeiter -o fakes/fake_server_version_detector.go . ServerVersionDetector
 type ServerVersionDetector interface {
-	GetVersion(config.ConnectionConfig) (version.SemanticVersion, error)
+	GetVersion(config.ConnectionConfig) (version.DatabaseServerVersion, error)
 }
 
 //go:generate counterfeiter -o fakes/fake_dump_utility_version_detector.go . DumpUtilityVersionDetector

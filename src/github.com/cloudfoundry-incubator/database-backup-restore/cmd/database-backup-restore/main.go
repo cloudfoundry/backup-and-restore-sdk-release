@@ -55,8 +55,8 @@ func makeInteractor(isRestoreAction bool, utilitiesConfig config.UtilitiesConfig
 	connectionConfig config.ConnectionConfig) (database.Interactor, error) {
 
 	postgresServerVersionDetector := postgres.NewServerVersionDetector(utilitiesConfig.Postgres96.Client)
-	mariadbServerVersionDetector := mysql.NewServerVersionDetector(utilitiesConfig.Mariadb.Client)
-	interactorFactory := database.NewInteractorFactory(utilitiesConfig, postgresServerVersionDetector, mariadbServerVersionDetector)
+	mysqlServerVersionDetector := mysql.NewServerVersionDetector(utilitiesConfig.Mariadb.Client)
+	interactorFactory := database.NewInteractorFactory(utilitiesConfig, postgresServerVersionDetector, mysqlServerVersionDetector)
 	return interactorFactory.Make(actionLabel(isRestoreAction), connectionConfig)
 }
 

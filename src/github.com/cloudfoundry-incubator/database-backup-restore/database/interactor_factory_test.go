@@ -25,13 +25,33 @@ var _ = Describe("InteractorFactory", func() {
 			Restore: "pg_p6_restore",
 			Client:  "pg_p6_client",
 		},
+		Mariadb: config.UtilityPaths{
+			Dump:    "mariadb_dump",
+			Restore: "mariadb_restore",
+			Client:  "mariadb_client",
+		},
+		Mysql55: config.UtilityPaths{
+			Dump:    "mysql_55_dump",
+			Restore: "mysql_55_restore",
+			Client:  "mysql_55_client",
+		},
+		Mysql56: config.UtilityPaths{
+			Dump:    "mysql_56_dump",
+			Restore: "mysql_56_restore",
+			Client:  "mysql_56_client",
+		},
+		Mysql57: config.UtilityPaths{
+			Dump:    "mysql_57_dump",
+			Restore: "mysql_57_restore",
+			Client:  "mysql_57_client",
+		},
 	}
 	var postgresServerVersionDetector = new(fakes.FakeServerVersionDetector)
-	var mariadbServerVersionDetector = new(fakes.FakeServerVersionDetector)
+	var mysqlServerVersionDetector = new(fakes.FakeServerVersionDetector)
 	var interactorFactory = database.NewInteractorFactory(
 		utilitiesConfig,
 		postgresServerVersionDetector,
-		mariadbServerVersionDetector)
+		mysqlServerVersionDetector)
 
 	var action database.Action
 	var connectionConfig config.ConnectionConfig
@@ -55,7 +75,9 @@ var _ = Describe("InteractorFactory", func() {
 
 			Context("when the version is detected as 9.6", func() {
 				BeforeEach(func() {
-					postgresServerVersionDetector.GetVersionReturns(version.SemanticVersion{Major: "9", Minor: "6", Patch: "1"}, nil)
+					postgresServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "9", Minor: "6", Patch: "1"}},
+						nil)
 				})
 
 				It("builds a database.TableCheckingInteractor", func() {
@@ -71,7 +93,9 @@ var _ = Describe("InteractorFactory", func() {
 
 			Context("when the version is detected as 9.4", func() {
 				BeforeEach(func() {
-					postgresServerVersionDetector.GetVersionReturns(version.SemanticVersion{Major: "9", Minor: "4", Patch: "1"}, nil)
+					postgresServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "9", Minor: "4", Patch: "1"}},
+						nil)
 				})
 
 				It("builds a database.TableCheckingInteractor", func() {
@@ -87,7 +111,9 @@ var _ = Describe("InteractorFactory", func() {
 
 			Context("when the version is detected as 9.5", func() {
 				BeforeEach(func() {
-					postgresServerVersionDetector.GetVersionReturns(version.SemanticVersion{Major: "9", Minor: "5", Patch: "1"}, nil)
+					postgresServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "9", Minor: "5", Patch: "1"}},
+						nil)
 				})
 
 				It("fails to build database.TableCheckingInteractor", func() {
@@ -103,7 +129,9 @@ var _ = Describe("InteractorFactory", func() {
 
 			Context("when the version is detected as 9.6", func() {
 				BeforeEach(func() {
-					postgresServerVersionDetector.GetVersionReturns(version.SemanticVersion{Major: "9", Minor: "6", Patch: "1"}, nil)
+					postgresServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "9", Minor: "6", Patch: "1"}},
+						nil)
 				})
 
 				It("builds a database.TableCheckingInteractor", func() {
@@ -116,7 +144,9 @@ var _ = Describe("InteractorFactory", func() {
 
 			Context("when the version is detected as 9.4", func() {
 				BeforeEach(func() {
-					postgresServerVersionDetector.GetVersionReturns(version.SemanticVersion{Major: "9", Minor: "4", Patch: "1"}, nil)
+					postgresServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "9", Minor: "4", Patch: "1"}},
+						nil)
 				})
 
 				It("builds a database.TableCheckingInteractor", func() {
@@ -129,7 +159,9 @@ var _ = Describe("InteractorFactory", func() {
 
 			Context("when the version is detected as 9.5", func() {
 				BeforeEach(func() {
-					postgresServerVersionDetector.GetVersionReturns(version.SemanticVersion{Major: "9", Minor: "5", Patch: "1"}, nil)
+					postgresServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "9", Minor: "5", Patch: "1"}},
+						nil)
 				})
 
 				It("fails to build database.TableCheckingInteractor", func() {
@@ -143,7 +175,8 @@ var _ = Describe("InteractorFactory", func() {
 				action = "backup"
 				connectionConfig = config.ConnectionConfig{Adapter: "postgres"}
 
-				postgresServerVersionDetector.GetVersionReturns(version.SemanticVersion{}, fmt.Errorf("server version detection test error"))
+				postgresServerVersionDetector.GetVersionReturns(
+					version.DatabaseServerVersion{}, fmt.Errorf("server version detection test error"))
 			})
 
 			It("fails", func() {
@@ -165,12 +198,60 @@ var _ = Describe("InteractorFactory", func() {
 
 			Context("when the version is detected as MariaDB 10.1.24", func() {
 				BeforeEach(func() {
-					mariadbServerVersionDetector.GetVersionReturns(version.SemanticVersion{Major: "10", Minor: "1", Patch: "24"}, nil)
+					mysqlServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"mariadb", version.SemanticVersion{Major: "10", Minor: "1", Patch: "24"}}, nil)
 				})
 
 				It("builds a mysql.Backuper", func() {
 					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(BeAssignableToTypeOf(mysql.Backuper{}))
+					Expect(interactor).To(Equal(mysql.NewBackuper(connectionConfig, "mariadb_dump")))
+				})
+			})
+
+			Context("when the version is detected as MySQL 5.5.57", func() {
+				BeforeEach(func() {
+					mysqlServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"mysql", version.SemanticVersion{Major: "5", Minor: "5", Patch: "57"}}, nil)
+				})
+
+				It("builds a mysql.Backuper", func() {
+					Expect(factoryError).NotTo(HaveOccurred())
+					Expect(interactor).To(Equal(mysql.NewBackuper(connectionConfig, "mysql_55_dump")))
+				})
+			})
+
+			Context("when the version is detected as MySQL 5.6.37", func() {
+				BeforeEach(func() {
+					mysqlServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"mysql", version.SemanticVersion{Major: "5", Minor: "6", Patch: "37"}}, nil)
+				})
+
+				It("builds a mysql.Backuper", func() {
+					Expect(factoryError).NotTo(HaveOccurred())
+					Expect(interactor).To(Equal(mysql.NewBackuper(connectionConfig, "mysql_56_dump")))
+				})
+			})
+
+			Context("when the version is detected as MySQL 5.7.19", func() {
+				BeforeEach(func() {
+					mysqlServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"mysql", version.SemanticVersion{Major: "5", Minor: "7", Patch: "19"}}, nil)
+				})
+
+				It("builds a mysql.Backuper", func() {
+					Expect(factoryError).NotTo(HaveOccurred())
+					Expect(interactor).To(Equal(mysql.NewBackuper(connectionConfig, "mysql_57_dump")))
+				})
+			})
+
+			Context("when the version is detected as the not supported MariaDB 5.5.58", func() {
+				BeforeEach(func() {
+					mysqlServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"mariadb", version.SemanticVersion{Major: "5", Minor: "5", Patch: "58"}}, nil)
+				})
+
+				It("errors", func() {
+					Expect(factoryError).To(MatchError("unsupported version of mariadb: 5.5"))
 				})
 			})
 		})
@@ -180,9 +261,63 @@ var _ = Describe("InteractorFactory", func() {
 				action = "restore"
 			})
 
-			It("builds a mysql.Restorer", func() {
-				Expect(factoryError).NotTo(HaveOccurred())
-				Expect(interactor).To(BeAssignableToTypeOf(mysql.Restorer{}))
+			Context("when the version is detected as MariaDB 10.1.24", func() {
+				BeforeEach(func() {
+					mysqlServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"mariadb", version.SemanticVersion{Major: "10", Minor: "1", Patch: "24"}}, nil)
+				})
+
+				It("builds a mysql.Restorer", func() {
+					Expect(factoryError).NotTo(HaveOccurred())
+					Expect(interactor).To(Equal(mysql.NewRestorer(connectionConfig, "mariadb_restore")))
+				})
+			})
+
+			Context("when the version is detected as MySQL 5.5.57", func() {
+				BeforeEach(func() {
+					mysqlServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"mysql", version.SemanticVersion{Major: "5", Minor: "5", Patch: "57"}}, nil)
+				})
+
+				It("builds a mysql.Restorer", func() {
+					Expect(factoryError).NotTo(HaveOccurred())
+					Expect(interactor).To(Equal(mysql.NewRestorer(connectionConfig, "mysql_55_restore")))
+				})
+			})
+
+			Context("when the version is detected as MySQL 5.6.37", func() {
+				BeforeEach(func() {
+					mysqlServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"mysql", version.SemanticVersion{Major: "5", Minor: "6", Patch: "37"}}, nil)
+				})
+
+				It("builds a mysql.Restorer", func() {
+					Expect(factoryError).NotTo(HaveOccurred())
+					Expect(interactor).To(Equal(mysql.NewRestorer(connectionConfig, "mysql_56_restore")))
+				})
+			})
+
+			Context("when the version is detected as MySQL 5.7.19", func() {
+				BeforeEach(func() {
+					mysqlServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"mysql", version.SemanticVersion{Major: "5", Minor: "7", Patch: "19"}}, nil)
+				})
+
+				It("builds a mysql.Restorer", func() {
+					Expect(factoryError).NotTo(HaveOccurred())
+					Expect(interactor).To(Equal(mysql.NewRestorer(connectionConfig, "mysql_57_restore")))
+				})
+			})
+
+			Context("when the version is detected as the not supported MariaDB 5.5.58", func() {
+				BeforeEach(func() {
+					mysqlServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"mariadb", version.SemanticVersion{Major: "5", Minor: "5", Patch: "58"}}, nil)
+				})
+
+				It("errors", func() {
+					Expect(factoryError).To(MatchError("unsupported version of mariadb: 5.5"))
+				})
 			})
 		})
 	})
