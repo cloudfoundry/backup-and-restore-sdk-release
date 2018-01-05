@@ -28,15 +28,17 @@ var _ = Describe("mysql", func() {
 	var proxySession *gexec.Session
 	var connection *sql.DB
 
+	BeforeSuite(func() {
+		mysqlHostName = MustHaveEnv("MYSQL_HOSTNAME")
+		connection, proxySession = connect()
+	})
+
 	BeforeEach(func() {
 		configPath = "/tmp/config.json" + strconv.FormatInt(time.Now().Unix(), 10)
 		dbDumpPath = "/tmp/sql_dump" + strconv.FormatInt(time.Now().Unix(), 10)
 		databaseName = "db" + strconv.FormatInt(time.Now().Unix(), 10)
 	})
-	BeforeSuite(func() {
-		mysqlHostName = MustHaveEnv("MYSQL_HOSTNAME")
-		connection, proxySession = connect()
-	})
+
 	AfterSuite(func() {
 		if proxySession != nil {
 			proxySession.Kill()
