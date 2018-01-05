@@ -37,6 +37,21 @@ func GetUtilitiesConfigFromEnv() UtilitiesConfig {
 			Dump:    lookupEnv("MARIADB_DUMP_PATH"),
 			Restore: lookupEnv("MARIADB_CLIENT_PATH"),
 		},
+		Mysql55: UtilityPaths{
+			Client:  lookupEnv("MYSQL_CLIENT_5_5_PATH"),
+			Dump:    lookupEnv("MYSQL_DUMP_5_5_PATH"),
+			Restore: lookupEnv("MYSQL_CLIENT_5_5_PATH"),
+		},
+		Mysql56: UtilityPaths{
+			Client:  lookupEnv("MYSQL_CLIENT_5_6_PATH"),
+			Dump:    lookupEnv("MYSQL_DUMP_5_6_PATH"),
+			Restore: lookupEnv("MYSQL_CLIENT_5_6_PATH"),
+		},
+		Mysql57: UtilityPaths{
+			Client:  lookupEnv("MYSQL_CLIENT_5_7_PATH"),
+			Dump:    lookupEnv("MYSQL_DUMP_5_7_PATH"),
+			Restore: lookupEnv("MYSQL_CLIENT_5_7_PATH"),
+		},
 	}
 }
 
