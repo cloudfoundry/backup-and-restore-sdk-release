@@ -57,12 +57,12 @@ func (f InteractorFactory) makeMysqlBackuper(config config.ConnectionConfig) (In
 }
 
 func (f InteractorFactory) makeMysqlRestorer(config config.ConnectionConfig) (Interactor, error) {
-	mysqldbVersion, err := f.mysqlServerVersionDetector.GetVersion(config)
+	mysqlVersion, err := f.mysqlServerVersionDetector.GetVersion(config)
 	if err != nil {
 		return nil, err
 	}
 
-	_, mysqlRestorePath, err := f.getUtilitiesForMySQL(mysqldbVersion)
+	_, mysqlRestorePath, err := f.getUtilitiesForMySQL(mysqlVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -100,22 +100,22 @@ func (f InteractorFactory) makePostgresRestorer(config config.ConnectionConfig) 
 	return postgres.NewRestorer(config, pgRestorePath), nil
 }
 
-func (f InteractorFactory) getUtilitiesForMySQL(mysqldbVersion version.DatabaseServerVersion) (string, string, error) {
-	implementation := mysqldbVersion.Implementation
-	semVer := mysqldbVersion.SemanticVersion
+func (f InteractorFactory) getUtilitiesForMySQL(mysqlVersion version.DatabaseServerVersion) (string, string, error) {
+	implementation := mysqlVersion.Implementation
+	semVer := mysqlVersion.SemanticVersion
 	switch {
 	case implementation == "mariadb" && semVer.MinorVersionMatches(version.SemVer("10", "1", "24")):
 		{
 			return f.utilitiesConfig.Mariadb.Dump, f.utilitiesConfig.Mariadb.Restore, nil
 		}
 	case implementation == "mysql":
-		if mysqldbVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "5", "58")) {
+		if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "5", "58")) {
 			return f.utilitiesConfig.Mysql55.Dump, f.utilitiesConfig.Mysql55.Restore, nil
 		}
-		if mysqldbVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "6", "38")) {
+		if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "6", "38")) {
 			return f.utilitiesConfig.Mysql56.Dump, f.utilitiesConfig.Mysql56.Restore, nil
 		}
-		if mysqldbVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "7", "20")) {
+		if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "7", "20")) {
 			return f.utilitiesConfig.Mysql57.Dump, f.utilitiesConfig.Mysql57.Restore, nil
 		}
 	}
