@@ -54,17 +54,22 @@ var _ = BeforeSuite(func() {
 	fakePgRestore96 = binmock.NewBinMock(Fail)
 	fakeMysqlDump = binmock.NewBinMock(Fail)
 	fakeMysqlClient = binmock.NewBinMock(Fail)
-
 })
 
 var _ = BeforeEach(func() {
 	envVars = map[string]string{
-		"PG_CLIENT_PATH":      "non-existent",
-		"PG_DUMP_9_6_PATH":    "non-existent",
-		"PG_DUMP_9_4_PATH":    "non-existent",
-		"PG_RESTORE_9_4_PATH": "non-existent",
-		"PG_RESTORE_9_6_PATH": "non-existent",
-		"MARIADB_CLIENT_PATH": "non-existent",
-		"MARIADB_DUMP_PATH":   "non-existent",
+		"PG_CLIENT_PATH":        "non-existent",
+		"PG_DUMP_9_6_PATH":      "non-existent",
+		"PG_DUMP_9_4_PATH":      "non-existent",
+		"PG_RESTORE_9_4_PATH":   "non-existent",
+		"PG_RESTORE_9_6_PATH":   "non-existent",
+		"MARIADB_CLIENT_PATH":   "non-existent",
+		"MARIADB_DUMP_PATH":     "non-existent",
+		"MYSQL_CLIENT_5_5_PATH": "non-existent",
+		"MYSQL_DUMP_5_5_PATH":   "non-existent",
+		"MYSQL_CLIENT_5_6_PATH": "non-existent",
+		"MYSQL_DUMP_5_6_PATH":   "non-existent",
+		"MYSQL_CLIENT_5_7_PATH": "non-existent",
+		"MYSQL_DUMP_5_7_PATH":   "non-existent",
 	}
 })
