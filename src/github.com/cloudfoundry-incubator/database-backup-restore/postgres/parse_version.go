@@ -14,5 +14,5 @@ func ParseVersion(str string) (version.SemanticVersion, error) {
 		return version.SemanticVersion{}, fmt.Errorf(`invalid postgres version: "%s"`, str)
 	}
 	stringVersion := words[1]
-	return version.ParseFromString(stringVersion)
+	return version.ParseSemVerFromString(stringVersion)
 }

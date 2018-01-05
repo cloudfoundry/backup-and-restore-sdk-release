@@ -20,7 +20,7 @@ var _ = Describe("SemanticVersion", func() {
 
 	Describe("ParseFromString", func() {
 		It("parses from string with 3 parts", func() {
-			Expect(ParseFromString("1.2.3")).To(Equal(SemanticVersion{
+			Expect(ParseSemVerFromString("1.2.3")).To(Equal(SemanticVersion{
 				Major: "1",
 				Minor: "2",
 				Patch: "3",
@@ -28,7 +28,7 @@ var _ = Describe("SemanticVersion", func() {
 		})
 
 		It("parses even if the patch version contains text", func() {
-			Expect(ParseFromString("1.2.3-MariaDB rest of stuff")).To(Equal(SemanticVersion{
+			Expect(ParseSemVerFromString("1.2.3-MariaDB rest of stuff")).To(Equal(SemanticVersion{
 				Major: "1",
 				Minor: "2",
 				Patch: "3-MariaDB",
@@ -36,7 +36,7 @@ var _ = Describe("SemanticVersion", func() {
 		})
 
 		It("fails if string has 2 parts", func() {
-			_, err := ParseFromString("1.2")
+			_, err := ParseSemVerFromString("1.2")
 			Expect(err).To(MatchError(`could not parse semver: "1.2"`))
 		})
 	})
