@@ -35,10 +35,10 @@ var _ = Describe("mysql", func() {
 	})
 
 	BeforeEach(func() {
-		randomString := RandomStringNumber()
-		configPath = "/tmp/config-" + randomString
-		dbDumpPath = "/tmp/artifact-" + randomString
-		databaseName = "db-" + randomString
+		disambiguationString := DisambiguationString()
+		configPath = "/tmp/config" + disambiguationString
+		dbDumpPath = "/tmp/artifact" + disambiguationString
+		databaseName = "db" + disambiguationString
 	})
 
 	AfterSuite(func() {

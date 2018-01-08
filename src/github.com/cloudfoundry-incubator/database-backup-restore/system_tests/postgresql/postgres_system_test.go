@@ -49,10 +49,10 @@ func PostgresTests(postgresPackage, postgresDeployment string) func() {
 				InstanceIndex: "0",
 			}
 
-			randomString := RandomStringNumber()
-			databaseName = "db-" + randomString
-			configPath = "/tmp/config-" + randomString
-			dbDumpPath = "/tmp/artifact-" + randomString
+			disambiguationString := DisambiguationString()
+			databaseName = "db" + disambiguationString
+			configPath = "/tmp/config" + disambiguationString
+			dbDumpPath = "/tmp/artifact" + disambiguationString
 
 			dbJob.RunOnVMAndSucceed(
 				fmt.Sprintf(`/var/vcap/packages/%s/bin/createdb -U vcap "%s"`,

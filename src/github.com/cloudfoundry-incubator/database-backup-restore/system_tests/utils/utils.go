@@ -25,8 +25,9 @@ import (
 
 	"github.com/onsi/gomega/gexec"
 
-	"crypto/rand"
-	"encoding/base64"
+	"time"
+
+	"strconv"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -117,12 +118,6 @@ type jsonOutputFromCli struct {
 	}
 }
 
-func RandomStringNumber() string {
-	b := make([]byte, 16)
-	_, err := rand.Read(b)
-	if err != nil {
-		panic("failed to generate random string number")
-	}
-
-	return base64.RawURLEncoding.EncodeToString(b)
+func DisambiguationString() string {
+	return strconv.FormatInt(time.Now().UnixNano(), 10)
 }
