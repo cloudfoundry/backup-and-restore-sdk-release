@@ -26,7 +26,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 )
 
@@ -45,10 +44,12 @@ var _ = Describe("MySQL", func() {
 		artifactFile = tempFilePath()
 		fakeMysqlDump.Reset()
 		fakeMysqlClient.Reset()
+
+		envVars["MARIADB_DUMP_PATH"] = fakeMysqlDump.Path
+		envVars["MARIADB_CLIENT_PATH"] = fakeMysqlClient.Path
 	})
 
 	Context("backup", func() {
-
 		BeforeEach(func() {
 			configFile = buildConfigFile(Config{
 				Adapter:  "mysql",
@@ -58,9 +59,6 @@ var _ = Describe("MySQL", func() {
 				Port:     port,
 				Database: databaseName,
 			})
-
-			envVars["MARIADB_DUMP_PATH"] = fakeMysqlDump.Path
-
 		})
 
 		JustBeforeEach(func() {
@@ -71,7 +69,6 @@ var _ = Describe("MySQL", func() {
 				"--config",
 				configFile.Name(),
 				"--backup")
-			envVars["MARIADB_CLIENT_PATH"] = fakeMysqlClient.Path
 
 			for key, val := range envVars {
 				cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
@@ -82,32 +79,55 @@ var _ = Describe("MySQL", func() {
 			Eventually(session).Should(gexec.Exit())
 		})
 
-		Context("MARIADB_DUMP_PATH env var is missing", func() {
+		Context("when mysqldump succeeds", func() {
 			BeforeEach(func() {
-				delete(envVars, "MARIADB_DUMP_PATH")
+				fakeMysqlClient.WhenCalledWith(
+					"--skip-column-names",
+					"--silent",
+					fmt.Sprintf("--user=%s", username),
+					fmt.Sprintf("--password=%s", password),
+					fmt.Sprintf("--host=%s", host),
+					fmt.Sprintf("--port=%d", port),
+					`--execute=SELECT VERSION()`,
+				).WillPrintToStdOut("10.1.24-MariaDB-wsrep")
+				fakeMysqlDump.WhenCalled().WillExitWith(0)
 			})
-			It("raises an appropriate error", func() {
-				Expect(session.Err).To(gbytes.Say("MARIADB_DUMP_PATH must be set"))
-			})
-		})
+			It("calls mysqldump with the correct arguments", func() {
+				Expect(fakeMysqlDump.Invocations()).To(HaveLen(1))
 
-		Context("MARIADB_DUMP_PATH is set", func() {
-			Context("when mysqldump succeeds", func() {
-				BeforeEach(func() {
-					fakeMysqlClient.WhenCalledWith(
-						"--skip-column-names",
-						"--silent",
+				By("then calling dump", func() {
+					expectedArgs := []string{
+						"-v",
+						"--single-transaction",
+						"--skip-add-locks",
 						fmt.Sprintf("--user=%s", username),
-						fmt.Sprintf("--password=%s", password),
 						fmt.Sprintf("--host=%s", host),
 						fmt.Sprintf("--port=%d", port),
-						`--execute=SELECT VERSION()`,
-					).WillPrintToStdOut("10.1.24-MariaDB-wsrep")
-					fakeMysqlDump.WhenCalled().WillExitWith(0)
-				})
-				It("calls mysqldump with the correct arguments", func() {
-					Expect(fakeMysqlDump.Invocations()).To(HaveLen(1))
+						fmt.Sprintf("--result-file=%s", artifactFile),
+						databaseName,
+					}
 
+					Expect(fakeMysqlDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+					Expect(fakeMysqlDump.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+				})
+
+				Expect(session).Should(gexec.Exit(0))
+			})
+
+			Context("when 'tables' are specified in the configFile", func() {
+				BeforeEach(func() {
+					configFile = buildConfigFile(Config{
+						Adapter:  "mysql",
+						Username: username,
+						Password: password,
+						Host:     host,
+						Port:     port,
+						Database: databaseName,
+						Tables:   []string{"table1", "table2", "table3"},
+					})
+				})
+
+				It("calls mysqldump with the correct arguments", func() {
 					By("then calling dump", func() {
 						expectedArgs := []string{
 							"-v",
@@ -118,131 +138,96 @@ var _ = Describe("MySQL", func() {
 							fmt.Sprintf("--port=%d", port),
 							fmt.Sprintf("--result-file=%s", artifactFile),
 							databaseName,
+							"table1",
+							"table2",
+							"table3",
 						}
 
 						Expect(fakeMysqlDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-						Expect(fakeMysqlDump.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
 					})
-
-					Expect(session).Should(gexec.Exit(0))
-				})
-
-				Context("when 'tables' are specified in the configFile", func() {
-					BeforeEach(func() {
-						configFile = buildConfigFile(Config{
-							Adapter:  "mysql",
-							Username: username,
-							Password: password,
-							Host:     host,
-							Port:     port,
-							Database: databaseName,
-							Tables:   []string{"table1", "table2", "table3"},
-						})
-					})
-
-					It("calls mysqldump with the correct arguments", func() {
-						By("then calling dump", func() {
-							expectedArgs := []string{
-								"-v",
-								"--single-transaction",
-								"--skip-add-locks",
-								fmt.Sprintf("--user=%s", username),
-								fmt.Sprintf("--host=%s", host),
-								fmt.Sprintf("--port=%d", port),
-								fmt.Sprintf("--result-file=%s", artifactFile),
-								databaseName,
-								"table1",
-								"table2",
-								"table3",
-							}
-
-							Expect(fakeMysqlDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-						})
-					})
-				})
-			})
-
-			Context("when mysqldump fails", func() {
-				BeforeEach(func() {
-					fakeMysqlClient.WhenCalledWith(
-						"--skip-column-names",
-						"--silent",
-						fmt.Sprintf("--user=%s", username),
-						fmt.Sprintf("--password=%s", password),
-						fmt.Sprintf("--host=%s", host),
-						fmt.Sprintf("--port=%d", port),
-						`--execute=SELECT VERSION()`,
-					).WillPrintToStdOut("10.1.24-MariaDB-wsrep")
-					fakeMysqlDump.WhenCalled().WillExitWith(1)
-				})
-
-				It("also fails", func() {
-					Eventually(session).Should(gexec.Exit(1))
-				})
-			})
-
-			Context("when the server has an unsupported mariadb major version", func() {
-				BeforeEach(func() {
-					fakeMysqlClient.WhenCalledWith(
-						"--skip-column-names",
-						"--silent",
-						fmt.Sprintf("--user=%s", username),
-						fmt.Sprintf("--password=%s", password),
-						fmt.Sprintf("--host=%s", host),
-						fmt.Sprintf("--port=%d", port),
-						`--execute=SELECT VERSION()`,
-					).WillPrintToStdOut("9.1.24-MariaDB-wsrep")
-				})
-
-				It("fails because of a version mismatch", func() {
-					Expect(session).Should(gexec.Exit(1))
-					Expect(string(session.Err.Contents())).Should(ContainSubstring(
-						"unsupported version of mariadb: 9.1"),
-					)
-				})
-			})
-
-			Context("when the server has an unsupported mariadb minor version", func() {
-				BeforeEach(func() {
-					fakeMysqlClient.WhenCalledWith(
-						"--skip-column-names",
-						"--silent",
-						fmt.Sprintf("--user=%s", username),
-						fmt.Sprintf("--password=%s", password),
-						fmt.Sprintf("--host=%s", host),
-						fmt.Sprintf("--port=%d", port),
-						`--execute=SELECT VERSION()`,
-					).WillPrintToStdOut("10.0.24-MariaDB-wsrep")
-				})
-
-				It("fails because of a version mismatch", func() {
-					Expect(session).Should(gexec.Exit(1))
-					Expect(string(session.Err.Contents())).Should(ContainSubstring(
-						"unsupported version of mariadb: 10.0"),
-					)
-				})
-			})
-
-			Context("when the server has a supported mariadb minor version with a different patch to the packaged utility", func() {
-				BeforeEach(func() {
-					fakeMysqlDump.WhenCalled().WillExitWith(0)
-					fakeMysqlClient.WhenCalledWith(
-						"--skip-column-names",
-						"--silent",
-						fmt.Sprintf("--user=%s", username),
-						fmt.Sprintf("--password=%s", password),
-						fmt.Sprintf("--host=%s", host),
-						fmt.Sprintf("--port=%d", port),
-						`--execute=SELECT VERSION()`,
-					).WillPrintToStdOut("10.1.22-MariaDB-wsrep")
-				})
-
-				It("succeeds despite different patch versions", func() {
-					Expect(session).Should(gexec.Exit(0))
 				})
 			})
 		})
 
+		Context("when mysqldump fails", func() {
+			BeforeEach(func() {
+				fakeMysqlClient.WhenCalledWith(
+					"--skip-column-names",
+					"--silent",
+					fmt.Sprintf("--user=%s", username),
+					fmt.Sprintf("--password=%s", password),
+					fmt.Sprintf("--host=%s", host),
+					fmt.Sprintf("--port=%d", port),
+					`--execute=SELECT VERSION()`,
+				).WillPrintToStdOut("10.1.24-MariaDB-wsrep")
+				fakeMysqlDump.WhenCalled().WillExitWith(1)
+			})
+
+			It("also fails", func() {
+				Eventually(session).Should(gexec.Exit(1))
+			})
+		})
+
+		Context("when the server has an unsupported mariadb major version", func() {
+			BeforeEach(func() {
+				fakeMysqlClient.WhenCalledWith(
+					"--skip-column-names",
+					"--silent",
+					fmt.Sprintf("--user=%s", username),
+					fmt.Sprintf("--password=%s", password),
+					fmt.Sprintf("--host=%s", host),
+					fmt.Sprintf("--port=%d", port),
+					`--execute=SELECT VERSION()`,
+				).WillPrintToStdOut("9.1.24-MariaDB-wsrep")
+			})
+
+			It("fails because of a version mismatch", func() {
+				Expect(session).Should(gexec.Exit(1))
+				Expect(string(session.Err.Contents())).Should(ContainSubstring(
+					"unsupported version of mariadb: 9.1"),
+				)
+			})
+		})
+
+		Context("when the server has an unsupported mariadb minor version", func() {
+			BeforeEach(func() {
+				fakeMysqlClient.WhenCalledWith(
+					"--skip-column-names",
+					"--silent",
+					fmt.Sprintf("--user=%s", username),
+					fmt.Sprintf("--password=%s", password),
+					fmt.Sprintf("--host=%s", host),
+					fmt.Sprintf("--port=%d", port),
+					`--execute=SELECT VERSION()`,
+				).WillPrintToStdOut("10.0.24-MariaDB-wsrep")
+			})
+
+			It("fails because of a version mismatch", func() {
+				Expect(session).Should(gexec.Exit(1))
+				Expect(string(session.Err.Contents())).Should(ContainSubstring(
+					"unsupported version of mariadb: 10.0"),
+				)
+			})
+		})
+
+		Context("when the server has a supported mariadb minor version with a different patch to the packaged utility", func() {
+			BeforeEach(func() {
+				fakeMysqlDump.WhenCalled().WillExitWith(0)
+				fakeMysqlClient.WhenCalledWith(
+					"--skip-column-names",
+					"--silent",
+					fmt.Sprintf("--user=%s", username),
+					fmt.Sprintf("--password=%s", password),
+					fmt.Sprintf("--host=%s", host),
+					fmt.Sprintf("--port=%d", port),
+					`--execute=SELECT VERSION()`,
+				).WillPrintToStdOut("10.1.22-MariaDB-wsrep")
+			})
+
+			It("succeeds despite different patch versions", func() {
+				Expect(session).Should(gexec.Exit(0))
+			})
+		})
 	})
 
 	Context("restore", func() {
@@ -280,17 +265,7 @@ var _ = Describe("MySQL", func() {
 			Eventually(session).Should(gexec.Exit())
 		})
 
-		Context("MARIADB_CLIENT_PATH env var is missing", func() {
-			BeforeEach(func() {
-				delete(envVars, "MARIADB_CLIENT_PATH")
-			})
-
-			It("raises an appropriate error", func() {
-				Expect(session.Err).To(gbytes.Say("MARIADB_CLIENT_PATH must be set"))
-			})
-		})
-
-		Context("MARIADB_CLIENT_PATH is set", func() {
+		Context("when mysql succeeds", func() {
 			BeforeEach(func() {
 				fakeMysqlClient.WhenCalledWith(
 					"--skip-column-names",
@@ -302,7 +277,6 @@ var _ = Describe("MySQL", func() {
 					`--execute=SELECT VERSION()`,
 				).WillPrintToStdOut("10.1.24-MariaDB-wsrep")
 				fakeMysqlClient.WhenCalled().WillExitWith(0)
-				envVars["MARIADB_CLIENT_PATH"] = fakeMysqlClient.Path
 			})
 
 			It("calls mysql with the correct arguments", func() {
@@ -325,7 +299,7 @@ var _ = Describe("MySQL", func() {
 			})
 
 		})
-		Context("and mysql fails", func() {
+		Context("when mysql fails", func() {
 			BeforeEach(func() {
 				fakeMysqlClient.WhenCalledWith(
 					"--skip-column-names",
@@ -337,7 +311,6 @@ var _ = Describe("MySQL", func() {
 					`--execute=SELECT VERSION()`,
 				).WillPrintToStdOut("10.1.24-MariaDB-wsrep")
 				fakeMysqlClient.WhenCalled().WillExitWith(1)
-				envVars["MARIADB_CLIENT_PATH"] = fakeMysqlClient.Path
 			})
 
 			It("also fails", func() {

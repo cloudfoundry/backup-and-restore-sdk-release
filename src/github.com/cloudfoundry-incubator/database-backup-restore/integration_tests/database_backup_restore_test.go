@@ -56,9 +56,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 	})
 
 	Context("incorrect usage or invalid config", func() {
-		var testCases []TableEntry
-
-		testCases = []TableEntry{
+		testCases := []TableEntry{
 			Entry("two actions provided", TestEntry{
 				arguments:      "--backup --restore",
 				expectedOutput: "Only one of: --backup or --restore can be provided",
@@ -105,13 +103,9 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 					entry.arguments = fmt.Sprintf(entry.arguments, configPath)
 					defer os.Remove(configPath)
 				}
+
 				args := strings.Split(entry.arguments, " ")
 				cmd := exec.Command(compiledSDKPath, args...)
-				cmd.Env = append(cmd.Env, "MARIADB_DUMP_PATH=somepath")
-				cmd.Env = append(cmd.Env, "MARIADB_CLIENT_PATH=somepath")
-				cmd.Env = append(cmd.Env, "PG_RESTORE_9_4_PATH=somepath")
-				cmd.Env = append(cmd.Env, "PG_DUMP_9_4_PATH=somepath")
-				cmd.Env = append(cmd.Env, "PG_CLIENT_PATH=somepath")
 
 				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).ToNot(HaveOccurred())
@@ -119,6 +113,54 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				Expect(session.Err).To(gbytes.Say(entry.expectedOutput))
 			},
 			testCases...,
+		)
+	})
+
+	Context("missing environment variables", func() {
+		requiredEnvVars := []TableEntry{
+			Entry("pg_client path missing", "PG_CLIENT_PATH"),
+			Entry("pg_dump_9_6 path missing", "PG_DUMP_9_6_PATH"),
+			Entry("pg_restore_9_6 path missing", "PG_RESTORE_9_6_PATH"),
+			Entry("pg_client path missing", "PG_CLIENT_PATH"),
+			Entry("pg_dump_9_4 path missing", "PG_DUMP_9_4_PATH"),
+			Entry("pg_restore_9_4 path missing", "PG_RESTORE_9_4_PATH"),
+			Entry("mariadb_client path missing", "MARIADB_CLIENT_PATH"),
+			Entry("mariadb_dump path missing", "MARIADB_DUMP_PATH"),
+			Entry("mariadb_client path missing", "MARIADB_CLIENT_PATH"),
+			Entry("mysql_client_5_5 path missing", "MYSQL_CLIENT_5_5_PATH"),
+			Entry("mysql_dump_5_5 path missing", "MYSQL_DUMP_5_5_PATH"),
+			Entry("mysql_client_5_5 path missing", "MYSQL_CLIENT_5_5_PATH"),
+			Entry("mysql_client_5_6 path missing", "MYSQL_CLIENT_5_6_PATH"),
+			Entry("mysql_dump_5_6 path missing", "MYSQL_DUMP_5_6_PATH"),
+			Entry("mysql_client_5_6 path missing", "MYSQL_CLIENT_5_6_PATH"),
+			Entry("mysql_client_5_7 path missing", "MYSQL_CLIENT_5_7_PATH"),
+			Entry("mysql_dump_5_7 path missing", "MYSQL_DUMP_5_7_PATH"),
+			Entry("mysql_client_5_7 path missing", "MYSQL_CLIENT_5_7_PATH"),
+		}
+
+		DescribeTable("raises the appropriate error when",
+			func(missingEnvVar string) {
+				configPath, err := validPgConfig()
+				Expect(err).NotTo(HaveOccurred())
+				defer os.Remove(configPath)
+
+				argumentString :=
+					fmt.Sprintf("--backup --artifact-file /foo --config %s", configPath)
+				args := strings.Split(argumentString, " ")
+				cmd := exec.Command(compiledSDKPath, args...)
+
+				for envVar, val := range envVars {
+					if envVar != missingEnvVar {
+						cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", envVar, val))
+					}
+				}
+
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).ToNot(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(1))
+				Eventually(session.Err).Should(gbytes.Say(missingEnvVar + " must be set"))
+			},
+			requiredEnvVars...,
 		)
 	})
 })
