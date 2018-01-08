@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package postgresql
+package utils
 
 import (
 	"fmt"
@@ -24,6 +24,9 @@ import (
 	"strings"
 
 	"github.com/onsi/gomega/gexec"
+
+	"crypto/rand"
+	"encoding/base64"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -112,4 +115,14 @@ type jsonOutputFromCli struct {
 	Tables []struct {
 		Rows []map[string]string
 	}
+}
+
+func RandomStringNumber() string {
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		panic("failed to generate random string number")
+	}
+
+	return base64.RawURLEncoding.EncodeToString(b)
 }

@@ -2,7 +2,6 @@ package mysql
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -17,6 +16,8 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/onsi/gomega/gexec"
+
+	. "github.com/cloudfoundry-incubator/database-backup-restore/system_tests/utils"
 )
 
 var _ = Describe("mysql", func() {
@@ -34,9 +35,10 @@ var _ = Describe("mysql", func() {
 	})
 
 	BeforeEach(func() {
-		configPath = "/tmp/config.json" + strconv.FormatInt(time.Now().Unix(), 10)
-		dbDumpPath = "/tmp/sql_dump" + strconv.FormatInt(time.Now().Unix(), 10)
-		databaseName = "db" + strconv.FormatInt(time.Now().Unix(), 10)
+		randomString := RandomStringNumber()
+		configPath = "/tmp/config-" + randomString
+		dbDumpPath = "/tmp/artifact-" + randomString
+		databaseName = "db-" + randomString
 	})
 
 	AfterSuite(func() {
@@ -48,9 +50,9 @@ var _ = Describe("mysql", func() {
 	Context("when the mysql server version matches", func() {
 		BeforeEach(func() {
 			brJob = JobInstance{
-				deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
-				instance:      MustHaveEnv("SDK_INSTANCE_GROUP"),
-				instanceIndex: "0",
+				Deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
+				Instance:      MustHaveEnv("SDK_INSTANCE_GROUP"),
+				InstanceIndex: "0",
 			}
 
 			runSQLCommand("CREATE DATABASE "+databaseName, connection)
@@ -70,21 +72,21 @@ var _ = Describe("mysql", func() {
 				mysqlHostName,
 				databaseName,
 			)
-			brJob.runOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+			brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 		})
 
 		AfterEach(func() {
 			runSQLCommand("DROP DATABASE "+databaseName, connection)
-			brJob.runOnVMAndSucceed(fmt.Sprintf("rm -rf %s %s", configPath, dbDumpPath))
+			brJob.RunOnVMAndSucceed(fmt.Sprintf("rm -rf %s %s", configPath, dbDumpPath))
 		})
 
 		It("backs up and restores the database", func() {
-			brJob.runOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
+			brJob.RunOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
 
 			runSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
 			runSQLCommand("UPDATE places SET NAME = 'New Place';", connection)
 
-			brJob.runOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
+			brJob.RunOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
 
 			Expect(fetchSQLColumn("SELECT name FROM people;", connection)).To(
 				ConsistOf("Old Person"))
@@ -105,18 +107,18 @@ var _ = Describe("mysql", func() {
 					mysqlHostName,
 					databaseName,
 				)
-				brJob.runOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+				brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 			})
 
 			It("backs up and restores only the specified tables", func() {
-				brJob.runOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
+				brJob.RunOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
 
 				runSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
 				runSQLCommand("UPDATE places SET NAME = 'New Place';", connection)
 
-				brJob.runOnVMAndSucceed(fmt.Sprintf("cat %s", dbDumpPath))
+				brJob.RunOnVMAndSucceed(fmt.Sprintf("cat %s", dbDumpPath))
 
-				restoreSession := brJob.runOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
+				restoreSession := brJob.RunOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
 
 				Expect(restoreSession).To(gbytes.Say("CREATE TABLE `people`"))
 
@@ -140,11 +142,11 @@ var _ = Describe("mysql", func() {
 					mysqlHostName,
 					databaseName,
 				)
-				brJob.runOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+				brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 			})
 
 			It("raises an error about the non-existent tables", func() {
-				session := brJob.runOnInstance(fmt.Sprintf(
+				session := brJob.RunOnInstance(fmt.Sprintf(
 					"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 					dbDumpPath,
 					configPath))
@@ -165,11 +167,11 @@ var _ = Describe("mysql", func() {
 					mysqlHostName,
 					databaseName,
 				)
-				brJob.runOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+				brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 			})
 
 			It("raises an error about the non-existent tables", func() {
-				session := brJob.runOnInstance(fmt.Sprintf(
+				session := brJob.RunOnInstance(fmt.Sprintf(
 					"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 					dbDumpPath,
 					configPath))

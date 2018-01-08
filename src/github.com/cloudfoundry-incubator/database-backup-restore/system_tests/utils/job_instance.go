@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mysql
+package utils
 
 import (
 	"encoding/json"
@@ -28,51 +28,51 @@ import (
 )
 
 type JobInstance struct {
-	deployment    string
-	instance      string
-	instanceIndex string
+	Deployment    string
+	Instance      string
+	InstanceIndex string
 }
 
-func (jobInstance *JobInstance) runPostgresSqlCommand(command, database, user, postgresPackage string) *gexec.Session {
-	return jobInstance.runOnVMAndSucceed(
+func (jobInstance *JobInstance) RunPostgresSqlCommand(command, database, user, postgresPackage string) *gexec.Session {
+	return jobInstance.RunOnVMAndSucceed(
 		fmt.Sprintf(`/var/vcap/packages/%s/bin/psql -U "%s" "%s" --command="%s"`, postgresPackage, user, database, command),
 	)
 }
 
-func (jobInstance *JobInstance) runMysqlSqlCommand(command string) *gexec.Session {
-	return jobInstance.runOnVMAndSucceed(
+func (jobInstance *JobInstance) RunMysqlSqlCommand(command string) *gexec.Session {
+	return jobInstance.RunOnVMAndSucceed(
 		fmt.Sprintf(`echo -e "%s" | /var/vcap/packages/mariadb/bin/mysql -u root -h localhost --password='%s'`, command, MustHaveEnv("MYSQL_PASSWORD")),
 	)
 }
 
-func (jobInstance *JobInstance) runMysqlSqlCommandOnDatabase(database, command string) *gexec.Session {
-	return jobInstance.runOnVMAndSucceed(
+func (jobInstance *JobInstance) RunMysqlSqlCommandOnDatabase(database, command string) *gexec.Session {
+	return jobInstance.RunOnVMAndSucceed(
 		fmt.Sprintf(`echo -e "%s" | /var/vcap/packages/mariadb/bin/mysql -u root -h localhost --password='%s' "%s"`, command, MustHaveEnv("MYSQL_PASSWORD"), database),
 	)
 }
 
-func (jobInstance *JobInstance) runOnVMAndSucceed(command string) *gexec.Session {
-	session := jobInstance.runOnInstance(command)
+func (jobInstance *JobInstance) RunOnVMAndSucceed(command string) *gexec.Session {
+	session := jobInstance.RunOnInstance(command)
 	Expect(session).To(gexec.Exit(0))
 
 	return session
 }
 
-func (jobInstance *JobInstance) runOnInstance(cmd ...string) *gexec.Session {
+func (jobInstance *JobInstance) RunOnInstance(cmd ...string) *gexec.Session {
 	return RunCommand(
 		join(
 			BoshCommand(),
-			forDeployment(jobInstance.deployment),
-			getSSHCommand(jobInstance.instance, jobInstance.instanceIndex),
+			forDeployment(jobInstance.Deployment),
+			getSSHCommand(jobInstance.Instance, jobInstance.InstanceIndex),
 		),
 		join(cmd...),
 	)
 }
 
-func (jobInstance *JobInstance) getIPOfInstance() string {
+func (jobInstance *JobInstance) GetIPOfInstance() string {
 	session := RunCommand(
 		BoshCommand(),
-		forDeployment(jobInstance.deployment),
+		forDeployment(jobInstance.Deployment),
 		"instances",
 		"--json",
 	)
@@ -80,11 +80,11 @@ func (jobInstance *JobInstance) getIPOfInstance() string {
 	contents := session.Out.Contents()
 	Expect(json.Unmarshal(contents, &outputFromCli)).To(Succeed())
 	for _, instanceData := range outputFromCli.Tables[0].Rows {
-		if strings.HasPrefix(instanceData["instance"], jobInstance.instance+"/") {
+		if strings.HasPrefix(instanceData["instance"], jobInstance.Instance+"/") {
 			return instanceData["ips"]
 		}
 	}
-	Fail("Cant find instances with name '" + jobInstance.instance + "' and deployment name '" + jobInstance.deployment + "'")
+	Fail("Cant find instances with name '" + jobInstance.Instance + "' and deployment name '" + jobInstance.Deployment + "'")
 	return ""
 }
 
@@ -92,8 +92,8 @@ func (jobInstance *JobInstance) downloadFromInstance(remotePath, localPath strin
 	return RunCommand(
 		join(
 			BoshCommand(),
-			forDeployment(jobInstance.deployment),
-			getDownloadCommand(remotePath, localPath, jobInstance.instance, jobInstance.instanceIndex),
+			forDeployment(jobInstance.Deployment),
+			getDownloadCommand(remotePath, localPath, jobInstance.Instance, jobInstance.InstanceIndex),
 		),
 	)
 }
@@ -102,8 +102,8 @@ func (jobInstance *JobInstance) uploadToInstance(localPath, remotePath string) *
 	return RunCommand(
 		join(
 			BoshCommand(),
-			forDeployment(jobInstance.deployment),
-			getUploadCommand(localPath, remotePath, jobInstance.instance, jobInstance.instanceIndex),
+			forDeployment(jobInstance.Deployment),
+			getUploadCommand(localPath, remotePath, jobInstance.Instance, jobInstance.InstanceIndex),
 		),
 	)
 }
