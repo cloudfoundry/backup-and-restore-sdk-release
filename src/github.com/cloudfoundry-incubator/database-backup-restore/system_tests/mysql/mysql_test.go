@@ -72,7 +72,7 @@ var _ = Describe("mysql", func() {
 				mysqlHostName,
 				databaseName,
 			)
-			brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s & chmod 777 %s", configJson, configPath, configPath))
+			brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 		})
 
 		AfterEach(func() {
@@ -81,7 +81,7 @@ var _ = Describe("mysql", func() {
 		})
 
 		It("backs up and restores the database", func() {
-			brJob.RunOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s & chmod 777 %s", dbDumpPath, configPath, dbDumpPath))
+			brJob.RunOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
 
 			runSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
 			runSQLCommand("UPDATE places SET NAME = 'New Place';", connection)
