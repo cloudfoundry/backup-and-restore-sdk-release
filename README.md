@@ -88,10 +88,10 @@ An example of templating using BOSH Links can be seen in the [cf networking rele
 
 #### Supported Database Adapters
 
-* `postgres` (auto-detects versions between 9.4.x and 9.6.x)
-* `mysql`
+* `postgres` (auto-detects versions between `9.4.x` and `9.6.x`)
+* `mysql` (auto-detects `MariaDB 10.1.x`, and `MySQL 5.5.x`, `5.6.x`, `5.7.x`. Any other `mysql` variants are not tested)
 
-Note that these have been tested with internal databases only.
+Note that `postgres` and `MariaDB` have been tested with internal databases only. `MySQL` has only been tested as `RDS`.
 
 ### 2. Write scripts to call the SDK binaries
 
