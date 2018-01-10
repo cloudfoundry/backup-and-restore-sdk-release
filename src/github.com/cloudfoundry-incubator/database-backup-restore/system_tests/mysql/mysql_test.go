@@ -65,14 +65,6 @@ var _ = Describe("mysql", func() {
 			runSQLCommand("CREATE TABLE places (name varchar(255));", connection)
 			runSQLCommand("INSERT INTO places VALUES ('Old Place');", connection)
 
-			configJson := fmt.Sprintf(
-				`{"username":"%s","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql"}`,
-				MustHaveEnv("MYSQL_USERNAME"),
-				MustHaveEnv("MYSQL_PASSWORD"),
-				mysqlHostName,
-				databaseName,
-			)
-			brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 		})
 
 		AfterEach(func() {
@@ -80,22 +72,36 @@ var _ = Describe("mysql", func() {
 			brJob.RunOnVMAndSucceed(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath))
 		})
 
-		It("backs up and restores the database", func() {
-			brJob.RunOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
+		Context("database dump is successful", func() {
+			BeforeEach(func() {
+				configJson := fmt.Sprintf(
+					`{"username":"%s","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql"}`,
+					MustHaveEnv("MYSQL_USERNAME"),
+					MustHaveEnv("MYSQL_PASSWORD"),
+					mysqlHostName,
+					databaseName,
+				)
+				brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+			})
 
-			runSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
-			runSQLCommand("UPDATE places SET NAME = 'New Place';", connection)
+			It("backs up and restores the database", func() {
+				brJob.RunOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
 
-			brJob.RunOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
+				runSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
+				runSQLCommand("UPDATE places SET NAME = 'New Place';", connection)
 
-			Expect(fetchSQLColumn("SELECT name FROM people;", connection)).To(
-				ConsistOf("Old Person"))
-			Expect(fetchSQLColumn("SELECT name FROM people;", connection)).NotTo(
-				ConsistOf("New Person"))
-			Expect(fetchSQLColumn("SELECT name FROM places;", connection)).To(
-				ConsistOf("Old Place"))
-			Expect(fetchSQLColumn("SELECT name FROM places;", connection)).NotTo(
-				ConsistOf("New Place"))
+				brJob.RunOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
+
+				Expect(fetchSQLColumn("SELECT name FROM people;", connection)).To(
+					ConsistOf("Old Person"))
+				Expect(fetchSQLColumn("SELECT name FROM people;", connection)).NotTo(
+					ConsistOf("New Person"))
+				Expect(fetchSQLColumn("SELECT name FROM places;", connection)).To(
+					ConsistOf("Old Place"))
+				Expect(fetchSQLColumn("SELECT name FROM places;", connection)).NotTo(
+					ConsistOf("New Place"))
+			})
+
 		})
 
 		Context("and some existing 'tables' are specified in config", func() {
