@@ -4,6 +4,28 @@ A SDK BOSH release used to backup and restore databases for BOSH deployed Cloud 
 
 * [Release Author Guide](http://docs.cloudfoundry.org/bbr/bbr-devguide.html)
 
+## CI
+
+Backup and Restore SDK Release status [![Build SDK Release Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/create-release/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release)
+
+### Supported Databases
+
+| Name | Version | Status |
+|------|---------|--------|
+| MariaDB | 10.1.x  | [![MariaDB Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/mariadb-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/mariadb-system-tests) | 
+| MySQL | 5.5.x  | [![MySQL Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/rds-mysql-5.5-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/rds-mysql-5.5-system-tests) | 
+| MySQL | 5.6.x  | [![MySQL Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/rds-mysql-5.6-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/rds-mysql-5.6-system-tests) | 
+| MySQL | 5.7.x  | [![MySQL Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/rds-mysql-5.7-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/rds-mysql-5.7-system-tests) | 
+| Postgres | 9.4.x  | [![Postgres Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/postgres-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/postgres-system-tests) | 
+| Postgres | 9.6.x  | [![Postgres Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/postgres-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/postgres-system-tests) | 
+
+
+### Supported Blobstores
+
+| Name |  Status |
+|------|---------|
+| Versioned S3 | [![S3 Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests) |
+
 ## Why?
 
 Release authors wanting to write backup and restore scripts frequently need to back up and restore databases (or parts of databases).
