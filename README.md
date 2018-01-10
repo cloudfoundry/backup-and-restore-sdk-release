@@ -1,10 +1,15 @@
 # Backup and Restore SDK BOSH release
 
-A SDK BOSH release used to backup and restore databases for BOSH deployed Cloud Foundry components.
+The Backup and Restore SDK BOSH release allows other BOSH deployed Cloud Foundry components to backup/restore their databases and blobstores.
 
-* [Release Author Guide](http://docs.cloudfoundry.org/bbr/bbr-devguide.html)
+**Docs**: [Release Author Guide](http://docs.cloudfoundry.org/bbr/bbr-devguide.html)
 
-## CI
+**Slack**: #bbr on https://slack.cloudfoundry.org
+
+**Pivotal Tracker**: https://www.pivotaltracker.com/n/projects/1662777
+
+
+## CI Status
 
 Backup and Restore SDK Release status [![Build SDK Release Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/create-release/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release)
 
