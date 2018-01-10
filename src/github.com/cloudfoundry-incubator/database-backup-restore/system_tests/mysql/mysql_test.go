@@ -77,7 +77,7 @@ var _ = Describe("mysql", func() {
 
 		AfterEach(func() {
 			runSQLCommand("DROP DATABASE "+databaseName, connection)
-			brJob.RunOnVMAndSucceed(fmt.Sprintf("rm -rf %s %s", configPath, dbDumpPath))
+			brJob.RunOnVMAndSucceed(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath))
 		})
 
 		It("backs up and restores the database", func() {
