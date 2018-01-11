@@ -1,6 +1,7 @@
 # NOTE: This package exists only for backwards compatibility with releases
-# directly consuming packaged utilities. This needs to be deleted as soon as\
+# directly consuming packaged utilities. This needs to be deleted as soon as
 # releases switch to using the job interface
+# [#154251295]
 
 ---
 name: database-backup-restorer-mysql
