@@ -15,20 +15,9 @@
 # limitations under the License.
 
 ---
-name: database-backup-restorer
+name: database-backup-restorer-mysql
 
-templates:
-  backup: bin/backup
-  restore: bin/restore
+dependencies: []
 
-packages:
-- database-backup-restorer
-- database-backup-restorer-postgres-9.6
-- database-backup-restorer-postgres-9.4
-- database-backup-restorer-mariadb
-- database-backup-restorer-mysql
-- database-backup-restorer-mysql-5.5
-- database-backup-restorer-mysql-5.6
-- database-backup-restorer-mysql-5.7
-
-properties: {}
+files:
+- mariadb/mariadb-10.1.24.tar.gz
