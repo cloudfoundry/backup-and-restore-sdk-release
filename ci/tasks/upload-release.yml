@@ -24,11 +24,13 @@ image_resource:
 inputs:
 - name: backup-and-restore-sdk-release-build
 - name: backup-and-restore-sdk-release
+- name: bosh-backup-and-restore-meta
 - name: version
 
 params:
   BOSH_ENVIRONMENT:
   BOSH_CLIENT:
   BOSH_CLIENT_SECRET:
+  TEAM_GPG_KEY:
 run:
   path: backup-and-restore-sdk-release/ci/scripts/upload-release.sh

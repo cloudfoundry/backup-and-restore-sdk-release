@@ -19,6 +19,9 @@
 set -e
 set -x
 
+./bosh-backup-and-restore-meta/unlock-ci.sh
+
+export BOSH_CA_CERT="./bosh-backup-and-restore-meta/certs/${BOSH_ENVIRONMENT}.crt"
 export VERSION=$(cat version/number)
 
 if [ -z "$RELEASE_NAME" ]; then
