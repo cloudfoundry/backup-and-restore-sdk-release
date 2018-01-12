@@ -23,6 +23,7 @@ image_resource:
 
 inputs:
 - name: backup-and-restore-sdk-release-build
+- name: backup-and-restore-sdk-release
 - name: version
 
 params:
