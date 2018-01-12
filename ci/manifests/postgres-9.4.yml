@@ -37,7 +37,8 @@ instance_groups:
   persistent_disk_type: fifty
   stemcell: trusty
   networks:
-  - name: concourse
+  - name: postgres
+    static_ips: [((db_host))]
   jobs:
   - name: postgres-9.4
     release: bosh
