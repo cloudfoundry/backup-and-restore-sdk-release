@@ -42,7 +42,7 @@ instance_groups:
   jobs:
   - name: postgres-9.4
     release: bosh
-  azs: [z1]
+  azs: [((availability_zone))]
   properties:
     postgres:
       user: test_user

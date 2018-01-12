@@ -42,7 +42,7 @@ instance_groups:
   jobs:
   - name: postgres
     release: postgres
-  azs: [z1]
+  azs: [((availability_zone))]
   properties:
     databases:
       roles:
