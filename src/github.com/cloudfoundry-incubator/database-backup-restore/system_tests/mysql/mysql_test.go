@@ -64,7 +64,6 @@ var _ = Describe("mysql", func() {
 			runSQLCommand("INSERT INTO people VALUES ('Old Person');", connection)
 			runSQLCommand("CREATE TABLE places (name varchar(255));", connection)
 			runSQLCommand("INSERT INTO places VALUES ('Old Place');", connection)
-
 		})
 
 		AfterEach(func() {
@@ -72,7 +71,7 @@ var _ = Describe("mysql", func() {
 			brJob.RunOnVMAndSucceed(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath))
 		})
 
-		Context("database dump is successful", func() {
+		Context("when whe backup the whole database", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
 					`{"username":"%s","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql"}`,
@@ -84,13 +83,17 @@ var _ = Describe("mysql", func() {
 				brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 			})
 
-			It("backs up and restores the database", func() {
-				brJob.RunOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
+			It("backs up and restores the database successfully", func() {
+				brJob.RunOnVMAndSucceed(
+					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+						dbDumpPath, configPath))
 
 				runSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
 				runSQLCommand("UPDATE places SET NAME = 'New Place';", connection)
 
-				brJob.RunOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
+				brJob.RunOnVMAndSucceed(
+					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
+						dbDumpPath, configPath))
 
 				Expect(fetchSQLColumn("SELECT name FROM people;", connection)).To(
 					ConsistOf("Old Person"))
@@ -101,10 +104,30 @@ var _ = Describe("mysql", func() {
 				Expect(fetchSQLColumn("SELECT name FROM places;", connection)).NotTo(
 					ConsistOf("New Place"))
 			})
-
 		})
 
-		Context("and some existing 'tables' are specified in config", func() {
+		Context("when the db user requires TLS", func() {
+			BeforeEach(func() {
+				configJson := fmt.Sprintf(
+					`{"username":"%s","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql"}`,
+					MustHaveEnv("MYSQL_USERNAME_WITH_SSL"),
+					MustHaveEnv("MYSQL_PASSWORD"),
+					mysqlHostName,
+					databaseName,
+				)
+				brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+			})
+
+			It("fails", func() {
+				session := brJob.RunOnInstance(
+					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+						dbDumpPath, configPath))
+
+				Expect(session.ExitCode()).NotTo(BeZero())
+			})
+		})
+
+		Context("when some existing 'tables' are specified in config", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
 					`{"username":"%s","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["people"]}`,
@@ -117,14 +140,18 @@ var _ = Describe("mysql", func() {
 			})
 
 			It("backs up and restores only the specified tables", func() {
-				brJob.RunOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s", dbDumpPath, configPath))
+				brJob.RunOnVMAndSucceed(
+					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+						dbDumpPath, configPath))
 
 				runSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
 				runSQLCommand("UPDATE places SET NAME = 'New Place';", connection)
 
 				brJob.RunOnVMAndSucceed(fmt.Sprintf("cat %s", dbDumpPath))
 
-				restoreSession := brJob.RunOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
+				restoreSession := brJob.RunOnVMAndSucceed(
+					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
+						dbDumpPath, configPath))
 
 				Expect(restoreSession).To(gbytes.Say("CREATE TABLE `people`"))
 
@@ -139,7 +166,7 @@ var _ = Describe("mysql", func() {
 			})
 		})
 
-		Context("and 'tables' are specified in config only some of which exist", func() {
+		Context("when 'tables' are specified in config only some of which exist", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
 					`{"username":"%s","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["people", "not there"]}`,
@@ -164,7 +191,7 @@ var _ = Describe("mysql", func() {
 			})
 		})
 
-		Context("and 'tables' are specified in config none of them exist", func() {
+		Context("when 'tables' are specified in config none of them exist", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
 					`{"username":"%s","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["lizards", "form-shifting-people"]}`,
