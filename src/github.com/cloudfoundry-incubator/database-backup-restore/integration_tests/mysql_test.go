@@ -26,6 +26,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 )
 
@@ -146,6 +147,25 @@ var _ = Describe("MySQL", func() {
 						Expect(fakeMysqlDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
 					})
 				})
+			})
+		})
+
+		Context("when version detection fails", func() {
+			BeforeEach(func() {
+				fakeMysqlClient.WhenCalledWith(
+					"--skip-column-names",
+					"--silent",
+					fmt.Sprintf("--user=%s", username),
+					fmt.Sprintf("--password=%s", password),
+					fmt.Sprintf("--host=%s", host),
+					fmt.Sprintf("--port=%d", port),
+					`--execute=SELECT VERSION()`,
+				).WillExitWith(1).WillPrintToStdErr("VERSION DETECTION FAILED!")
+			})
+
+			It("also fails", func() {
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(session.Err).To(gbytes.Say("VERSION DETECTION FAILED!"))
 			})
 		})
 

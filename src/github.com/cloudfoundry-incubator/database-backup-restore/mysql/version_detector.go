@@ -32,7 +32,11 @@ func (d ServerVersionDetector) GetVersion(config config.ConnectionConfig) (versi
 
 	stdout, err := versionCmd.Output()
 	if err != nil {
-		return version.DatabaseServerVersion{}, err
+		if exitError, ok := err.(*exec.ExitError); ok {
+			return version.DatabaseServerVersion{}, fmt.Errorf(string(exitError.Stderr))
+		} else {
+			return version.DatabaseServerVersion{}, err
+		}
 	}
 
 	versionString := string(stdout)
