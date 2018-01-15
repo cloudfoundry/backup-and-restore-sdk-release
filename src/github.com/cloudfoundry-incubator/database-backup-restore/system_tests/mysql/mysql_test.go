@@ -2,7 +2,6 @@ package mysql
 
 import (
 	"fmt"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -10,12 +9,10 @@ import (
 
 	"database/sql"
 
-	"os/exec"
-
-	"os"
-
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/onsi/gomega/gexec"
+
+	"os"
 
 	. "github.com/cloudfoundry-incubator/database-backup-restore/system_tests/utils"
 )
@@ -31,7 +28,16 @@ var _ = Describe("mysql", func() {
 
 	BeforeSuite(func() {
 		mysqlHostName = MustHaveEnv("MYSQL_HOSTNAME")
-		connection, proxySession = connect()
+		connection, proxySession = Connect(
+			"mysql",
+			MustHaveEnv("MYSQL_HOSTNAME"),
+			MustHaveEnv("MYSQL_PASSWORD"),
+			MustHaveEnv("MYSQL_USERNAME"),
+			MustHaveEnv("MYSQL_PORT"),
+			os.Getenv("SSH_PROXY_HOST"),
+			os.Getenv("SSH_PROXY_USER"),
+			os.Getenv("SSH_PROXY_KEY_FILE"),
+		)
 	})
 
 	BeforeEach(func() {
@@ -55,19 +61,19 @@ var _ = Describe("mysql", func() {
 				InstanceIndex: "0",
 			}
 
-			runSQLCommand("CREATE DATABASE "+databaseName, connection)
+			RunSQLCommand("CREATE DATABASE "+databaseName, connection)
 
-			runSQLCommand("USE "+databaseName, connection)
+			RunSQLCommand("USE "+databaseName, connection)
 
-			runSQLCommand("CREATE TABLE people (name varchar(255));", connection)
+			RunSQLCommand("CREATE TABLE people (name varchar(255));", connection)
 
-			runSQLCommand("INSERT INTO people VALUES ('Old Person');", connection)
-			runSQLCommand("CREATE TABLE places (name varchar(255));", connection)
-			runSQLCommand("INSERT INTO places VALUES ('Old Place');", connection)
+			RunSQLCommand("INSERT INTO people VALUES ('Old Person');", connection)
+			RunSQLCommand("CREATE TABLE places (name varchar(255));", connection)
+			RunSQLCommand("INSERT INTO places VALUES ('Old Place');", connection)
 		})
 
 		AfterEach(func() {
-			runSQLCommand("DROP DATABASE "+databaseName, connection)
+			RunSQLCommand("DROP DATABASE "+databaseName, connection)
 			brJob.RunOnVMAndSucceed(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath))
 		})
 
@@ -88,20 +94,20 @@ var _ = Describe("mysql", func() {
 					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 						dbDumpPath, configPath))
 
-				runSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
-				runSQLCommand("UPDATE places SET NAME = 'New Place';", connection)
+				RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
+				RunSQLCommand("UPDATE places SET NAME = 'New Place';", connection)
 
 				brJob.RunOnVMAndSucceed(
 					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 						dbDumpPath, configPath))
 
-				Expect(fetchSQLColumn("SELECT name FROM people;", connection)).To(
+				Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(
 					ConsistOf("Old Person"))
-				Expect(fetchSQLColumn("SELECT name FROM people;", connection)).NotTo(
+				Expect(FetchSQLColumn("SELECT name FROM people;", connection)).NotTo(
 					ConsistOf("New Person"))
-				Expect(fetchSQLColumn("SELECT name FROM places;", connection)).To(
+				Expect(FetchSQLColumn("SELECT name FROM places;", connection)).To(
 					ConsistOf("Old Place"))
-				Expect(fetchSQLColumn("SELECT name FROM places;", connection)).NotTo(
+				Expect(FetchSQLColumn("SELECT name FROM places;", connection)).NotTo(
 					ConsistOf("New Place"))
 			})
 		})
@@ -144,8 +150,8 @@ var _ = Describe("mysql", func() {
 					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 						dbDumpPath, configPath))
 
-				runSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
-				runSQLCommand("UPDATE places SET NAME = 'New Place';", connection)
+				RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
+				RunSQLCommand("UPDATE places SET NAME = 'New Place';", connection)
 
 				brJob.RunOnVMAndSucceed(fmt.Sprintf("cat %s", dbDumpPath))
 
@@ -155,13 +161,13 @@ var _ = Describe("mysql", func() {
 
 				Expect(restoreSession).To(gbytes.Say("CREATE TABLE `people`"))
 
-				Expect(fetchSQLColumn("SELECT name FROM people;", connection)).To(
+				Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(
 					ConsistOf("Old Person"))
-				Expect(fetchSQLColumn("SELECT name FROM people;", connection)).NotTo(
+				Expect(FetchSQLColumn("SELECT name FROM people;", connection)).NotTo(
 					ConsistOf("New Person"))
-				Expect(fetchSQLColumn("SELECT name FROM places;", connection)).To(
+				Expect(FetchSQLColumn("SELECT name FROM places;", connection)).To(
 					ConsistOf("New Place"))
-				Expect(fetchSQLColumn("SELECT name FROM places;", connection)).NotTo(
+				Expect(FetchSQLColumn("SELECT name FROM places;", connection)).NotTo(
 					ConsistOf("Old Place"))
 			})
 		})
@@ -217,66 +223,3 @@ var _ = Describe("mysql", func() {
 		})
 	})
 })
-
-func connect() (*sql.DB, *gexec.Session) {
-	mysqlHostName := MustHaveEnv("MYSQL_HOSTNAME")
-	mysqlPassword := MustHaveEnv("MYSQL_PASSWORD")
-	mysqlUsername := MustHaveEnv("MYSQL_USERNAME")
-	mysqlPort := MustHaveEnv("MYSQL_PORT")
-
-	sshProxyHost := os.Getenv("SSH_PROXY_HOST")
-	if sshProxyHost != "" {
-		sshProxyUser := MustHaveEnv("SSH_PROXY_USER")
-		sshProxyKeyFile := MustHaveEnv("SSH_PROXY_KEY_FILE")
-
-		proxiedMysqlHostName := "127.0.0.1"
-		proxiedMysqlPort := "13306"
-		var err error
-		proxySession, err := gexec.Start(exec.Command(
-			"ssh",
-			"-L",
-			fmt.Sprintf("%s:%s:%s", proxiedMysqlPort, mysqlHostName, mysqlPort),
-			sshProxyUser+"@"+sshProxyHost,
-			"-i", sshProxyKeyFile,
-			"-N",
-			"-o",
-			"UserKnownHostsFile=/dev/null",
-			"-o",
-			"StrictHostKeyChecking=no",
-		), GinkgoWriter, GinkgoWriter)
-		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(1 * time.Second)
-
-		connection, err := sql.Open("mysql", fmt.Sprintf(
-			"%s:%s@tcp(%s:%s)/", mysqlUsername, mysqlPassword, proxiedMysqlHostName, proxiedMysqlPort))
-		Expect(err).NotTo(HaveOccurred())
-		return connection, proxySession
-	} else {
-		connection, err := sql.Open("mysql", fmt.Sprintf(
-			"%s:%s@tcp(%s:%s)/", mysqlUsername, mysqlPassword, mysqlHostName, mysqlPort))
-		Expect(err).NotTo(HaveOccurred())
-		return connection, nil
-	}
-
-}
-
-func runSQLCommand(command string, connection *sql.DB) {
-	_, err := connection.Exec(command)
-	Expect(err).NotTo(HaveOccurred())
-}
-
-func fetchSQLColumn(command string, connection *sql.DB) []string {
-	var returnValue []string
-	rows, err := connection.Query(command)
-	Expect(err).NotTo(HaveOccurred())
-
-	defer rows.Close()
-	for rows.Next() {
-		var rowData string
-		Expect(rows.Scan(&rowData)).NotTo(HaveOccurred())
-
-		returnValue = append(returnValue, rowData)
-	}
-	Expect(rows.Err()).NotTo(HaveOccurred())
-	return returnValue
-}
