@@ -61,44 +61,48 @@ func PostgresTests(postgresPackage, postgresDeployment string) func() {
 			dbJob.RunPostgresSqlCommand("INSERT INTO people VALUES ('Old Person');", databaseName, testUser, postgresPackage)
 			dbJob.RunPostgresSqlCommand("CREATE TABLE places (name varchar);", databaseName, testUser, postgresPackage)
 			dbJob.RunPostgresSqlCommand("INSERT INTO places VALUES ('Old Place');", databaseName, testUser, postgresPackage)
-
-			configJson := fmt.Sprintf(
-				`{"username":"test_user","password":"%s","host":"%s","port":5432,
-					"database":"%s","adapter":"postgres"}`,
-				MustHaveEnv("POSTGRES_PASSWORD"),
-				dbJob.GetIPOfInstance(),
-				databaseName,
-			)
-			brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 		})
 
 		AfterEach(func() {
 			dbJob.RunOnVMAndSucceed(fmt.Sprintf(
 				`/var/vcap/packages/%s/bin/dropdb -U vcap "%s"`, postgresPackage, databaseName))
-			brJob.RunOnVMAndSucceed(fmt.Sprintf("rm -rf %s %s", configPath, dbDumpPath))
+			brJob.RunOnVMAndSucceed(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath))
 		})
 
-		It("backs up the Postgres database", func() {
-			brJob.RunOnVMAndSucceed(
-				fmt.Sprintf(`/var/vcap/jobs/database-backup-restorer/bin/backup --config %s --artifact-file %s`,
-					configPath, dbDumpPath))
-			brJob.RunOnVMAndSucceed(fmt.Sprintf("ls -l %s", dbDumpPath))
+		Context("the database dump is successful", func() {
+			BeforeEach(func() {
+				configJson := fmt.Sprintf(
+					`{"username":"test_user","password":"%s","host":"%s","port":5432,
+						"database":"%s","adapter":"postgres"}`,
+					MustHaveEnv("POSTGRES_PASSWORD"),
+					dbJob.GetIPOfInstance(),
+					databaseName,
+				)
+				brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+			})
 
-			dbJob.RunPostgresSqlCommand("UPDATE people SET NAME = 'New Person';", databaseName, testUser, postgresPackage)
-			dbJob.RunPostgresSqlCommand("UPDATE places SET NAME = 'New Place';", databaseName, testUser, postgresPackage)
+			It("backs up the Postgres database", func() {
+				brJob.RunOnVMAndSucceed(
+					fmt.Sprintf(`/var/vcap/jobs/database-backup-restorer/bin/backup --config %s --artifact-file %s`,
+						configPath, dbDumpPath))
+				brJob.RunOnVMAndSucceed(fmt.Sprintf("ls -l %s", dbDumpPath))
 
-			brJob.RunOnVMAndSucceed(
-				fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
-					configPath, dbDumpPath))
+				dbJob.RunPostgresSqlCommand("UPDATE people SET NAME = 'New Person';", databaseName, testUser, postgresPackage)
+				dbJob.RunPostgresSqlCommand("UPDATE places SET NAME = 'New Place';", databaseName, testUser, postgresPackage)
 
-			Expect(dbJob.RunPostgresSqlCommand("SELECT name FROM people;", databaseName, testUser, postgresPackage)).
-				To(gbytes.Say("Old Person"))
-			Expect(dbJob.RunPostgresSqlCommand("SELECT name FROM people;", databaseName, testUser, postgresPackage)).
-				NotTo(gbytes.Say("New Person"))
-			Expect(dbJob.RunPostgresSqlCommand("SELECT name FROM places;", databaseName, testUser, postgresPackage)).
-				To(gbytes.Say("Old Place"))
-			Expect(dbJob.RunPostgresSqlCommand("SELECT name FROM places;", databaseName, testUser, postgresPackage)).
-				NotTo(gbytes.Say("New Place"))
+				brJob.RunOnVMAndSucceed(
+					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
+						configPath, dbDumpPath))
+
+				Expect(dbJob.RunPostgresSqlCommand("SELECT name FROM people;", databaseName, testUser, postgresPackage)).
+					To(gbytes.Say("Old Person"))
+				Expect(dbJob.RunPostgresSqlCommand("SELECT name FROM people;", databaseName, testUser, postgresPackage)).
+					NotTo(gbytes.Say("New Person"))
+				Expect(dbJob.RunPostgresSqlCommand("SELECT name FROM places;", databaseName, testUser, postgresPackage)).
+					To(gbytes.Say("Old Place"))
+				Expect(dbJob.RunPostgresSqlCommand("SELECT name FROM places;", databaseName, testUser, postgresPackage)).
+					NotTo(gbytes.Say("New Place"))
+			})
 		})
 
 		Context("and 'tables' are specified in config", func() {
