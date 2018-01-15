@@ -29,7 +29,7 @@ var _ = Describe("mysql", func() {
 	BeforeSuite(func() {
 		mysqlHostName = MustHaveEnv("MYSQL_HOSTNAME")
 		connection, proxySession = Connect(
-			"mysql",
+			MySQL,
 			MustHaveEnv("MYSQL_HOSTNAME"),
 			MustHaveEnv("MYSQL_PASSWORD"),
 			MustHaveEnv("MYSQL_USERNAME"),
@@ -77,7 +77,7 @@ var _ = Describe("mysql", func() {
 			brJob.RunOnVMAndSucceed(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath))
 		})
 
-		Context("when whe backup the whole database", func() {
+		Context("when we backup the whole database", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
 					`{"username":"%s","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql"}`,

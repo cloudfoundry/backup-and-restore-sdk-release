@@ -44,7 +44,7 @@ var _ = Describe("postgres", func() {
 	BeforeSuite(func() {
 		postgresHostName = MustHaveEnv("POSTGRES_HOSTNAME")
 		connection, proxySession = Connect(
-			"postgres",
+			Postgres,
 			MustHaveEnv("POSTGRES_HOSTNAME"),
 			MustHaveEnv("POSTGRES_PASSWORD"),
 			MustHaveEnv("POSTGRES_USERNAME"),

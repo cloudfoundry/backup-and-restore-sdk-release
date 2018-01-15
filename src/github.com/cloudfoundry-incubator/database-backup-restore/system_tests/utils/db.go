@@ -11,7 +11,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-func Connect(dbDriver, dbHostname, dbPassword, dbUsername, dbPort, proxyHost, proxyUsername, proxyPrivateKey string) (*sql.DB, *gexec.Session) {
+func Connect(dbDriverProvider DBDriverProvider, dbHostname, dbPassword, dbUsername, dbPort, proxyHost, proxyUsername, proxyPrivateKey string) (*sql.DB, *gexec.Session) {
 
 	if proxyHost != "" {
 		proxiedDBHostName := "127.0.0.1"
@@ -32,17 +32,25 @@ func Connect(dbDriver, dbHostname, dbPassword, dbUsername, dbPort, proxyHost, pr
 		Expect(err).NotTo(HaveOccurred())
 		time.Sleep(1 * time.Second)
 
-		connection, err := sql.Open(dbDriver, fmt.Sprintf(
-			"%s:%s@tcp(%s:%s)/", dbUsername, dbPassword, proxiedDBHostName, proxiedDBPort))
+		connection, err := sql.Open(dbDriverProvider(dbUsername, dbPassword, proxiedDBHostName, proxiedDBPort))
 		Expect(err).NotTo(HaveOccurred())
 		return connection, proxySession
 	} else {
-		connection, err := sql.Open(dbDriver, fmt.Sprintf(
-			"%s:%s@tcp(%s:%s)/", dbUsername, dbPassword, dbHostname, dbPort))
+		connection, err := sql.Open(dbDriverProvider(dbUsername, dbPassword, dbHostname, dbPort))
+
 		Expect(err).NotTo(HaveOccurred())
 		return connection, nil
 	}
 
+}
+
+type DBDriverProvider func(dbUsername, dbPassword, dbHostname, dbPort string) (string, string)
+
+func MySQL(dbUsername, dbPassword, dbHostname, dbPort string) (string, string) {
+	return "mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/", dbUsername, dbPassword, dbHostname, dbPort)
+}
+func Postgres(dbUsername, dbPassword, dbHostname, dbPort string) (string, string) {
+	return "postgres", fmt.Sprintf("user=%s password=%s host=%s port=%s", dbUsername, dbPassword, dbHostname, dbPort)
 }
 
 func RunSQLCommand(command string, connection *sql.DB) {
