@@ -25,6 +25,7 @@ var _ = Describe("mysql", func() {
 	var mysqlHostName string
 	var proxySession *gexec.Session
 	var connection *sql.DB
+	var sslUser string
 
 	BeforeSuite(func() {
 		mysqlHostName = MustHaveEnv("MYSQL_HOSTNAME")
@@ -38,6 +39,11 @@ var _ = Describe("mysql", func() {
 			os.Getenv("SSH_PROXY_USER"),
 			os.Getenv("SSH_PROXY_KEY_FILE"),
 		)
+
+		sslUser = "ssl_user_" + DisambiguationString()
+		RunSQLCommand(fmt.Sprintf(
+			"CREATE USER %s IDENTIFIED BY %s REQUIRE SSL",
+			sslUser, MustHaveEnv("MYSQL_PASSWORD")), connection)
 	})
 
 	BeforeEach(func() {
@@ -51,6 +57,8 @@ var _ = Describe("mysql", func() {
 		if proxySession != nil {
 			proxySession.Kill()
 		}
+		RunSQLCommand(fmt.Sprintf(
+			"DROP USER %s", sslUser), connection)
 	})
 
 	Context("when the mysql server version matches", func() {
@@ -70,6 +78,10 @@ var _ = Describe("mysql", func() {
 			RunSQLCommand("INSERT INTO people VALUES ('Old Person');", connection)
 			RunSQLCommand("CREATE TABLE places (name varchar(255));", connection)
 			RunSQLCommand("INSERT INTO places VALUES ('Old Place');", connection)
+
+			RunSQLCommand(fmt.Sprintf(
+				"GRANT ALL PRIVELEGES ON %s.* TO %s",
+				databaseName, sslUser), connection)
 		})
 
 		AfterEach(func() {
@@ -116,7 +128,7 @@ var _ = Describe("mysql", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
 					`{"username":"%s","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql"}`,
-					MustHaveEnv("MYSQL_USERNAME_WITH_SSL"),
+					sslUser,
 					MustHaveEnv("MYSQL_PASSWORD"),
 					mysqlHostName,
 					databaseName,
