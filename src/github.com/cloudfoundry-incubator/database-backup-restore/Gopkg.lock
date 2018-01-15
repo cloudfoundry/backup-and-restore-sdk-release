@@ -8,6 +8,12 @@
   version = "v1.3"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/lib/pq"
+  packages = [".","oid"]
+  revision = "83612a56d3dd153a94a629cd64925371c9adad78"
+
+[[projects]]
   name = "github.com/onsi/ginkgo"
   packages = [".","config","extensions/table","internal/codelocation","internal/containernode","internal/failer","internal/leafnodes","internal/remote","internal/spec","internal/spec_iterator","internal/specrunner","internal/suite","internal/testingtproxy","internal/writer","reporters","reporters/stenographer","reporters/stenographer/support/go-colorable","reporters/stenographer/support/go-isatty","types"]
   revision = "77a8c1e5c40d6bb6c5eb4dd4bdce9763564f6298"
@@ -39,6 +45,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4a3d4afc24e363281d477f5f036baea61214812266b0560a686a21368413faf7"
+  inputs-digest = "40bb4b88b5ec471f801b0927666f34e1450865681c2cbf4ea10b31ebf9932a20"
   solver-name = "gps-cdcl"
   solver-version = 1

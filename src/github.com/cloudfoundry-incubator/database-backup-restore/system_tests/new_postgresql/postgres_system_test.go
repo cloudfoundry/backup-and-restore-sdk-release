@@ -20,37 +20,51 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
+	"github.com/onsi/gomega/gexec"
 
 	"fmt"
 
+	"os"
+
 	. "github.com/cloudfoundry-incubator/database-backup-restore/system_tests/utils"
+	_ "github.com/lib/pq"
+
+	"database/sql"
 )
 
 var _ = Describe("postgres", func() {
-	postgresPackage, postgresDeployment := "postgres-9.4", "postgres-9.4-dev"
 	var databaseName string
 	var dbDumpPath string
 	var configPath string
+	var postgresHostName string
+	var proxySession *gexec.Session
+	var connection *sql.DB
+	var brJob JobInstance
 
-	var dbHostName string
+	BeforeSuite(func() {
+		postgresHostName = MustHaveEnv("POSTGRES_HOSTNAME")
+		connection, proxySession = Connect(
+			"postgres",
+			MustHaveEnv("POSTGRES_HOSTNAME"),
+			MustHaveEnv("POSTGRES_PASSWORD"),
+			MustHaveEnv("POSTGRES_USERNAME"),
+			MustHaveEnv("POSTGRES_PORT"),
+			os.Getenv("SSH_PROXY_HOST"),
+			os.Getenv("SSH_PROXY_USER"),
+			os.Getenv("SSH_PROXY_KEY_FILE"),
+		)
+	})
 
-	var brJob, dbJob JobInstance
-
-	const testUser = "test_user"
+	AfterSuite(func() {
+		if proxySession != nil {
+			proxySession.Kill()
+		}
+	})
 
 	BeforeEach(func() {
-
-		dbHostName = MustHaveEnv("POSTGRES_HOSTNAME")
-
 		brJob = JobInstance{
-			Deployment:    postgresDeployment,
-			Instance:      "database-backup-restorer",
-			InstanceIndex: "0",
-		}
-
-		dbJob = JobInstance{
-			Deployment:    postgresDeployment,
-			Instance:      "postgres",
+			Deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
+			Instance:      MustHaveEnv("SDK_INSTANCE_GROUP"),
 			InstanceIndex: "0",
 		}
 
@@ -59,29 +73,26 @@ var _ = Describe("postgres", func() {
 		configPath = "/tmp/config" + disambiguationString
 		dbDumpPath = "/tmp/artifact" + disambiguationString
 
-		dbJob.RunOnVMAndSucceed(
-			fmt.Sprintf(`/var/vcap/packages/%s/bin/createdb -U vcap "%s"`,
-				postgresPackage, databaseName))
-		dbJob.RunPostgresSqlCommand("CREATE TABLE people (name varchar);", databaseName, testUser, postgresPackage)
-		dbJob.RunPostgresSqlCommand("INSERT INTO people VALUES ('Old Person');", databaseName, testUser, postgresPackage)
-		dbJob.RunPostgresSqlCommand("CREATE TABLE places (name varchar);", databaseName, testUser, postgresPackage)
-		dbJob.RunPostgresSqlCommand("INSERT INTO places VALUES ('Old Place');", databaseName, testUser, postgresPackage)
+		RunSQLCommand("CREATE DATABASE "+databaseName, connection)
+
+		RunSQLCommand("CREATE TABLE people (name varchar);", connection)
+		RunSQLCommand("INSERT INTO people VALUES ('Old Person');", connection)
+		RunSQLCommand("CREATE TABLE places (name varchar);", connection)
+		RunSQLCommand("INSERT INTO places VALUES ('Old Place');", connection)
 	})
 
 	AfterEach(func() {
-		dbJob.RunOnVMAndSucceed(fmt.Sprintf(
-			`/var/vcap/packages/%s/bin/dropdb -U vcap "%s"`, postgresPackage, databaseName))
+		RunSQLCommand("DROP DATABASE "+databaseName, connection)
 		brJob.RunOnVMAndSucceed(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath))
 	})
 
 	Context("database dump is successful", func() {
-
 		BeforeEach(func() {
 			configJson := fmt.Sprintf(
 				`{"username":"test_user","password":"%s","host":"%s","port":5432,
 							"database":"%s","adapter":"postgres"}`,
 				MustHaveEnv("POSTGRES_PASSWORD"),
-				dbHostName,
+				postgresHostName,
 				databaseName,
 			)
 			brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
@@ -93,20 +104,20 @@ var _ = Describe("postgres", func() {
 					configPath, dbDumpPath))
 			brJob.RunOnVMAndSucceed(fmt.Sprintf("ls -l %s", dbDumpPath))
 
-			dbJob.RunPostgresSqlCommand("UPDATE people SET NAME = 'New Person';", databaseName, testUser, postgresPackage)
-			dbJob.RunPostgresSqlCommand("UPDATE places SET NAME = 'New Place';", databaseName, testUser, postgresPackage)
+			RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
+			RunSQLCommand("UPDATE places SET NAME = 'New Place';", connection)
 
 			brJob.RunOnVMAndSucceed(
 				fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
 					configPath, dbDumpPath))
 
-			Expect(dbJob.RunPostgresSqlCommand("SELECT name FROM people;", databaseName, testUser, postgresPackage)).
+			Expect(FetchSQLColumn("SELECT name FROM people;", connection)).
 				To(gbytes.Say("Old Person"))
-			Expect(dbJob.RunPostgresSqlCommand("SELECT name FROM people;", databaseName, testUser, postgresPackage)).
+			Expect(FetchSQLColumn("SELECT name FROM people;", connection)).
 				NotTo(gbytes.Say("New Person"))
-			Expect(dbJob.RunPostgresSqlCommand("SELECT name FROM places;", databaseName, testUser, postgresPackage)).
+			Expect(FetchSQLColumn("SELECT name FROM places;", connection)).
 				To(gbytes.Say("Old Place"))
-			Expect(dbJob.RunPostgresSqlCommand("SELECT name FROM places;", databaseName, testUser, postgresPackage)).
+			Expect(FetchSQLColumn("SELECT name FROM places;", connection)).
 				NotTo(gbytes.Say("New Place"))
 		})
 
@@ -118,7 +129,7 @@ var _ = Describe("postgres", func() {
 				`{"username":"test_user","password":"%s","host":"%s","port":5432,
 							"database":"%s","adapter":"postgres", "tables":["people"]}`,
 				MustHaveEnv("POSTGRES_PASSWORD"),
-				dbHostName,
+				postgresHostName,
 				databaseName,
 			)
 			brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
@@ -130,20 +141,20 @@ var _ = Describe("postgres", func() {
 				dbDumpPath,
 				configPath))
 
-			dbJob.RunPostgresSqlCommand("UPDATE people SET NAME = 'New Person';", databaseName, testUser, postgresPackage)
-			dbJob.RunPostgresSqlCommand("UPDATE places SET NAME = 'New Place';", databaseName, testUser, postgresPackage)
+			RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
+			RunSQLCommand("UPDATE places SET NAME = 'New Place';", connection)
 
 			brJob.RunOnVMAndSucceed(fmt.Sprintf("cat %s", dbDumpPath))
 
 			brJob.RunOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
 
-			Expect(dbJob.RunPostgresSqlCommand("SELECT name FROM people;", databaseName, testUser, postgresPackage)).
+			Expect(FetchSQLColumn("SELECT name FROM people;", connection)).
 				To(gbytes.Say("Old Person"))
-			Expect(dbJob.RunPostgresSqlCommand("SELECT name FROM people;", databaseName, testUser, postgresPackage)).
+			Expect(FetchSQLColumn("SELECT name FROM people;", connection)).
 				NotTo(gbytes.Say("New Person"))
-			Expect(dbJob.RunPostgresSqlCommand("SELECT name FROM places;", databaseName, testUser, postgresPackage)).
+			Expect(FetchSQLColumn("SELECT name FROM places;", connection)).
 				To(gbytes.Say("New Place"))
-			Expect(dbJob.RunPostgresSqlCommand("SELECT name FROM places;", databaseName, testUser, postgresPackage)).
+			Expect(FetchSQLColumn("SELECT name FROM places;", connection)).
 				NotTo(gbytes.Say("Old Place"))
 		})
 	})
@@ -154,7 +165,7 @@ var _ = Describe("postgres", func() {
 				`{"username":"test_user","password":"%s","host":"%s","port":5432,
 							"database":"%s","adapter":"postgres", "tables":["people", "lizards"]}`,
 				MustHaveEnv("POSTGRES_PASSWORD"),
-				dbHostName,
+				postgresHostName,
 				databaseName,
 			)
 			brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
