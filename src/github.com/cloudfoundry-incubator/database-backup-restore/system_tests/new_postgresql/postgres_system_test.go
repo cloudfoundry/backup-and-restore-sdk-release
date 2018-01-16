@@ -75,6 +75,8 @@ var _ = Describe("postgres", func() {
 
 		RunSQLCommand("CREATE DATABASE "+databaseName, connection)
 
+		connection.Close()
+
 		connection, proxySession = ConnectPostgres(
 			MustHaveEnv("POSTGRES_HOSTNAME"),
 			MustHaveEnv("POSTGRES_PASSWORD"),
