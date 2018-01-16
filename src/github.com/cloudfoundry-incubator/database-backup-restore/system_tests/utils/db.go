@@ -68,8 +68,6 @@ func ConnectPostgres(dbHostname, dbPassword, dbUsername, dbPort, dbName, proxyHo
 		return connection, proxySession
 	} else {
 		connection, err := sql.Open("postgres", fmt.Sprintf("user=%s password=%s host=%s port=%s sslmode=disable dbname=%s", dbUsername, dbPassword, dbHostname, dbPort, dbName))
-
-		fmt.Println("Connecting database " + dbName)
 		Expect(err).NotTo(HaveOccurred())
 		return connection, nil
 	}
@@ -86,6 +84,7 @@ func Postgres(dbUsername, dbPassword, dbHostname, dbPort string) (string, string
 
 func RunSQLCommand(command string, connection *sql.DB) {
 	_, err := connection.Exec(command)
+
 	Expect(err).NotTo(HaveOccurred())
 }
 

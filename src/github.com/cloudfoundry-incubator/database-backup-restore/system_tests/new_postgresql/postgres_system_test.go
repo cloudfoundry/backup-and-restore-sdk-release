@@ -48,7 +48,7 @@ var _ = Describe("postgres", func() {
 			MustHaveEnv("POSTGRES_PASSWORD"),
 			MustHaveEnv("POSTGRES_USERNAME"),
 			MustHaveEnv("POSTGRES_PORT"),
-			"template1",
+			"postgres",
 			os.Getenv("SSH_PROXY_HOST"),
 			os.Getenv("SSH_PROXY_USER"),
 			os.Getenv("SSH_PROXY_KEY_FILE"),
@@ -74,7 +74,6 @@ var _ = Describe("postgres", func() {
 		dbDumpPath = "/tmp/artifact" + disambiguationString
 
 		RunSQLCommand("CREATE DATABASE "+databaseName, connection)
-
 		connection.Close()
 
 		connection, proxySession = ConnectPostgres(
@@ -95,6 +94,20 @@ var _ = Describe("postgres", func() {
 	})
 
 	AfterEach(func() {
+
+		connection.Close()
+
+		connection, proxySession = ConnectPostgres(
+			MustHaveEnv("POSTGRES_HOSTNAME"),
+			MustHaveEnv("POSTGRES_PASSWORD"),
+			MustHaveEnv("POSTGRES_USERNAME"),
+			MustHaveEnv("POSTGRES_PORT"),
+			"postgres",
+			os.Getenv("SSH_PROXY_HOST"),
+			os.Getenv("SSH_PROXY_USER"),
+			os.Getenv("SSH_PROXY_KEY_FILE"),
+		)
+
 		RunSQLCommand("DROP DATABASE "+databaseName, connection)
 		brJob.RunOnVMAndSucceed(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath))
 	})
