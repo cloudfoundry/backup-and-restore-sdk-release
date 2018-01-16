@@ -41,7 +41,6 @@ func Connect(dbDriverProvider DBDriverProvider, dbHostname, dbPassword, dbUserna
 		Expect(err).NotTo(HaveOccurred())
 		return connection, nil
 	}
-
 }
 
 type DBDriverProvider func(dbUsername, dbPassword, dbHostname, dbPort string) (string, string)

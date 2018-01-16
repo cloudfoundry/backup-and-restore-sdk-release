@@ -42,7 +42,7 @@ var _ = Describe("mysql", func() {
 
 		sslUser = "ssl_user_" + DisambiguationString()
 		RunSQLCommand(fmt.Sprintf(
-			"CREATE USER '%s' IDENTIFIED BY '%s' REQUIRE SSL;",
+			"CREATE USER '%s' IDENTIFIED BY '%s';",
 			sslUser, MustHaveEnv("MYSQL_PASSWORD")), connection)
 	})
 
@@ -58,7 +58,7 @@ var _ = Describe("mysql", func() {
 			proxySession.Kill()
 		}
 		RunSQLCommand(fmt.Sprintf(
-			"DROP USER %s", sslUser), connection)
+			"DROP USER '%s';", sslUser), connection)
 	})
 
 	Context("when the mysql server version matches", func() {
@@ -80,7 +80,7 @@ var _ = Describe("mysql", func() {
 			RunSQLCommand("INSERT INTO places VALUES ('Old Place');", connection)
 
 			RunSQLCommand(fmt.Sprintf(
-				"GRANT ALL PRIVELEGES ON %s.* TO %s",
+				"GRANT ALL PRIVELEGES ON %s.* TO %s REQUIRE SSL;",
 				databaseName, sslUser), connection)
 		})
 
