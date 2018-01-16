@@ -75,6 +75,8 @@ var _ = Describe("postgres", func() {
 
 		RunSQLCommand("CREATE DATABASE "+databaseName, connection)
 
+		RunSQLCommand("USE "+databaseName, connection)
+
 		RunSQLCommand("CREATE TABLE people (name varchar);", connection)
 		RunSQLCommand("INSERT INTO people VALUES ('Old Person');", connection)
 		RunSQLCommand("CREATE TABLE places (name varchar);", connection)
@@ -112,13 +114,13 @@ var _ = Describe("postgres", func() {
 					configPath, dbDumpPath))
 
 			Expect(FetchSQLColumn("SELECT name FROM people;", connection)).
-				To(gbytes.Say("Old Person"))
+				To(ConsistOf("Old Person"))
 			Expect(FetchSQLColumn("SELECT name FROM people;", connection)).
-				NotTo(gbytes.Say("New Person"))
+				NotTo(ConsistOf("New Person"))
 			Expect(FetchSQLColumn("SELECT name FROM places;", connection)).
-				To(gbytes.Say("Old Place"))
+				To(ConsistOf("Old Place"))
 			Expect(FetchSQLColumn("SELECT name FROM places;", connection)).
-				NotTo(gbytes.Say("New Place"))
+				NotTo(ConsistOf("New Place"))
 		})
 
 	})
@@ -149,13 +151,13 @@ var _ = Describe("postgres", func() {
 			brJob.RunOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
 
 			Expect(FetchSQLColumn("SELECT name FROM people;", connection)).
-				To(gbytes.Say("Old Person"))
+				To(ConsistOf("Old Person"))
 			Expect(FetchSQLColumn("SELECT name FROM people;", connection)).
-				NotTo(gbytes.Say("New Person"))
+				NotTo(ConsistOf("New Person"))
 			Expect(FetchSQLColumn("SELECT name FROM places;", connection)).
-				To(gbytes.Say("New Place"))
+				To(ConsistOf("New Place"))
 			Expect(FetchSQLColumn("SELECT name FROM places;", connection)).
-				NotTo(gbytes.Say("Old Place"))
+				NotTo(ConsistOf("Old Place"))
 		})
 	})
 
@@ -171,7 +173,7 @@ var _ = Describe("postgres", func() {
 			brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 		})
 
-		It("backs up and restores only the specified tables", func() {
+		It("raises an error about the non-existent tables", func() {
 			session := brJob.RunOnInstance(fmt.Sprintf(
 				"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 				dbDumpPath,
