@@ -54,11 +54,11 @@ var _ = Describe("mysql", func() {
 	})
 
 	AfterSuite(func() {
+		RunSQLCommand(fmt.Sprintf(
+			"DROP USER '%s';", sslUser), connection)
 		if proxySession != nil {
 			proxySession.Kill()
 		}
-		RunSQLCommand(fmt.Sprintf(
-			"DROP USER '%s';", sslUser), connection)
 	})
 
 	Context("when the mysql server version matches", func() {
