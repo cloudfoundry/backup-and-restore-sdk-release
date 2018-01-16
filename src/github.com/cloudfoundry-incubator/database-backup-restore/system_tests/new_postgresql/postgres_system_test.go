@@ -43,12 +43,12 @@ var _ = Describe("postgres", func() {
 
 	BeforeSuite(func() {
 		postgresHostName = MustHaveEnv("POSTGRES_HOSTNAME")
-		connection, proxySession = Connect(
-			Postgres,
+		connection, proxySession = ConnectPostgres(
 			MustHaveEnv("POSTGRES_HOSTNAME"),
 			MustHaveEnv("POSTGRES_PASSWORD"),
 			MustHaveEnv("POSTGRES_USERNAME"),
 			MustHaveEnv("POSTGRES_PORT"),
+			"template1",
 			os.Getenv("SSH_PROXY_HOST"),
 			os.Getenv("SSH_PROXY_USER"),
 			os.Getenv("SSH_PROXY_KEY_FILE"),
@@ -75,7 +75,16 @@ var _ = Describe("postgres", func() {
 
 		RunSQLCommand("CREATE DATABASE "+databaseName, connection)
 
-		RunSQLCommand("USE "+databaseName, connection)
+		connection, proxySession = ConnectPostgres(
+			MustHaveEnv("POSTGRES_HOSTNAME"),
+			MustHaveEnv("POSTGRES_PASSWORD"),
+			MustHaveEnv("POSTGRES_USERNAME"),
+			MustHaveEnv("POSTGRES_PORT"),
+			databaseName,
+			os.Getenv("SSH_PROXY_HOST"),
+			os.Getenv("SSH_PROXY_USER"),
+			os.Getenv("SSH_PROXY_KEY_FILE"),
+		)
 
 		RunSQLCommand("CREATE TABLE people (name varchar);", connection)
 		RunSQLCommand("INSERT INTO people VALUES ('Old Person');", connection)
