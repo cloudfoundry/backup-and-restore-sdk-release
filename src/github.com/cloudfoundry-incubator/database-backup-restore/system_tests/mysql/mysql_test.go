@@ -40,7 +40,7 @@ var _ = Describe("mysql", func() {
 			os.Getenv("SSH_PROXY_KEY_FILE"),
 		)
 
-		sslUser = "ssl_user_" + DisambiguationString()
+		sslUser = "ssl_user_" + DisambiguationStringOfLength(6)
 		RunSQLCommand(fmt.Sprintf(
 			"CREATE USER '%s' IDENTIFIED BY '%s';",
 			sslUser, MustHaveEnv("MYSQL_PASSWORD")), connection)

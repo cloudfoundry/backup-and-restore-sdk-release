@@ -121,3 +121,8 @@ type jsonOutputFromCli struct {
 func DisambiguationString() string {
 	return strconv.FormatInt(time.Now().UnixNano(), 10)
 }
+
+func DisambiguationStringOfLength(length int) string {
+	str := DisambiguationString()
+	return str[len(str)-length:]
+}
