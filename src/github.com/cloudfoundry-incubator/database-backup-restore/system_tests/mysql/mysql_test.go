@@ -42,7 +42,7 @@ var _ = Describe("mysql", func() {
 
 		sslUser = "ssl_user_" + DisambiguationString()
 		RunSQLCommand(fmt.Sprintf(
-			"CREATE USER '%s' IDENTIFIED BY '%s' REQUIRE SSL",
+			"CREATE USER '%s' IDENTIFIED BY '%s' REQUIRE SSL;",
 			sslUser, MustHaveEnv("MYSQL_PASSWORD")), connection)
 	})
 
