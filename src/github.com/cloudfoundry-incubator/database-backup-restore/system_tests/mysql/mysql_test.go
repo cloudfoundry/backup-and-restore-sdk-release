@@ -80,7 +80,7 @@ var _ = Describe("mysql", func() {
 			RunSQLCommand("INSERT INTO places VALUES ('Old Place');", connection)
 
 			RunSQLCommand(fmt.Sprintf(
-				"GRANT ALL PRIVELEGES ON %s.* TO %s REQUIRE SSL;",
+				"GRANT ALL PRIVILEGES ON %s.* TO %s REQUIRE SSL;",
 				databaseName, sslUser), connection)
 		})
 
