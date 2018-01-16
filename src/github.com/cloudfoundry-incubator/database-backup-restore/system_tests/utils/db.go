@@ -50,7 +50,7 @@ func MySQL(dbUsername, dbPassword, dbHostname, dbPort string) (string, string) {
 	return "mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/", dbUsername, dbPassword, dbHostname, dbPort)
 }
 func Postgres(dbUsername, dbPassword, dbHostname, dbPort string) (string, string) {
-	return "postgres", fmt.Sprintf("user=%s password=%s host=%s port=%s sslmode=disable", dbUsername, dbPassword, dbHostname, dbPort)
+	return "postgres", fmt.Sprintf("user=%s password=%s host=%s port=%s sslmode=disable dbname=template1", dbUsername, dbPassword, dbHostname, dbPort)
 }
 
 func RunSQLCommand(command string, connection *sql.DB) {
