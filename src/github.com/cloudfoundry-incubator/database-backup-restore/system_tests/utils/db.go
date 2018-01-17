@@ -11,75 +11,58 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-func Connect(dbDriverProvider DBDriverProvider, dbHostname, dbPassword, dbUsername, dbPort, proxyHost, proxyUsername, proxyPrivateKey string) (*sql.DB, *gexec.Session) {
+func ConnectMysql(dbHostname, dbPassword, dbUsername, dbPort, proxyHost, proxyUsername, proxyPrivateKey string) (*sql.DB, *gexec.Session) {
+	var proxySession *gexec.Session
+	var err error
 
+	var hostname, port = dbHostname, dbPort
 	if proxyHost != "" {
-		proxiedDBHostName := "127.0.0.1"
-		proxiedDBPort := "13306"
-		var err error
-		proxySession, err := gexec.Start(exec.Command(
-			"ssh",
-			"-L",
-			fmt.Sprintf("%s:%s:%s", proxiedDBPort, dbHostname, dbPort),
-			proxyUsername+"@"+proxyHost,
-			"-i", proxyPrivateKey,
-			"-N",
-			"-o",
-			"UserKnownHostsFile=/dev/null",
-			"-o",
-			"StrictHostKeyChecking=no",
-		), ginkgo.GinkgoWriter, ginkgo.GinkgoWriter)
+		hostname, port = "127.0.0.1", "13306"
+		proxySession, err = startTunnel(port, dbHostname, dbPort, proxyUsername, proxyHost, proxyPrivateKey)
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(1 * time.Second)
-
-		connection, err := sql.Open(dbDriverProvider(dbUsername, dbPassword, proxiedDBHostName, proxiedDBPort))
-		Expect(err).NotTo(HaveOccurred())
-		return connection, proxySession
-	} else {
-		connection, err := sql.Open(dbDriverProvider(dbUsername, dbPassword, dbHostname, dbPort))
-
-		Expect(err).NotTo(HaveOccurred())
-		return connection, nil
 	}
+
+	connection, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/", dbUsername, dbPassword, hostname, port))
+	Expect(err).NotTo(HaveOccurred())
+
+	return connection, proxySession
 }
 
 func ConnectPostgres(dbHostname, dbPassword, dbUsername, dbPort, dbName, proxyHost, proxyUsername, proxyPrivateKey string) (*sql.DB, *gexec.Session) {
+	var proxySession *gexec.Session
+	var err error
+
+	var hostname, port = dbHostname, dbPort
 	if proxyHost != "" {
-		proxiedDBHostName := "127.0.0.1"
-		proxiedDBPort := "13306"
-		var err error
-		proxySession, err := gexec.Start(exec.Command(
-			"ssh",
-			"-L",
-			fmt.Sprintf("%s:%s:%s", proxiedDBPort, dbHostname, dbPort),
-			proxyUsername+"@"+proxyHost,
-			"-i", proxyPrivateKey,
-			"-N",
-			"-o",
-			"UserKnownHostsFile=/dev/null",
-			"-o",
-			"StrictHostKeyChecking=no",
-		), ginkgo.GinkgoWriter, ginkgo.GinkgoWriter)
+		hostname, port = "127.0.0.1", "13306"
+		proxySession, err = startTunnel(port, dbHostname, dbPort, proxyUsername, proxyHost, proxyPrivateKey)
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(1 * time.Second)
-
-		connection, err := sql.Open("postgres", fmt.Sprintf("user=%s password=%s host=%s port=%s sslmode=disable dbname=%s", dbUsername, dbPassword, proxiedDBHostName, proxiedDBPort, dbName))
-		Expect(err).NotTo(HaveOccurred())
-		return connection, proxySession
-	} else {
-		connection, err := sql.Open("postgres", fmt.Sprintf("user=%s password=%s host=%s port=%s sslmode=disable dbname=%s", dbUsername, dbPassword, dbHostname, dbPort, dbName))
-		Expect(err).NotTo(HaveOccurred())
-		return connection, nil
 	}
+
+	connection, err := sql.Open("postgres", fmt.Sprintf("user=%s password=%s host=%s port=%s sslmode=disable dbname=%s", dbUsername, dbPassword, hostname, port, dbName))
+	Expect(err).NotTo(HaveOccurred())
+
+	return connection, proxySession
 }
 
-type DBDriverProvider func(dbUsername, dbPassword, dbHostname, dbPort string) (string, string)
+func startTunnel(localPort string, remoteHost string, remotePort string, proxyUsername string, proxyHost string, proxyPrivateKey string) (*gexec.Session, error) {
+	var err error
+	proxySession, err := gexec.Start(exec.Command(
+		"ssh",
+		"-L",
+		fmt.Sprintf("%s:%s:%s", localPort, remoteHost, remotePort),
+		proxyUsername+"@"+proxyHost,
+		"-i", proxyPrivateKey,
+		"-N",
+		"-o",
+		"UserKnownHostsFile=/dev/null",
+		"-o",
+		"StrictHostKeyChecking=no",
+	), ginkgo.GinkgoWriter, ginkgo.GinkgoWriter)
 
-func MySQL(dbUsername, dbPassword, dbHostname, dbPort string) (string, string) {
-	return "mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/", dbUsername, dbPassword, dbHostname, dbPort)
-}
-func Postgres(dbUsername, dbPassword, dbHostname, dbPort string) (string, string) {
-	return "postgres", fmt.Sprintf("user=%s password=%s host=%s port=%s sslmode=disable dbname=template1", dbUsername, dbPassword, dbHostname, dbPort)
+	time.Sleep(1 * time.Second)
+
+	return proxySession, err
 }
 
 func RunSQLCommand(command string, connection *sql.DB) {

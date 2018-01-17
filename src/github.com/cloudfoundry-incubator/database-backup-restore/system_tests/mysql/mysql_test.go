@@ -29,8 +29,7 @@ var _ = Describe("mysql", func() {
 
 	BeforeSuite(func() {
 		mysqlHostName = MustHaveEnv("MYSQL_HOSTNAME")
-		connection, proxySession = Connect(
-			MySQL,
+		connection, proxySession = ConnectMysql(
 			MustHaveEnv("MYSQL_HOSTNAME"),
 			MustHaveEnv("MYSQL_PASSWORD"),
 			MustHaveEnv("MYSQL_USERNAME"),
