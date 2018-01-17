@@ -26,10 +26,18 @@ inputs:
 - name: bosh-backup-and-restore-meta
 
 run:
-  path: backup-and-restore-sdk-release/ci/scripts/postgres-system-tests.sh
+  path: backup-and-restore-sdk-release/ci/scripts/new-postgres-system-tests.sh
 
 params:
   TEAM_GPG_KEY:
   BOSH_CLIENT_SECRET:
   BOSH_CLIENT:
   POSTGRES_PASSWORD:
+  POSTGRES_USERNAME:
+  POSTGRES_HOSTNAME:
+  POSTGRES_PORT:
+  SSH_PROXY_HOST:
+  SSH_PROXY_USER:
+  SSH_PROXY_PRIVATE_KEY:
+  SDK_DEPLOYMENT: backup-restorer
+  SDK_INSTANCE_GROUP: database-backup-restorer
