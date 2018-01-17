@@ -1,10 +1,7 @@
 package mysql
 
 import (
-	"fmt"
-
 	"github.com/cloudfoundry-incubator/database-backup-restore/config"
-	"github.com/cloudfoundry-incubator/database-backup-restore/runner"
 )
 
 type Backuper struct {
@@ -22,20 +19,15 @@ func NewBackuper(config config.ConnectionConfig, backupBinary string) Backuper {
 func (b Backuper) Action(artifactFilePath string) error {
 	cmdArgs := []string{
 		"-v",
-		"--single-transaction",
 		"--skip-add-locks",
-		"--user=" + b.config.Username,
-		"--host=" + b.config.Host,
-		fmt.Sprintf("--port=%d", b.config.Port),
+		"--single-transaction",
 		"--result-file=" + artifactFilePath,
 		b.config.Database,
 	}
 
 	cmdArgs = append(cmdArgs, b.config.Tables...)
 
-	_, _, err := runner.NewCommand(b.backupBinary).WithParams(cmdArgs...).WithEnv(map[string]string{
-		"MYSQL_PWD": b.config.Password,
-	}).Run()
+	_, _, err := NewMysqlCommand(b.config, b.backupBinary).WithParams(cmdArgs...).Run()
 
 	return err
 }

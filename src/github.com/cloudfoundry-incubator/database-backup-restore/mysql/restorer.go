@@ -2,12 +2,10 @@ package mysql
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"os"
 
 	"github.com/cloudfoundry-incubator/database-backup-restore/config"
-	"github.com/cloudfoundry-incubator/database-backup-restore/runner"
 )
 
 type Restorer struct {
@@ -29,13 +27,7 @@ func (r Restorer) Action(artifactFilePath string) error {
 	}
 	artifactReader := bufio.NewReader(artifactFile)
 
-	_, _, err = runner.NewCommand(r.clientBinary).WithParams(
-		"-v",
-		"--user="+r.config.Username,
-		"--host="+r.config.Host,
-		fmt.Sprintf("--port=%d", r.config.Port),
-		r.config.Database,
-	).WithEnv(map[string]string{"MYSQL_PWD": r.config.Password}).WithStdin(artifactReader).Run()
+	_, _, err = NewMysqlCommand(r.config, r.clientBinary).WithParams("-v", r.config.Database).WithStdin(artifactReader).Run()
 
 	return err
 }

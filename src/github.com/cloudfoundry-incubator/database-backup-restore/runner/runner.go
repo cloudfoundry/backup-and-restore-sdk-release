@@ -16,11 +16,14 @@ type Command struct {
 }
 
 func NewCommand(cmd string) Command {
-	return Command{cmd: cmd}
+	return Command{
+		cmd:    cmd,
+		params: []string{},
+	}
 }
 
 func (c Command) WithParams(params ...string) Command {
-	return Command{cmd: c.cmd, params: params, env: c.env, stdin: c.stdin}
+	return Command{cmd: c.cmd, params: append(c.params, params...), env: c.env, stdin: c.stdin}
 }
 
 func (c Command) WithEnv(env map[string]string) Command {
