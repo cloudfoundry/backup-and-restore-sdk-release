@@ -43,9 +43,9 @@ func (c Command) Run() ([]byte, []byte, error) {
 
 	command.Stdout = io.MultiWriter(outb, os.Stdout)
 	command.Stderr = io.MultiWriter(errb, os.Stderr)
+	command.Stdin = c.stdin
 
 	err := command.Run()
-	command.Stdin = c.stdin
 
 	return outb.Bytes(), errb.Bytes(), err
 }
