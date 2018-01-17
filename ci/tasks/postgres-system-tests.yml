@@ -26,7 +26,7 @@ inputs:
 - name: bosh-backup-and-restore-meta
 
 run:
-  path: backup-and-restore-sdk-release/ci/scripts/new-postgres-system-tests.sh
+  path: backup-and-restore-sdk-release/ci/scripts/postgres-system-tests.sh
 
 params:
   TEAM_GPG_KEY:
