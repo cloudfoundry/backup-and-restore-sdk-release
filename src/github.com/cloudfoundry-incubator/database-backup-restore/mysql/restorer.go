@@ -29,14 +29,13 @@ func (r Restorer) Action(artifactFilePath string) error {
 	}
 	artifactReader := bufio.NewReader(artifactFile)
 
-	_, _, err = runner.RunWithStdin(r.clientBinary, []string{
+	_, _, err = runner.NewCommand(r.clientBinary).WithParams(
 		"-v",
-		"--user=" + r.config.Username,
-		"--host=" + r.config.Host,
+		"--user="+r.config.Username,
+		"--host="+r.config.Host,
 		fmt.Sprintf("--port=%d", r.config.Port),
-		r.config.Database},
-		map[string]string{"MYSQL_PWD": r.config.Password},
-		artifactReader)
+		r.config.Database,
+	).WithEnv(map[string]string{"MYSQL_PWD": r.config.Password}).WithStdin(artifactReader).Run()
 
 	return err
 }

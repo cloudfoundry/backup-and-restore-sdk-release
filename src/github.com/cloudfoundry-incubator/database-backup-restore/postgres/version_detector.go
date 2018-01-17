@@ -18,13 +18,14 @@ func NewServerVersionDetector(psqlPath string) ServerVersionDetector {
 }
 
 func (d ServerVersionDetector) GetVersion(config config.ConnectionConfig) (version.DatabaseServerVersion, error) {
-	stdout, stderr, err := runner.Run(d.psqlPath, []string{"--tuples-only",
+	stdout, stderr, err := runner.NewCommand(d.psqlPath).WithParams(
+		"--tuples-only",
 		fmt.Sprintf("--username=%s", config.Username),
 		fmt.Sprintf("--host=%s", config.Host),
 		fmt.Sprintf("--port=%d", config.Port),
 		config.Database,
-		`--command=SELECT VERSION()`},
-		map[string]string{"PGPASSWORD": config.Password})
+		`--command=SELECT VERSION()`,
+	).WithEnv(map[string]string{"PGPASSWORD": config.Password}).Run()
 
 	if err != nil {
 		log.Fatalf("Unable to check version of Postgres: %v\n%s\n%s", err, string(stdout), string(stderr))

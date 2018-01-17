@@ -8,38 +8,44 @@ import (
 	"os/exec"
 )
 
-func Run(cmd string, params []string, env map[string]string) ([]byte, []byte, error) {
+type Command struct {
+	cmd    string
+	params []string
+	env    map[string]string
+	stdin  io.Reader
+}
+
+func NewCommand(cmd string) Command {
+	return Command{cmd: cmd}
+}
+
+func (c Command) WithParams(params ...string) Command {
+	return Command{cmd: c.cmd, params: params, env: c.env, stdin: c.stdin}
+}
+
+func (c Command) WithEnv(env map[string]string) Command {
+	return Command{cmd: c.cmd, params: c.params, env: env, stdin: c.stdin}
+}
+
+func (c Command) WithStdin(stdin io.Reader) Command {
+	return Command{cmd: c.cmd, params: c.params, env: e.env, stdin: stdin}
+}
+
+func (c Command) Run() ([]byte, []byte, error) {
 	outb := bytes.NewBuffer([]byte{})
 	errb := bytes.NewBuffer([]byte{})
 
-	c := buildCommand(cmd, params, env, outb, errb)
+	command := exec.Command(c.cmd, c.params...)
 
-	err := c.Run()
-
-	return outb.Bytes(), errb.Bytes(), err
-}
-
-func RunWithStdin(cmd string, params []string, env map[string]string, stdin io.Reader) ([]byte, []byte, error) {
-	outb := bytes.NewBuffer([]byte{})
-	errb := bytes.NewBuffer([]byte{})
-
-	c := buildCommand(cmd, params, env, outb, errb)
-	c.Stdin = stdin
-
-	err := c.Run()
-
-	return outb.Bytes(), errb.Bytes(), err
-}
-
-func buildCommand(cmd string, params []string, env map[string]string, outb *bytes.Buffer, errb *bytes.Buffer) *exec.Cmd {
-	command := exec.Command(cmd, params...)
-
-	for key, value := range env {
+	for key, value := range c.env {
 		command.Env = append(command.Env, fmt.Sprintf("%s=%s", key, value))
 	}
 
 	command.Stdout = io.MultiWriter(outb, os.Stdout)
 	command.Stderr = io.MultiWriter(errb, os.Stderr)
 
-	return command
+	err := command.Run()
+	command.Stdin = c.stdin
+
+	return outb.Bytes(), errb.Bytes(), err
 }

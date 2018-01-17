@@ -20,14 +20,15 @@ func NewServerVersionDetector(mysqlPath string) ServerVersionDetector {
 }
 
 func (d ServerVersionDetector) GetVersion(config config.ConnectionConfig) (version.DatabaseServerVersion, error) {
-	stdout, stderr, err := runner.Run(d.mysqlPath, []string{"--skip-column-names",
+	stdout, stderr, err := runner.NewCommand(d.mysqlPath).WithParams(
+		"--skip-column-names",
 		"--silent",
 		fmt.Sprintf("--user=%s", config.Username),
 		fmt.Sprintf("--password=%s", config.Password),
 		fmt.Sprintf("--host=%s", config.Host),
 		fmt.Sprintf("--port=%d", config.Port),
-		"--execute=SELECT VERSION()"},
-		map[string]string{})
+		"--execute=SELECT VERSION()",
+	).Run()
 
 	if err != nil {
 		return version.DatabaseServerVersion{}, fmt.Errorf(string(stderr))

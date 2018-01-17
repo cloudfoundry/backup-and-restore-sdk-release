@@ -33,7 +33,9 @@ func (b Backuper) Action(artifactFilePath string) error {
 
 	cmdArgs = append(cmdArgs, b.config.Tables...)
 
-	_, _, err := runner.Run(b.backupBinary, cmdArgs, map[string]string{"MYSQL_PWD": b.config.Password})
+	_, _, err := runner.NewCommand(b.backupBinary).WithParams(cmdArgs...).WithEnv(map[string]string{
+		"MYSQL_PWD": b.config.Password,
+	}).Run()
 
 	return err
 }

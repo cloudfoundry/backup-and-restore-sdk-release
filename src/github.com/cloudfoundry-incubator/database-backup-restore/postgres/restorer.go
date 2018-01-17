@@ -23,10 +23,7 @@ func NewRestorer(config config.ConnectionConfig, restoreBinary string) Restorer 
 }
 
 func (r Restorer) Action(artifactFilePath string) error {
-	stdout, _, err := runner.Run(r.restoreBinary, []string{
-		"--list",
-		artifactFilePath},
-		map[string]string{})
+	stdout, _, err := runner.NewCommand(r.restoreBinary).WithParams("--list", artifactFilePath).Run()
 
 	if err != nil {
 		return err
@@ -40,17 +37,16 @@ func (r Restorer) Action(artifactFilePath string) error {
 
 	listFile.Write(ListFileFilter(stdout))
 
-	_, _, err = runner.Run(r.restoreBinary, []string{
+	_, _, err = runner.NewCommand(r.restoreBinary).WithParams(
 		"--verbose",
-		"--user=" + r.config.Username,
-		"--host=" + r.config.Host,
+		"--user="+r.config.Username,
+		"--host="+r.config.Host,
 		fmt.Sprintf("--port=%d", r.config.Port),
 		"--format=custom",
-		"--dbname=" + r.config.Database,
+		"--dbname="+r.config.Database,
 		"--clean",
 		fmt.Sprintf("--use-list=%s", listFile.Name()),
-		artifactFilePath},
-		map[string]string{"PGPASSWORD": r.config.Password})
+		artifactFilePath).WithEnv(map[string]string{"PGPASSWORD": r.config.Password}).Run()
 
 	return err
 }
