@@ -39,4 +39,4 @@ export SSH_PROXY_KEY_FILE=/tmp/private.key
 
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/database-backup-restore
 dep ensure
-ginkgo -v -r system_tests/new_postgresql -trace
+ginkgo -v -r system_tests/postgresql -trace

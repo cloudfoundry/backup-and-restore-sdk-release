@@ -1,4 +1,4 @@
-package new_postgresql
+package postgresql
 
 import (
 	"time"
