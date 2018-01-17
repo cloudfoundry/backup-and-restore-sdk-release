@@ -28,7 +28,7 @@ func (c Command) WithEnv(env map[string]string) Command {
 }
 
 func (c Command) WithStdin(stdin io.Reader) Command {
-	return Command{cmd: c.cmd, params: c.params, env: e.env, stdin: stdin}
+	return Command{cmd: c.cmd, params: c.params, env: c.env, stdin: stdin}
 }
 
 func (c Command) Run() ([]byte, []byte, error) {
