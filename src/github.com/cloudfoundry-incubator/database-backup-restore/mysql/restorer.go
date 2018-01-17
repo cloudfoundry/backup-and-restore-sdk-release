@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 
 	"github.com/cloudfoundry-incubator/database-backup-restore/config"
+	"github.com/cloudfoundry-incubator/database-backup-restore/runner"
 )
 
 type Restorer struct {
@@ -27,19 +27,16 @@ func (r Restorer) Action(artifactFilePath string) error {
 	if err != nil {
 		log.Fatalln("Error reading from artifact file,", err)
 	}
+	artifactReader := bufio.NewReader(artifactFile)
 
-	cmd := exec.Command(r.clientBinary,
+	_, _, err = runner.RunWithStdin(r.clientBinary, []string{
 		"-v",
-		"--user="+r.config.Username,
-		"--host="+r.config.Host,
+		"--user=" + r.config.Username,
+		"--host=" + r.config.Host,
 		fmt.Sprintf("--port=%d", r.config.Port),
-		r.config.Database,
-	)
+		r.config.Database},
+		map[string]string{"MYSQL_PWD": r.config.Password},
+		artifactReader)
 
-	cmd.Stdin = bufio.NewReader(artifactFile)
-	cmd.Env = append(cmd.Env, "MYSQL_PWD="+r.config.Password)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	return cmd.Run()
+	return err
 }
