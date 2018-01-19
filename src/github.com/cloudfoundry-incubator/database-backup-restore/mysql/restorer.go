@@ -2,10 +2,8 @@ package mysql
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"os"
-	"os/exec"
 
 	"github.com/cloudfoundry-incubator/database-backup-restore/config"
 )
@@ -27,19 +25,9 @@ func (r Restorer) Action(artifactFilePath string) error {
 	if err != nil {
 		log.Fatalln("Error reading from artifact file,", err)
 	}
+	artifactReader := bufio.NewReader(artifactFile)
 
-	cmd := exec.Command(r.clientBinary,
-		"-v",
-		"--user="+r.config.Username,
-		"--host="+r.config.Host,
-		fmt.Sprintf("--port=%d", r.config.Port),
-		r.config.Database,
-	)
+	_, _, err = NewMysqlCommand(r.config, r.clientBinary).WithParams("-v", r.config.Database).WithStdin(artifactReader).Run()
 
-	cmd.Stdin = bufio.NewReader(artifactFile)
-	cmd.Env = append(cmd.Env, "MYSQL_PWD="+r.config.Password)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	return cmd.Run()
+	return err
 }

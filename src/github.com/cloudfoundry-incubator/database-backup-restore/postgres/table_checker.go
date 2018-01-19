@@ -19,14 +19,15 @@ func NewTableChecker(config config.ConnectionConfig, psqlPath string) TableCheck
 }
 
 func (c TableChecker) FindMissingTables(tableNames []string) ([]string, error) {
-	stdout, _, err := runner.Run(c.psqlPath,
-		[]string{"--tuples-only",
-			fmt.Sprintf("--username=%s", c.config.Username),
-			fmt.Sprintf("--host=%s", c.config.Host),
-			fmt.Sprintf("--port=%d", c.config.Port),
-			c.config.Database,
-			`--command=SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';`,
-		}, map[string]string{"PGPASSWORD": c.config.Password})
+	stdout, _, err := runner.NewCommand(c.psqlPath).WithParams(
+		"--tuples-only",
+		fmt.Sprintf("--username=%s", c.config.Username),
+		fmt.Sprintf("--host=%s", c.config.Host),
+		fmt.Sprintf("--port=%d", c.config.Port),
+		c.config.Database,
+		`--command=SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';`,
+	).WithEnv(map[string]string{"PGPASSWORD": c.config.Password}).Run()
+
 	if err != nil {
 		return nil, err
 	}

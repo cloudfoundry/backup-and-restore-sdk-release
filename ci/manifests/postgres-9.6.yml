@@ -37,17 +37,19 @@ instance_groups:
   persistent_disk_type: fifty
   stemcell: trusty
   networks:
-  - name: concourse
+  - name: postgres
+    static_ips: [((db_host))]
   jobs:
   - name: postgres
     release: postgres
-  azs: [z1]
+  azs: [((availability_zone))]
   properties:
     databases:
       roles:
       - name: test_user
         password: ((db_password))
-        tag: admin
+        permissions:
+        - "SUPERUSER"
       port: 5432
 - name: database-backup-restorer
   instances: 1

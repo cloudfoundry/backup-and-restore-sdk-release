@@ -29,14 +29,14 @@ func (b Backuper) Action(artifactFilePath string) error {
 		"--file=" + artifactFilePath,
 		b.config.Database,
 	}
+
 	for _, tableName := range b.config.Tables {
 		cmdArgs = append(cmdArgs, "-t", tableName)
 	}
-	_, _, err := runner.Run(
-		b.backupBinary,
-		cmdArgs,
-		map[string]string{"PGPASSWORD": b.config.Password},
-	)
+	_, _, err := runner.NewCommand(b.backupBinary).
+		WithParams(cmdArgs...).
+		WithEnv(map[string]string{"PGPASSWORD": b.config.Password}).
+		Run()
 
 	return err
 }

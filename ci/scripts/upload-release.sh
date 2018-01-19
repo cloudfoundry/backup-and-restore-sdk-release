@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Copyright (C) 2017-Present Pivotal Software, Inc. All rights reserved.
 #
 # This program and the accompanying materials are made available under
@@ -14,30 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
----
-platform: linux
+set -e
+set -x
 
-image_resource:
-  type: docker-image
-  source: {repository: cloudfoundrylondon/backup-and-restore}
+./bosh-backup-and-restore-meta/unlock-ci.sh
 
-inputs:
-- name: backup-and-restore-sdk-release
-- name: bosh-backup-and-restore-meta
+export BOSH_CA_CERT="./bosh-backup-and-restore-meta/certs/${BOSH_ENVIRONMENT}.crt"
+export VERSION=$(cat version/number)
 
-run:
-  path: backup-and-restore-sdk-release/ci/scripts/postgres-system-tests.sh
+if [ -z "$RELEASE_NAME" ]; then
+  export RELEASE_NAME="backup-and-restore-sdk"
+fi
 
-params:
-  TEAM_GPG_KEY:
-  BOSH_CLIENT_SECRET:
-  BOSH_CLIENT:
-  POSTGRES_PASSWORD:
-  POSTGRES_USERNAME:
-  POSTGRES_HOSTNAME:
-  POSTGRES_PORT:
-  SSH_PROXY_HOST:
-  SSH_PROXY_USER:
-  SSH_PROXY_PRIVATE_KEY:
-  SDK_DEPLOYMENT: backup-restorer
-  SDK_INSTANCE_GROUP: database-backup-restorer
+bosh-cli upload-release backup-and-restore-sdk-release-build/${RELEASE_NAME}-$VERSION.tgz

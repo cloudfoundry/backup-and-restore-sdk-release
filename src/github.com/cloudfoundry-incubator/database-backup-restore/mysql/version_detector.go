@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"os/exec"
-
 	"strings"
 
 	"github.com/cloudfoundry-incubator/database-backup-restore/config"
@@ -21,18 +19,14 @@ func NewServerVersionDetector(mysqlPath string) ServerVersionDetector {
 }
 
 func (d ServerVersionDetector) GetVersion(config config.ConnectionConfig) (version.DatabaseServerVersion, error) {
-	versionCmd := exec.Command(d.mysqlPath,
+	stdout, stderr, err := NewMysqlCommand(config, d.mysqlPath).WithParams(
 		"--skip-column-names",
 		"--silent",
-		fmt.Sprintf("--user=%s", config.Username),
-		fmt.Sprintf("--password=%s", config.Password),
-		fmt.Sprintf("--host=%s", config.Host),
-		fmt.Sprintf("--port=%d", config.Port),
-		"--execute=SELECT VERSION()")
+		"--execute=SELECT VERSION()",
+	).Run()
 
-	stdout, err := versionCmd.Output()
 	if err != nil {
-		return version.DatabaseServerVersion{}, err
+		return version.DatabaseServerVersion{}, fmt.Errorf(string(stderr))
 	}
 
 	versionString := string(stdout)
