@@ -16,10 +16,7 @@ type Command struct {
 }
 
 func NewCommand(cmd string) Command {
-	return Command{
-		cmd:    cmd,
-		params: []string{},
-	}
+	return Command{cmd: cmd}
 }
 
 func (c Command) WithParams(params ...string) Command {
