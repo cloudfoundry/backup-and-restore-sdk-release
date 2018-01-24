@@ -7,12 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 
-	"database/sql"
-
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/onsi/gomega/gexec"
-
-	"os"
 
 	. "github.com/cloudfoundry-incubator/database-backup-restore/system_tests/utils"
 )
@@ -21,29 +16,6 @@ var _ = Describe("mysql", func() {
 	var dbDumpPath string
 	var configPath string
 	var databaseName string
-	var brJob JobInstance
-	var mysqlHostName string
-	var proxySession *gexec.Session
-	var connection *sql.DB
-	var sslUser string
-
-	BeforeSuite(func() {
-		mysqlHostName = MustHaveEnv("MYSQL_HOSTNAME")
-		connection, proxySession = ConnectMysql(
-			MustHaveEnv("MYSQL_HOSTNAME"),
-			MustHaveEnv("MYSQL_PASSWORD"),
-			MustHaveEnv("MYSQL_USERNAME"),
-			MustHaveEnv("MYSQL_PORT"),
-			os.Getenv("SSH_PROXY_HOST"),
-			os.Getenv("SSH_PROXY_USER"),
-			os.Getenv("SSH_PROXY_KEY_FILE"),
-		)
-
-		sslUser = "ssl_user_" + DisambiguationStringOfLength(6)
-		RunSQLCommand(fmt.Sprintf(
-			"CREATE USER '%s' IDENTIFIED BY '%s';",
-			sslUser, MustHaveEnv("MYSQL_PASSWORD")), connection)
-	})
 
 	BeforeEach(func() {
 		disambiguationString := DisambiguationString()
@@ -52,22 +24,8 @@ var _ = Describe("mysql", func() {
 		databaseName = "db" + disambiguationString
 	})
 
-	AfterSuite(func() {
-		RunSQLCommand(fmt.Sprintf(
-			"DROP USER '%s';", sslUser), connection)
-		if proxySession != nil {
-			proxySession.Kill()
-		}
-	})
-
 	Context("when the mysql server version matches", func() {
 		BeforeEach(func() {
-			brJob = JobInstance{
-				Deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
-				Instance:      MustHaveEnv("SDK_INSTANCE_GROUP"),
-				InstanceIndex: "0",
-			}
-
 			RunSQLCommand("CREATE DATABASE "+databaseName, connection)
 
 			RunSQLCommand("USE "+databaseName, connection)
@@ -77,10 +35,6 @@ var _ = Describe("mysql", func() {
 			RunSQLCommand("INSERT INTO people VALUES ('Old Person');", connection)
 			RunSQLCommand("CREATE TABLE places (name varchar(255));", connection)
 			RunSQLCommand("INSERT INTO places VALUES ('Old Place');", connection)
-
-			RunSQLCommand(fmt.Sprintf(
-				"GRANT ALL PRIVILEGES ON %s.* TO %s REQUIRE SSL;",
-				databaseName, sslUser), connection)
 		})
 
 		AfterEach(func() {
@@ -91,10 +45,11 @@ var _ = Describe("mysql", func() {
 		Context("when we backup the whole database", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
-					`{"username":"%s","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql"}`,
-					MustHaveEnv("MYSQL_USERNAME"),
-					MustHaveEnv("MYSQL_PASSWORD"),
+					`{"username":"%s","password":"%s","host":"%s","port":%s,"database":"%s","adapter":"mysql"}`,
+					mysqlUsername,
+					mysqlPassword,
 					mysqlHostName,
+					mysqlPort,
 					databaseName,
 				)
 				brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
@@ -123,34 +78,14 @@ var _ = Describe("mysql", func() {
 			})
 		})
 
-		Context("when the db user requires TLS", func() {
-			BeforeEach(func() {
-				configJson := fmt.Sprintf(
-					`{"username":"%s","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql"}`,
-					sslUser,
-					MustHaveEnv("MYSQL_PASSWORD"),
-					mysqlHostName,
-					databaseName,
-				)
-				brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
-			})
-
-			It("fails", func() {
-				session := brJob.RunOnInstance(
-					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
-						dbDumpPath, configPath))
-
-				Expect(session.ExitCode()).NotTo(BeZero())
-			})
-		})
-
 		Context("when some existing 'tables' are specified in config", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
-					`{"username":"%s","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["people"]}`,
-					MustHaveEnv("MYSQL_USERNAME"),
-					MustHaveEnv("MYSQL_PASSWORD"),
+					`{"username":"%s","password":"%s","host":"%s","port":%s,"database":"%s","adapter":"mysql","tables":["people"]}`,
+					mysqlUsername,
+					mysqlPassword,
 					mysqlHostName,
+					mysqlPort,
 					databaseName,
 				)
 				brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
@@ -186,10 +121,11 @@ var _ = Describe("mysql", func() {
 		Context("when 'tables' are specified in config only some of which exist", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
-					`{"username":"%s","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["people", "not there"]}`,
-					MustHaveEnv("MYSQL_USERNAME"),
-					MustHaveEnv("MYSQL_PASSWORD"),
+					`{"username":"%s","password":"%s","host":"%s","port":%s,"database":"%s","adapter":"mysql","tables":["people", "not there"]}`,
+					mysqlUsername,
+					mysqlPassword,
 					mysqlHostName,
+					mysqlPort,
 					databaseName,
 				)
 				brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
@@ -211,10 +147,11 @@ var _ = Describe("mysql", func() {
 		Context("when 'tables' are specified in config none of them exist", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
-					`{"username":"%s","password":"%s","host":"%s","port":3306,"database":"%s","adapter":"mysql","tables":["lizards", "form-shifting-people"]}`,
-					MustHaveEnv("MYSQL_USERNAME"),
-					MustHaveEnv("MYSQL_PASSWORD"),
+					`{"username":"%s","password":"%s","host":"%s","port":%s,"database":"%s","adapter":"mysql","tables":["lizards", "form-shifting-people"]}`,
+					mysqlUsername,
+					mysqlPassword,
 					mysqlHostName,
+					mysqlPort,
 					databaseName,
 				)
 				brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
