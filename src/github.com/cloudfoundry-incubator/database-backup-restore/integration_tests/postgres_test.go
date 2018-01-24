@@ -61,15 +61,19 @@ var _ = Describe("Postgres", func() {
 
 	Context("backup", func() {
 		BeforeEach(func() {
-			configFile = buildConfigFile(Config{
-				Adapter:  "postgres",
-				Username: username,
-				Password: password,
-				Host:     host,
-				Port:     port,
-				Database: databaseName,
-			})
-
+			configFile = saveFile(fmt.Sprintf(`{
+					"adapter":  "postgres",
+					"username": "%s",
+					"password": "%s",
+					"host":     "%s",
+					"port":     %d,
+					"database": "%s"
+				}`,
+				username,
+				password,
+				host,
+				port,
+				databaseName))
 		})
 
 		JustBeforeEach(func() {
@@ -143,15 +147,20 @@ var _ = Describe("Postgres", func() {
 
 				Context("when 'tables' are specified in the configFile", func() {
 					BeforeEach(func() {
-						configFile = buildConfigFile(Config{
-							Adapter:  "postgres",
-							Username: username,
-							Password: password,
-							Host:     host,
-							Port:     port,
-							Database: databaseName,
-							Tables:   []string{"table1", "table2", "table3"},
-						})
+						configFile = saveFile(fmt.Sprintf(`{
+								"adapter":  "postgres",
+								"username": "%s",
+								"password": "%s",
+								"host":     "%s",
+								"port":     %d,
+								"database": "%s",
+								"tables": ["table1", "table2", "table3"]
+							}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
 						fakePgClient.WhenCalled().WillPrintToStdOut(
 							" table1 \n table2 \n table3 \n\n\n").
 							WillExitWith(0)
@@ -196,15 +205,20 @@ var _ = Describe("Postgres", func() {
 
 				Context("when missing 'tables' are specified in the configFile", func() {
 					BeforeEach(func() {
-						configFile = buildConfigFile(Config{
-							Adapter:  "postgres",
-							Username: username,
-							Password: password,
-							Host:     host,
-							Port:     port,
-							Database: databaseName,
-							Tables:   []string{"table1", "table2", "table3"},
-						})
+						configFile = saveFile(fmt.Sprintf(`{
+								"adapter":  "postgres",
+								"username": "%s",
+								"password": "%s",
+								"host":     "%s",
+								"port":     %d,
+								"database": "%s",
+								"tables": ["table1", "table2", "table3"]
+							}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
 						fakePgClient.WhenCalled().WillPrintToStdOut(
 							" table1 \n table2 \n\n\n").
 							WillExitWith(0)
@@ -237,15 +251,20 @@ var _ = Describe("Postgres", func() {
 
 			Context("when pg_dump fails", func() {
 				BeforeEach(func() {
-					configFile = buildConfigFile(Config{
-						Adapter:  "postgres",
-						Username: username,
-						Password: password,
-						Host:     host,
-						Port:     port,
-						Database: databaseName,
-						Tables:   []string{"table1", "table2", "table3"},
-					})
+					configFile = saveFile(fmt.Sprintf(`{
+								"adapter":  "postgres",
+								"username": "%s",
+								"password": "%s",
+								"host":     "%s",
+								"port":     %d,
+								"database": "%s",
+								"tables": ["table1", "table2", "table3"]
+							}`,
+						username,
+						password,
+						host,
+						port,
+						databaseName))
 					fakePgClient.WhenCalled().WillPrintToStdOut(
 						" table1 \n table2 \n\n\n").
 						WillExitWith(0)
@@ -314,15 +333,20 @@ var _ = Describe("Postgres", func() {
 
 				Context("when 'tables' are specified in the configFile", func() {
 					BeforeEach(func() {
-						configFile = buildConfigFile(Config{
-							Adapter:  "postgres",
-							Username: username,
-							Password: password,
-							Host:     host,
-							Port:     port,
-							Database: databaseName,
-							Tables:   []string{"table1", "table2", "table3"},
-						})
+						configFile = saveFile(fmt.Sprintf(`{
+								"adapter":  "postgres",
+								"username": "%s",
+								"password": "%s",
+								"host":     "%s",
+								"port":     %d,
+								"database": "%s",
+								"tables": ["table1", "table2", "table3"]
+							}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
 						fakePgClient.WhenCalled().WillPrintToStdOut(
 							" table1 \n table2 \n table3 \n\n\n").
 							WillExitWith(0)
@@ -367,15 +391,20 @@ var _ = Describe("Postgres", func() {
 
 				Context("when missing 'tables' are specified in the configFile", func() {
 					BeforeEach(func() {
-						configFile = buildConfigFile(Config{
-							Adapter:  "postgres",
-							Username: username,
-							Password: password,
-							Host:     host,
-							Port:     port,
-							Database: databaseName,
-							Tables:   []string{"table1", "table2", "table3"},
-						})
+						configFile = saveFile(fmt.Sprintf(`{
+								"adapter":  "postgres",
+								"username": "%s",
+								"password": "%s",
+								"host":     "%s",
+								"port":     %d,
+								"database": "%s",
+								"tables": ["table1", "table2", "table3"]
+							}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
 						fakePgClient.WhenCalled().WillPrintToStdOut(
 							" table1 \n table2 \n\n\n").
 							WillExitWith(0)
@@ -424,15 +453,19 @@ var _ = Describe("Postgres", func() {
 
 	Context("restore", func() {
 		BeforeEach(func() {
-			configFile = buildConfigFile(Config{
-				Adapter:  "postgres",
-				Username: username,
-				Password: password,
-				Host:     host,
-				Port:     port,
-				Database: databaseName,
-			})
-
+			configFile = saveFile(fmt.Sprintf(`{
+					"adapter":  "postgres",
+					"username": "%s",
+					"password": "%s",
+					"host":     "%s",
+					"port":     %d,
+					"database": "%s"
+				}`,
+				username,
+				password,
+				host,
+				port,
+				databaseName))
 		})
 
 		JustBeforeEach(func() {

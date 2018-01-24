@@ -52,14 +52,19 @@ var _ = Describe("MySQL", func() {
 
 	Context("backup", func() {
 		BeforeEach(func() {
-			configFile = buildConfigFile(Config{
-				Adapter:  "mysql",
-				Username: username,
-				Password: password,
-				Host:     host,
-				Port:     port,
-				Database: databaseName,
-			})
+			configFile = saveFile(fmt.Sprintf(`{
+					"adapter":  "mysql",
+					"username": "%s",
+					"password": "%s",
+					"host":     "%s",
+					"port":     %d,
+					"database": "%s"
+				}`,
+				username,
+				password,
+				host,
+				port,
+				databaseName))
 		})
 
 		JustBeforeEach(func() {
@@ -119,15 +124,20 @@ var _ = Describe("MySQL", func() {
 
 			Context("when 'tables' are specified in the configFile", func() {
 				BeforeEach(func() {
-					configFile = buildConfigFile(Config{
-						Adapter:  "mysql",
-						Username: username,
-						Password: password,
-						Host:     host,
-						Port:     port,
-						Database: databaseName,
-						Tables:   []string{"table1", "table2", "table3"},
-					})
+					configFile = saveFile(fmt.Sprintf(`{
+					"adapter":  "mysql",
+					"username": "%s",
+					"password": "%s",
+					"host":     "%s",
+					"port":     %d,
+					"database": "%s",
+					"tables": ["table1", "table2", "table3"]
+				}`,
+						username,
+						password,
+						host,
+						port,
+						databaseName))
 				})
 
 				It("calls mysqldump with the correct arguments", func() {
@@ -254,14 +264,19 @@ var _ = Describe("MySQL", func() {
 
 	Context("restore", func() {
 		BeforeEach(func() {
-			configFile = buildConfigFile(Config{
-				Adapter:  "mysql",
-				Username: username,
-				Password: password,
-				Host:     host,
-				Port:     port,
-				Database: databaseName,
-			})
+			configFile = saveFile(fmt.Sprintf(`{
+					"adapter":  "mysql",
+					"username": "%s",
+					"password": "%s",
+					"host":     "%s",
+					"port":     %d,
+					"database": "%s"
+				}`,
+				username,
+				password,
+				host,
+				port,
+				databaseName))
 		})
 
 		JustBeforeEach(func() {

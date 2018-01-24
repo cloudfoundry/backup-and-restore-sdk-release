@@ -17,7 +17,6 @@
 package integration_tests
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -231,23 +230,11 @@ func validPgConfig() (string, error) {
 	return validConfig.Name(), nil
 }
 
-type Config struct {
-	Username string   `json:"username"`
-	Password string   `json:"password"`
-	Host     string   `json:"host"`
-	Port     int      `json:"port"`
-	Database string   `json:"database"`
-	Adapter  string   `json:"adapter"`
-	Tables   []string `json:"tables,omitempty"`
-}
-
-func buildConfigFile(config Config) *os.File {
+func saveFile(content string) *os.File {
 	configFile, err := ioutil.TempFile(os.TempDir(), time.Now().String())
 	Expect(err).NotTo(HaveOccurred())
 
-	encoder := json.NewEncoder(configFile)
-	err = encoder.Encode(config)
-	Expect(err).NotTo(HaveOccurred())
+	ioutil.WriteFile(configFile.Name(), []byte(content), 0755)
 
 	return configFile
 }
