@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 type Command struct {
@@ -37,9 +38,7 @@ func (c Command) Run() ([]byte, []byte, error) {
 
 	command := exec.Command(c.cmd, c.params...)
 
-	for key, value := range c.env {
-		command.Env = append(command.Env, fmt.Sprintf("%s=%s", key, value))
-	}
+	command.Env = c.buildEnvStrings()
 
 	command.Stdout = io.MultiWriter(outb, os.Stdout)
 	command.Stderr = io.MultiWriter(errb, os.Stderr)
@@ -48,4 +47,18 @@ func (c Command) Run() ([]byte, []byte, error) {
 	err := command.Run()
 
 	return outb.Bytes(), errb.Bytes(), err
+}
+
+func (c Command) buildEnvStrings() []string {
+	var env []string
+	for key, value := range c.env {
+		env = append(env, fmt.Sprintf("%s=%s", key, value))
+	}
+	return env
+}
+
+func (c Command) String() string {
+	env := strings.Join(c.buildEnvStrings(), " ")
+	params := strings.Join(c.params, " ")
+	return fmt.Sprintf("%s %s %s", env, c.cmd, params)
 }
