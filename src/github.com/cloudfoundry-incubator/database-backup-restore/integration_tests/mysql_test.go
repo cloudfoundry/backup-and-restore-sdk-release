@@ -174,8 +174,8 @@ var _ = Describe("MySQL", func() {
 							"port":     %d,
 							"database": "%s",
 							"tls": {
-								"server": {
-									"ca_cert": "A_CA_CERT"
+								"cert": {
+									"ca": "A_CA_CERT"
 								}
 							}
 						}`,

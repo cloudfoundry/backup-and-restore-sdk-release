@@ -39,4 +39,9 @@ export SSH_PROXY_KEY_FILE=/tmp/private.key
 
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/database-backup-restore
 dep ensure
-ginkgo -v -r system_tests/mysql -trace
+if [[ $INLCUDE_TLS_TESTS = "false" ]]
+then
+  ginkgo -v -r -trace -skip "mysql with tls" system_tests/mysql
+else
+  ginkgo -v -r -trace system_tests/mysql
+fi

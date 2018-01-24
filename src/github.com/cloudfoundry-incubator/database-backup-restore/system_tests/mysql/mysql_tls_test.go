@@ -12,7 +12,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("mysql", func() {
+var _ = Describe("mysql with tls", func() {
 	var dbDumpPath string
 	var configPath string
 	var databaseName string
