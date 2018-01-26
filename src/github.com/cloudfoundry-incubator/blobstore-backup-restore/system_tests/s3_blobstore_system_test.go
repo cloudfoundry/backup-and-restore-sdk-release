@@ -75,10 +75,11 @@ var _ = Describe("S3 backuper", func() {
 			" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/restore")
 
 		filesList := listFilesFromBucket(region, bucket)
-		Expect(filesList).To(ConsistOf(fileName1, fileName2))
+		Expect(filesList).To(ConsistOf(fileName1, fileName2, fileName3))
 
 		Expect(getFileContentsFromBucket(region, bucket, fileName1)).To(Equal("FILE1"))
 		Expect(getFileContentsFromBucket(region, bucket, fileName2)).To(Equal("FILE2"))
+		Expect(getFileContentsFromBucket(region, bucket, fileName2)).To(Equal("FILE3"))
 	})
 
 	It("backs up and restores to a different bucket", func() {
