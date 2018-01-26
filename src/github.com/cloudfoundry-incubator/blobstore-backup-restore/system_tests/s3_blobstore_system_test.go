@@ -79,7 +79,7 @@ var _ = Describe("S3 backuper", func() {
 
 		Expect(getFileContentsFromBucket(region, bucket, fileName1)).To(Equal("FILE1"))
 		Expect(getFileContentsFromBucket(region, bucket, fileName2)).To(Equal("FILE2"))
-		Expect(getFileContentsFromBucket(region, bucket, fileName2)).To(Equal("FILE3"))
+		Expect(getFileContentsFromBucket(region, bucket, fileName3)).To(Equal("FILE3"))
 	})
 
 	It("backs up and restores to a different bucket", func() {
