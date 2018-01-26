@@ -37,17 +37,17 @@ type FakeBucket struct {
 		result1 []blobstore.Version
 		result2 error
 	}
-	CopyVersionsAndPruneStub        func(regionName, bucketName string, versions []blobstore.BlobVersion) error
-	copyVersionsAndPruneMutex       sync.RWMutex
-	copyVersionsAndPruneArgsForCall []struct {
+	CopyVersionsStub        func(regionName, bucketName string, versions []blobstore.BlobVersion) error
+	copyVersionsMutex       sync.RWMutex
+	copyVersionsArgsForCall []struct {
 		regionName string
 		bucketName string
 		versions   []blobstore.BlobVersion
 	}
-	copyVersionsAndPruneReturns struct {
+	copyVersionsReturns struct {
 		result1 error
 	}
-	copyVersionsAndPruneReturnsOnCall map[int]struct {
+	copyVersionsReturnsOnCall map[int]struct {
 		result1 error
 	}
 	invocations      map[string][][]interface{}
@@ -177,57 +177,57 @@ func (fake *FakeBucket) VersionsReturnsOnCall(i int, result1 []blobstore.Version
 	}{result1, result2}
 }
 
-func (fake *FakeBucket) CopyVersionsAndPrune(regionName string, bucketName string, versions []blobstore.BlobVersion) error {
+func (fake *FakeBucket) CopyVersions(regionName string, bucketName string, versions []blobstore.BlobVersion) error {
 	var versionsCopy []blobstore.BlobVersion
 	if versions != nil {
 		versionsCopy = make([]blobstore.BlobVersion, len(versions))
 		copy(versionsCopy, versions)
 	}
-	fake.copyVersionsAndPruneMutex.Lock()
-	ret, specificReturn := fake.copyVersionsAndPruneReturnsOnCall[len(fake.copyVersionsAndPruneArgsForCall)]
-	fake.copyVersionsAndPruneArgsForCall = append(fake.copyVersionsAndPruneArgsForCall, struct {
+	fake.copyVersionsMutex.Lock()
+	ret, specificReturn := fake.copyVersionsReturnsOnCall[len(fake.copyVersionsArgsForCall)]
+	fake.copyVersionsArgsForCall = append(fake.copyVersionsArgsForCall, struct {
 		regionName string
 		bucketName string
 		versions   []blobstore.BlobVersion
 	}{regionName, bucketName, versionsCopy})
-	fake.recordInvocation("CopyVersionsAndPrune", []interface{}{regionName, bucketName, versionsCopy})
-	fake.copyVersionsAndPruneMutex.Unlock()
-	if fake.CopyVersionsAndPruneStub != nil {
-		return fake.CopyVersionsAndPruneStub(regionName, bucketName, versions)
+	fake.recordInvocation("CopyVersions", []interface{}{regionName, bucketName, versionsCopy})
+	fake.copyVersionsMutex.Unlock()
+	if fake.CopyVersionsStub != nil {
+		return fake.CopyVersionsStub(regionName, bucketName, versions)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.copyVersionsAndPruneReturns.result1
+	return fake.copyVersionsReturns.result1
 }
 
-func (fake *FakeBucket) CopyVersionsAndPruneCallCount() int {
-	fake.copyVersionsAndPruneMutex.RLock()
-	defer fake.copyVersionsAndPruneMutex.RUnlock()
-	return len(fake.copyVersionsAndPruneArgsForCall)
+func (fake *FakeBucket) CopyVersionsCallCount() int {
+	fake.copyVersionsMutex.RLock()
+	defer fake.copyVersionsMutex.RUnlock()
+	return len(fake.copyVersionsArgsForCall)
 }
 
-func (fake *FakeBucket) CopyVersionsAndPruneArgsForCall(i int) (string, string, []blobstore.BlobVersion) {
-	fake.copyVersionsAndPruneMutex.RLock()
-	defer fake.copyVersionsAndPruneMutex.RUnlock()
-	return fake.copyVersionsAndPruneArgsForCall[i].regionName, fake.copyVersionsAndPruneArgsForCall[i].bucketName, fake.copyVersionsAndPruneArgsForCall[i].versions
+func (fake *FakeBucket) CopyVersionsArgsForCall(i int) (string, string, []blobstore.BlobVersion) {
+	fake.copyVersionsMutex.RLock()
+	defer fake.copyVersionsMutex.RUnlock()
+	return fake.copyVersionsArgsForCall[i].regionName, fake.copyVersionsArgsForCall[i].bucketName, fake.copyVersionsArgsForCall[i].versions
 }
 
-func (fake *FakeBucket) CopyVersionsAndPruneReturns(result1 error) {
-	fake.CopyVersionsAndPruneStub = nil
-	fake.copyVersionsAndPruneReturns = struct {
+func (fake *FakeBucket) CopyVersionsReturns(result1 error) {
+	fake.CopyVersionsStub = nil
+	fake.copyVersionsReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeBucket) CopyVersionsAndPruneReturnsOnCall(i int, result1 error) {
-	fake.CopyVersionsAndPruneStub = nil
-	if fake.copyVersionsAndPruneReturnsOnCall == nil {
-		fake.copyVersionsAndPruneReturnsOnCall = make(map[int]struct {
+func (fake *FakeBucket) CopyVersionsReturnsOnCall(i int, result1 error) {
+	fake.CopyVersionsStub = nil
+	if fake.copyVersionsReturnsOnCall == nil {
+		fake.copyVersionsReturnsOnCall = make(map[int]struct {
 			result1 error
 		})
 	}
-	fake.copyVersionsAndPruneReturnsOnCall[i] = struct {
+	fake.copyVersionsReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -241,8 +241,8 @@ func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	defer fake.regionNameMutex.RUnlock()
 	fake.versionsMutex.RLock()
 	defer fake.versionsMutex.RUnlock()
-	fake.copyVersionsAndPruneMutex.RLock()
-	defer fake.copyVersionsAndPruneMutex.RUnlock()
+	fake.copyVersionsMutex.RLock()
+	defer fake.copyVersionsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

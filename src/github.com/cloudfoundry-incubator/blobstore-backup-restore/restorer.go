@@ -17,7 +17,7 @@ func (r Restorer) Restore() error {
 
 	for identifier, destinationBucket := range r.destinationBuckets {
 		bucketSnapshot := bucketSnapshots[identifier]
-		err = destinationBucket.CopyVersionsAndPrune(
+		err = destinationBucket.CopyVersions(
 			bucketSnapshot.RegionName,
 			bucketSnapshot.BucketName,
 			bucketSnapshot.Versions)

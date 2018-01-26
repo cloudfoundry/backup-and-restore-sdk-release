@@ -10,7 +10,7 @@ type Bucket interface {
 	Name() string
 	RegionName() string
 	Versions() ([]Version, error)
-	CopyVersionsAndPrune(regionName, bucketName string, versions []BlobVersion) error
+	CopyVersions(regionName, bucketName string, versions []BlobVersion) error
 }
 
 type S3Bucket struct {
