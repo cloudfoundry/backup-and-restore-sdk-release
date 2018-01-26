@@ -66,10 +66,9 @@ func (bucket S3Bucket) Versions() ([]Version, error) {
 	return response.Versions, nil
 }
 
-func (bucket S3Bucket) CopyVersionsAndPrune(sourceBucketRegion, sourceBucketName string, versionsToCopy []BlobVersion) error {
+func (bucket S3Bucket) CopyVersions(sourceBucketRegion, sourceBucketName string, versionsToCopy []BlobVersion) error {
 	var err error
 
-	s3Cli := NewS3CLI(bucket.awsCliPath, bucket.endpoint, bucket.regionName, bucket.accessKey.Id, bucket.accessKey.Secret)
 	s3API, err := NewS3API(bucket.endpoint, bucket.regionName, bucket.accessKey.Id, bucket.accessKey.Secret)
 
 	if err != nil {
@@ -88,29 +87,7 @@ func (bucket S3Bucket) CopyVersionsAndPrune(sourceBucketRegion, sourceBucketName
 		keysThatShouldBePresentInBucket = append(keysThatShouldBePresentInBucket, versionToCopy.BlobKey)
 	}
 
-	keysThatArePresentInBucket, err := s3Cli.ListObjects(bucket.name)
-	if err != nil {
-		return err
-	}
-
-	for _, key := range keysThatArePresentInBucket {
-		if !includes(keysThatShouldBePresentInBucket, key) {
-			err = s3API.DeleteObject(bucket.name, key)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
 	return nil
-}
-func includes(haystack []string, needle string) bool {
-	for _, value := range haystack {
-		if value == needle {
-			return true
-		}
-	}
-	return false
 }
 
 type S3ListVersionsResponse struct {

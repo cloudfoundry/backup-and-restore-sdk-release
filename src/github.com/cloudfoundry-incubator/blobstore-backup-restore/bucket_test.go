@@ -97,7 +97,7 @@ var _ = Describe("S3Bucket", func() {
 			})
 		})
 
-		Describe("CopyVersionsAndPrune from same bucket", func() {
+		Describe("CopyVersions from same bucket", func() {
 			var err error
 
 			BeforeEach(func() {
@@ -105,7 +105,7 @@ var _ = Describe("S3Bucket", func() {
 			})
 
 			JustBeforeEach(func() {
-				err = bucketObjectUnderTest.CopyVersionsAndPrune(mainRegion, mainBucketName, []BlobVersion{
+				err = bucketObjectUnderTest.CopyVersions(mainRegion, mainBucketName, []BlobVersion{
 					{BlobKey: "test-1", Id: secondVersionOfTest1},
 					{BlobKey: "test-2", Id: firstVersionOfTest2},
 				})
@@ -119,12 +119,13 @@ var _ = Describe("S3Bucket", func() {
 					}
 				})
 
-				It("restores the versions to the specified ones", func() {
+				It("restores the versions to the specified ones and does not delete blobs that are not specified from the bucket", func() {
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(listFiles(mainBucketName, endpoint, accessKey, secretKey)).To(ConsistOf("test-1", "test-2"))
+					Expect(listFiles(mainBucketName, endpoint, accessKey, secretKey)).To(ConsistOf("test-1", "test-2", "test-3"))
 					Expect(getFileContents(mainBucketName, endpoint, "test-1", accessKey, secretKey)).To(Equal("TEST-1-B"))
 					Expect(getFileContents(mainBucketName, endpoint, "test-2", accessKey, secretKey)).To(Equal("TEST-2-A"))
+					Expect(getFileContents(mainBucketName, endpoint, "test-3", accessKey, secretKey)).To(Equal("TEST-3-A"))
 				})
 			})
 
@@ -139,7 +140,7 @@ var _ = Describe("S3Bucket", func() {
 			})
 		})
 
-		Describe("CopyVersionsAndPrune from different bucket", func() {
+		Describe("CopyVersions from different bucket", func() {
 
 			var secondaryBucketName string
 			var versionOfFileWhichWasSubsequentlyDeleted, versionOfFileToBeRestored string
@@ -150,6 +151,7 @@ var _ = Describe("S3Bucket", func() {
 					Id:     accessKey,
 					Secret: secretKey,
 				}
+				deleteAllVersions(mainRegion, mainBucketName, endpoint, accessKey, secretKey)
 				secondaryBucketName = "sdk-integration-test-secondary" + strconv.FormatInt(time.Now().UnixNano(), 10)
 				createBucket(secondaryRegion, secondaryBucketName, endpoint, accessKey, secretKey)
 				enableBucketVersioning(secondaryBucketName, endpoint, accessKey, secretKey)
@@ -160,17 +162,21 @@ var _ = Describe("S3Bucket", func() {
 			})
 
 			JustBeforeEach(func() {
-				err = bucketObjectUnderTest.CopyVersionsAndPrune(secondaryRegion, secondaryBucketName,
+				err = bucketObjectUnderTest.CopyVersions(secondaryRegion, secondaryBucketName,
 					[]BlobVersion{
 						{BlobKey: "file-to-restore", Id: versionOfFileToBeRestored},
 						{BlobKey: "deleted-file-to-restore", Id: versionOfFileWhichWasSubsequentlyDeleted},
 					})
 			})
-			It("restores files from the secondary to the main bucket", func() {
+
+			It("restores files from the secondary to the main bucket and does not delete pre-existing blobs", func() {
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(listFiles(mainBucketName, endpoint, accessKey, secretKey)).To(ConsistOf("file-to-restore", "deleted-file-to-restore"))
+				Expect(listFiles(mainBucketName, endpoint, accessKey, secretKey)).To(
+					ConsistOf("file-to-restore", "deleted-file-to-restore", "file-to-be-destroyed-by-restore"),
+				)
 			})
+
 			AfterEach(func() {
 				deleteAllVersions(secondaryRegion, secondaryBucketName, endpoint, accessKey, secretKey)
 				deleteBucket(secondaryBucketName, endpoint, accessKey, secretKey)
@@ -226,7 +232,7 @@ var _ = Describe("S3Bucket", func() {
 		})
 		Context("when restore from an empty bucket", func() {
 			It("does not fail", func() {
-				err := bucketObjectUnderTest.CopyVersionsAndPrune(region, bucketName, []BlobVersion{})
+				err := bucketObjectUnderTest.CopyVersions(region, bucketName, []BlobVersion{})
 				Expect(err).NotTo(HaveOccurred())
 
 			})
