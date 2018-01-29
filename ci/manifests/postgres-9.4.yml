@@ -37,7 +37,7 @@ instance_groups:
   persistent_disk_type: fifty
   stemcell: trusty
   networks:
-  - name: postgres
+  - name: ((network_name))
     static_ips: [((db_host))]
   jobs:
   - name: postgres-9.4

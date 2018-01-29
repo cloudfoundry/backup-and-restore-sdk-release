@@ -26,6 +26,7 @@ export BOSH_CA_CERT="./bosh-backup-and-restore-meta/certs/${BOSH_ENVIRONMENT}.cr
 export OPTIONAL_BOSH_VARS_db_password=${DB_PASSWORD}
 export OPTIONAL_BOSH_VARS_db_host=${DB_HOST}
 export OPTIONAL_BOSH_VARS_availability_zone=${AVAILABILITY_ZONE}
+export OPTIONAL_BOSH_VARS_network_name=${NETWORK_NAME}
 
 export vars_store_argument=""
 if [ ! -z "$VARS_STORE_PATH" ]; then
