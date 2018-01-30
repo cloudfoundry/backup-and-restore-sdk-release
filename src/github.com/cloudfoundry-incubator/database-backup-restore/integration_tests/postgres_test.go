@@ -57,40 +57,29 @@ var _ = Describe("Postgres", func() {
 		envVars["PG_DUMP_9_6_PATH"] = fakePgDump96.Path
 		envVars["PG_RESTORE_9_4_PATH"] = fakePgRestore94.Path
 		envVars["PG_RESTORE_9_6_PATH"] = fakePgRestore96.Path
+
+		configFile = saveFile(fmt.Sprintf(`{
+				"adapter":  "postgres",
+				"username": "%s",
+				"password": "%s",
+				"host":     "%s",
+				"port":     %d,
+				"database": "%s"
+			}`,
+			username,
+			password,
+			host,
+			port,
+			databaseName))
 	})
 
 	Context("backup", func() {
-		BeforeEach(func() {
-			configFile = saveFile(fmt.Sprintf(`{
-					"adapter":  "postgres",
-					"username": "%s",
-					"password": "%s",
-					"host":     "%s",
-					"port":     %d,
-					"database": "%s"
-				}`,
-				username,
-				password,
-				host,
-				port,
-				databaseName))
-		})
-
 		JustBeforeEach(func() {
-			cmd := exec.Command(
-				compiledSDKPath,
-				"--artifact-file",
-				artifactFile,
-				"--config",
-				configFile.Name(),
-				"--backup")
-			for key, val := range envVars {
-				cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
-			}
-
-			session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
-			Eventually(session).Should(gexec.Exit())
+			session = run(compiledSDKPath, envVars,
+				"--artifact-file", artifactFile,
+				"--config", configFile.Name(),
+				"--backup",
+			)
 		})
 
 		Context("Postgres database server is version 9.4", func() {
@@ -452,37 +441,12 @@ var _ = Describe("Postgres", func() {
 	})
 
 	Context("restore", func() {
-		BeforeEach(func() {
-			configFile = saveFile(fmt.Sprintf(`{
-					"adapter":  "postgres",
-					"username": "%s",
-					"password": "%s",
-					"host":     "%s",
-					"port":     %d,
-					"database": "%s"
-				}`,
-				username,
-				password,
-				host,
-				port,
-				databaseName))
-		})
-
 		JustBeforeEach(func() {
-			cmd := exec.Command(
-				compiledSDKPath,
-				"--artifact-file",
-				artifactFile,
-				"--config",
-				configFile.Name(),
-				"--restore")
-
-			for key, val := range envVars {
-				cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
-			}
-			session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
-			Eventually(session).Should(gexec.Exit())
+			session = run(compiledSDKPath, envVars,
+				"--artifact-file", artifactFile,
+				"--config", configFile.Name(),
+				"--restore",
+			)
 		})
 
 		Context("Postgres database server is version 9.4", func() {
@@ -611,3 +575,15 @@ var _ = Describe("Postgres", func() {
 		})
 	})
 })
+
+func run(path string, env map[string]string, args ...string) *gexec.Session {
+	cmd := exec.Command(path, args...)
+	for key, val := range env {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
+	}
+	session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+	Expect(err).ToNot(HaveOccurred())
+	Eventually(session).Should(gexec.Exit())
+
+	return session
+}
