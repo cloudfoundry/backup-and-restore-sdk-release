@@ -9,4 +9,4 @@ name: database-backup-restorer-mysql
 dependencies: []
 
 files:
-- mariadb/mariadb-10.1.34.tar.gz
+- mariadb/mariadb-10.1.30.tar.gz
