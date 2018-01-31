@@ -12,6 +12,7 @@ go/go1.9.1.linux-amd64.tar.gz:
   sha: 8ab67607ac917684560e699b76b3121f5799e24e
 mariadb/mariadb-10.1.34.tar.gz:
   size: 69266294
+  object_id: 1f91dee8-8375-4a8b-4ab1-c0bf4032fd6e
   sha: 95ea88a9310c5e1b6123a0ce4c2f635f43470e59
 mysql/mysql-5.5.58.tar.gz:
   size: 21045852
