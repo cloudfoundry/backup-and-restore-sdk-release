@@ -8,7 +8,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
-	"io/ioutil"
+	"strings"
 
 	. "github.com/cloudfoundry-incubator/database-backup-restore/system_tests/utils"
 	"github.com/onsi/gomega/gexec"
@@ -87,7 +87,6 @@ var _ = Describe("mysql with tls", func() {
 
 		Context("when TLS info is provided in the config", func() {
 			Context("And the CA cert is correct", func() {
-				workingCaCertChain, _ := ioutil.ReadFile("fixtures/rds.crt")
 				BeforeEach(func() {
 					configJson = fmt.Sprintf(
 						`{
@@ -108,7 +107,7 @@ var _ = Describe("mysql with tls", func() {
 						mysqlHostName,
 						mysqlPort,
 						databaseName,
-						workingCaCertChain,
+						escapeNewLines(mysqlCaCert),
 					)
 				})
 
@@ -162,7 +161,6 @@ var _ = Describe("mysql with tls", func() {
 	Context("the user does not require TLS", func() {
 		Context("correct CA cert is provided", func() {
 			BeforeEach(func() {
-				workingCaCertChain, _ := ioutil.ReadFile("fixtures/rds.crt")
 				configJson = fmt.Sprintf(
 					`{
 						"username": "%s",
@@ -182,7 +180,7 @@ var _ = Describe("mysql with tls", func() {
 					mysqlHostName,
 					mysqlPort,
 					databaseName,
-					workingCaCertChain,
+					escapeNewLines(mysqlCaCert),
 				)
 			})
 
@@ -232,3 +230,7 @@ var _ = Describe("mysql with tls", func() {
 		})
 	})
 })
+
+func escapeNewLines(txt string) string {
+	return strings.Replace(txt, "\n", "\\n", -1)
+}

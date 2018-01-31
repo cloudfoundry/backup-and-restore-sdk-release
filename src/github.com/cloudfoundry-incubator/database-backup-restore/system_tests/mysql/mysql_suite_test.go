@@ -23,6 +23,8 @@ var mysqlUsername string
 var mysqlPassword string
 var mysqlPort string
 
+var mysqlCaCert string
+
 var brJob JobInstance
 
 func TestMysql(t *testing.T) {
@@ -43,6 +45,8 @@ var _ = Describe("mysql", func() {
 		mysqlUsername = MustHaveEnv("MYSQL_USERNAME")
 		mysqlPassword = MustHaveEnv("MYSQL_PASSWORD")
 		mysqlPort = MustHaveEnv("MYSQL_PORT")
+
+		mysqlCaCert = os.Getenv("MYSQL_CA_CERT")
 
 		connection, proxySession = ConnectMysql(
 			mysqlHostName,
