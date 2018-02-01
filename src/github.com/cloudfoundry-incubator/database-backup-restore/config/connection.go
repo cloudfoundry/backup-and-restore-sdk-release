@@ -18,11 +18,14 @@ type ConnectionConfig struct {
 }
 
 type TlsConfig struct {
-	Cert CertTlsConfig `json:"cert"`
+	SkipHostVerify bool          `json:skip_host_verify`
+	Cert           CertTlsConfig `json:"cert"`
 }
 
 type CertTlsConfig struct {
-	Ca string `json:"ca"`
+	Ca          string `json:"ca"`
+	Certificate string `json:"certificate"`
+	PrivateKey  string `json:"private_key"`
 }
 
 func ParseAndValidateConnectionConfig(configPath string) (ConnectionConfig, error) {
