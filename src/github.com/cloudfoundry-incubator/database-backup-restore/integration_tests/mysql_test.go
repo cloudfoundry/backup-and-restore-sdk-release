@@ -43,18 +43,19 @@ var _ = Describe("MySQL", func() {
 	var err error
 	var configFile *os.File
 
-	BeforeEach(func() {
-		artifactFile = tempFilePath()
-		fakeMysqlDump.Reset()
-		fakeMysqlClient.Reset()
-
-		envVars["MYSQL_CLIENT_5_7_PATH"] = fakeMysqlClient.Path
-		envVars["MYSQL_DUMP_5_7_PATH"] = fakeMysqlDump.Path
-	})
-
-	Context("backup", func() {
+	Context("mysql 5.7", func() {
 		BeforeEach(func() {
-			configFile = saveFile(fmt.Sprintf(`{
+			artifactFile = tempFilePath()
+			fakeMysqlDump57.Reset()
+			fakeMysqlClient57.Reset()
+
+			envVars["MYSQL_CLIENT_5_7_PATH"] = fakeMysqlClient57.Path
+			envVars["MYSQL_DUMP_5_7_PATH"] = fakeMysqlDump57.Path
+		})
+
+		Context("backup", func() {
+			BeforeEach(func() {
+				configFile = saveFile(fmt.Sprintf(`{
 					"adapter":  "mysql",
 					"username": "%s",
 					"password": "%s",
@@ -62,74 +63,74 @@ var _ = Describe("MySQL", func() {
 					"port":     %d,
 					"database": "%s"
 				}`,
-				username,
-				password,
-				host,
-				port,
-				databaseName))
-		})
-
-		JustBeforeEach(func() {
-			cmd := exec.Command(
-				compiledSDKPath,
-				"--artifact-file",
-				artifactFile,
-				"--config",
-				configFile.Name(),
-				"--backup")
-
-			for key, val := range envVars {
-				cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
-			}
-
-			session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
-			Eventually(session).Should(gexec.Exit())
-		})
-
-		Context("when mysqldump succeeds", func() {
-			BeforeEach(func() {
-				fakeMysqlClient.WhenCalled().WillPrintToStdOut("MYSQL server version 5.7.20")
-				fakeMysqlDump.WhenCalled().WillExitWith(0)
+					username,
+					password,
+					host,
+					port,
+					databaseName))
 			})
 
-			It("calls mysql and mysqldump with the correct arguments", func() {
-				By("calling mysql to detect the version", func() {
-					Expect(fakeMysqlClient.Invocations()).To(HaveLen(1))
-					Expect(fakeMysqlClient.Invocations()[0].Args()).Should(ConsistOf(
-						fmt.Sprintf("--user=%s", username),
-						fmt.Sprintf("--host=%s", host),
-						fmt.Sprintf("--port=%d", port),
-						"--skip-column-names",
-						"--silent",
-						`--execute=SELECT VERSION()`,
-					))
-					Expect(fakeMysqlClient.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
-				})
+			JustBeforeEach(func() {
+				cmd := exec.Command(
+					compiledSDKPath,
+					"--artifact-file",
+					artifactFile,
+					"--config",
+					configFile.Name(),
+					"--backup")
 
-				By("then calling dump", func() {
-					Expect(fakeMysqlDump.Invocations()).To(HaveLen(1))
-					expectedArgs := []string{
-						fmt.Sprintf("--user=%s", username),
-						fmt.Sprintf("--host=%s", host),
-						fmt.Sprintf("--port=%d", port),
-						"-v",
-						"--single-transaction",
-						"--skip-add-locks",
-						fmt.Sprintf("--result-file=%s", artifactFile),
-						databaseName,
-					}
+				for key, val := range envVars {
+					cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
+				}
 
-					Expect(fakeMysqlDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-					Expect(fakeMysqlDump.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
-				})
-
-				Expect(session).Should(gexec.Exit(0))
+				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).ToNot(HaveOccurred())
+				Eventually(session).Should(gexec.Exit())
 			})
 
-			Context("when 'tables' are specified in the configFile", func() {
+			Context("when mysqldump succeeds", func() {
 				BeforeEach(func() {
-					configFile = saveFile(fmt.Sprintf(`{
+					fakeMysqlClient57.WhenCalled().WillPrintToStdOut("MYSQL server version 5.7.20")
+					fakeMysqlDump57.WhenCalled().WillExitWith(0)
+				})
+
+				It("calls mysql and mysqldump with the correct arguments", func() {
+					By("calling mysql to detect the version", func() {
+						Expect(fakeMysqlClient57.Invocations()).To(HaveLen(1))
+						Expect(fakeMysqlClient57.Invocations()[0].Args()).Should(ConsistOf(
+							fmt.Sprintf("--user=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							"--skip-column-names",
+							"--silent",
+							`--execute=SELECT VERSION()`,
+						))
+						Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					})
+
+					By("then calling dump", func() {
+						Expect(fakeMysqlDump57.Invocations()).To(HaveLen(1))
+						expectedArgs := []string{
+							fmt.Sprintf("--user=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							"-v",
+							"--single-transaction",
+							"--skip-add-locks",
+							fmt.Sprintf("--result-file=%s", artifactFile),
+							databaseName,
+						}
+
+						Expect(fakeMysqlDump57.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+						Expect(fakeMysqlDump57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					})
+
+					Expect(session).Should(gexec.Exit(0))
+				})
+
+				Context("when 'tables' are specified in the configFile", func() {
+					BeforeEach(func() {
+						configFile = saveFile(fmt.Sprintf(`{
 					"adapter":  "mysql",
 					"username": "%s",
 					"password": "%s",
@@ -138,35 +139,35 @@ var _ = Describe("MySQL", func() {
 					"database": "%s",
 					"tables": ["table1", "table2", "table3"]
 				}`,
-						username,
-						password,
-						host,
-						port,
-						databaseName))
+							username,
+							password,
+							host,
+							port,
+							databaseName))
+					})
+
+					It("calls mysqldump with the correct arguments", func() {
+						expectedArgs := []string{
+							fmt.Sprintf("--user=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							"-v",
+							"--single-transaction",
+							"--skip-add-locks",
+							fmt.Sprintf("--result-file=%s", artifactFile),
+							databaseName,
+							"table1",
+							"table2",
+							"table3",
+						}
+
+						Expect(fakeMysqlDump57.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+					})
 				})
 
-				It("calls mysqldump with the correct arguments", func() {
-					expectedArgs := []string{
-						fmt.Sprintf("--user=%s", username),
-						fmt.Sprintf("--host=%s", host),
-						fmt.Sprintf("--port=%d", port),
-						"-v",
-						"--single-transaction",
-						"--skip-add-locks",
-						fmt.Sprintf("--result-file=%s", artifactFile),
-						databaseName,
-						"table1",
-						"table2",
-						"table3",
-					}
-
-					Expect(fakeMysqlDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-				})
-			})
-
-			Context("when TLS is configured", func() {
-				BeforeEach(func() {
-					configFile = saveFile(fmt.Sprintf(`{
+				Context("when TLS is configured", func() {
+					BeforeEach(func() {
+						configFile = saveFile(fmt.Sprintf(`{
 							"adapter":  "mysql",
 							"username": "%s",
 							"password": "%s",
@@ -179,156 +180,156 @@ var _ = Describe("MySQL", func() {
 								}
 							}
 						}`,
-						username,
-						password,
-						host,
-						port,
-						databaseName))
-				})
-
-				It("calls mysql and mysqldump with the correct arguments", func() {
-					By("calling mysql to detect the version", func() {
-						Expect(fakeMysqlClient.Invocations()).To(HaveLen(1))
-						Expect(fakeMysqlClient.Invocations()[0].Args()).Should(ConsistOf(
-							fmt.Sprintf("--user=%s", username),
-							fmt.Sprintf("--host=%s", host),
-							fmt.Sprintf("--port=%d", port),
-							HavePrefix("--ssl-ca="),
-							"--ssl-mode=VERIFY_IDENTITY",
-							"--skip-column-names",
-							"--silent",
-							`--execute=SELECT VERSION()`,
-						))
-						Expect(fakeMysqlClient.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+							username,
+							password,
+							host,
+							port,
+							databaseName))
 					})
 
-					By("then calling dump", func() {
-						expectedArgs := []interface{}{
-							fmt.Sprintf("--user=%s", username),
-							fmt.Sprintf("--host=%s", host),
-							fmt.Sprintf("--port=%d", port),
-							HavePrefix("--ssl-ca="),
-							"--ssl-mode=VERIFY_IDENTITY",
-							"-v",
-							"--single-transaction",
-							"--skip-add-locks",
-							fmt.Sprintf("--result-file=%s", artifactFile),
-							databaseName,
-						}
+					It("calls mysql and mysqldump with the correct arguments", func() {
+						By("calling mysql to detect the version", func() {
+							Expect(fakeMysqlClient57.Invocations()).To(HaveLen(1))
+							Expect(fakeMysqlClient57.Invocations()[0].Args()).Should(ConsistOf(
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								HavePrefix("--ssl-ca="),
+								"--ssl-mode=VERIFY_IDENTITY",
+								"--skip-column-names",
+								"--silent",
+								`--execute=SELECT VERSION()`,
+							))
+							Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+						})
 
-						Expect(fakeMysqlDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+						By("then calling dump", func() {
+							expectedArgs := []interface{}{
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								HavePrefix("--ssl-ca="),
+								"--ssl-mode=VERIFY_IDENTITY",
+								"-v",
+								"--single-transaction",
+								"--skip-add-locks",
+								fmt.Sprintf("--result-file=%s", artifactFile),
+								databaseName,
+							}
 
-						caCertPath := strings.Split(fakeMysqlDump.Invocations()[0].Args()[3], "=")[1]
-						Expect(caCertPath).To(BeAnExistingFile())
-						Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
+							Expect(fakeMysqlDump57.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+
+							caCertPath := strings.Split(fakeMysqlDump57.Invocations()[0].Args()[3], "=")[1]
+							Expect(caCertPath).To(BeAnExistingFile())
+							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
+						})
 					})
+				})
+			})
+
+			Context("when version detection fails", func() {
+				BeforeEach(func() {
+					fakeMysqlClient57.WhenCalledWith(
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--skip-column-names",
+						"--silent",
+						`--execute=SELECT VERSION()`,
+					).WillExitWith(1).WillPrintToStdErr("VERSION DETECTION FAILED!")
+				})
+
+				It("also fails", func() {
+					Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					Eventually(session).Should(gexec.Exit(1))
+					Expect(session.Err).To(gbytes.Say("VERSION DETECTION FAILED!"))
+				})
+			})
+
+			Context("when mysqldump fails", func() {
+				BeforeEach(func() {
+					fakeMysqlClient57.WhenCalledWith(
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--skip-column-names",
+						"--silent",
+						`--execute=SELECT VERSION()`,
+					).WillPrintToStdOut("MYSQL server version 5.7.20")
+					fakeMysqlDump57.WhenCalled().WillExitWith(1)
+				})
+
+				It("also fails", func() {
+					Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					Eventually(session).Should(gexec.Exit(1))
+				})
+			})
+
+			Context("when the server has an unsupported mysql major version", func() {
+				BeforeEach(func() {
+					fakeMysqlClient57.WhenCalledWith(
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--skip-column-names",
+						"--silent",
+						`--execute=SELECT VERSION()`,
+					).WillPrintToStdOut("MYSQL server version 4.7.20")
+				})
+
+				It("fails because of a version mismatch", func() {
+					Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					Expect(session).Should(gexec.Exit(1))
+					Expect(string(session.Err.Contents())).Should(ContainSubstring(
+						"unsupported version of mysql: 4.7"),
+					)
+				})
+			})
+
+			Context("when the server has an unsupported mysql minor version", func() {
+				BeforeEach(func() {
+					fakeMysqlClient57.WhenCalledWith(
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--skip-column-names",
+						"--silent",
+						`--execute=SELECT VERSION()`,
+					).WillPrintToStdOut("MYSQL server version 5.9.20")
+				})
+
+				It("fails because of a version mismatch", func() {
+					Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					Expect(session).Should(gexec.Exit(1))
+					Expect(string(session.Err.Contents())).Should(ContainSubstring(
+						"unsupported version of mysql: 5.9"),
+					)
+				})
+			})
+
+			Context("when the server has a supported mysql minor version with a different patch to the packaged utility", func() {
+				BeforeEach(func() {
+					fakeMysqlDump57.WhenCalled().WillExitWith(0)
+					fakeMysqlClient57.WhenCalledWith(
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--skip-column-names",
+						"--silent",
+						`--execute=SELECT VERSION()`,
+					).WillPrintToStdOut("MYSQL server version 5.7.5")
+				})
+
+				It("succeeds despite different patch versions", func() {
+					Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					Expect(session).Should(gexec.Exit(0))
 				})
 			})
 		})
 
-		Context("when version detection fails", func() {
+		Context("restore", func() {
 			BeforeEach(func() {
-				fakeMysqlClient.WhenCalledWith(
-					fmt.Sprintf("--user=%s", username),
-					fmt.Sprintf("--host=%s", host),
-					fmt.Sprintf("--port=%d", port),
-					"--skip-column-names",
-					"--silent",
-					`--execute=SELECT VERSION()`,
-				).WillExitWith(1).WillPrintToStdErr("VERSION DETECTION FAILED!")
-			})
-
-			It("also fails", func() {
-				Expect(fakeMysqlClient.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
-				Eventually(session).Should(gexec.Exit(1))
-				Expect(session.Err).To(gbytes.Say("VERSION DETECTION FAILED!"))
-			})
-		})
-
-		Context("when mysqldump fails", func() {
-			BeforeEach(func() {
-				fakeMysqlClient.WhenCalledWith(
-					fmt.Sprintf("--user=%s", username),
-					fmt.Sprintf("--host=%s", host),
-					fmt.Sprintf("--port=%d", port),
-					"--skip-column-names",
-					"--silent",
-					`--execute=SELECT VERSION()`,
-				).WillPrintToStdOut("MYSQL server version 5.7.20")
-				fakeMysqlDump.WhenCalled().WillExitWith(1)
-			})
-
-			It("also fails", func() {
-				Expect(fakeMysqlClient.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
-				Eventually(session).Should(gexec.Exit(1))
-			})
-		})
-
-		Context("when the server has an unsupported mysql major version", func() {
-			BeforeEach(func() {
-				fakeMysqlClient.WhenCalledWith(
-					fmt.Sprintf("--user=%s", username),
-					fmt.Sprintf("--host=%s", host),
-					fmt.Sprintf("--port=%d", port),
-					"--skip-column-names",
-					"--silent",
-					`--execute=SELECT VERSION()`,
-				).WillPrintToStdOut("MYSQL server version 4.7.20")
-			})
-
-			It("fails because of a version mismatch", func() {
-				Expect(fakeMysqlClient.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
-				Expect(session).Should(gexec.Exit(1))
-				Expect(string(session.Err.Contents())).Should(ContainSubstring(
-					"unsupported version of mysql: 4.7"),
-				)
-			})
-		})
-
-		Context("when the server has an unsupported mysql minor version", func() {
-			BeforeEach(func() {
-				fakeMysqlClient.WhenCalledWith(
-					fmt.Sprintf("--user=%s", username),
-					fmt.Sprintf("--host=%s", host),
-					fmt.Sprintf("--port=%d", port),
-					"--skip-column-names",
-					"--silent",
-					`--execute=SELECT VERSION()`,
-				).WillPrintToStdOut("MYSQL server version 5.9.20")
-			})
-
-			It("fails because of a version mismatch", func() {
-				Expect(fakeMysqlClient.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
-				Expect(session).Should(gexec.Exit(1))
-				Expect(string(session.Err.Contents())).Should(ContainSubstring(
-					"unsupported version of mysql: 5.9"),
-				)
-			})
-		})
-
-		Context("when the server has a supported mysql minor version with a different patch to the packaged utility", func() {
-			BeforeEach(func() {
-				fakeMysqlDump.WhenCalled().WillExitWith(0)
-				fakeMysqlClient.WhenCalledWith(
-					fmt.Sprintf("--user=%s", username),
-					fmt.Sprintf("--host=%s", host),
-					fmt.Sprintf("--port=%d", port),
-					"--skip-column-names",
-					"--silent",
-					`--execute=SELECT VERSION()`,
-				).WillPrintToStdOut("MYSQL server version 5.7.5")
-			})
-
-			It("succeeds despite different patch versions", func() {
-				Expect(fakeMysqlClient.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
-				Expect(session).Should(gexec.Exit(0))
-			})
-		})
-	})
-
-	Context("restore", func() {
-		BeforeEach(func() {
-			configFile = saveFile(fmt.Sprintf(`{
+				configFile = saveFile(fmt.Sprintf(`{
 					"adapter":  "mysql",
 					"username": "%s",
 					"password": "%s",
@@ -336,86 +337,605 @@ var _ = Describe("MySQL", func() {
 					"port":     %d,
 					"database": "%s"
 				}`,
-				username,
-				password,
-				host,
-				port,
-				databaseName))
-		})
-
-		JustBeforeEach(func() {
-			err := ioutil.WriteFile(artifactFile, []byte("SOME BACKUP SQL"), 0644)
-			if err != nil {
-				log.Fatalln("Failed to write to artifact file, %s", err)
-			}
-
-			cmd := exec.Command(
-				compiledSDKPath,
-				"--artifact-file",
-				artifactFile,
-				"--config",
-				configFile.Name(),
-				"--restore")
-
-			for key, val := range envVars {
-				cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
-			}
-
-			session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
-			Eventually(session).Should(gexec.Exit())
-		})
-
-		Context("when mysql succeeds", func() {
-			BeforeEach(func() {
-				fakeMysqlClient.WhenCalledWith(
-					fmt.Sprintf("--user=%s", username),
-					fmt.Sprintf("--host=%s", host),
-					fmt.Sprintf("--port=%d", port),
-					"--skip-column-names",
-					"--silent",
-					`--execute=SELECT VERSION()`,
-				).WillPrintToStdOut("MYSQL server version 5.7.20")
-				fakeMysqlClient.WhenCalled().WillExitWith(0)
+					username,
+					password,
+					host,
+					port,
+					databaseName))
 			})
 
-			It("calls mysql with the correct arguments", func() {
-				expectedArgs := []string{
-					"-v",
-					fmt.Sprintf("--user=%s", username),
-					fmt.Sprintf("--host=%s", host),
-					fmt.Sprintf("--port=%d", port),
-					databaseName,
+			JustBeforeEach(func() {
+				err := ioutil.WriteFile(artifactFile, []byte("SOME BACKUP SQL"), 0644)
+				if err != nil {
+					log.Fatalln("Failed to write to artifact file, %s", err)
 				}
 
-				Expect(fakeMysqlClient.Invocations()).To(HaveLen(2))
-				Expect(fakeMysqlClient.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
-				Expect(fakeMysqlClient.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
-				Expect(fakeMysqlClient.Invocations()[1].Stdin()).Should(ConsistOf("SOME BACKUP SQL"))
-				Expect(fakeMysqlClient.Invocations()[1].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+				cmd := exec.Command(
+					compiledSDKPath,
+					"--artifact-file",
+					artifactFile,
+					"--config",
+					configFile.Name(),
+					"--restore")
+
+				for key, val := range envVars {
+					cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
+				}
+
+				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).ToNot(HaveOccurred())
+				Eventually(session).Should(gexec.Exit())
 			})
 
-			It("succeeds", func() {
-				Expect(session).Should(gexec.Exit(0))
+			Context("when mysql succeeds", func() {
+				BeforeEach(func() {
+					fakeMysqlClient57.WhenCalled().WillPrintToStdOut("MYSQL server version 5.7.20")
+					fakeMysqlClient57.WhenCalled().WillExitWith(0)
+				})
+
+				Context("when TLS is not configured", func() {
+					It("calls mysql with the correct arguments", func() {
+						Expect(fakeMysqlClient57.Invocations()).To(HaveLen(2))
+
+						By("calling mysql with for version check", func() {
+							expectedVersionCheckArgs := []string{
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								"--skip-column-names",
+								"--silent",
+								`--execute=SELECT VERSION()`,
+							}
+
+							Expect(fakeMysqlClient57.Invocations()[0].Args()).Should(ConsistOf(expectedVersionCheckArgs))
+							Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+						})
+
+						By("calling mysql with for restore", func() {
+							expectedRestoreArgs := []string{
+								"-v",
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								databaseName,
+							}
+
+							Expect(fakeMysqlClient57.Invocations()[1].Args()).Should(ConsistOf(expectedRestoreArgs))
+							Expect(fakeMysqlClient57.Invocations()[1].Stdin()).Should(ConsistOf("SOME BACKUP SQL"))
+							Expect(fakeMysqlClient57.Invocations()[1].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+						})
+
+						By("succeeding", func() {
+							Expect(session).Should(gexec.Exit(0))
+						})
+					})
+				})
+
+				Context("when TLS is configured", func() {
+					BeforeEach(func() {
+						configFile = saveFile(fmt.Sprintf(`{
+							"adapter":  "mysql",
+							"username": "%s",
+							"password": "%s",
+							"host":     "%s",
+							"port":     %d,
+							"database": "%s",
+							"tls": {
+								"cert": {
+									"ca": "A_CA_CERT"
+								}
+							}
+						}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
+					})
+
+					It("calls mysql with the correct arguments", func() {
+						By("calling mysql to detect the version", func() {
+							Expect(fakeMysqlClient57.Invocations()).To(HaveLen(2))
+							Expect(fakeMysqlClient57.Invocations()[0].Args()).Should(ConsistOf(
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								HavePrefix("--ssl-ca="),
+								"--ssl-mode=VERIFY_IDENTITY",
+								"--skip-column-names",
+								"--silent",
+								`--execute=SELECT VERSION()`,
+							))
+							Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+						})
+
+						By("then calling mysql to restore", func() {
+							expectedArgs := []interface{}{
+								"-v",
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								HavePrefix("--ssl-ca="),
+								"--ssl-mode=VERIFY_IDENTITY",
+								databaseName,
+							}
+
+							Expect(fakeMysqlClient57.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+
+							caCertPath := strings.Split(fakeMysqlClient57.Invocations()[1].Args()[3], "=")[1]
+							Expect(caCertPath).To(BeAnExistingFile())
+							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
+						})
+					})
+				})
+			})
+
+			Context("when mysql fails", func() {
+				BeforeEach(func() {
+					fakeMysqlClient57.WhenCalledWith(
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--skip-column-names",
+						"--silent",
+						`--execute=SELECT VERSION()`,
+					).WillPrintToStdOut("MYSQL server version 5.7.20")
+					fakeMysqlClient57.WhenCalled().WillExitWith(1)
+				})
+
+				It("also fails", func() {
+					Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					Eventually(session).Should(gexec.Exit(1))
+				})
+			})
+		})
+	})
+
+	Context("mysql 5.6", func() {
+		BeforeEach(func() {
+			artifactFile = tempFilePath()
+			fakeMysqlClient57.Reset()
+			fakeMysqlDump56.Reset()
+			fakeMysqlClient56.Reset()
+
+			envVars["MYSQL_CLIENT_5_7_PATH"] = fakeMysqlClient57.Path
+			envVars["MYSQL_CLIENT_5_6_PATH"] = fakeMysqlClient56.Path
+			envVars["MYSQL_DUMP_5_6_PATH"] = fakeMysqlDump56.Path
+		})
+
+		Context("backup", func() {
+			BeforeEach(func() {
+				configFile = saveFile(fmt.Sprintf(`{
+					"adapter":  "mysql",
+					"username": "%s",
+					"password": "%s",
+					"host":     "%s",
+					"port":     %d,
+					"database": "%s"
+				}`,
+					username,
+					password,
+					host,
+					port,
+					databaseName))
+			})
+
+			JustBeforeEach(func() {
+				cmd := exec.Command(
+					compiledSDKPath,
+					"--artifact-file",
+					artifactFile,
+					"--config",
+					configFile.Name(),
+					"--backup")
+
+				for key, val := range envVars {
+					cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
+				}
+
+				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).ToNot(HaveOccurred())
+				Eventually(session).Should(gexec.Exit())
+			})
+
+			Context("when mysqldump succeeds", func() {
+				BeforeEach(func() {
+					fakeMysqlClient57.WhenCalled().WillPrintToStdOut("MYSQL server version 5.6.38")
+					fakeMysqlDump56.WhenCalled().WillExitWith(0)
+				})
+
+				It("calls mysql and mysqldump with the correct arguments", func() {
+					By("calling mysql to detect the version", func() {
+						Expect(fakeMysqlClient57.Invocations()).To(HaveLen(1))
+						Expect(fakeMysqlClient57.Invocations()[0].Args()).Should(ConsistOf(
+							fmt.Sprintf("--user=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							"--skip-column-names",
+							"--silent",
+							`--execute=SELECT VERSION()`,
+						))
+						Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					})
+
+					By("then calling dump", func() {
+						Expect(fakeMysqlDump56.Invocations()).To(HaveLen(1))
+						expectedArgs := []string{
+							fmt.Sprintf("--user=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							"-v",
+							"--single-transaction",
+							"--skip-add-locks",
+							fmt.Sprintf("--result-file=%s", artifactFile),
+							databaseName,
+						}
+
+						Expect(fakeMysqlDump56.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+						Expect(fakeMysqlDump56.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					})
+
+					Expect(session).Should(gexec.Exit(0))
+				})
+
+				Context("when 'tables' are specified in the configFile", func() {
+					BeforeEach(func() {
+						configFile = saveFile(fmt.Sprintf(`{
+					"adapter":  "mysql",
+					"username": "%s",
+					"password": "%s",
+					"host":     "%s",
+					"port":     %d,
+					"database": "%s",
+					"tables": ["table1", "table2", "table3"]
+				}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
+					})
+
+					It("calls mysqldump with the correct arguments", func() {
+						expectedArgs := []string{
+							fmt.Sprintf("--user=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							"-v",
+							"--single-transaction",
+							"--skip-add-locks",
+							fmt.Sprintf("--result-file=%s", artifactFile),
+							databaseName,
+							"table1",
+							"table2",
+							"table3",
+						}
+
+						Expect(fakeMysqlDump56.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+					})
+				})
+
+				Context("when TLS is configured", func() {
+					BeforeEach(func() {
+						configFile = saveFile(fmt.Sprintf(`{
+							"adapter":  "mysql",
+							"username": "%s",
+							"password": "%s",
+							"host":     "%s",
+							"port":     %d,
+							"database": "%s",
+							"tls": {
+								"cert": {
+									"ca": "A_CA_CERT"
+								}
+							}
+						}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
+					})
+
+					It("calls mysql and mysqldump with the correct arguments", func() {
+						By("calling mysql to detect the version", func() {
+							Expect(fakeMysqlClient57.Invocations()).To(HaveLen(1))
+							Expect(fakeMysqlClient57.Invocations()[0].Args()).Should(ConsistOf(
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								HavePrefix("--ssl-ca="),
+								"--ssl-mode=VERIFY_IDENTITY",
+								"--skip-column-names",
+								"--silent",
+								`--execute=SELECT VERSION()`,
+							))
+							Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+						})
+
+						By("then calling dump", func() {
+							expectedArgs := []interface{}{
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								HavePrefix("--ssl-ca="),
+								"--ssl-verify-server-cert",
+								"-v",
+								"--single-transaction",
+								"--skip-add-locks",
+								fmt.Sprintf("--result-file=%s", artifactFile),
+								databaseName,
+							}
+
+							Expect(fakeMysqlDump56.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+
+							caCertPath := strings.Split(fakeMysqlDump56.Invocations()[0].Args()[3], "=")[1]
+							Expect(caCertPath).To(BeAnExistingFile())
+							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
+						})
+					})
+				})
+			})
+
+			Context("when version detection fails", func() {
+				BeforeEach(func() {
+					fakeMysqlClient57.WhenCalledWith(
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--skip-column-names",
+						"--silent",
+						`--execute=SELECT VERSION()`,
+					).WillExitWith(1).WillPrintToStdErr("VERSION DETECTION FAILED!")
+				})
+
+				It("also fails", func() {
+					Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					Eventually(session).Should(gexec.Exit(1))
+					Expect(session.Err).To(gbytes.Say("VERSION DETECTION FAILED!"))
+				})
+			})
+
+			Context("when mysqldump fails", func() {
+				BeforeEach(func() {
+					fakeMysqlClient57.WhenCalledWith(
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--skip-column-names",
+						"--silent",
+						`--execute=SELECT VERSION()`,
+					).WillPrintToStdOut("MYSQL server version 5.6.38")
+					fakeMysqlDump56.WhenCalled().WillExitWith(1)
+				})
+
+				It("also fails", func() {
+					Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					Eventually(session).Should(gexec.Exit(1))
+				})
+			})
+
+			Context("when the server has an unsupported mysql major version", func() {
+				BeforeEach(func() {
+					fakeMysqlClient57.WhenCalledWith(
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--skip-column-names",
+						"--silent",
+						`--execute=SELECT VERSION()`,
+					).WillPrintToStdOut("MYSQL server version 4.7.20")
+				})
+
+				It("fails because of a version mismatch", func() {
+					Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					Expect(session).Should(gexec.Exit(1))
+					Expect(string(session.Err.Contents())).Should(ContainSubstring(
+						"unsupported version of mysql: 4.7"),
+					)
+				})
+			})
+
+			Context("when the server has an unsupported mysql minor version", func() {
+				BeforeEach(func() {
+					fakeMysqlClient57.WhenCalledWith(
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--skip-column-names",
+						"--silent",
+						`--execute=SELECT VERSION()`,
+					).WillPrintToStdOut("MYSQL server version 5.9.20")
+				})
+
+				It("fails because of a version mismatch", func() {
+					Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					Expect(session).Should(gexec.Exit(1))
+					Expect(string(session.Err.Contents())).Should(ContainSubstring(
+						"unsupported version of mysql: 5.9"),
+					)
+				})
+			})
+
+			Context("when the server has a supported mysql minor version with a different patch to the packaged utility", func() {
+				BeforeEach(func() {
+					fakeMysqlDump56.WhenCalled().WillExitWith(0)
+					fakeMysqlClient57.WhenCalledWith(
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--skip-column-names",
+						"--silent",
+						`--execute=SELECT VERSION()`,
+					).WillPrintToStdOut("MYSQL server version 5.6.5")
+				})
+
+				It("succeeds despite different patch versions", func() {
+					Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					Expect(session).Should(gexec.Exit(0))
+				})
 			})
 		})
 
-		Context("when mysql fails", func() {
+		Context("restore", func() {
 			BeforeEach(func() {
-				fakeMysqlClient.WhenCalledWith(
-					fmt.Sprintf("--user=%s", username),
-					fmt.Sprintf("--host=%s", host),
-					fmt.Sprintf("--port=%d", port),
-					"--skip-column-names",
-					"--silent",
-					`--execute=SELECT VERSION()`,
-				).WillPrintToStdOut("MYSQL server version 5.7.20")
-				fakeMysqlClient.WhenCalled().WillExitWith(1)
+				configFile = saveFile(fmt.Sprintf(`{
+					"adapter":  "mysql",
+					"username": "%s",
+					"password": "%s",
+					"host":     "%s",
+					"port":     %d,
+					"database": "%s"
+				}`,
+					username,
+					password,
+					host,
+					port,
+					databaseName))
 			})
 
-			It("also fails", func() {
-				Expect(fakeMysqlClient.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
-				Eventually(session).Should(gexec.Exit(1))
+			JustBeforeEach(func() {
+				err := ioutil.WriteFile(artifactFile, []byte("SOME BACKUP SQL"), 0644)
+				if err != nil {
+					log.Fatalln("Failed to write to artifact file, %s", err)
+				}
+
+				cmd := exec.Command(
+					compiledSDKPath,
+					"--artifact-file",
+					artifactFile,
+					"--config",
+					configFile.Name(),
+					"--restore")
+
+				for key, val := range envVars {
+					cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
+				}
+
+				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).ToNot(HaveOccurred())
+				Eventually(session).Should(gexec.Exit())
+			})
+
+			Context("when mysql succeeds", func() {
+				BeforeEach(func() {
+					fakeMysqlClient57.WhenCalled().WillPrintToStdOut("MYSQL server version 5.6.38")
+					fakeMysqlClient56.WhenCalled().WillExitWith(0)
+				})
+
+				Context("when TLS block is not configured", func() {
+					It("calls mysql with the correct arguments", func() {
+						By("calling mysql with the correct arguments for version checking", func() {
+							expectedVersionCheckArgs := []string{
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								"--skip-column-names",
+								"--silent",
+								`--execute=SELECT VERSION()`,
+							}
+							Expect(fakeMysqlClient57.Invocations()).To(HaveLen(1))
+							Expect(fakeMysqlClient57.Invocations()[0].Args()).Should(ConsistOf(expectedVersionCheckArgs))
+							Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+						})
+
+						By("calling mysql with the correct arguments for restoring", func() {
+							expectedRestoreArgs := []string{
+								"-v",
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								databaseName,
+							}
+
+							Expect(fakeMysqlClient56.Invocations()).To(HaveLen(1))
+							Expect(fakeMysqlClient56.Invocations()[0].Args()).Should(ConsistOf(expectedRestoreArgs))
+							Expect(fakeMysqlClient56.Invocations()[0].Stdin()).Should(ConsistOf("SOME BACKUP SQL"))
+							Expect(fakeMysqlClient56.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+						})
+
+						By("succeeding", func() {
+							Expect(session).Should(gexec.Exit(0))
+						})
+					})
+				})
+
+				Context("when TLS is configured", func() {
+					BeforeEach(func() {
+						configFile = saveFile(fmt.Sprintf(`{
+							"adapter":  "mysql",
+							"username": "%s",
+							"password": "%s",
+							"host":     "%s",
+							"port":     %d,
+							"database": "%s",
+							"tls": {
+								"cert": {
+									"ca": "A_CA_CERT"
+								}
+							}
+						}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
+					})
+
+					It("calls mysql with the correct arguments", func() {
+						By("calling mysql to detect the version", func() {
+							Expect(fakeMysqlClient57.Invocations()).To(HaveLen(1))
+							Expect(fakeMysqlClient57.Invocations()[0].Args()).Should(ConsistOf(
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								HavePrefix("--ssl-ca="),
+								"--ssl-mode=VERIFY_IDENTITY",
+								"--skip-column-names",
+								"--silent",
+								`--execute=SELECT VERSION()`,
+							))
+							Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+						})
+
+						By("then calling mysql to restore", func() {
+							expectedArgs := []interface{}{
+								"-v",
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								HavePrefix("--ssl-ca="),
+								"--ssl-verify-server-cert",
+								databaseName,
+							}
+
+							Expect(fakeMysqlClient56.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+
+							caCertPath := strings.Split(fakeMysqlClient56.Invocations()[0].Args()[3], "=")[1]
+							Expect(caCertPath).To(BeAnExistingFile())
+							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
+						})
+					})
+				})
+			})
+
+			Context("when mysql fails", func() {
+				BeforeEach(func() {
+					fakeMysqlClient57.WhenCalledWith(
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--skip-column-names",
+						"--silent",
+						`--execute=SELECT VERSION()`,
+					).WillPrintToStdOut("MYSQL server version 5.6.38")
+					fakeMysqlClient56.WhenCalled().WillExitWith(1)
+				})
+
+				It("also fails", func() {
+					Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					Eventually(session).Should(gexec.Exit(1))
+				})
 			})
 		})
 	})

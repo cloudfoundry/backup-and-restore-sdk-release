@@ -38,8 +38,12 @@ var fakePgDump96 *binmock.Mock
 var fakePgRestore94 *binmock.Mock
 var fakePgRestore96 *binmock.Mock
 var fakePgClient *binmock.Mock
-var fakeMysqlClient *binmock.Mock
-var fakeMysqlDump *binmock.Mock
+var fakeMysqlClient55 *binmock.Mock
+var fakeMysqlDump55 *binmock.Mock
+var fakeMysqlClient56 *binmock.Mock
+var fakeMysqlDump56 *binmock.Mock
+var fakeMysqlClient57 *binmock.Mock
+var fakeMysqlDump57 *binmock.Mock
 
 var _ = BeforeSuite(func() {
 	var err error
@@ -52,8 +56,12 @@ var _ = BeforeSuite(func() {
 	fakePgDump96 = binmock.NewBinMock(Fail)
 	fakePgRestore94 = binmock.NewBinMock(Fail)
 	fakePgRestore96 = binmock.NewBinMock(Fail)
-	fakeMysqlDump = binmock.NewBinMock(Fail)
-	fakeMysqlClient = binmock.NewBinMock(Fail)
+	fakeMysqlDump55 = binmock.NewBinMock(Fail)
+	fakeMysqlClient55 = binmock.NewBinMock(Fail)
+	fakeMysqlDump56 = binmock.NewBinMock(Fail)
+	fakeMysqlClient56 = binmock.NewBinMock(Fail)
+	fakeMysqlDump57 = binmock.NewBinMock(Fail)
+	fakeMysqlClient57 = binmock.NewBinMock(Fail)
 })
 
 var _ = BeforeEach(func() {

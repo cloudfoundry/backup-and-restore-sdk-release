@@ -53,21 +53,25 @@ func (f InteractorFactory) makeMysqlBackuper(config config.ConnectionConfig) (In
 		return nil, err
 	}
 
-	return mysql.NewBackuper(config, mysqlDumpPath), nil
+	mysqlSSLProvider := f.getSSLCommandProvider(mysqldbVersion)
+
+	return mysql.NewBackuper(config, mysqlDumpPath, mysqlSSLProvider), nil
 }
 
 func (f InteractorFactory) makeMysqlRestorer(config config.ConnectionConfig) (Interactor, error) {
-	mysqlVersion, err := f.mysqlServerVersionDetector.GetVersion(config)
+	mysqldbVersion, err := f.mysqlServerVersionDetector.GetVersion(config)
 	if err != nil {
 		return nil, err
 	}
 
-	_, mysqlRestorePath, err := f.getUtilitiesForMySQL(mysqlVersion)
+	_, mysqlRestorePath, err := f.getUtilitiesForMySQL(mysqldbVersion)
 	if err != nil {
 		return nil, err
 	}
 
-	return mysql.NewRestorer(config, mysqlRestorePath), nil
+	mysqlSSLProvider := f.getSSLCommandProvider(mysqldbVersion)
+
+	return mysql.NewRestorer(config, mysqlRestorePath, mysqlSSLProvider), nil
 }
 
 func (f InteractorFactory) makePostgresBackuper(config config.ConnectionConfig) (Interactor, error) {
@@ -119,6 +123,14 @@ func (f InteractorFactory) getUtilitiesForMySQL(mysqlVersion version.DatabaseSer
 	}
 
 	return "", "", fmt.Errorf("unsupported version of %s: %s.%s", implementation, semVer.Major, semVer.Minor)
+}
+
+func (f InteractorFactory) getSSLCommandProvider(mysqlVersion version.DatabaseServerVersion) mysql.SSLOptionsProvider {
+	if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "7", "20")) {
+		return mysql.NewDefaultSSLProvider()
+	} else {
+		return mysql.NewLegacySSLOptionsProvider()
+	}
 }
 
 func (f InteractorFactory) getUtilitiesForPostgres(postgresVersion version.DatabaseServerVersion) (string, string, string, error) {
