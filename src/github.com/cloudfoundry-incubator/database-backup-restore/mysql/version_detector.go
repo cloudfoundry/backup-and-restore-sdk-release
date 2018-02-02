@@ -19,7 +19,7 @@ func NewServerVersionDetector(mysqlPath string) ServerVersionDetector {
 }
 
 func (d ServerVersionDetector) GetVersion(config config.ConnectionConfig) (version.DatabaseServerVersion, error) {
-	stdout, stderr, err := NewMysqlCommand(config, d.mysqlPath).WithParams(
+	stdout, stderr, err := NewMysqlCommand(config, d.mysqlPath, NewDefaultSSLProvider()).WithParams(
 		"--skip-column-names",
 		"--silent",
 		"--execute=SELECT VERSION()",

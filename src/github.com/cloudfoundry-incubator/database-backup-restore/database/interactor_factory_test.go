@@ -204,7 +204,7 @@ var _ = Describe("InteractorFactory", func() {
 
 				It("builds a mysql.Backuper", func() {
 					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewBackuper(connectionConfig, "mariadb_dump")))
+					Expect(interactor).To(Equal(mysql.NewBackuper(connectionConfig, "mariadb_dump", mysql.NewLegacySSLOptionsProvider())))
 				})
 			})
 
@@ -216,7 +216,7 @@ var _ = Describe("InteractorFactory", func() {
 
 				It("builds a mysql.Backuper", func() {
 					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewBackuper(connectionConfig, "mysql_55_dump")))
+					Expect(interactor).To(Equal(mysql.NewBackuper(connectionConfig, "mysql_55_dump", mysql.NewLegacySSLOptionsProvider())))
 				})
 			})
 
@@ -228,7 +228,7 @@ var _ = Describe("InteractorFactory", func() {
 
 				It("builds a mysql.Backuper", func() {
 					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewBackuper(connectionConfig, "mysql_56_dump")))
+					Expect(interactor).To(Equal(mysql.NewBackuper(connectionConfig, "mysql_56_dump", mysql.NewLegacySSLOptionsProvider())))
 				})
 			})
 
@@ -240,7 +240,7 @@ var _ = Describe("InteractorFactory", func() {
 
 				It("builds a mysql.Backuper", func() {
 					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewBackuper(connectionConfig, "mysql_57_dump")))
+					Expect(interactor).To(Equal(mysql.NewBackuper(connectionConfig, "mysql_57_dump", mysql.NewDefaultSSLProvider())))
 				})
 			})
 

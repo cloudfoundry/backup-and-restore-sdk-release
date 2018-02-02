@@ -7,22 +7,25 @@ import (
 )
 
 type ConnectionConfig struct {
-	Username string    `json:"username"`
-	Password string    `json:"password"`
-	Port     int       `json:"port"`
-	Adapter  string    `json:"adapter"`
-	Host     string    `json:"host"`
-	Database string    `json:"database"`
-	Tables   []string  `json:"tables"`
-	Tls      TlsConfig `json:"tls"`
+	Username string     `json:"username"`
+	Password string     `json:"password"`
+	Port     int        `json:"port"`
+	Adapter  string     `json:"adapter"`
+	Host     string     `json:"host"`
+	Database string     `json:"database"`
+	Tables   []string   `json:"tables"`
+	Tls      *TlsConfig `json:"tls"`
 }
 
 type TlsConfig struct {
-	Cert CertTlsConfig `json:"cert"`
+	SkipHostVerify bool          `json:skip_host_verify`
+	Cert           CertTlsConfig `json:"cert"`
 }
 
 type CertTlsConfig struct {
-	Ca string `json:"ca"`
+	Ca          string `json:"ca"`
+	Certificate string `json:"certificate"`
+	PrivateKey  string `json:"private_key"`
 }
 
 func ParseAndValidateConnectionConfig(configPath string) (ConnectionConfig, error) {
