@@ -615,7 +615,7 @@ var _ = Describe("MySQL", func() {
 					})
 				})
 
-				Context("when TLS is configured", func() {
+				Context("when TLS is configured with hostname verification turned off", func() {
 					BeforeEach(func() {
 						configFile = saveFile(fmt.Sprintf(`{
 							"adapter":  "mysql",
@@ -625,6 +625,7 @@ var _ = Describe("MySQL", func() {
 							"port":     %d,
 							"database": "%s",
 							"tls": {
+								"skip_host_verify": true,
 								"cert": {
 									"ca": "A_CA_CERT"
 								}
@@ -645,12 +646,13 @@ var _ = Describe("MySQL", func() {
 								fmt.Sprintf("--host=%s", host),
 								fmt.Sprintf("--port=%d", port),
 								HavePrefix("--ssl-ca="),
-								"--ssl-mode=VERIFY_IDENTITY",
+								"--ssl-mode=VERIFY_CA",
 								"--skip-column-names",
 								"--silent",
 								`--execute=SELECT VERSION()`,
 							))
-							Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+							Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(
+								HaveKeyWithValue("MYSQL_PWD", password))
 						})
 
 						By("then calling dump", func() {
@@ -659,7 +661,6 @@ var _ = Describe("MySQL", func() {
 								fmt.Sprintf("--host=%s", host),
 								fmt.Sprintf("--port=%d", port),
 								HavePrefix("--ssl-ca="),
-								"--ssl-verify-server-cert",
 								"-v",
 								"--single-transaction",
 								"--skip-add-locks",

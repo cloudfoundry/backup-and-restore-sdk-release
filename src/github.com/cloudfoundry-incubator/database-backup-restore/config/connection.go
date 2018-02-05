@@ -18,7 +18,7 @@ type ConnectionConfig struct {
 }
 
 type TlsConfig struct {
-	SkipHostVerify bool          `json:skip_host_verify`
+	SkipHostVerify bool          `json:"skip_host_verify"`
 	Cert           CertTlsConfig `json:"cert"`
 }
 

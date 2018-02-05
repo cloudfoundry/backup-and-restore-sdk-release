@@ -86,10 +86,11 @@ var _ = Describe("mysql with tls", func() {
 		})
 
 		Context("when TLS info is provided in the config", func() {
-			Context("And the CA cert is correct", func() {
-				BeforeEach(func() {
-					configJson = fmt.Sprintf(
-						`{
+			Context("And host verification is not skipped", func() {
+				Context("And the CA cert is correct", func() {
+					BeforeEach(func() {
+						configJson = fmt.Sprintf(
+							`{
 							"username": "%s",
 							"password": "%s",
 							"host": "%s",
@@ -102,57 +103,100 @@ var _ = Describe("mysql with tls", func() {
 								}
 							}
 						}`,
-						sslUser,
-						mysqlPassword,
-						mysqlHostName,
-						mysqlPort,
-						databaseName,
-						escapeNewLines(mysqlCaCert),
-					)
-				})
+							sslUser,
+							mysqlPassword,
+							mysqlHostName,
+							mysqlPort,
+							databaseName,
+							escapeNewLines(mysqlCaCert),
+						)
+					})
 
-				It("works", func() {
-					brJob.RunOnVMAndSucceed(
-						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
-							dbDumpPath, configPath))
+					It("works", func() {
+						brJob.RunOnVMAndSucceed(
+							fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+								dbDumpPath, configPath))
 
-					RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
+						RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
 
-					brJob.RunOnVMAndSucceed(
-						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
-							dbDumpPath, configPath))
+						brJob.RunOnVMAndSucceed(
+							fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
+								dbDumpPath, configPath))
 
-					Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(ConsistOf("Old Person"))
+						Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(ConsistOf("Old Person"))
+					})
 				})
 			})
-
-			Context("And the CA cert is malformed", func() {
-				BeforeEach(func() {
-					configJson = fmt.Sprintf(
-						`{
-								"username": "%s",
-								"password": "%s",
-								"host": "%s",
-								"port": %s,
-								"database": "%s",
-								"adapter": "mysql",
-								"tls": {
-									"cert": {
-										"ca": "fooooooo"
-									}
+			Context("And host verification is skipped", func() {
+				Context("And the CA cert is correct", func() {
+					BeforeEach(func() {
+						configJson = fmt.Sprintf(
+							`{
+							"username": "%s",
+							"password": "%s",
+							"host": "%s",
+							"port": %s,
+							"database": "%s",
+							"adapter": "mysql",
+							"tls": {
+								"skip_host_verify": true,
+								"cert": {
+									"ca": "%s"
 								}
-							}`,
-						sslUser,
-						mysqlPassword,
-						mysqlHostName,
-						mysqlPort,
-						databaseName,
-					)
-				})
+							}
+						}`,
+							sslUser,
+							mysqlPassword,
+							mysqlHostName,
+							mysqlPort,
+							databaseName,
+							escapeNewLines(mysqlCaCert),
+						)
+					})
 
-				It("does not work", func() {
-					Expect(brJob.RunOnInstance("/var/vcap/jobs/database-backup-restorer/bin/backup",
-						"--artifact-file", dbDumpPath, "--config", configPath)).To(gexec.Exit(1))
+					It("works", func() {
+						brJob.RunOnVMAndSucceed(
+							fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+								dbDumpPath, configPath))
+
+						RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
+
+						brJob.RunOnVMAndSucceed(
+							fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
+								dbDumpPath, configPath))
+
+						Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(ConsistOf("Old Person"))
+					})
+				})
+				Context("And the CA cert is malformed", func() {
+					BeforeEach(func() {
+						configJson = fmt.Sprintf(
+							`{
+									"username": "%s",
+									"password": "%s",
+									"host": "%s",
+									"port": %s,
+									"database": "%s",
+									"adapter": "mysql",
+									"tls": {
+										"skip_host_verify": true,
+										"cert": {
+											"ca": "fooooooo"
+										}
+									}
+								}`,
+							sslUser,
+							mysqlPassword,
+							mysqlHostName,
+							mysqlPort,
+							databaseName,
+						)
+					})
+
+					It("does not work", func() {
+						Expect(brJob.RunOnInstance("/var/vcap/jobs/database-backup-restorer/bin/backup",
+							"--artifact-file", dbDumpPath, "--config", configPath)).To(gexec.Exit(1))
+					})
 				})
 			})
 		})
