@@ -204,7 +204,8 @@ var _ = Describe("InteractorFactory", func() {
 
 				It("builds a mysql.Backuper", func() {
 					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewBackuper(connectionConfig, "mariadb_dump", mysql.NewLegacySSLOptionsProvider())))
+					Expect(interactor).To(Equal(mysql.NewBackuper(connectionConfig, "mariadb_dump",
+						mysql.NewLegacySSLOptionsProvider())))
 				})
 			})
 
@@ -264,55 +265,81 @@ var _ = Describe("InteractorFactory", func() {
 			Context("when the version is detected as MariaDB 10.1.30", func() {
 				BeforeEach(func() {
 					mysqlServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"mariadb", version.SemanticVersion{Major: "10", Minor: "1", Patch: "30"}}, nil)
+						version.DatabaseServerVersion{
+							"mariadb",
+							version.SemanticVersion{Major: "10", Minor: "1", Patch: "30"}}, nil)
 				})
 
 				It("builds a mysql.Restorer", func() {
 					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewRestorer(connectionConfig, "mariadb_restore")))
+					Expect(interactor).To(Equal(mysql.NewRestorer(
+						connectionConfig,
+						"mariadb_restore",
+						mysql.NewLegacySSLOptionsProvider()),
+					))
 				})
 			})
 
 			Context("when the version is detected as MySQL 5.5.57", func() {
 				BeforeEach(func() {
 					mysqlServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"mysql", version.SemanticVersion{Major: "5", Minor: "5", Patch: "57"}}, nil)
+						version.DatabaseServerVersion{
+							"mysql",
+							version.SemanticVersion{Major: "5", Minor: "5", Patch: "57"}}, nil)
 				})
 
 				It("builds a mysql.Restorer", func() {
 					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewRestorer(connectionConfig, "mysql_55_restore")))
+					Expect(interactor).To(Equal(mysql.NewRestorer(
+						connectionConfig,
+						"mysql_55_restore",
+						mysql.NewLegacySSLOptionsProvider()),
+					))
 				})
 			})
 
 			Context("when the version is detected as MySQL 5.6.37", func() {
 				BeforeEach(func() {
 					mysqlServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"mysql", version.SemanticVersion{Major: "5", Minor: "6", Patch: "37"}}, nil)
+						version.DatabaseServerVersion{
+							"mysql",
+							version.SemanticVersion{Major: "5", Minor: "6", Patch: "37"}}, nil)
 				})
 
 				It("builds a mysql.Restorer", func() {
 					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewRestorer(connectionConfig, "mysql_56_restore")))
+					Expect(interactor).To(Equal(mysql.NewRestorer(
+						connectionConfig,
+						"mysql_56_restore",
+						mysql.NewLegacySSLOptionsProvider()),
+					))
 				})
 			})
 
 			Context("when the version is detected as MySQL 5.7.19", func() {
 				BeforeEach(func() {
 					mysqlServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"mysql", version.SemanticVersion{Major: "5", Minor: "7", Patch: "19"}}, nil)
+						version.DatabaseServerVersion{
+							"mysql",
+							version.SemanticVersion{Major: "5", Minor: "7", Patch: "19"}}, nil)
 				})
 
 				It("builds a mysql.Restorer", func() {
 					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewRestorer(connectionConfig, "mysql_57_restore")))
+					Expect(interactor).To(Equal(mysql.NewRestorer(
+						connectionConfig,
+						"mysql_57_restore",
+						mysql.NewDefaultSSLProvider(),
+					)))
 				})
 			})
 
 			Context("when the version is detected as the not supported MariaDB 5.5.58", func() {
 				BeforeEach(func() {
 					mysqlServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"mariadb", version.SemanticVersion{Major: "5", Minor: "5", Patch: "58"}}, nil)
+						version.DatabaseServerVersion{
+							"mariadb",
+							version.SemanticVersion{Major: "5", Minor: "5", Patch: "58"}}, nil)
 				})
 
 				It("errors", func() {
@@ -329,7 +356,8 @@ var _ = Describe("InteractorFactory", func() {
 		})
 
 		It("fails", func() {
-			Expect(factoryError).To(MatchError("unsupported adapter/action combination: unsupported/backup"))
+			Expect(factoryError).To(MatchError(
+				"unsupported adapter/action combination: unsupported/backup"))
 		})
 	})
 
@@ -341,7 +369,8 @@ var _ = Describe("InteractorFactory", func() {
 
 		It("fails", func() {
 			Expect(interactor).To(BeNil())
-			Expect(factoryError).To(MatchError("unsupported adapter/action combination: postgres/unsupported"))
+			Expect(factoryError).To(MatchError(
+				"unsupported adapter/action combination: postgres/unsupported"))
 		})
 	})
 })

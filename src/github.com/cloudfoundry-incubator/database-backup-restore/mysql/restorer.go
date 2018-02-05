@@ -14,7 +14,10 @@ type Restorer struct {
 	sslOptionsProvider SSLOptionsProvider
 }
 
-func NewRestorer(config config.ConnectionConfig, restoreBinary string, sslOptionsProvider SSLOptionsProvider) Restorer {
+func NewRestorer(
+	config config.ConnectionConfig,
+	restoreBinary string,
+	sslOptionsProvider SSLOptionsProvider) Restorer {
 	return Restorer{
 		config:             config,
 		clientBinary:       restoreBinary,
@@ -29,7 +32,10 @@ func (r Restorer) Action(artifactFilePath string) error {
 	}
 	artifactReader := bufio.NewReader(artifactFile)
 
-	_, _, err = NewMysqlCommand(r.config, r.clientBinary, r.sslOptionsProvider).WithParams("-v", r.config.Database).WithStdin(artifactReader).Run()
+	_, _, err = NewMysqlCommand(
+		r.config,
+		r.clientBinary,
+		r.sslOptionsProvider).WithParams("-v", r.config.Database).WithStdin(artifactReader).Run()
 
 	return err
 }
