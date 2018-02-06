@@ -46,7 +46,7 @@ var _ = Describe("mysql", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
 					`{"username":"%s","password":"%s","host":"%s","port":%s,"database":"%s","adapter":"mysql"}`,
-					mysqlUsername,
+					mysqlNonSslUsername,
 					mysqlPassword,
 					mysqlHostName,
 					mysqlPort,
@@ -82,7 +82,7 @@ var _ = Describe("mysql", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
 					`{"username":"%s","password":"%s","host":"%s","port":%s,"database":"%s","adapter":"mysql","tables":["people"]}`,
-					mysqlUsername,
+					mysqlNonSslUsername,
 					mysqlPassword,
 					mysqlHostName,
 					mysqlPort,
@@ -122,7 +122,7 @@ var _ = Describe("mysql", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
 					`{"username":"%s","password":"%s","host":"%s","port":%s,"database":"%s","adapter":"mysql","tables":["people", "not there"]}`,
-					mysqlUsername,
+					mysqlNonSslUsername,
 					mysqlPassword,
 					mysqlHostName,
 					mysqlPort,
@@ -148,7 +148,7 @@ var _ = Describe("mysql", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
 					`{"username":"%s","password":"%s","host":"%s","port":%s,"database":"%s","adapter":"mysql","tables":["lizards", "form-shifting-people"]}`,
-					mysqlUsername,
+					mysqlNonSslUsername,
 					mysqlPassword,
 					mysqlHostName,
 					mysqlPort,

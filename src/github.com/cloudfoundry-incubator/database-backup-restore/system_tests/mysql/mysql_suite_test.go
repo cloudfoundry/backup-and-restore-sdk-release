@@ -19,7 +19,7 @@ var proxySession *gexec.Session
 var connection *sql.DB
 
 var mysqlHostName string
-var mysqlUsername string
+var mysqlNonSslUsername string
 var mysqlPassword string
 var mysqlPort string
 
@@ -42,7 +42,7 @@ var _ = Describe("mysql", func() {
 		}
 
 		mysqlHostName = MustHaveEnv("MYSQL_HOSTNAME")
-		mysqlUsername = MustHaveEnv("MYSQL_USERNAME")
+		mysqlNonSslUsername = MustHaveEnv("MYSQL_USERNAME")
 		mysqlPassword = MustHaveEnv("MYSQL_PASSWORD")
 		mysqlPort = MustHaveEnv("MYSQL_PORT")
 
@@ -51,7 +51,7 @@ var _ = Describe("mysql", func() {
 		connection, proxySession = ConnectMysql(
 			mysqlHostName,
 			mysqlPassword,
-			mysqlUsername,
+			mysqlNonSslUsername,
 			mysqlPort,
 			os.Getenv("SSH_PROXY_HOST"),
 			os.Getenv("SSH_PROXY_USER"),
