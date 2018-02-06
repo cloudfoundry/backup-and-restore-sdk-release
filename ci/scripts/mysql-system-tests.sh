@@ -40,9 +40,4 @@ export MYSQL_CA_CERT="$(cat $PWD/bosh-backup-and-restore-meta/${MYSQL_CA_CERT_PA
 
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/database-backup-restore
 dep ensure
-if [[ "${TEST_TLS_VERIFY_IDENTITY}" = "false" ]]
-then
-  ginkgo -v -r -trace -skip "And host verification is not skipped" system_tests/mysql
-else
-  ginkgo -v -r -trace system_tests/mysql
-fi
+ginkgo -v -r -trace system_tests/mysql

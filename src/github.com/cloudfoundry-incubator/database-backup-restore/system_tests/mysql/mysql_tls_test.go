@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"fmt"
+	"os"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -15,6 +16,12 @@ import (
 )
 
 var _ = Describe("mysql with tls", func() {
+	if os.Getenv("TEST_TLS") == "false" {
+		fmt.Println("**********************************************")
+		fmt.Println("Not testing TLS")
+		fmt.Println("**********************************************")
+		return
+	}
 	var dbDumpPath string
 	var configPath string
 	var databaseName string
@@ -87,6 +94,12 @@ var _ = Describe("mysql with tls", func() {
 
 		Context("when TLS info is provided in the config", func() {
 			Context("And host verification is not skipped", func() {
+				if os.Getenv("TEST_TLS_VERIFY_IDENTITY") == "false" {
+					fmt.Println("**********************************************")
+					fmt.Println("Not testing TLS with Verify Identity")
+					fmt.Println("**********************************************")
+					return
+				}
 				Context("And the CA cert is correct", func() {
 					BeforeEach(func() {
 						configJson = fmt.Sprintf(
