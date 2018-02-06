@@ -42,7 +42,7 @@ func (s3Cli S3Cli) ListObjects(s string) ([]string, error) {
 		return nil, err
 	}
 
-	files := []string{}
+	var files []string
 	for _, object := range response.Contents {
 		files = append(files, object.Key)
 	}

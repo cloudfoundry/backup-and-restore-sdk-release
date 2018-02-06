@@ -48,7 +48,7 @@ func containsNullVersion(latestVersions []BlobVersion) bool {
 }
 
 func filterLatest(versions []Version) []BlobVersion {
-	filteredVersions := []BlobVersion{}
+	var filteredVersions []BlobVersion
 	for _, version := range versions {
 		if version.IsLatest {
 			filteredVersions = append(filteredVersions, BlobVersion{Id: version.Id, BlobKey: version.Key})

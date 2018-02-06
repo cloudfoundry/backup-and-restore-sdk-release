@@ -20,13 +20,13 @@ func NewS3API(endpoint, regionName, accessKeyId, accessKeySecret string) (S3Api,
 		return S3Api{}, err
 	}
 
-	s3Session := s3.New(awsSession)
-	return S3Api{regionName: regionName, S3: s3Session}, nil
+	s3Client := s3.New(awsSession)
+	return S3Api{regionName: regionName, s3Client: s3Client}, nil
 }
 
 type S3Api struct {
 	regionName string
-	*s3.S3
+	s3Client   *s3.S3
 }
 
 func (s3Api S3Api) CopyVersion(sourceBucketName, blobKey, versionId, destinationBucketName string) error {
@@ -36,7 +36,7 @@ func (s3Api S3Api) CopyVersion(sourceBucketName, blobKey, versionId, destination
 		CopySource: aws.String(fmt.Sprintf("/%s/%s?versionId=%s", sourceBucketName, blobKey, versionId)),
 	}
 
-	_, err := s3Api.S3.CopyObject(&input)
+	_, err := s3Api.s3Client.CopyObject(&input)
 
 	return err
 }
@@ -47,7 +47,7 @@ func (s3Api S3Api) DeleteObject(bucketName, file string) error {
 		Key:    aws.String(file),
 	}
 
-	_, err := s3Api.S3.DeleteObject(&input)
+	_, err := s3Api.s3Client.DeleteObject(&input)
 
 	return err
 }
