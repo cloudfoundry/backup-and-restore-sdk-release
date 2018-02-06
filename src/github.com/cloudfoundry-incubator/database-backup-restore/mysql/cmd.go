@@ -14,9 +14,7 @@ func NewMysqlCommand(config config.ConnectionConfig, cmd string, sslOptionsProvi
 		fmt.Sprintf("--port=%d", config.Port),
 	}
 
-	if config.Tls != nil {
-		cmdArgs = append(cmdArgs, sslOptionsProvider.BuildSSLParams(config.Tls)...)
-	}
+	cmdArgs = append(cmdArgs, sslOptionsProvider.BuildSSLParams(config.Tls)...)
 
 	return runner.NewCommand(cmd).WithParams(cmdArgs...).WithEnv(map[string]string{"MYSQL_PWD": config.Password})
 }

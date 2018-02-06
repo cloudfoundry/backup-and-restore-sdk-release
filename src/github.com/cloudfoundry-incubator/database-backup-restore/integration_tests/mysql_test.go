@@ -560,10 +560,11 @@ var _ = Describe("MySQL", func() {
 
 					By("then calling dump", func() {
 						Expect(fakeMysqlDump56.Invocations()).To(HaveLen(1))
-						expectedArgs := []string{
+						expectedArgs := []interface{}{
 							fmt.Sprintf("--user=%s", username),
 							fmt.Sprintf("--host=%s", host),
 							fmt.Sprintf("--port=%d", port),
+							HavePrefix("--ssl-cipher="),
 							"-v",
 							"--single-transaction",
 							"--skip-add-locks",
@@ -597,10 +598,11 @@ var _ = Describe("MySQL", func() {
 					})
 
 					It("calls mysqldump with the correct arguments", func() {
-						expectedArgs := []string{
+						expectedArgs := []interface{}{
 							fmt.Sprintf("--user=%s", username),
 							fmt.Sprintf("--host=%s", host),
 							fmt.Sprintf("--port=%d", port),
+							HavePrefix("--ssl-cipher="),
 							"-v",
 							"--single-transaction",
 							"--skip-add-locks",
@@ -841,11 +843,12 @@ var _ = Describe("MySQL", func() {
 						})
 
 						By("calling mysql with the correct arguments for restoring", func() {
-							expectedRestoreArgs := []string{
+							expectedRestoreArgs := []interface{}{
 								"-v",
 								fmt.Sprintf("--user=%s", username),
 								fmt.Sprintf("--host=%s", host),
 								fmt.Sprintf("--port=%d", port),
+								HavePrefix("--ssl-cipher="),
 								databaseName,
 							}
 
