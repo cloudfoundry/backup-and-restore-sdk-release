@@ -51,17 +51,6 @@ instance_groups:
         permissions:
         - "SUPERUSER"
       port: 5432
-- name: database-backup-restorer
-  instances: 1
-  vm_type: small
-  persistent_disk_type: fifty
-  stemcell: trusty
-  networks:
-  - name: concourse
-  jobs:
-  - name: database-backup-restorer
-    release: backup-and-restore-sdk
-  azs: [z1]
 
 update:
   canaries: 1

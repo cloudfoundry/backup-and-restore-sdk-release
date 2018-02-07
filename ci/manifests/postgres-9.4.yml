@@ -48,17 +48,6 @@ instance_groups:
       user: test_user
       password: ((db_password))
       listen_address: 0.0.0.0
-- name: database-backup-restorer
-  instances: 1
-  vm_type: small
-  persistent_disk_type: fifty
-  stemcell: trusty
-  networks:
-  - name: concourse
-  jobs:
-  - name: database-backup-restorer
-    release: backup-and-restore-sdk
-  azs: [z1]
 
 update:
   canaries: 1
