@@ -222,7 +222,7 @@ var _ = Describe("mysql with tls", func() {
 		})
 	})
 
-	FContext("when the db user requires TLS and Mutual TLS", func() {
+	Context("when the db user requires TLS and Mutual TLS", func() {
 		if os.Getenv("TEST_TLS_MUTUAL_TLS") == "false" {
 			fmt.Println("**********************************************")
 			fmt.Println("Not testing TLS with Mutual TLS")
