@@ -24,6 +24,8 @@ var mysqlPassword string
 var mysqlPort string
 
 var mysqlCaCert string
+var mysqlClientCert string
+var mysqlClientKey string
 
 var brJob JobInstance
 
@@ -47,6 +49,8 @@ var _ = Describe("mysql", func() {
 		mysqlPort = MustHaveEnv("MYSQL_PORT")
 
 		mysqlCaCert = os.Getenv("MYSQL_CA_CERT")
+		mysqlClientCert = os.Getenv("MYSQL_CLIENT_CERT")
+		mysqlClientKey = os.Getenv("MYSQL_CLIENT_KEY")
 
 		connection, proxySession = ConnectMysql(
 			mysqlHostName,

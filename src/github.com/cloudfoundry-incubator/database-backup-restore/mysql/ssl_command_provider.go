@@ -24,6 +24,16 @@ func (LegacySSLOptionsProvider) BuildSSLParams(config *config.TlsConfig) []strin
 		caCertFile, _ := ioutil.TempFile("", "")
 		ioutil.WriteFile(caCertFile.Name(), []byte(config.Cert.Ca), 0777)
 		cmdArgs = append(cmdArgs, "--ssl-ca="+caCertFile.Name())
+		if config.Cert.Certificate != "" {
+			clientCertFile, _ := ioutil.TempFile("", "")
+			ioutil.WriteFile(clientCertFile.Name(), []byte(config.Cert.Certificate), 0777)
+			cmdArgs = append(cmdArgs, "--ssl-cert="+clientCertFile.Name())
+		}
+		if config.Cert.PrivateKey != "" {
+			clientKeyFile, _ := ioutil.TempFile("", "")
+			ioutil.WriteFile(clientKeyFile.Name(), []byte(config.Cert.PrivateKey), 0777)
+			cmdArgs = append(cmdArgs, "--ssl-key="+clientKeyFile.Name())
+		}
 		if !config.SkipHostVerify {
 			cmdArgs = append(cmdArgs, "--ssl-verify-server-cert")
 		}
@@ -45,6 +55,16 @@ func (DefaultSSLOptionsProvider) BuildSSLParams(config *config.TlsConfig) []stri
 		caCertFile, _ := ioutil.TempFile("", "")
 		ioutil.WriteFile(caCertFile.Name(), []byte(config.Cert.Ca), 0777)
 		cmdArgs = append(cmdArgs, "--ssl-ca="+caCertFile.Name())
+		if config.Cert.Certificate != "" {
+			clientCertFile, _ := ioutil.TempFile("", "")
+			ioutil.WriteFile(clientCertFile.Name(), []byte(config.Cert.Certificate), 0777)
+			cmdArgs = append(cmdArgs, "--ssl-cert="+clientCertFile.Name())
+		}
+		if config.Cert.PrivateKey != "" {
+			clientKeyFile, _ := ioutil.TempFile("", "")
+			ioutil.WriteFile(clientKeyFile.Name(), []byte(config.Cert.PrivateKey), 0777)
+			cmdArgs = append(cmdArgs, "--ssl-key="+clientKeyFile.Name())
+		}
 		if config.SkipHostVerify {
 			cmdArgs = append(cmdArgs, "--ssl-mode=VERIFY_CA")
 		} else {

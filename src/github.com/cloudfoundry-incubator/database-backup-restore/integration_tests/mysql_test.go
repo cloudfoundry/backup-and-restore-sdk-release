@@ -225,6 +225,82 @@ var _ = Describe("MySQL", func() {
 						})
 					})
 				})
+
+				Context("when TLS is configured with client cert and private key", func() {
+					BeforeEach(func() {
+						configFile = saveFile(fmt.Sprintf(`{
+							"adapter":  "mysql",
+							"username": "%s",
+							"password": "%s",
+							"host":     "%s",
+							"port":     %d,
+							"database": "%s",
+							"tls": {
+								"cert": {
+									"ca": "A_CA_CERT",
+									"certificate": "A_CLIENT_CERT",
+									"private_key": "A_CLIENT_KEY"
+								}
+							}
+						}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
+					})
+
+					It("calls mysql and mysqldump with the correct arguments", func() {
+						By("calling mysql to detect the version", func() {
+							Expect(fakeMysqlClient57.Invocations()).To(HaveLen(1))
+							Expect(fakeMysqlClient57.Invocations()[0].Args()).Should(ConsistOf(
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								HavePrefix("--ssl-ca="),
+								HavePrefix("--ssl-cert="),
+								HavePrefix("--ssl-key="),
+								"--ssl-mode=VERIFY_IDENTITY",
+								"--skip-column-names",
+								"--silent",
+								`--execute=SELECT VERSION()`,
+							))
+							Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(
+								HaveKeyWithValue("MYSQL_PWD", password))
+						})
+
+						By("then calling dump", func() {
+							expectedArgs := []interface{}{
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								HavePrefix("--ssl-ca="),
+								HavePrefix("--ssl-cert="),
+								HavePrefix("--ssl-key="),
+								"--ssl-mode=VERIFY_IDENTITY",
+								"-v",
+								"--single-transaction",
+								"--skip-add-locks",
+								fmt.Sprintf("--result-file=%s", artifactFile),
+								databaseName,
+							}
+
+							Expect(fakeMysqlDump57.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+
+							caCertPath := strings.Split(fakeMysqlDump57.Invocations()[0].Args()[3], "=")[1]
+							Expect(caCertPath).To(BeAnExistingFile())
+							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
+
+							clientCertPath := strings.Split(fakeMysqlDump57.Invocations()[0].Args()[4], "=")[1]
+							Expect(clientCertPath).To(BeAnExistingFile())
+							Expect(ioutil.ReadFile(clientCertPath)).To(Equal([]byte("A_CLIENT_CERT")))
+
+							clientKeyPath := strings.Split(fakeMysqlDump57.Invocations()[0].Args()[5], "=")[1]
+							Expect(clientKeyPath).To(BeAnExistingFile())
+							Expect(ioutil.ReadFile(clientKeyPath)).To(Equal([]byte("A_CLIENT_KEY")))
+						})
+					})
+				})
 			})
 
 			Context("when version detection fails", func() {
@@ -446,7 +522,8 @@ var _ = Describe("MySQL", func() {
 								"--silent",
 								`--execute=SELECT VERSION()`,
 							))
-							Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+							Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(
+								HaveKeyWithValue("MYSQL_PWD", password))
 						})
 
 						By("then calling mysql to restore", func() {
@@ -465,6 +542,80 @@ var _ = Describe("MySQL", func() {
 							caCertPath := strings.Split(fakeMysqlClient57.Invocations()[1].Args()[3], "=")[1]
 							Expect(caCertPath).To(BeAnExistingFile())
 							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
+						})
+					})
+				})
+
+				Context("when TLS is configured with client cert and private key", func() {
+					BeforeEach(func() {
+						configFile = saveFile(fmt.Sprintf(`{
+							"adapter":  "mysql",
+							"username": "%s",
+							"password": "%s",
+							"host":     "%s",
+							"port":     %d,
+							"database": "%s",
+							"tls": {
+								"cert": {
+									"ca": "A_CA_CERT",
+									"certificate": "A_CLIENT_CERT",
+									"private_key": "A_CLIENT_KEY"
+								}
+							}
+						}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
+					})
+
+					It("calls mysql with the correct arguments", func() {
+						By("calling mysql to detect the version", func() {
+							Expect(fakeMysqlClient57.Invocations()).To(HaveLen(2))
+							Expect(fakeMysqlClient57.Invocations()[0].Args()).Should(ConsistOf(
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								HavePrefix("--ssl-ca="),
+								HavePrefix("--ssl-cert="),
+								HavePrefix("--ssl-key="),
+								"--ssl-mode=VERIFY_IDENTITY",
+								"--skip-column-names",
+								"--silent",
+								`--execute=SELECT VERSION()`,
+							))
+							Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(
+								HaveKeyWithValue("MYSQL_PWD", password))
+						})
+
+						By("then calling mysql to restore", func() {
+							expectedArgs := []interface{}{
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								HavePrefix("--ssl-ca="),
+								HavePrefix("--ssl-cert="),
+								HavePrefix("--ssl-key="),
+								"--ssl-mode=VERIFY_IDENTITY",
+								"-v",
+								databaseName,
+							}
+
+							Expect(fakeMysqlClient57.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+							Expect(fakeMysqlClient57.Invocations()[1].Stdin()).Should(ConsistOf("SOME BACKUP SQL"))
+
+							caCertPath := strings.Split(fakeMysqlClient57.Invocations()[1].Args()[3], "=")[1]
+							Expect(caCertPath).To(BeAnExistingFile())
+							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
+
+							clientCertPath := strings.Split(fakeMysqlClient57.Invocations()[1].Args()[4], "=")[1]
+							Expect(clientCertPath).To(BeAnExistingFile())
+							Expect(ioutil.ReadFile(clientCertPath)).To(Equal([]byte("A_CLIENT_CERT")))
+
+							clientKeyPath := strings.Split(fakeMysqlClient57.Invocations()[1].Args()[5], "=")[1]
+							Expect(clientKeyPath).To(BeAnExistingFile())
+							Expect(ioutil.ReadFile(clientKeyPath)).To(Equal([]byte("A_CLIENT_KEY")))
 						})
 					})
 				})
@@ -675,6 +826,82 @@ var _ = Describe("MySQL", func() {
 							caCertPath := strings.Split(fakeMysqlDump56.Invocations()[0].Args()[3], "=")[1]
 							Expect(caCertPath).To(BeAnExistingFile())
 							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
+						})
+					})
+				})
+
+				Context("when TLS is configured with client cert and private key", func() {
+					BeforeEach(func() {
+						configFile = saveFile(fmt.Sprintf(`{
+							"adapter":  "mysql",
+							"username": "%s",
+							"password": "%s",
+							"host":     "%s",
+							"port":     %d,
+							"database": "%s",
+							"tls": {
+								"cert": {
+									"ca": "A_CA_CERT",
+									"certificate": "A_CLIENT_CERT",
+									"private_key": "A_CLIENT_KEY"
+								}
+							}
+						}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
+					})
+
+					It("calls mysql and mysqldump with the correct arguments", func() {
+						By("calling mysql to detect the version", func() {
+							Expect(fakeMysqlClient57.Invocations()).To(HaveLen(1))
+							Expect(fakeMysqlClient57.Invocations()[0].Args()).Should(ConsistOf(
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								HavePrefix("--ssl-ca="),
+								HavePrefix("--ssl-cert="),
+								HavePrefix("--ssl-key="),
+								"--ssl-mode=VERIFY_IDENTITY",
+								"--skip-column-names",
+								"--silent",
+								`--execute=SELECT VERSION()`,
+							))
+							Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(
+								HaveKeyWithValue("MYSQL_PWD", password))
+						})
+
+						By("then calling dump", func() {
+							expectedArgs := []interface{}{
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								HavePrefix("--ssl-ca="),
+								HavePrefix("--ssl-cert="),
+								HavePrefix("--ssl-key="),
+								"--ssl-verify-server-cert",
+								"-v",
+								"--single-transaction",
+								"--skip-add-locks",
+								fmt.Sprintf("--result-file=%s", artifactFile),
+								databaseName,
+							}
+
+							Expect(fakeMysqlDump56.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+
+							caCertPath := strings.Split(fakeMysqlDump56.Invocations()[0].Args()[3], "=")[1]
+							Expect(caCertPath).To(BeAnExistingFile())
+							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
+
+							clientCertPath := strings.Split(fakeMysqlDump56.Invocations()[0].Args()[4], "=")[1]
+							Expect(clientCertPath).To(BeAnExistingFile())
+							Expect(ioutil.ReadFile(clientCertPath)).To(Equal([]byte("A_CLIENT_CERT")))
+
+							clientKeyPath := strings.Split(fakeMysqlDump56.Invocations()[0].Args()[5], "=")[1]
+							Expect(clientKeyPath).To(BeAnExistingFile())
+							Expect(ioutil.ReadFile(clientKeyPath)).To(Equal([]byte("A_CLIENT_KEY")))
 						})
 					})
 				})
@@ -914,10 +1141,85 @@ var _ = Describe("MySQL", func() {
 							}
 
 							Expect(fakeMysqlClient56.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+							Expect(fakeMysqlClient56.Invocations()[0].Stdin()).Should(ConsistOf("SOME BACKUP SQL"))
 
 							caCertPath := strings.Split(fakeMysqlClient56.Invocations()[0].Args()[3], "=")[1]
 							Expect(caCertPath).To(BeAnExistingFile())
 							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
+						})
+					})
+				})
+
+				Context("when TLS is configured with client cert and private key", func() {
+					BeforeEach(func() {
+						configFile = saveFile(fmt.Sprintf(`{
+							"adapter":  "mysql",
+							"username": "%s",
+							"password": "%s",
+							"host":     "%s",
+							"port":     %d,
+							"database": "%s",
+							"tls": {
+								"cert": {
+									"ca": "A_CA_CERT",
+									"certificate": "A_CLIENT_CERT",
+									"private_key": "A_CLIENT_KEY"
+								}
+							}
+						}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
+					})
+
+					It("calls mysql with the correct arguments", func() {
+						By("calling mysql to detect the version", func() {
+							Expect(fakeMysqlClient57.Invocations()).To(HaveLen(1))
+							Expect(fakeMysqlClient57.Invocations()[0].Args()).Should(ConsistOf(
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								HavePrefix("--ssl-ca="),
+								HavePrefix("--ssl-cert="),
+								HavePrefix("--ssl-key="),
+								"--ssl-mode=VERIFY_IDENTITY",
+								"--skip-column-names",
+								"--silent",
+								`--execute=SELECT VERSION()`,
+							))
+							Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(
+								HaveKeyWithValue("MYSQL_PWD", password))
+						})
+
+						By("then calling mysql to restore", func() {
+							expectedArgs := []interface{}{
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								HavePrefix("--ssl-ca="),
+								HavePrefix("--ssl-cert="),
+								HavePrefix("--ssl-key="),
+								"--ssl-verify-server-cert",
+								"-v",
+								databaseName,
+							}
+
+							Expect(fakeMysqlClient56.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+							Expect(fakeMysqlClient56.Invocations()[0].Stdin()).Should(ConsistOf("SOME BACKUP SQL"))
+
+							caCertPath := strings.Split(fakeMysqlClient56.Invocations()[0].Args()[3], "=")[1]
+							Expect(caCertPath).To(BeAnExistingFile())
+							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
+
+							clientCertPath := strings.Split(fakeMysqlClient56.Invocations()[0].Args()[4], "=")[1]
+							Expect(clientCertPath).To(BeAnExistingFile())
+							Expect(ioutil.ReadFile(clientCertPath)).To(Equal([]byte("A_CLIENT_CERT")))
+
+							clientKeyPath := strings.Split(fakeMysqlClient56.Invocations()[0].Args()[5], "=")[1]
+							Expect(clientKeyPath).To(BeAnExistingFile())
+							Expect(ioutil.ReadFile(clientKeyPath)).To(Equal([]byte("A_CLIENT_KEY")))
 						})
 					})
 				})
