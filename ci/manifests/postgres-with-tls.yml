@@ -50,22 +50,15 @@ instance_groups:
         password: ((db_password))
         permissions:
         - "SUPERUSER"
+      - name: ssl_user
+        password: ((db_password))
+        permissions:
+        - "SUPERUSER"
       port: 5432
       tls:
         ca: "((databases.ca))"
         certificate: "((databases.certificate))"
         private_key: "((databases.private_key))"
-- name: database-backup-restorer
-  instances: 1
-  vm_type: small
-  persistent_disk_type: fifty
-  stemcell: trusty
-  networks:
-  - name: concourse
-  jobs:
-  - name: database-backup-restorer
-    release: backup-and-restore-sdk
-  azs: [z1]
 
 update:
   canaries: 1
