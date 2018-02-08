@@ -129,7 +129,7 @@ Or if you want to operate on specific tables
 }
 ```
 
-For the full list of `config.json` properties see [Config options](#config-options)
+For the full list of `config.json` properties see [Config options](#config-options).
 
 An example of templating using BOSH Links can be seen in the [cf networking release](https://github.com/cloudfoundry-incubator/cf-networking-release/blob/647f7a71b442c25ec29b1cc6484410946f41935c/jobs/bbr-cfnetworkingdb/templates/config.json.erb).
 
