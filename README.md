@@ -15,20 +15,20 @@ Backup and Restore SDK Release status [![Build SDK Release Badge](https://backup
 
 ### Supported Databases
 
-| Name | Version | Status |
-|------|---------|--------|
-| MariaDB | 10.1.x  | [![MariaDB Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/mariadb-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/mariadb-system-tests) | 
-| MySQL | 5.5.x  | [![MySQL Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/rds-mysql-5.5-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/rds-mysql-5.5-system-tests) | 
-| MySQL | 5.6.x  | [![MySQL Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/rds-mysql-5.6-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/rds-mysql-5.6-system-tests) | 
-| MySQL | 5.7.x  | [![MySQL Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/rds-mysql-5.7-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/rds-mysql-5.7-system-tests) | 
-| Postgres | 9.4.x  | [![Postgres Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/postgres-system-tests-9.4/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/postgres-system-tests-9.4) | 
-| Postgres | 9.6.x  | [![Postgres Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/postgres-system-tests-9.6/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/postgres-system-tests-9.6) | 
+| Name     | Version | Status                                                                                                                                                                                                                                                                                     |
+|:---------|:--------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| MariaDB  | 10.1.x  | [![MariaDB Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/mariadb-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/mariadb-system-tests)            |
+| MySQL    | 5.5.x   | [![MySQL Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/rds-mysql-5.5-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/rds-mysql-5.5-system-tests)  |
+| MySQL    | 5.6.x   | [![MySQL Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/rds-mysql-5.6-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/rds-mysql-5.6-system-tests)  |
+| MySQL    | 5.7.x   | [![MySQL Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/rds-mysql-5.7-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/rds-mysql-5.7-system-tests)  |
+| Postgres | 9.4.x   | [![Postgres Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/postgres-system-tests-9.4/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/postgres-system-tests-9.4) |
+| Postgres | 9.6.x   | [![Postgres Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/postgres-system-tests-9.6/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/postgres-system-tests-9.6) |
 
 
 ### Supported Blobstores
 
-| Name |  Status |
-|------|---------|
+| Name         | Status                                                                                                                                                                                                                                                                                                 |
+|:-------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Versioned S3 | [![S3 Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests) |
 
 ## Why?
@@ -38,6 +38,29 @@ Release authors wanting to write backup and restore scripts frequently need to b
 Rather than have every team figure out the vagaries of backing up all the different kinds of database supported by CF, we've done it for you. The **Backup and Restore SDK** abstracts away the differences between databases, offering a consistent interface for your backup and restore scripts to use.
 
 Behind the scenes, the SDK parses a configuration file passed to it, which selects the appropriate database backup/restore strategy (e.g. `pg_dump` or `mysql` at the required version) and places the backup artifact in the specified location.
+
+## Config options
+
+The SDK accepts a json document with the following fields
+
+| name                  | type         | Optional | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|:----------------------|:-------------|:---------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| username              | string       | no       | Database connection username                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| password              | string       | no       | Database connection password                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| host                  | string       | no       | Database connection host                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| port                  | integer      | no       | Database connection port, no defaulting is done, always needs to be specified                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| adapter               | string       | no       | Database adapter, see [Supported database adapters](#supported-database-adapters)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| database              | string       | no       | Name of the database to backup/restore                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| tables                | string array | yes      | If not specified, the entire database will be backed up/restored. If specified only the tables in that list will be included in the backup, and on restore the other tables in the database will be left as is. If the field is specified and empty, the utility will fail. If the field contains non-existent tables the utility will fail. We have not tested this with foreign key relationships or triggers spanning between tables specified in the `tables` list and other tables in the database not listed there. It's possible those relationships would be lost on restore. |
+| tls.skip_host_verify  | bool         | yes      | Skip host verification for Server CA certificate                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| tls.certs.ca          | string       | yes      | Server CA certificate. This must be included if any of the `tls` block is specified                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| tls.certs.certificate | string       | yes      | Client certificate for Mutual TLS. This must be specified if `tls.certs.private_key` is given.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| tls.certs.private_key | string       | yes      | Client private key for Mutual TLS, this must be specified if `tls.certs.certificate` is given.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+
+### Supported Database Adapters
+
+* `postgres` (auto-detects versions between `9.4.x` and `9.6.x`)
+* `mysql` (auto-detects `MariaDB 10.1.x`, and `MySQL 5.5.x`, `5.6.x`, `5.7.x`. Any other `mysql` variants are not tested)
 
 ## Deploying
 
@@ -76,7 +99,7 @@ instance_groups:
 ...
 ```
 
-## Usage
+## Usage from another BOSH job
 
 ### 1. Template `config.json`
 
@@ -92,10 +115,7 @@ Your job should template a `config.json` as follows:
   "database": "name of database to back up",
 }
 ```
-
-**Note**: all fields in `config.json` need to be strings except `port` which is an int.
-
-`tables` is an optional field (a list of strings). If you don't specify it, the entire database will be backed up and restored. If you specify a list of tables, only the tables in that list will be included in the backup, and on restore the other tables in the database will be left as is. If the field is specified and empty, the utility will fail. If the field contains non-existent tables the utility will fail.
+Or if you want to operate on specific tables
 
 ```json
 {
@@ -109,16 +129,10 @@ Your job should template a `config.json` as follows:
 }
 ```
 
-We have not tested this with foreign key relationships or triggers spanning between tables specified in the `tables` list and other tables in the database not listed there. It's possible those relationships would be lost on restore.
+For the full list of `config.json` properties see [Config options](#config-options)
 
 An example of templating using BOSH Links can be seen in the [cf networking release](https://github.com/cloudfoundry-incubator/cf-networking-release/blob/647f7a71b442c25ec29b1cc6484410946f41935c/jobs/bbr-cfnetworkingdb/templates/config.json.erb).
 
-#### Supported Database Adapters
-
-* `postgres` (auto-detects versions between `9.4.x` and `9.6.x`)
-* `mysql` (auto-detects `MariaDB 10.1.x`, and `MySQL 5.5.x`, `5.6.x`, `5.7.x`. Any other `mysql` variants are not tested)
-
-Note that `postgres` and `MariaDB` have been tested with internal databases only. `MySQL` has only been tested as `RDS`.
 
 ### 2. Write scripts to call the SDK binaries
 
