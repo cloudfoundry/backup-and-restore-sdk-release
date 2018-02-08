@@ -22,4 +22,6 @@ builds:
     version: 1.4.2
   82ffa911-5aae-4eaa-a0ee-9f9758b07f06:
     version: 1.4.3
+  4eb24e49-0b50-49ab-baa4-015735138e5a:
+    version: 1.4.4
 format-version: '2'

@@ -1,0 +1,88 @@
+---
+name: backup-and-restore-sdk
+version: 1.4.4
+commit_hash: 18313f5
+uncommitted_changes: false
+jobs:
+- name: database-backup-restorer
+  version: a680fe8b2f5b7cd2af232feaae7a20bacc26f682
+  fingerprint: a680fe8b2f5b7cd2af232feaae7a20bacc26f682
+  sha1: 2a20c20b4ae0472d3a687a6da2434c388e666280
+- name: s3-versioned-blobstore-backup-restorer
+  version: 441b6a1edf3d48721f997ca935690b7440dda34d
+  fingerprint: 441b6a1edf3d48721f997ca935690b7440dda34d
+  sha1: d32f7771202bfc9166c5489c0c3ab97bd5358455
+packages:
+- name: backup-and-restore-release-golang
+  version: 322af40566b61235b46a9c8db756aba7453818a5
+  fingerprint: 322af40566b61235b46a9c8db756aba7453818a5
+  sha1: 440bfddbfeb5b0df9e56746614d1809dab744b31
+  dependencies: []
+- name: backup-and-restore-sdk-aws-cli
+  version: da4c9bd7f071d90118f8fdc34b9a8f3a36e83a9c
+  fingerprint: da4c9bd7f071d90118f8fdc34b9a8f3a36e83a9c
+  sha1: 7e70f37b8d8430b82eff343da14a3341703de60f
+  dependencies:
+  - backup-and-restore-sdk-python
+- name: backup-and-restore-sdk-python
+  version: b99e5e412d303fc45491e248a54406064be48b86
+  fingerprint: b99e5e412d303fc45491e248a54406064be48b86
+  sha1: 774e16c89e5064a151d3e13b3668b1db9d2ed736
+  dependencies: []
+- name: blobstore-backup-restorer
+  version: 4233a2b82b29ffa77d8199d6c72e707e652f8b15
+  fingerprint: 4233a2b82b29ffa77d8199d6c72e707e652f8b15
+  sha1: 65699b9ecef035da4d5667a4f394ef8f4653a6ca
+  dependencies:
+  - backup-and-restore-release-golang
+- name: database-backup-restorer
+  version: 05be265c080ab8210fb828ea93eb04981a006828
+  fingerprint: 05be265c080ab8210fb828ea93eb04981a006828
+  sha1: 88f08e2308a8cdec177c90ab454cfe0e4e89ecaf
+  dependencies:
+  - backup-and-restore-release-golang
+- name: database-backup-restorer-boost
+  version: c3aee061423c7de8e1bbe50db88f82379c54edf3
+  fingerprint: c3aee061423c7de8e1bbe50db88f82379c54edf3
+  sha1: 6696e8d06abceb1ca86aa84577eec7298c0557f2
+  dependencies: []
+- name: database-backup-restorer-mariadb
+  version: 1838e76a6125c4e4b61d40a629edd5a94f388154
+  fingerprint: 1838e76a6125c4e4b61d40a629edd5a94f388154
+  sha1: f9b21f61780d1e022047185a7558dad40577d02c
+  dependencies: []
+- name: database-backup-restorer-mysql
+  version: 1838e76a6125c4e4b61d40a629edd5a94f388154
+  fingerprint: 1838e76a6125c4e4b61d40a629edd5a94f388154
+  sha1: aad34998b59b075bfee00658458f72feb2b4cd2c
+  dependencies: []
+- name: database-backup-restorer-mysql-5.5
+  version: 1c3e31db5fb4228b50565f0952a3387752fc4a23
+  fingerprint: 1c3e31db5fb4228b50565f0952a3387752fc4a23
+  sha1: 78cce7edc16efbad1bec325b3070cf338177f845
+  dependencies: []
+- name: database-backup-restorer-mysql-5.6
+  version: fd9ea31a8f101a53382f5415250072e61ab075e0
+  fingerprint: fd9ea31a8f101a53382f5415250072e61ab075e0
+  sha1: '084aa90c1cd052daaba4487cafe742f187e5764f'
+  dependencies: []
+- name: database-backup-restorer-mysql-5.7
+  version: d56501baf8c468226230eea0db3ec973e6c0319c
+  fingerprint: d56501baf8c468226230eea0db3ec973e6c0319c
+  sha1: 33e66478f90a5bf51570eca30ae587e5e216f886
+  dependencies:
+  - database-backup-restorer-boost
+- name: database-backup-restorer-postgres-9.4
+  version: 4f46c5bf4646634cdaf2d9bca922c82a561b8638
+  fingerprint: 4f46c5bf4646634cdaf2d9bca922c82a561b8638
+  sha1: 42f0ead567ef35542f6293c7ab9e201738e208a6
+  dependencies: []
+- name: database-backup-restorer-postgres-9.6
+  version: acaa98101616ef46862d5c9f3bf8c5aa358da19b
+  fingerprint: acaa98101616ef46862d5c9f3bf8c5aa358da19b
+  sha1: 3583e8f909b4e0d5fcf8b2625f2e5bcd818f51a9
+  dependencies: []
+license:
+  version: c30ccf6b7c6010431b580aeee0904286237e3298
+  fingerprint: c30ccf6b7c6010431b580aeee0904286237e3298
+  sha1: 8839ce59bbe7679377e316bb7639aa59bec6eea7
