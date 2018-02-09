@@ -28,10 +28,40 @@ func ConnectMysql(dbHostname, dbPassword, dbUsername, dbPort, proxyHost, proxyUs
 	return connection, proxySession
 }
 
-func ConnectPostgres(dbHostname, dbPassword, dbUsername, dbPort, dbName, proxyHost, proxyUsername, proxyPrivateKey string) (*sql.DB, *gexec.Session) {
+func SuccessfullyConnectToPostgres(
+	dbHostname,
+	dbPassword,
+	dbUsername,
+	dbPort,
+	dbName,
+	proxyHost,
+	proxyUsername,
+	proxyPrivateKey string) (*sql.DB, *gexec.Session) {
+	proxySession, connection, err := ConnectToPostgresWithNoSsl(
+		dbHostname,
+		dbPassword,
+		dbUsername,
+		dbPort,
+		dbName,
+		proxyHost,
+		proxyUsername,
+		proxyPrivateKey)
+	Expect(err).NotTo(HaveOccurred())
+
+	return connection, proxySession
+}
+
+func ConnectToPostgresWithNoSsl(
+	dbHostname string,
+	dbPassword string,
+	dbUsername string,
+	dbPort string,
+	dbName string,
+	proxyHost string,
+	proxyUsername string,
+	proxyPrivateKey string) (*gexec.Session, *sql.DB, error) {
 	var proxySession *gexec.Session
 	var err error
-
 	var hostname, port = dbHostname, dbPort
 	if proxyHost != "" {
 		hostname, port = "127.0.0.1", "13306"
@@ -39,10 +69,19 @@ func ConnectPostgres(dbHostname, dbPassword, dbUsername, dbPort, dbName, proxyHo
 		Expect(err).NotTo(HaveOccurred())
 	}
 
-	connection, err := sql.Open("postgres", fmt.Sprintf("user=%s password=%s host=%s port=%s sslmode=disable dbname=%s", dbUsername, dbPassword, hostname, port, dbName))
-	Expect(err).NotTo(HaveOccurred())
+	connectionString := fmt.Sprintf("user=%s password=%s host=%s port=%s sslmode=disable dbname=%s", dbUsername, dbPassword, hostname, port, dbName)
 
-	return connection, proxySession
+	connection, err := sql.Open("postgres", connectionString)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	_, err = connection.Exec("SELECT VERSION();")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return proxySession, connection, err
 }
 
 func startTunnel(localPort string, remoteHost string, remotePort string, proxyUsername string, proxyHost string, proxyPrivateKey string) (*gexec.Session, error) {

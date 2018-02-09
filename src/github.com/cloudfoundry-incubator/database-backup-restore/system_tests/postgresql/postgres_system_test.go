@@ -20,54 +20,22 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
-	"github.com/onsi/gomega/gexec"
 
 	"fmt"
 
 	"os"
 
 	. "github.com/cloudfoundry-incubator/database-backup-restore/system_tests/utils"
-	_ "github.com/lib/pq"
 
-	"database/sql"
+	_ "github.com/lib/pq"
 )
 
 var _ = Describe("postgres", func() {
 	var databaseName string
 	var dbDumpPath string
 	var configPath string
-	var postgresHostName string
-	var proxySession *gexec.Session
-	var connection *sql.DB
-	var brJob JobInstance
-
-	BeforeSuite(func() {
-		postgresHostName = MustHaveEnv("POSTGRES_HOSTNAME")
-		connection, proxySession = ConnectPostgres(
-			MustHaveEnv("POSTGRES_HOSTNAME"),
-			MustHaveEnv("POSTGRES_PASSWORD"),
-			MustHaveEnv("POSTGRES_USERNAME"),
-			MustHaveEnv("POSTGRES_PORT"),
-			"postgres",
-			os.Getenv("SSH_PROXY_HOST"),
-			os.Getenv("SSH_PROXY_USER"),
-			os.Getenv("SSH_PROXY_KEY_FILE"),
-		)
-	})
-
-	AfterSuite(func() {
-		if proxySession != nil {
-			proxySession.Kill()
-		}
-	})
 
 	BeforeEach(func() {
-		brJob = JobInstance{
-			Deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
-			Instance:      MustHaveEnv("SDK_INSTANCE_GROUP"),
-			InstanceIndex: "0",
-		}
-
 		disambiguationString := DisambiguationString()
 		databaseName = "db" + disambiguationString
 		configPath = "/tmp/config" + disambiguationString
@@ -76,11 +44,11 @@ var _ = Describe("postgres", func() {
 		RunSQLCommand("CREATE DATABASE "+databaseName, connection)
 		connection.Close()
 
-		connection, proxySession = ConnectPostgres(
-			MustHaveEnv("POSTGRES_HOSTNAME"),
-			MustHaveEnv("POSTGRES_PASSWORD"),
-			MustHaveEnv("POSTGRES_USERNAME"),
-			MustHaveEnv("POSTGRES_PORT"),
+		connection, proxySession = SuccessfullyConnectToPostgres(
+			postgresHostName,
+			postgresPassword,
+			postgresNonSslUsername,
+			postgresPort,
 			databaseName,
 			os.Getenv("SSH_PROXY_HOST"),
 			os.Getenv("SSH_PROXY_USER"),
@@ -97,11 +65,11 @@ var _ = Describe("postgres", func() {
 
 		connection.Close()
 
-		connection, proxySession = ConnectPostgres(
-			MustHaveEnv("POSTGRES_HOSTNAME"),
-			MustHaveEnv("POSTGRES_PASSWORD"),
-			MustHaveEnv("POSTGRES_USERNAME"),
-			MustHaveEnv("POSTGRES_PORT"),
+		connection, proxySession = SuccessfullyConnectToPostgres(
+			postgresHostName,
+			postgresPassword,
+			postgresNonSslUsername,
+			postgresPort,
 			"postgres",
 			os.Getenv("SSH_PROXY_HOST"),
 			os.Getenv("SSH_PROXY_USER"),
@@ -117,7 +85,7 @@ var _ = Describe("postgres", func() {
 			configJson := fmt.Sprintf(
 				`{"username":"test_user","password":"%s","host":"%s","port":5432,
 							"database":"%s","adapter":"postgres"}`,
-				MustHaveEnv("POSTGRES_PASSWORD"),
+				postgresPassword,
 				postgresHostName,
 				databaseName,
 			)
@@ -154,7 +122,7 @@ var _ = Describe("postgres", func() {
 			configJson := fmt.Sprintf(
 				`{"username":"test_user","password":"%s","host":"%s","port":5432,
 							"database":"%s","adapter":"postgres", "tables":["people"]}`,
-				MustHaveEnv("POSTGRES_PASSWORD"),
+				postgresPassword,
 				postgresHostName,
 				databaseName,
 			)
@@ -190,7 +158,7 @@ var _ = Describe("postgres", func() {
 			configJson := fmt.Sprintf(
 				`{"username":"test_user","password":"%s","host":"%s","port":5432,
 							"database":"%s","adapter":"postgres", "tables":["people", "lizards"]}`,
-				MustHaveEnv("POSTGRES_PASSWORD"),
+				postgresPassword,
 				postgresHostName,
 				databaseName,
 			)
