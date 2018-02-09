@@ -43,11 +43,13 @@ bosh-cli --non-interactive \
   --var=deployment-name=${BOSH_DEPLOYMENT}
 
 if [ ! -z "$VARS_STORE_PATH" ]; then
-  git add "bosh-backup-and-restore-meta/${VARS_STORE_PATH}"
+  pushd "bosh-backup-and-restore-meta"
+  git add "${VARS_STORE_PATH}"
   if git commit -m "Update vars file for ${MANIFEST_NAME}" ; then
     echo "Update vars file for ${MANIFEST_NAME}"
   else
     echo "No change to vars file for ${MANIFEST_NAME}"
   fi
+  popd
 fi
 cp -r bosh-backup-and-restore-meta/* bosh-backup-and-restore-meta-output/
