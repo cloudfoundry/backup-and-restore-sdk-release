@@ -28,6 +28,7 @@ inputs:
 
 outputs:
 - name: backup-and-restore-sdk-release-build
+- name: bosh-backup-and-restore-meta-output
 
 run:
   path: backup-and-restore-sdk-release/ci/scripts/deploy.sh
