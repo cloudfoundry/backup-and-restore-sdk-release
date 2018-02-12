@@ -18,8 +18,8 @@
 platform: linux
 
 image_resource:
-type: docker-image
-source: {repository: cloudfoundrylondon/backup-and-restore}
+  type: docker-image
+  source: {repository: cloudfoundrylondon/backup-and-restore}
 
 inputs:
 - name: bosh-backup-and-restore-meta
@@ -28,9 +28,9 @@ outputs:
 - name: bosh-backup-and-restore-meta-output
 
 run:
-path: backup-and-restore-sdk-release/ci/scripts/create-ssl-user.sh
+  path: backup-and-restore-sdk-release/ci/scripts/create-ssl-user.sh
 
 params:
-TEAM_GPG_KEY:
-BOSH_ENVIRONMENT:
-BOSH_DEPLOYMENT:
+  TEAM_GPG_KEY:
+  BOSH_ENVIRONMENT:
+  BOSH_DEPLOYMENT:
