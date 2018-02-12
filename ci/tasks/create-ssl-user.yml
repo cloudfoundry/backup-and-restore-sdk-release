@@ -22,6 +22,7 @@ image_resource:
   source: {repository: cloudfoundrylondon/backup-and-restore}
 
 inputs:
+- name: backup-and-restore-sdk-release
 - name: bosh-backup-and-restore-meta
 
 outputs:
