@@ -44,7 +44,7 @@ bosh-cli --non-interactive \
 
 if [ ! -z "$VARS_STORE_PATH" ]; then
   pushd "bosh-backup-and-restore-meta"
-  git add "bosh-backup-and-restore-meta/${VARS_STORE_PATH}"
+  git add "${VARS_STORE_PATH}"
   if git commit -m "Update vars file for ${MANIFEST_NAME}" ; then
     echo "Update vars file for ${MANIFEST_NAME}"
   else
