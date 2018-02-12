@@ -52,4 +52,4 @@ if [ ! -z "$VARS_STORE_PATH" ]; then
   fi
   popd
 fi
-cp -r bosh-backup-and-restore-meta/* bosh-backup-and-restore-meta-output/
+cp -r bosh-backup-and-restore-meta/. bosh-backup-and-restore-meta-output/
