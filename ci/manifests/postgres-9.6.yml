@@ -50,6 +50,10 @@ instance_groups:
         password: ((db_password))
         permissions:
         - "SUPERUSER"
+      - name: ssl_user
+        password: ((db_password))
+        permissions:
+        - "SUPERUSER"
       port: 5432
       tls:
         ca: "((databases.ca))"
