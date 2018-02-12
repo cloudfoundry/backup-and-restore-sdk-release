@@ -55,6 +55,7 @@ fi
 cp -r bosh-backup-and-restore-meta/. bosh-backup-and-restore-meta-output/
 
 # add the ssl_user
+chmod 400 bosh-backup-and-restore-meta/genesis-bosh/bosh.pem
 bosh-cli \
   --deployment ${BOSH_DEPLOYMENT} \
   ssh \
