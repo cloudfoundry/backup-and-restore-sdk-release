@@ -45,7 +45,7 @@ var _ = Describe("postgres", func() {
 		postgresHostName = MustHaveEnv("POSTGRES_HOSTNAME")
 		postgresPassword = MustHaveEnv("POSTGRES_PASSWORD")
 		postgresNonSslUsername = MustHaveEnv("POSTGRES_USERNAME")
-		postgresSslUsername = MustHaveEnv("POSTGRES_SSL_USERNAME")
+		postgresSslUsername = os.Getenv("POSTGRES_SSL_USERNAME")
 		postgresPort = MustHaveEnv("POSTGRES_PORT")
 
 		postgresCaCert = os.Getenv("POSTGRES_CA_CERT")

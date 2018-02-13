@@ -14,6 +14,12 @@ import (
 )
 
 var _ = Describe("postgres with tls", func() {
+	if os.Getenv("TEST_TLS") == "false" {
+		fmt.Println("**********************************************")
+		fmt.Println("Not testing TLS")
+		fmt.Println("**********************************************")
+		return
+	}
 	var dbDumpPath string
 	var configPath string
 	var databaseName string
