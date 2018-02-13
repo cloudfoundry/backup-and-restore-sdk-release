@@ -114,7 +114,7 @@ var _ = Describe("Postgres", func() {
 					By("dumping the database with the correct dump binary", func() {
 						expectedArgs := []string{
 							"--verbose",
-							fmt.Sprintf("--user=%s", username),
+							fmt.Sprintf("--username=%s", username),
 							fmt.Sprintf("--host=%s", host),
 							fmt.Sprintf("--port=%d", port),
 							"--format=custom",
@@ -174,7 +174,7 @@ var _ = Describe("Postgres", func() {
 						By("calling pg_dump with the correct arguments", func() {
 							expectedArgs := []string{
 								"--verbose",
-								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--username=%s", username),
 								fmt.Sprintf("--host=%s", host),
 								fmt.Sprintf("--port=%d", port),
 								"--format=custom",
@@ -300,7 +300,7 @@ var _ = Describe("Postgres", func() {
 					By("dumping the database with the correct dump binary", func() {
 						expectedArgs := []string{
 							"--verbose",
-							fmt.Sprintf("--user=%s", username),
+							fmt.Sprintf("--username=%s", username),
 							fmt.Sprintf("--host=%s", host),
 							fmt.Sprintf("--port=%d", port),
 							"--format=custom",
@@ -360,7 +360,7 @@ var _ = Describe("Postgres", func() {
 						By("calling pg_dump with the correct arguments", func() {
 							expectedArgs := []string{
 								"--verbose",
-								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--username=%s", username),
 								fmt.Sprintf("--host=%s", host),
 								fmt.Sprintf("--port=%d", port),
 								"--format=custom",
@@ -470,7 +470,7 @@ var _ = Describe("Postgres", func() {
 
 					expectedArgs := []interface{}{
 						"--verbose",
-						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--username=%s", username),
 						fmt.Sprintf("--host=%s", host),
 						fmt.Sprintf("--port=%d", port),
 						"--format=custom",
@@ -533,7 +533,7 @@ var _ = Describe("Postgres", func() {
 
 					expectedArgs := []interface{}{
 						"--verbose",
-						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--username=%s", username),
 						fmt.Sprintf("--host=%s", host),
 						fmt.Sprintf("--port=%d", port),
 						"--format=custom",

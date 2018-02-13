@@ -24,7 +24,7 @@ func NewBackuper(config config.ConnectionConfig, backupBinary string) Backuper {
 func (b Backuper) Action(artifactFilePath string) error {
 	cmdArgs := []string{
 		"--verbose",
-		"--user=" + b.config.Username,
+		"--username=" + b.config.Username,
 		"--host=" + b.config.Host,
 		fmt.Sprintf("--port=%d", b.config.Port),
 		"--format=custom",

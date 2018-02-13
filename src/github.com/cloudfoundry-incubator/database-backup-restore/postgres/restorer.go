@@ -39,7 +39,7 @@ func (r Restorer) Action(artifactFilePath string) error {
 
 	_, _, err = runner.NewCommand(r.restoreBinary).WithParams(
 		"--verbose",
-		"--user="+r.config.Username,
+		"--username="+r.config.Username,
 		"--host="+r.config.Host,
 		fmt.Sprintf("--port=%d", r.config.Port),
 		"--format=custom",
