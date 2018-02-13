@@ -1,11 +1,9 @@
 package postgres
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/cloudfoundry-incubator/database-backup-restore/config"
-	"github.com/cloudfoundry-incubator/database-backup-restore/runner"
 	"github.com/cloudfoundry-incubator/database-backup-restore/version"
 )
 
@@ -18,14 +16,13 @@ func NewServerVersionDetector(psqlPath string) ServerVersionDetector {
 }
 
 func (d ServerVersionDetector) GetVersion(config config.ConnectionConfig) (version.DatabaseServerVersion, error) {
-	stdout, stderr, err := runner.NewCommand(d.psqlPath).WithParams(
+	cmdArgs := []string{
 		"--tuples-only",
-		fmt.Sprintf("--username=%s", config.Username),
-		fmt.Sprintf("--host=%s", config.Host),
-		fmt.Sprintf("--port=%d", config.Port),
 		config.Database,
 		`--command=SELECT VERSION()`,
-	).WithEnv(map[string]string{"PGPASSWORD": config.Password}).Run()
+	}
+
+	stdout, stderr, err := NewPostgresCommand(config, d.psqlPath).WithParams(cmdArgs...).Run()
 
 	if err != nil {
 		log.Fatalf("Unable to check version of Postgres: %v\n%s\n%s", err, string(stdout), string(stderr))

@@ -37,16 +37,16 @@ func (r Restorer) Action(artifactFilePath string) error {
 
 	listFile.Write(ListFileFilter(stdout))
 
-	_, _, err = runner.NewCommand(r.restoreBinary).WithParams(
+	cmdArgs := []string{
 		"--verbose",
-		"--username="+r.config.Username,
-		"--host="+r.config.Host,
-		fmt.Sprintf("--port=%d", r.config.Port),
 		"--format=custom",
-		"--dbname="+r.config.Database,
+		"--dbname=" + r.config.Database,
 		"--clean",
 		fmt.Sprintf("--use-list=%s", listFile.Name()),
-		artifactFilePath).WithEnv(map[string]string{"PGPASSWORD": r.config.Password}).Run()
+		artifactFilePath,
+	}
+
+	_, _, err = NewPostgresCommand(r.config, r.restoreBinary).WithParams(cmdArgs...).Run()
 
 	return err
 }

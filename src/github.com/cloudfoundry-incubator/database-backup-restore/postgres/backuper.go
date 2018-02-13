@@ -1,12 +1,7 @@
 package postgres
 
 import (
-	"fmt"
-
-	"io/ioutil"
-
 	"github.com/cloudfoundry-incubator/database-backup-restore/config"
-	"github.com/cloudfoundry-incubator/database-backup-restore/runner"
 )
 
 type Backuper struct {
@@ -24,9 +19,6 @@ func NewBackuper(config config.ConnectionConfig, backupBinary string) Backuper {
 func (b Backuper) Action(artifactFilePath string) error {
 	cmdArgs := []string{
 		"--verbose",
-		"--username=" + b.config.Username,
-		"--host=" + b.config.Host,
-		fmt.Sprintf("--port=%d", b.config.Port),
 		"--format=custom",
 		"--file=" + artifactFilePath,
 		b.config.Database,
@@ -36,25 +28,7 @@ func (b Backuper) Action(artifactFilePath string) error {
 		cmdArgs = append(cmdArgs, "-t", tableName)
 	}
 
-	caCertFile, err := ioutil.TempFile("", "")
-	if err != nil {
-		return err
-	}
-
-	env := map[string]string{
-		"PGPASSWORD": b.config.Password,
-	}
-
-	if b.config.Tls != nil {
-		ioutil.WriteFile(caCertFile.Name(), []byte(b.config.Tls.Cert.Ca), 0777)
-		env["PGSSLROOTCERT"] = caCertFile.Name()
-		env["PGSSLMODE"] = "verify-ca"
-	}
-
-	_, _, err = runner.NewCommand(b.backupBinary).
-		WithParams(cmdArgs...).
-		WithEnv(env).
-		Run()
+	_, _, err := NewPostgresCommand(b.config, b.backupBinary).WithParams(cmdArgs...).Run()
 
 	return err
 }

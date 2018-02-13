@@ -21,6 +21,9 @@ import (
 	"os"
 	"os/exec"
 
+	"io/ioutil"
+	"strings"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -421,6 +424,133 @@ var _ = Describe("Postgres", func() {
 						})
 					})
 				})
+
+				Context("when TLS is configured", func() {
+					Context("when skip host verify is not set", func() {
+						BeforeEach(func() {
+							configFile = saveFile(fmt.Sprintf(`{
+							"adapter":  "postgres",
+							"username": "%s",
+							"password": "%s",
+							"host":     "%s",
+							"port":     %d,
+							"database": "%s",
+							"tls": {
+								"cert": {
+									"ca": "A_CA_CERT"
+								}
+							}
+						}`,
+								username,
+								password,
+								host,
+								port,
+								databaseName))
+						})
+
+						It("calls psql and pg_dump with the correct arguments", func() {
+							By("calling psql to detect the version", func() {
+								Expect(fakePgClient.Invocations()).To(HaveLen(1))
+								Expect(fakePgClient.Invocations()[0].Args()).Should(ConsistOf(
+									"--tuples-only",
+									fmt.Sprintf("--username=%s", username),
+									fmt.Sprintf("--host=%s", host),
+									fmt.Sprintf("--port=%d", port),
+									databaseName,
+									`--command=SELECT VERSION()`,
+								))
+								Expect(fakePgClient.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+								Expect(fakePgClient.Invocations()[0].Env()).Should(HaveKey("PGSSLROOTCERT"))
+								Expect(fakePgClient.Invocations()[0].Env()).Should(HaveKeyWithValue("PGSSLMODE", "verify-full"))
+							})
+
+							By("then calling dump", func() {
+								expectedArgs := []string{
+									"--verbose",
+									fmt.Sprintf("--username=%s", username),
+									fmt.Sprintf("--host=%s", host),
+									fmt.Sprintf("--port=%d", port),
+									"--format=custom",
+									fmt.Sprintf("--file=%s", artifactFile),
+									databaseName,
+								}
+
+								Expect(fakePgDump96.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+
+								Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+								Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKey("PGSSLROOTCERT"))
+								Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKeyWithValue("PGSSLMODE", "verify-full"))
+
+								caCertPath := fakePgDump96.Invocations()[0].Env()["PGSSLROOTCERT"]
+								Expect(caCertPath).To(BeAnExistingFile())
+								Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
+							})
+						})
+					})
+
+					Context("when skip_host_verify is set to true", func() {
+						BeforeEach(func() {
+							configFile = saveFile(fmt.Sprintf(`{
+							"adapter":  "postgres",
+							"username": "%s",
+							"password": "%s",
+							"host":     "%s",
+							"port":     %d,
+							"database": "%s",
+							"tls": {
+								"skip_host_verify": true,
+								"cert": {
+									"ca": "A_CA_CERT"
+								}
+							}
+						}`,
+								username,
+								password,
+								host,
+								port,
+								databaseName))
+						})
+
+						It("calls psql and pg_dump with the correct arguments", func() {
+							By("calling psql to detect the version", func() {
+								Expect(fakePgClient.Invocations()).To(HaveLen(1))
+								Expect(fakePgClient.Invocations()[0].Args()).Should(ConsistOf(
+									"--tuples-only",
+									fmt.Sprintf("--username=%s", username),
+									fmt.Sprintf("--host=%s", host),
+									fmt.Sprintf("--port=%d", port),
+									databaseName,
+									`--command=SELECT VERSION()`,
+								))
+								Expect(fakePgClient.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+								Expect(fakePgClient.Invocations()[0].Env()).Should(HaveKey("PGSSLROOTCERT"))
+								Expect(fakePgClient.Invocations()[0].Env()).Should(HaveKeyWithValue("PGSSLMODE", "verify-ca"))
+							})
+
+							By("then calling dump", func() {
+								expectedArgs := []string{
+									"--verbose",
+									fmt.Sprintf("--username=%s", username),
+									fmt.Sprintf("--host=%s", host),
+									fmt.Sprintf("--port=%d", port),
+									"--format=custom",
+									fmt.Sprintf("--file=%s", artifactFile),
+									databaseName,
+								}
+
+								Expect(fakePgDump96.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+
+								Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+								Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKey("PGSSLROOTCERT"))
+								Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKeyWithValue("PGSSLMODE", "verify-ca"))
+
+								caCertPath := fakePgDump96.Invocations()[0].Env()["PGSSLROOTCERT"]
+								Expect(caCertPath).To(BeAnExistingFile())
+								Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
+							})
+						})
+					})
+				})
 			})
 
 			Context("and pg_dump fails", func() {
@@ -512,7 +642,6 @@ var _ = Describe("Postgres", func() {
 		})
 
 		Context("Postgres database server is version 9.6", func() {
-
 			BeforeEach(func() {
 				fakePgClient.WhenCalled().WillPrintToStdOut(
 					" PostgreSQL 9.6.3 on x86_64-pc-linux-gnu, compiled by gcc " + "" +
@@ -526,29 +655,170 @@ var _ = Describe("Postgres", func() {
 					fakePgRestore96.WhenCalled().WillExitWith(0)
 				})
 
-				It("calls pg_restore to get information about the restore", func() {
-					Expect(fakePgRestore96.Invocations()).To(HaveLen(2))
+				Context("when TLS block is not configured", func() {
+					It("calls pg_restore to get information about the restore", func() {
+						Expect(fakePgRestore96.Invocations()).To(HaveLen(2))
 
-					Expect(fakePgRestore96.Invocations()[0].Args()).To(Equal([]string{"--list", artifactFile}))
+						Expect(fakePgRestore96.Invocations()[0].Args()).To(Equal([]string{"--list", artifactFile}))
 
-					expectedArgs := []interface{}{
-						"--verbose",
-						fmt.Sprintf("--username=%s", username),
-						fmt.Sprintf("--host=%s", host),
-						fmt.Sprintf("--port=%d", port),
-						"--format=custom",
-						fmt.Sprintf("--dbname=%s", databaseName),
-						"--clean",
-						HavePrefix("--use-list="),
-						artifactFile,
-					}
+						expectedArgs := []interface{}{
+							"--verbose",
+							fmt.Sprintf("--username=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							"--format=custom",
+							fmt.Sprintf("--dbname=%s", databaseName),
+							"--clean",
+							HavePrefix("--use-list="),
+							artifactFile,
+						}
 
-					Expect(fakePgRestore96.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
-					Expect(fakePgRestore96.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+						Expect(fakePgRestore96.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+						Expect(fakePgRestore96.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+					})
+
+					It("succeeds", func() {
+						Expect(session).Should(gexec.Exit(0))
+					})
 				})
 
-				It("succeeds", func() {
-					Expect(session).Should(gexec.Exit(0))
+				Context("when TLS is configured", func() {
+					Context("when skip_host_verify is not specified", func() {
+						BeforeEach(func() {
+							configFile = saveFile(fmt.Sprintf(`{
+							"adapter":  "postgres",
+							"username": "%s",
+							"password": "%s",
+							"host":     "%s",
+							"port":     %d,
+							"database": "%s",
+							"tls": {
+								"cert": {
+									"ca": "A_CA_CERT"
+								}
+							}
+						}`,
+								username,
+								password,
+								host,
+								port,
+								databaseName))
+						})
+
+						It("calls psql and pg_restore with the correct arguments", func() {
+							By("calling psql to detect the version", func() {
+								Expect(fakePgClient.Invocations()).To(HaveLen(1))
+								Expect(fakePgClient.Invocations()[0].Args()).Should(ConsistOf(
+									"--tuples-only",
+									fmt.Sprintf("--username=%s", username),
+									fmt.Sprintf("--host=%s", host),
+									fmt.Sprintf("--port=%d", port),
+									databaseName,
+									`--command=SELECT VERSION()`,
+								))
+								Expect(fakePgClient.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+								Expect(fakePgClient.Invocations()[0].Env()).Should(HaveKey("PGSSLROOTCERT"))
+								Expect(fakePgClient.Invocations()[0].Env()).Should(HaveKeyWithValue("PGSSLMODE", "verify-full"))
+							})
+
+							By("then calling pg_restore to restore", func() {
+								Expect(fakePgRestore96.Invocations()).To(HaveLen(2))
+
+								Expect(fakePgRestore96.Invocations()[0].Args()).To(Equal([]string{"--list", artifactFile}))
+
+								expectedArgs := []interface{}{
+									fmt.Sprintf("--username=%s", username),
+									fmt.Sprintf("--host=%s", host),
+									fmt.Sprintf("--port=%d", port),
+									"--verbose",
+									"--format=custom",
+									fmt.Sprintf("--dbname=%s", databaseName),
+									"--clean",
+									HavePrefix("--use-list="),
+									artifactFile,
+								}
+
+								Expect(fakePgRestore96.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+
+								Expect(fakePgRestore96.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+								Expect(fakePgRestore96.Invocations()[1].Env()).Should(HaveKey("PGSSLROOTCERT"))
+								Expect(fakePgRestore96.Invocations()[1].Env()).Should(HaveKeyWithValue("PGSSLMODE", "verify-full"))
+
+								caCertPath := fakePgRestore96.Invocations()[1].Env()["PGSSLROOTCERT"]
+								Expect(caCertPath).To(BeAnExistingFile())
+								Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
+							})
+						})
+					})
+
+					Context("when skip_host_verify is set to true", func() {
+						BeforeEach(func() {
+							configFile = saveFile(fmt.Sprintf(`{
+							"adapter":  "postgres",
+							"username": "%s",
+							"password": "%s",
+							"host":     "%s",
+							"port":     %d,
+							"database": "%s",
+							"tls": {
+								"skip_host_verify": true,
+								"cert": {
+									"ca": "A_CA_CERT"
+								}
+							}
+						}`,
+								username,
+								password,
+								host,
+								port,
+								databaseName))
+						})
+
+						It("calls psql and pg_restore with the correct arguments", func() {
+							By("calling psql to detect the version", func() {
+								Expect(fakePgClient.Invocations()).To(HaveLen(1))
+								Expect(fakePgClient.Invocations()[0].Args()).Should(ConsistOf(
+									"--tuples-only",
+									fmt.Sprintf("--username=%s", username),
+									fmt.Sprintf("--host=%s", host),
+									fmt.Sprintf("--port=%d", port),
+									databaseName,
+									`--command=SELECT VERSION()`,
+								))
+								Expect(fakePgClient.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+								Expect(fakePgClient.Invocations()[0].Env()).Should(HaveKey("PGSSLROOTCERT"))
+								Expect(fakePgClient.Invocations()[0].Env()).Should(HaveKeyWithValue("PGSSLMODE", "verify-ca"))
+							})
+
+							By("then calling pg_restore to restore", func() {
+								Expect(fakePgRestore96.Invocations()).To(HaveLen(2))
+
+								Expect(fakePgRestore96.Invocations()[0].Args()).To(Equal([]string{"--list", artifactFile}))
+
+								expectedArgs := []interface{}{
+									fmt.Sprintf("--username=%s", username),
+									fmt.Sprintf("--host=%s", host),
+									fmt.Sprintf("--port=%d", port),
+									"--verbose",
+									"--format=custom",
+									fmt.Sprintf("--dbname=%s", databaseName),
+									"--clean",
+									HavePrefix("--use-list="),
+									artifactFile,
+								}
+
+								Expect(fakePgRestore96.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+
+								Expect(fakePgRestore96.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+								Expect(fakePgRestore96.Invocations()[1].Env()).Should(HaveKey("PGSSLROOTCERT"))
+								Expect(fakePgRestore96.Invocations()[1].Env()).Should(HaveKeyWithValue("PGSSLMODE", "verify-ca"))
+
+								caCertPath := fakePgRestore96.Invocations()[1].Env()["PGSSLROOTCERT"]
+								Expect(caCertPath).To(BeAnExistingFile())
+								Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
+							})
+						})
+					})
 				})
 			})
 
