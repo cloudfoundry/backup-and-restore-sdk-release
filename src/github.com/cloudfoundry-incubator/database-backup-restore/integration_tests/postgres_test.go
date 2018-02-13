@@ -22,7 +22,6 @@ import (
 	"os/exec"
 
 	"io/ioutil"
-	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
