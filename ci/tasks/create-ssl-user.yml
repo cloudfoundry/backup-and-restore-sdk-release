@@ -25,9 +25,6 @@ inputs:
 - name: backup-and-restore-sdk-release
 - name: bosh-backup-and-restore-meta
 
-outputs:
-- name: bosh-backup-and-restore-meta-output
-
 run:
   path: backup-and-restore-sdk-release/ci/scripts/create-ssl-user.sh
 
