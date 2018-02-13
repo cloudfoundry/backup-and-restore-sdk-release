@@ -19,6 +19,10 @@
 set -eu
 
 ./bosh-backup-and-restore-meta/unlock-ci.sh
+export BOSH_CLIENT
+export BOSH_CLIENT_SECRET
+export BOSH_ENVIRONMENT
+export BOSH_CA_CERT="./bosh-backup-and-restore-meta/certs/${BOSH_ENVIRONMENT}.crt"
 
 chmod 400 bosh-backup-and-restore-meta/genesis-bosh/bosh.pem
 
