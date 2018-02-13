@@ -44,3 +44,4 @@ params:
   SDK_INSTANCE_GROUP: database-backup-restorer
   TEST_TLS: true
   TEST_TLS_VERIFY_IDENTITY: true
+  TEST_TLS_MUTUAL_TLS: true
