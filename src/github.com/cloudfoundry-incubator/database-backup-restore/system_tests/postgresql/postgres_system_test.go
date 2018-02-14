@@ -83,8 +83,15 @@ var _ = Describe("postgres", func() {
 	Context("database dump is successful", func() {
 		BeforeEach(func() {
 			configJson := fmt.Sprintf(
-				`{"username":"test_user","password":"%s","host":"%s","port":5432,
-							"database":"%s","adapter":"postgres"}`,
+				`{
+					"username": "%s",
+					"password": "%s",
+					"host": "%s",
+					"port": 5432,
+					"database": "%s",
+					"adapter": "postgres"
+				}`,
+				postgresNonSslUsername,
 				postgresPassword,
 				postgresHostName,
 				databaseName,
@@ -120,8 +127,16 @@ var _ = Describe("postgres", func() {
 	Context("and 'tables' are specified in config", func() {
 		BeforeEach(func() {
 			configJson := fmt.Sprintf(
-				`{"username":"test_user","password":"%s","host":"%s","port":5432,
-							"database":"%s","adapter":"postgres", "tables":["people"]}`,
+				`{
+					"username": "%s",
+					"password": "%s",
+					"host": "%s",
+					"port": 5432,
+					"database": "%s",
+					"adapter": "postgres",
+					"tables": ["people"]
+				}`,
+				postgresNonSslUsername,
 				postgresPassword,
 				postgresHostName,
 				databaseName,
@@ -156,8 +171,16 @@ var _ = Describe("postgres", func() {
 	Context("and 'tables' are specified in config, with a non-existent table", func() {
 		BeforeEach(func() {
 			configJson := fmt.Sprintf(
-				`{"username":"test_user","password":"%s","host":"%s","port":5432,
-							"database":"%s","adapter":"postgres", "tables":["people", "lizards"]}`,
+				`{
+					"username": "%s",
+					"password": "%s",
+					"host": "%s",
+					"port": 5432,
+					"database": "%s",
+					"adapter": "postgres",
+					"tables": ["people", "lizards"]
+				}`,
+				postgresNonSslUsername,
 				postgresPassword,
 				postgresHostName,
 				databaseName,
