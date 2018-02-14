@@ -54,6 +54,10 @@ instance_groups:
         password: ((db_password))
         permissions:
         - "SUPERUSER"
+      - name: mutual_tls_user
+        common_name: postgres96
+        permissions:
+        - "SUPERUSER"
       port: 5432
       tls:
         ca: "((databases.ca))"
