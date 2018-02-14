@@ -62,7 +62,6 @@ var _ = Describe("postgres", func() {
 	})
 
 	AfterEach(func() {
-
 		connection.Close()
 
 		connection, proxySession = SuccessfullyConnectToPostgres(

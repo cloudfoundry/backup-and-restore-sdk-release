@@ -73,6 +73,10 @@ var _ = Describe("postgres with tls", func() {
 
 	Context("when the db user requires TLS", func() {
 		BeforeEach(func() {
+			if os.Getenv("TEST_SSL_USER_REQUIRES_SSL") == "false" {
+				return
+			}
+
 			_, _, err := ConnectToPostgresWithNoSsl(
 				postgresHostName,
 				postgresPassword,
@@ -285,6 +289,7 @@ var _ = Describe("postgres with tls", func() {
 				if os.Getenv("TEST_TLS_VERIFY_IDENTITY") == "false" {
 					return
 				}
+
 				Context("and the CA cert is correct", func() {
 					BeforeEach(func() {
 						configJson = fmt.Sprintf(
