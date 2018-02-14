@@ -49,6 +49,24 @@ var _ = Describe("postgres with tls", func() {
 		RunSQLCommand("INSERT INTO people VALUES ('Old Person');", connection)
 	})
 
+	AfterEach(func() {
+		connection.Close()
+
+		connection, proxySession = SuccessfullyConnectToPostgres(
+			postgresHostName,
+			postgresPassword,
+			postgresNonSslUsername,
+			postgresPort,
+			"postgres",
+			os.Getenv("SSH_PROXY_HOST"),
+			os.Getenv("SSH_PROXY_USER"),
+			os.Getenv("SSH_PROXY_KEY_FILE"),
+		)
+
+		RunSQLCommand("DROP DATABASE "+databaseName, connection)
+		brJob.RunOnVMAndSucceed(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath))
+	})
+
 	JustBeforeEach(func() {
 		brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 	})
