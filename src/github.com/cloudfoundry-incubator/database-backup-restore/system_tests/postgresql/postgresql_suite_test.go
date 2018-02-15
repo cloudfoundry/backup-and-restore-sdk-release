@@ -9,21 +9,19 @@ import (
 	"os"
 	"testing"
 
-	"database/sql"
+	"strconv"
 
 	. "github.com/cloudfoundry-incubator/database-backup-restore/system_tests/utils"
-	"github.com/onsi/gomega/gexec"
 )
 
-var proxySession *gexec.Session
-var connection *sql.DB
+var pgConnection *PostgresConnection
 
 var postgresHostName string
 var postgresNonSslUsername string
 var postgresSslUsername string
 var postgresMutualTlsUsername string
 var postgresPassword string
-var postgresPort string
+var postgresPort int
 
 var postgresCaCert string
 var postgresClientCert string
@@ -50,27 +48,10 @@ var _ = Describe("postgres", func() {
 		postgresNonSslUsername = MustHaveEnv("POSTGRES_USERNAME")
 		postgresSslUsername = os.Getenv("POSTGRES_SSL_USERNAME")
 		postgresMutualTlsUsername = os.Getenv("POSTGRES_MUTUAL_TLS_USERNAME")
-		postgresPort = MustHaveEnv("POSTGRES_PORT")
+		postgresPort, _ = strconv.Atoi(MustHaveEnv("POSTGRES_PORT"))
 
 		postgresCaCert = os.Getenv("POSTGRES_CA_CERT")
 		postgresClientCert = os.Getenv("POSTGRES_CLIENT_CERT")
 		postgresClientKey = os.Getenv("POSTGRES_CLIENT_KEY")
-
-		connection, proxySession = SuccessfullyConnectToPostgres(
-			postgresHostName,
-			postgresPassword,
-			postgresNonSslUsername,
-			postgresPort,
-			"postgres",
-			os.Getenv("SSH_PROXY_HOST"),
-			os.Getenv("SSH_PROXY_USER"),
-			os.Getenv("SSH_PROXY_KEY_FILE"),
-		)
-	})
-
-	AfterSuite(func() {
-		if proxySession != nil {
-			proxySession.Kill()
-		}
 	})
 })

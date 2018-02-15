@@ -31,39 +31,28 @@ var _ = Describe("postgres with tls", func() {
 		dbDumpPath = "/tmp/artifact" + disambiguationString
 		databaseName = "db" + disambiguationString
 
-		RunSQLCommand("CREATE DATABASE "+databaseName, connection)
-		connection.Close()
-
-		connection, proxySession = SuccessfullyConnectToPostgres(
+		pgConnection = NewPostgresConnection(
 			postgresHostName,
-			postgresPassword,
-			postgresNonSslUsername,
 			postgresPort,
-			databaseName,
+			postgresNonSslUsername,
+			postgresPassword,
 			os.Getenv("SSH_PROXY_HOST"),
 			os.Getenv("SSH_PROXY_USER"),
 			os.Getenv("SSH_PROXY_KEY_FILE"),
 		)
 
-		RunSQLCommand("CREATE TABLE people (name varchar(255));", connection)
-		RunSQLCommand("INSERT INTO people VALUES ('Old Person');", connection)
+		pgConnection.Open("postgres")
+		pgConnection.RunSQLCommand("CREATE DATABASE " + databaseName)
+		pgConnection.SwitchToDb(databaseName)
+		pgConnection.RunSQLCommand("CREATE TABLE people (name varchar(255));")
+		pgConnection.RunSQLCommand("INSERT INTO people VALUES ('Old Person');")
 	})
 
 	AfterEach(func() {
-		connection.Close()
+		pgConnection.SwitchToDb("postgres")
+		pgConnection.RunSQLCommand("DROP DATABASE " + databaseName)
+		pgConnection.Close()
 
-		connection, proxySession = SuccessfullyConnectToPostgres(
-			postgresHostName,
-			postgresPassword,
-			postgresNonSslUsername,
-			postgresPort,
-			"postgres",
-			os.Getenv("SSH_PROXY_HOST"),
-			os.Getenv("SSH_PROXY_USER"),
-			os.Getenv("SSH_PROXY_KEY_FILE"),
-		)
-
-		RunSQLCommand("DROP DATABASE "+databaseName, connection)
 		brJob.RunOnVMAndSucceed(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath))
 	})
 
@@ -98,7 +87,7 @@ var _ = Describe("postgres with tls", func() {
 						"username": "%s",
 						"password": "%s",
 						"host": "%s",
-						"port": %s,
+						"port": %d,
 						"database": "%s",
 						"adapter": "postgres"
 					}`,
@@ -115,13 +104,13 @@ var _ = Describe("postgres with tls", func() {
 					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 						dbDumpPath, configPath))
 
-				RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
+				pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
 
 				brJob.RunOnVMAndSucceed(
 					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 						dbDumpPath, configPath))
 
-				Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(ConsistOf("Old Person"))
+				Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).To(ConsistOf("Old Person"))
 			})
 		})
 
@@ -141,7 +130,7 @@ var _ = Describe("postgres with tls", func() {
 							"username": "%s",
 							"password": "%s",
 							"host": "%s",
-							"port": %s,
+							"port": %d,
 							"database": "%s",
 							"adapter": "postgres",
 							"tls": {
@@ -164,13 +153,13 @@ var _ = Describe("postgres with tls", func() {
 							fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 								dbDumpPath, configPath))
 
-						RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
+						pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
 
 						brJob.RunOnVMAndSucceed(
 							fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 								dbDumpPath, configPath))
 
-						Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(ConsistOf("Old Person"))
+						Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).To(ConsistOf("Old Person"))
 					})
 				})
 			})
@@ -183,7 +172,7 @@ var _ = Describe("postgres with tls", func() {
 							"username": "%s",
 							"password": "%s",
 							"host": "%s",
-							"port": %s,
+							"port": %d,
 							"database": "%s",
 							"adapter": "postgres",
 							"tls": {
@@ -207,13 +196,13 @@ var _ = Describe("postgres with tls", func() {
 							fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 								dbDumpPath, configPath))
 
-						RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
+						pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
 
 						brJob.RunOnVMAndSucceed(
 							fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 								dbDumpPath, configPath))
 
-						Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(ConsistOf("Old Person"))
+						Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).To(ConsistOf("Old Person"))
 					})
 				})
 
@@ -224,7 +213,7 @@ var _ = Describe("postgres with tls", func() {
 									"username": "%s",
 									"password": "%s",
 									"host": "%s",
-									"port": %s,
+									"port": %d,
 									"database": "%s",
 									"adapter": "postgres",
 									"tls": {
@@ -266,7 +255,7 @@ var _ = Describe("postgres with tls", func() {
 						"username": "%s",
 						"password": "%s",
 						"host": "%s",
-						"port": %s,
+						"port": %d,
 						"database": "%s",
 						"adapter": "postgres"
 					}`,
@@ -297,7 +286,7 @@ var _ = Describe("postgres with tls", func() {
 							"username": "%s",
 							"password": "%s",
 							"host": "%s",
-							"port": %s,
+							"port": %d,
 							"database": "%s",
 							"adapter": "postgres",
 							"tls": {
@@ -324,13 +313,13 @@ var _ = Describe("postgres with tls", func() {
 							fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 								dbDumpPath, configPath))
 
-						RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
+						pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
 
 						brJob.RunOnVMAndSucceed(
 							fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 								dbDumpPath, configPath))
 
-						Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(ConsistOf("Old Person"))
+						Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).To(ConsistOf("Old Person"))
 					})
 				})
 			})
@@ -343,7 +332,7 @@ var _ = Describe("postgres with tls", func() {
 									"username": "%s",
 									"password": "%s",
 									"host": "%s",
-									"port": %s,
+									"port": %d,
 									"database": "%s",
 									"adapter": "postgres",
 									"tls": {
@@ -371,13 +360,13 @@ var _ = Describe("postgres with tls", func() {
 							fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 								dbDumpPath, configPath))
 
-						RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
+						pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
 
 						brJob.RunOnVMAndSucceed(
 							fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 								dbDumpPath, configPath))
 
-						Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(ConsistOf("Old Person"))
+						Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).To(ConsistOf("Old Person"))
 					})
 				})
 
@@ -388,7 +377,7 @@ var _ = Describe("postgres with tls", func() {
 									"username": "%s",
 									"password": "%s",
 									"host": "%s",
-									"port": %s,
+									"port": %d,
 									"database": "%s",
 									"adapter": "postgres",
 									"tls": {
@@ -422,7 +411,7 @@ var _ = Describe("postgres with tls", func() {
 							"username": "%s",
 							"password": "%s",
 							"host": "%s",
-							"port": %s,
+							"port": %d,
 							"database": "%s",
 							"adapter": "postgres",
 							"tls": {
@@ -463,7 +452,7 @@ var _ = Describe("postgres with tls", func() {
 						"username": "%s",
 						"password": "%s",
 						"host": "%s",
-						"port": %s,
+						"port": %d,
 						"database": "%s",
 						"adapter": "postgres",
 						"tls": {
@@ -486,13 +475,13 @@ var _ = Describe("postgres with tls", func() {
 						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 							dbDumpPath, configPath))
 
-					RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
+					pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
 
 					brJob.RunOnVMAndSucceed(
 						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 							dbDumpPath, configPath))
 
-					Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(ConsistOf("Old Person"))
+					Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).To(ConsistOf("Old Person"))
 				})
 			})
 		})
@@ -505,7 +494,7 @@ var _ = Describe("postgres with tls", func() {
 						"username": "%s",
 						"password": "%s",
 						"host": "%s",
-						"port": %s,
+						"port": %d,
 						"database": "%s",
 						"adapter": "postgres",
 						"tls": {
@@ -529,13 +518,13 @@ var _ = Describe("postgres with tls", func() {
 						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 							dbDumpPath, configPath))
 
-					RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
+					pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
 
 					brJob.RunOnVMAndSucceed(
 						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 							dbDumpPath, configPath))
 
-					Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(ConsistOf("Old Person"))
+					Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).To(ConsistOf("Old Person"))
 				})
 			})
 
@@ -546,7 +535,7 @@ var _ = Describe("postgres with tls", func() {
 								"username": "%s",
 								"password": "%s",
 								"host": "%s",
-								"port": %s,
+								"port": %d,
 								"database": "%s",
 								"adapter": "postgres",
 								"tls": {

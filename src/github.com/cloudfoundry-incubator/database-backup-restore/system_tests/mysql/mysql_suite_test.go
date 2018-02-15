@@ -12,6 +12,8 @@ import (
 
 	"github.com/onsi/gomega/gexec"
 
+	"strconv"
+
 	. "github.com/cloudfoundry-incubator/database-backup-restore/system_tests/utils"
 )
 
@@ -21,7 +23,7 @@ var connection *sql.DB
 var mysqlHostName string
 var mysqlNonSslUsername string
 var mysqlPassword string
-var mysqlPort string
+var mysqlPort int
 
 var mysqlCaCert string
 var mysqlClientCert string
@@ -46,7 +48,7 @@ var _ = Describe("mysql", func() {
 		mysqlHostName = MustHaveEnv("MYSQL_HOSTNAME")
 		mysqlNonSslUsername = MustHaveEnv("MYSQL_USERNAME")
 		mysqlPassword = MustHaveEnv("MYSQL_PASSWORD")
-		mysqlPort = MustHaveEnv("MYSQL_PORT")
+		mysqlPort, _ = strconv.Atoi(MustHaveEnv("MYSQL_PORT"))
 
 		mysqlCaCert = os.Getenv("MYSQL_CA_CERT")
 		mysqlClientCert = os.Getenv("MYSQL_CLIENT_CERT")

@@ -37,45 +37,34 @@ var _ = Describe("postgres", func() {
 
 	BeforeEach(func() {
 		disambiguationString := DisambiguationString()
-		databaseName = "db" + disambiguationString
 		configPath = "/tmp/config" + disambiguationString
 		dbDumpPath = "/tmp/artifact" + disambiguationString
+		databaseName = "db" + disambiguationString
 
-		RunSQLCommand("CREATE DATABASE "+databaseName, connection)
-		connection.Close()
-
-		connection, proxySession = SuccessfullyConnectToPostgres(
+		pgConnection = NewPostgresConnection(
 			postgresHostName,
-			postgresPassword,
-			postgresNonSslUsername,
 			postgresPort,
-			databaseName,
+			postgresNonSslUsername,
+			postgresPassword,
 			os.Getenv("SSH_PROXY_HOST"),
 			os.Getenv("SSH_PROXY_USER"),
 			os.Getenv("SSH_PROXY_KEY_FILE"),
 		)
 
-		RunSQLCommand("CREATE TABLE people (name varchar);", connection)
-		RunSQLCommand("INSERT INTO people VALUES ('Old Person');", connection)
-		RunSQLCommand("CREATE TABLE places (name varchar);", connection)
-		RunSQLCommand("INSERT INTO places VALUES ('Old Place');", connection)
+		pgConnection.Open("postgres")
+		pgConnection.RunSQLCommand("CREATE DATABASE " + databaseName)
+		pgConnection.SwitchToDb(databaseName)
+		pgConnection.RunSQLCommand("CREATE TABLE people (name varchar(255));")
+		pgConnection.RunSQLCommand("INSERT INTO people VALUES ('Old Person');")
+		pgConnection.RunSQLCommand("CREATE TABLE places (name varchar);")
+		pgConnection.RunSQLCommand("INSERT INTO places VALUES ('Old Place');")
 	})
 
 	AfterEach(func() {
-		connection.Close()
+		pgConnection.SwitchToDb("postgres")
+		pgConnection.RunSQLCommand("DROP DATABASE " + databaseName)
+		pgConnection.Close()
 
-		connection, proxySession = SuccessfullyConnectToPostgres(
-			postgresHostName,
-			postgresPassword,
-			postgresNonSslUsername,
-			postgresPort,
-			"postgres",
-			os.Getenv("SSH_PROXY_HOST"),
-			os.Getenv("SSH_PROXY_USER"),
-			os.Getenv("SSH_PROXY_KEY_FILE"),
-		)
-
-		RunSQLCommand("DROP DATABASE "+databaseName, connection)
 		brJob.RunOnVMAndSucceed(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath))
 	})
 
@@ -104,20 +93,20 @@ var _ = Describe("postgres", func() {
 					configPath, dbDumpPath))
 			brJob.RunOnVMAndSucceed(fmt.Sprintf("ls -l %s", dbDumpPath))
 
-			RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
-			RunSQLCommand("UPDATE places SET NAME = 'New Place';", connection)
+			pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
+			pgConnection.RunSQLCommand("UPDATE places SET NAME = 'New Place';")
 
 			brJob.RunOnVMAndSucceed(
 				fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
 					configPath, dbDumpPath))
 
-			Expect(FetchSQLColumn("SELECT name FROM people;", connection)).
+			Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
 				To(ConsistOf("Old Person"))
-			Expect(FetchSQLColumn("SELECT name FROM people;", connection)).
+			Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
 				NotTo(ConsistOf("New Person"))
-			Expect(FetchSQLColumn("SELECT name FROM places;", connection)).
+			Expect(pgConnection.FetchSQLColumn("SELECT name FROM places;")).
 				To(ConsistOf("Old Place"))
-			Expect(FetchSQLColumn("SELECT name FROM places;", connection)).
+			Expect(pgConnection.FetchSQLColumn("SELECT name FROM places;")).
 				NotTo(ConsistOf("New Place"))
 		})
 
@@ -149,20 +138,20 @@ var _ = Describe("postgres", func() {
 				dbDumpPath,
 				configPath))
 
-			RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
-			RunSQLCommand("UPDATE places SET NAME = 'New Place';", connection)
+			pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
+			pgConnection.RunSQLCommand("UPDATE places SET NAME = 'New Place';")
 
 			brJob.RunOnVMAndSucceed(fmt.Sprintf("cat %s", dbDumpPath))
 
 			brJob.RunOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
 
-			Expect(FetchSQLColumn("SELECT name FROM people;", connection)).
+			Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
 				To(ConsistOf("Old Person"))
-			Expect(FetchSQLColumn("SELECT name FROM people;", connection)).
+			Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
 				NotTo(ConsistOf("New Person"))
-			Expect(FetchSQLColumn("SELECT name FROM places;", connection)).
+			Expect(pgConnection.FetchSQLColumn("SELECT name FROM places;")).
 				To(ConsistOf("New Place"))
-			Expect(FetchSQLColumn("SELECT name FROM places;", connection)).
+			Expect(pgConnection.FetchSQLColumn("SELECT name FROM places;")).
 				NotTo(ConsistOf("Old Place"))
 		})
 	})
