@@ -45,7 +45,7 @@ var _ = Describe("mysql", func() {
 		Context("when we backup the whole database", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
-					`{"username":"%s","password":"%s","host":"%s","port":%s,"database":"%s","adapter":"mysql"}`,
+					`{"username":"%s","password":"%s","host":"%s","port":%d,"database":"%s","adapter":"mysql"}`,
 					mysqlNonSslUsername,
 					mysqlPassword,
 					mysqlHostName,
@@ -81,7 +81,7 @@ var _ = Describe("mysql", func() {
 		Context("when some existing 'tables' are specified in config", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
-					`{"username":"%s","password":"%s","host":"%s","port":%s,"database":"%s","adapter":"mysql","tables":["people"]}`,
+					`{"username":"%s","password":"%s","host":"%s","port":%d,"database":"%s","adapter":"mysql","tables":["people"]}`,
 					mysqlNonSslUsername,
 					mysqlPassword,
 					mysqlHostName,
@@ -121,7 +121,7 @@ var _ = Describe("mysql", func() {
 		Context("when 'tables' are specified in config only some of which exist", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
-					`{"username":"%s","password":"%s","host":"%s","port":%s,"database":"%s","adapter":"mysql","tables":["people", "not there"]}`,
+					`{"username":"%s","password":"%s","host":"%s","port":%d,"database":"%s","adapter":"mysql","tables":["people", "not there"]}`,
 					mysqlNonSslUsername,
 					mysqlPassword,
 					mysqlHostName,
@@ -147,7 +147,7 @@ var _ = Describe("mysql", func() {
 		Context("when 'tables' are specified in config none of them exist", func() {
 			BeforeEach(func() {
 				configJson := fmt.Sprintf(
-					`{"username":"%s","password":"%s","host":"%s","port":%s,"database":"%s","adapter":"mysql","tables":["lizards", "form-shifting-people"]}`,
+					`{"username":"%s","password":"%s","host":"%s","port":%d,"database":"%s","adapter":"mysql","tables":["lizards", "form-shifting-people"]}`,
 					mysqlNonSslUsername,
 					mysqlPassword,
 					mysqlHostName,

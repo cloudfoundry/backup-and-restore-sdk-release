@@ -72,7 +72,7 @@ var _ = Describe("mysql with tls", func() {
 						"username": "%s",
 						"password": "%s",
 						"host": "%s",
-						"port": %s,
+						"port": %d,
 						"database": "%s",
 						"adapter": "mysql"
 					}`,
@@ -114,7 +114,7 @@ var _ = Describe("mysql with tls", func() {
 							"username": "%s",
 							"password": "%s",
 							"host": "%s",
-							"port": %s,
+							"port": %d,
 							"database": "%s",
 							"adapter": "mysql",
 							"tls": {
@@ -155,7 +155,7 @@ var _ = Describe("mysql with tls", func() {
 							"username": "%s",
 							"password": "%s",
 							"host": "%s",
-							"port": %s,
+							"port": %d,
 							"database": "%s",
 							"adapter": "mysql",
 							"tls": {
@@ -195,7 +195,7 @@ var _ = Describe("mysql with tls", func() {
 									"username": "%s",
 									"password": "%s",
 									"host": "%s",
-									"port": %s,
+									"port": %d,
 									"database": "%s",
 									"adapter": "mysql",
 									"tls": {
@@ -241,7 +241,7 @@ var _ = Describe("mysql with tls", func() {
 						"username": "%s",
 						"password": "%s",
 						"host": "%s",
-						"port": %s,
+						"port": %d,
 						"database": "%s",
 						"adapter": "mysql"
 					}`,
@@ -271,7 +271,7 @@ var _ = Describe("mysql with tls", func() {
 							"username": "%s",
 							"password": "%s",
 							"host": "%s",
-							"port": %s,
+							"port": %d,
 							"database": "%s",
 							"adapter": "mysql",
 							"tls": {
@@ -317,7 +317,7 @@ var _ = Describe("mysql with tls", func() {
 									"username": "%s",
 									"password": "%s",
 									"host": "%s",
-									"port": %s,
+									"port": %d,
 									"database": "%s",
 									"adapter": "mysql",
 									"tls": {
@@ -362,7 +362,7 @@ var _ = Describe("mysql with tls", func() {
 									"username": "%s",
 									"password": "%s",
 									"host": "%s",
-									"port": %s,
+									"port": %d,
 									"database": "%s",
 									"adapter": "mysql",
 									"tls": {
@@ -396,7 +396,7 @@ var _ = Describe("mysql with tls", func() {
 							"username": "%s",
 							"password": "%s",
 							"host": "%s",
-							"port": %s,
+							"port": %d,
 							"database": "%s",
 							"adapter": "mysql",
 							"tls": {
@@ -436,7 +436,7 @@ var _ = Describe("mysql with tls", func() {
 						"username": "%s",
 						"password": "%s",
 						"host": "%s",
-						"port": %s,
+						"port": %d,
 						"database": "%s",
 						"adapter": "mysql",
 						"tls": {
@@ -478,7 +478,7 @@ var _ = Describe("mysql with tls", func() {
 						"username": "%s",
 						"password": "%s",
 						"host": "%s",
-						"port": %s,
+						"port": %d,
 						"database": "%s",
 						"adapter": "mysql",
 						"tls": {
@@ -518,7 +518,7 @@ var _ = Describe("mysql with tls", func() {
 								"username": "%s",
 								"password": "%s",
 								"host": "%s",
-								"port": %s,
+								"port": %d,
 								"database": "%s",
 								"adapter": "mysql",
 								"tls": {
