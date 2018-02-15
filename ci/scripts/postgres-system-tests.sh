@@ -36,9 +36,9 @@ export BOSH_GW_USER=${SSH_PROXY_USER}
 export BOSH_GW_HOST=${SSH_PROXY_HOST}
 export BOSH_GW_PRIVATE_KEY=/tmp/private.key
 export SSH_PROXY_KEY_FILE=/tmp/private.key
-export POSTGRES_CA_CERT="$(cat $PWD/bosh-backup-and-restore-meta/${POSTGRES_CA_CERT_PATH})"
-export POSTGRES_CLIENT_CERT="$(cat $PWD/bosh-backup-and-restore-meta/${POSTGRES_CLIENT_CERT_PATH})"
-export POSTGRES_CLIENT_KEY="$(cat $PWD/bosh-backup-and-restore-meta/${POSTGRES_CLIENT_KEY_PATH})"
+export POSTGRES_CA_CERT="${POSTGRES_CA_CERT:-$(cat $PWD/bosh-backup-and-restore-meta/${POSTGRES_CA_CERT_PATH})}"
+export POSTGRES_CLIENT_CERT="${POSTGRES_CLIENT_CERT:-$(cat $PWD/bosh-backup-and-restore-meta/${POSTGRES_CLIENT_CERT_PATH})}"
+export POSTGRES_CLIENT_KEY="${POSTGRES_CLIENT_KEY:-$(cat $PWD/bosh-backup-and-restore-meta/${POSTGRES_CLIENT_KEY_PATH})}"
 
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/database-backup-restore
 dep ensure
