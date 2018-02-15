@@ -22,7 +22,7 @@ func ConnectMysql(dbHostname string, dbPassword string, dbUsername string, dbPor
 		Expect(err).NotTo(HaveOccurred())
 	}
 
-	connection, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/", dbUsername, dbPassword, hostname, port))
+	connection, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/", dbUsername, dbPassword, hostname, port))
 	Expect(err).NotTo(HaveOccurred())
 
 	return connection, proxySession
