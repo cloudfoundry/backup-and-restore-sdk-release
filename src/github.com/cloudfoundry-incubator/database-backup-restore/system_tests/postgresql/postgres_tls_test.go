@@ -41,7 +41,7 @@ var _ = Describe("postgres with tls", func() {
 			os.Getenv("SSH_PROXY_KEY_FILE"),
 		)
 
-		pgConnection.Open("postgres")
+		pgConnection.OpenSuccessfully("postgres")
 		pgConnection.RunSQLCommand("CREATE DATABASE " + databaseName)
 		pgConnection.SwitchToDb(databaseName)
 		pgConnection.RunSQLCommand("CREATE TABLE people (name varchar(255));")
@@ -66,16 +66,15 @@ var _ = Describe("postgres with tls", func() {
 				return
 			}
 
-			_, _, err := ConnectToPostgresWithNoSsl(
+			err := NewPostgresConnection(
 				postgresHostName,
-				postgresPassword,
-				postgresSslUsername,
 				postgresPort,
-				databaseName,
+				postgresSslUsername,
+				postgresPassword,
 				os.Getenv("SSH_PROXY_HOST"),
 				os.Getenv("SSH_PROXY_USER"),
 				os.Getenv("SSH_PROXY_KEY_FILE"),
-			)
+			).Open(databaseName)
 
 			Expect(err).To(MatchError(MatchRegexp("no pg_hba.conf entry for host \".*\", user \"ssl_user\", database \".*\", SSL off")))
 		})

@@ -51,7 +51,7 @@ var _ = Describe("postgres", func() {
 			os.Getenv("SSH_PROXY_KEY_FILE"),
 		)
 
-		pgConnection.Open("postgres")
+		pgConnection.OpenSuccessfully("postgres")
 		pgConnection.RunSQLCommand("CREATE DATABASE " + databaseName)
 		pgConnection.SwitchToDb(databaseName)
 		pgConnection.RunSQLCommand("CREATE TABLE people (name varchar(255));")

@@ -53,7 +53,12 @@ func NewPostgresConnection(hostname string, port int, username, password, proxyH
 	}
 }
 
-func (c *PostgresConnection) Open(dbName string) {
+func (c *PostgresConnection) OpenSuccessfully(dbName string) {
+	err := c.Open(dbName)
+	Expect(err).NotTo(HaveOccurred())
+}
+
+func (c *PostgresConnection) Open(dbName string) error {
 	var db *sql.DB
 	var proxySession *gexec.Session
 	var err error
@@ -70,13 +75,19 @@ func (c *PostgresConnection) Open(dbName string) {
 	connectionString := fmt.Sprintf("user=%s password=%s host=%s port=%d sslmode=disable dbname=%s", c.username, c.password, hostname, port, dbName)
 
 	db, err = sql.Open("postgres", connectionString)
-	Expect(err).NotTo(HaveOccurred())
+	if err != nil {
+		return err
+	}
 
 	_, err = db.Exec("SELECT VERSION();")
-	Expect(err).NotTo(HaveOccurred())
+	if err != nil {
+		return err
+	}
 
 	c.db = db
 	c.proxySession = proxySession
+
+	return nil
 }
 
 func (c *PostgresConnection) RunSQLCommand(command string) {
@@ -125,39 +136,6 @@ func (c *PostgresConnection) SwitchToDb(dbName string) {
 	Expect(err).NotTo(HaveOccurred())
 
 	c.db = db
-}
-
-func ConnectToPostgresWithNoSsl(
-	dbHostname string,
-	dbPassword string,
-	dbUsername string,
-	dbPort int,
-	dbName string,
-	proxyHost string,
-	proxyUsername string,
-	proxyPrivateKey string) (*gexec.Session, *sql.DB, error) {
-	var proxySession *gexec.Session
-	var err error
-	var hostname, port = dbHostname, dbPort
-	if proxyHost != "" {
-		hostname, port = "127.0.0.1", 13306
-		proxySession, err = startTunnel(port, dbHostname, dbPort, proxyUsername, proxyHost, proxyPrivateKey)
-		Expect(err).NotTo(HaveOccurred())
-	}
-
-	connectionString := fmt.Sprintf("user=%s password=%s host=%s port=%d sslmode=disable dbname=%s", dbUsername, dbPassword, hostname, port, dbName)
-
-	connection, err := sql.Open("postgres", connectionString)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	_, err = connection.Exec("SELECT VERSION();")
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return proxySession, connection, err
 }
 
 func startTunnel(localPort int, remoteHost string, remotePort int, proxyUsername string, proxyHost string, proxyPrivateKey string) (*gexec.Session, error) {
