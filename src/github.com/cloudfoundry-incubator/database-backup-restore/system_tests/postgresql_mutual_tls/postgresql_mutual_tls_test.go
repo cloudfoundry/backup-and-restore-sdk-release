@@ -12,6 +12,8 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 
+	"io/ioutil"
+
 	_ "github.com/lib/pq"
 )
 
@@ -30,6 +32,8 @@ var _ = Describe("postgres with mutual tls", func() {
 	var postgresCaCert string
 	var postgresClientCert string
 	var postgresClientKey string
+	var postgresClientCertPath string
+	var postgresClientKeyPath string
 
 	var brJob JobInstance
 
@@ -50,15 +54,21 @@ var _ = Describe("postgres with mutual tls", func() {
 	})
 
 	BeforeEach(func() {
-		databaseName = "db" + DisambiguationString()
+		disambiguationString := DisambiguationString()
+		configPath = "/tmp/config" + disambiguationString
+		dbDumpPath = "/tmp/artifact" + disambiguationString
+		databaseName = "db" + disambiguationString
+
+		postgresClientCertPath = writeToFile(postgresClientCert)
+		postgresClientKeyPath = writeToFile(postgresClientKey)
 
 		pgConnection = NewMutualTlsPostgresConnection(
 			postgresHostName,
 			postgresPort,
 			postgresUsername,
 			postgresPassword,
-			postgresClientCert,
-			postgresClientKey,
+			postgresClientCertPath,
+			postgresClientKeyPath,
 			os.Getenv("SSH_PROXY_HOST"),
 			os.Getenv("SSH_PROXY_USER"),
 			os.Getenv("SSH_PROXY_KEY_FILE"),
@@ -72,11 +82,18 @@ var _ = Describe("postgres with mutual tls", func() {
 	})
 
 	AfterEach(func() {
+		os.Remove(postgresClientCertPath)
+		os.Remove(postgresClientKeyPath)
+
 		pgConnection.SwitchToDb("postgres")
 		pgConnection.RunSQLCommand("DROP DATABASE " + databaseName)
 		pgConnection.Close()
 
 		brJob.RunOnVMAndSucceed(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath))
+	})
+
+	JustBeforeEach(func() {
+		brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
 	})
 
 	Context("when TLS info is not provided in the config", func() {
@@ -269,3 +286,11 @@ var _ = Describe("postgres with mutual tls", func() {
 		})
 	})
 })
+
+func writeToFile(contents string) string {
+	file, err := ioutil.TempFile("", "")
+	Expect(err).NotTo(HaveOccurred())
+	path := file.Name()
+	ioutil.WriteFile(path, []byte(contents), 0777)
+	return path
+}

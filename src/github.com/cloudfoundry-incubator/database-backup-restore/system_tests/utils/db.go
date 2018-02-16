@@ -29,13 +29,13 @@ func ConnectMysql(dbHostname string, dbPassword string, dbUsername string, dbPor
 }
 
 type PostgresConnection struct {
-	hostname   string
-	port       int
-	username   string
-	password   string
-	clientCert string
-	clientKey  string
-	db         *sql.DB
+	hostname       string
+	port           int
+	username       string
+	password       string
+	clientCertPath string
+	clientKeyPath  string
+	db             *sql.DB
 
 	proxyHost       string
 	proxyUsername   string
@@ -55,14 +55,14 @@ func NewPostgresConnection(hostname string, port int, username, password, proxyH
 	}
 }
 
-func NewMutualTlsPostgresConnection(hostname string, port int, username, password, clientCert, clientKey, proxyHost, proxyUsername, proxyPrivateKey string) *PostgresConnection {
+func NewMutualTlsPostgresConnection(hostname string, port int, username, password, clientCertPath, clientKeyPath, proxyHost, proxyUsername, proxyPrivateKey string) *PostgresConnection {
 	return &PostgresConnection{
 		hostname:        hostname,
 		port:            port,
 		username:        username,
 		password:        password,
-		clientCert:      clientCert,
-		clientKey:       clientKey,
+		clientCertPath:  clientCertPath,
+		clientKeyPath:   clientKeyPath,
 		proxyHost:       proxyHost,
 		proxyUsername:   proxyUsername,
 		proxyPrivateKey: proxyPrivateKey,
@@ -161,8 +161,8 @@ func (c *PostgresConnection) connect(hostname string, port int, dbName string) (
 func (c *PostgresConnection) connectionString(hostname string, port int, dbName, sslMode string) string {
 	connectionString := fmt.Sprintf("user=%s password=%s host=%s port=%d dbname=%s sslmode=%s", c.username, c.password, hostname, port, dbName, sslMode)
 
-	if c.clientCert != "" && c.clientKey != "" {
-		connectionString = connectionString + fmt.Sprintf(" sslcert=%s sslkey=%s", c.clientCert, c.clientKey)
+	if c.clientCertPath != "" && c.clientKeyPath != "" {
+		connectionString = connectionString + fmt.Sprintf(" sslcert=%s sslkey=%s", c.clientCertPath, c.clientKeyPath)
 	}
 
 	return connectionString
