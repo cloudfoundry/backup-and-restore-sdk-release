@@ -33,8 +33,6 @@ var _ = Describe("postgres with mutual tls", func() {
 
 	var brJob JobInstance
 
-	var mutualTlsDatabaseName string
-
 	BeforeSuite(func() {
 		brJob = JobInstance{
 			Deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
@@ -52,7 +50,7 @@ var _ = Describe("postgres with mutual tls", func() {
 	})
 
 	BeforeEach(func() {
-		mutualTlsDatabaseName = "db" + DisambiguationString()
+		databaseName = "db" + DisambiguationString()
 
 		pgConnection = NewMutualTlsPostgresConnection(
 			postgresHostName,
@@ -67,7 +65,7 @@ var _ = Describe("postgres with mutual tls", func() {
 		)
 
 		pgConnection.OpenSuccessfully("postgres")
-		pgConnection.RunSQLCommand("CREATE DATABASE " + mutualTlsDatabaseName)
+		pgConnection.RunSQLCommand("CREATE DATABASE " + databaseName)
 		pgConnection.SwitchToDb(databaseName)
 		pgConnection.RunSQLCommand("CREATE TABLE people (name varchar(255));")
 		pgConnection.RunSQLCommand("INSERT INTO people VALUES ('Old Person');")
@@ -75,7 +73,7 @@ var _ = Describe("postgres with mutual tls", func() {
 
 	AfterEach(func() {
 		pgConnection.SwitchToDb("postgres")
-		pgConnection.RunSQLCommand("DROP DATABASE " + mutualTlsDatabaseName)
+		pgConnection.RunSQLCommand("DROP DATABASE " + databaseName)
 		pgConnection.Close()
 
 		brJob.RunOnVMAndSucceed(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath))
