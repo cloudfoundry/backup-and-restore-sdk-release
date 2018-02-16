@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"fmt"
+	"net"
 	"os"
 
 	. "github.com/onsi/ginkgo"
@@ -144,6 +145,39 @@ var _ = Describe("mysql with tls", func() {
 								dbDumpPath, configPath))
 
 						Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(ConsistOf("Old Person"))
+					})
+				})
+				Context("and the host does not match the CA cert", func() {
+					BeforeEach(func() {
+						By("connecting to the host using its IP rather than the hostname")
+						configJson = fmt.Sprintf(
+							`{
+							"username": "%s",
+							"password": "%s",
+							"host": "%s",
+							"port": %d,
+							"database": "%s",
+							"adapter": "mysql",
+							"tls": {
+								"cert": {
+									"ca": "%s"
+								}
+							}
+						}`,
+							mysqlSslUsername,
+							mysqlPassword,
+							resolveHostToIP(mysqlHostName),
+							mysqlPort,
+							databaseName,
+							escapeNewLines(mysqlCaCert),
+						)
+					})
+
+					It("fails as the hosts does not match the certificate", func() {
+						Expect(brJob.RunOnInstance(
+							fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+								dbDumpPath, configPath))).To(gexec.Exit(1))
+
 					})
 				})
 			})
@@ -544,6 +578,13 @@ var _ = Describe("mysql with tls", func() {
 		})
 	})
 })
+
+func resolveHostToIP(hostname string) string {
+	addrs, err := net.LookupHost(hostname)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(addrs).NotTo(HaveLen(0), "hostname "+hostname+" does not resolve to any IPs")
+	return addrs[0]
+}
 
 func escapeNewLines(txt string) string {
 	return strings.Replace(txt, "\n", "\\n", -1)
