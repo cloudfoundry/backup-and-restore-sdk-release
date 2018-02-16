@@ -88,7 +88,7 @@ func (c *PostgresConnection) Open(dbName string) error {
 		Expect(err).NotTo(HaveOccurred())
 	}
 
-	db, err = sql.Open("postgres", c.connectionString(hostname, port, dbName))
+	db, err = c.connect(hostname, port, dbName)
 	if err != nil {
 		return err
 	}
@@ -144,14 +144,22 @@ func (c *PostgresConnection) SwitchToDb(dbName string) {
 		hostname, port = "127.0.0.1", 13306
 	}
 
-	db, err := sql.Open("postgres", c.connectionString(hostname, port, dbName))
+	db, err := c.connect(hostname, port, dbName)
 	Expect(err).NotTo(HaveOccurred())
 
 	c.db = db
 }
 
-func (c *PostgresConnection) connectionString(hostname string, port int, dbName string) string {
-	connectionString := fmt.Sprintf("user=%s password=%s host=%s port=%d dbname=%s sslmode=prefer", c.username, c.password, hostname, port, dbName)
+func (c *PostgresConnection) connect(hostname string, port int, dbName string) (*sql.DB, error) {
+	db, err := sql.Open("postgres", c.connectionString(hostname, port, dbName, "require"))
+	if err != nil {
+		db, err = sql.Open("postgres", c.connectionString(hostname, port, dbName, "disable"))
+	}
+	return db, err
+}
+
+func (c *PostgresConnection) connectionString(hostname string, port int, dbName, sslMode string) string {
+	connectionString := fmt.Sprintf("user=%s password=%s host=%s port=%d dbname=%s sslmode=%s", c.username, c.password, hostname, port, dbName, sslMode)
 
 	if c.clientCert != "" && c.clientKey != "" {
 		connectionString = connectionString + fmt.Sprintf(" sslcert=%s sslkey=%s", c.clientCert, c.clientKey)
