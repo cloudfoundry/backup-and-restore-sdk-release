@@ -29,11 +29,13 @@ func ConnectMysql(dbHostname string, dbPassword string, dbUsername string, dbPor
 }
 
 type PostgresConnection struct {
-	hostname string
-	port     int
-	username string
-	password string
-	db       *sql.DB
+	hostname   string
+	port       int
+	username   string
+	password   string
+	clientCert string
+	clientKey  string
+	db         *sql.DB
 
 	proxyHost       string
 	proxyUsername   string
@@ -47,6 +49,20 @@ func NewPostgresConnection(hostname string, port int, username, password, proxyH
 		port:            port,
 		username:        username,
 		password:        password,
+		proxyHost:       proxyHost,
+		proxyUsername:   proxyUsername,
+		proxyPrivateKey: proxyPrivateKey,
+	}
+}
+
+func NewMutualTlsPostgresConnection(hostname string, port int, username, password, clientCert, clientKey, proxyHost, proxyUsername, proxyPrivateKey string) *PostgresConnection {
+	return &PostgresConnection{
+		hostname:        hostname,
+		port:            port,
+		username:        username,
+		password:        password,
+		clientCert:      clientCert,
+		clientKey:       clientKey,
 		proxyHost:       proxyHost,
 		proxyUsername:   proxyUsername,
 		proxyPrivateKey: proxyPrivateKey,
@@ -72,9 +88,7 @@ func (c *PostgresConnection) Open(dbName string) error {
 		Expect(err).NotTo(HaveOccurred())
 	}
 
-	connectionString := fmt.Sprintf("user=%s password=%s host=%s port=%d sslmode=disable dbname=%s", c.username, c.password, hostname, port, dbName)
-
-	db, err = sql.Open("postgres", connectionString)
+	db, err = sql.Open("postgres", c.connectionString(hostname, port, dbName))
 	if err != nil {
 		return err
 	}
@@ -130,12 +144,20 @@ func (c *PostgresConnection) SwitchToDb(dbName string) {
 		hostname, port = "127.0.0.1", 13306
 	}
 
-	connectionString := fmt.Sprintf("user=%s password=%s host=%s port=%d sslmode=disable dbname=%s", c.username, c.password, hostname, port, dbName)
-
-	db, err := sql.Open("postgres", connectionString)
+	db, err := sql.Open("postgres", c.connectionString(hostname, port, dbName))
 	Expect(err).NotTo(HaveOccurred())
 
 	c.db = db
+}
+
+func (c *PostgresConnection) connectionString(hostname string, port int, dbName string) string {
+	connectionString := fmt.Sprintf("user=%s password=%s host=%s port=%d dbname=%s", c.username, c.password, hostname, port, dbName)
+
+	if c.clientCert != "" && c.clientKey != "" {
+		connectionString = connectionString + fmt.Sprintf(" sslcert=%s sslkey=%s", c.clientCert, c.clientKey)
+	}
+
+	return connectionString
 }
 
 func startTunnel(localPort int, remoteHost string, remotePort int, proxyUsername string, proxyHost string, proxyPrivateKey string) (*gexec.Session, error) {

@@ -126,3 +126,7 @@ func DisambiguationStringOfLength(length int) string {
 	str := DisambiguationString()
 	return str[len(str)-length:]
 }
+
+func EscapeNewLines(txt string) string {
+	return strings.Replace(txt, "\n", "\\n", -1)
+}
