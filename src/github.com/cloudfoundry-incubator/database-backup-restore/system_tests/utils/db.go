@@ -151,7 +151,7 @@ func (c *PostgresConnection) SwitchToDb(dbName string) {
 }
 
 func (c *PostgresConnection) connectionString(hostname string, port int, dbName string) string {
-	connectionString := fmt.Sprintf("user=%s password=%s host=%s port=%d dbname=%s ssl-mode=prefer", c.username, c.password, hostname, port, dbName)
+	connectionString := fmt.Sprintf("user=%s password=%s host=%s port=%d dbname=%s sslmode=prefer", c.username, c.password, hostname, port, dbName)
 
 	if c.clientCert != "" && c.clientKey != "" {
 		connectionString = connectionString + fmt.Sprintf(" sslcert=%s sslkey=%s", c.clientCert, c.clientKey)
