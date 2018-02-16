@@ -42,4 +42,4 @@ export POSTGRES_CLIENT_KEY="${POSTGRES_CLIENT_KEY:-$(cat $PWD/bosh-backup-and-re
 
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/database-backup-restore
 dep ensure
-ginkgo -v -r system_tests/postgresql -trace
+ginkgo -v -r system_tests/${TEST_SUITE_NAME} -trace

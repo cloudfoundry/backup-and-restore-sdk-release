@@ -45,7 +45,6 @@ params:
   SSH_PROXY_PRIVATE_KEY:
   SDK_DEPLOYMENT: backup-restorer
   SDK_INSTANCE_GROUP: database-backup-restorer
-  TEST_TLS: true
   TEST_TLS_VERIFY_IDENTITY: true
-  TEST_TLS_MUTUAL_TLS: true
   TEST_SSL_USER_REQUIRES_SSL: true
+  TEST_SUITE_NAME:
