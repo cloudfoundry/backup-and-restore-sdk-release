@@ -9,6 +9,8 @@ import (
 
 	. "github.com/cloudfoundry-incubator/database-backup-restore/system_tests/utils"
 	"github.com/onsi/gomega/gexec"
+
+	_ "github.com/lib/pq"
 )
 
 var _ = Describe("postgres with tls", func() {
