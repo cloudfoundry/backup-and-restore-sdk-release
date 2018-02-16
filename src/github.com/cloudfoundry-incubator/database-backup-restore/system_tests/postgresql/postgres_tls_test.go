@@ -252,14 +252,12 @@ var _ = Describe("postgres with tls", func() {
 				configJson = fmt.Sprintf(
 					`{
 						"username": "%s",
-						"password": "%s",
 						"host": "%s",
 						"port": %d,
 						"database": "%s",
 						"adapter": "postgres"
 					}`,
 					postgresMutualTlsUsername,
-					postgresPassword,
 					postgresHostName,
 					postgresPort,
 					databaseName,
@@ -283,7 +281,6 @@ var _ = Describe("postgres with tls", func() {
 						configJson = fmt.Sprintf(
 							`{
 							"username": "%s",
-							"password": "%s",
 							"host": "%s",
 							"port": %d,
 							"database": "%s",
@@ -297,7 +294,6 @@ var _ = Describe("postgres with tls", func() {
 							}
 						}`,
 							postgresMutualTlsUsername,
-							postgresPassword,
 							postgresHostName,
 							postgresPort,
 							databaseName,
@@ -329,7 +325,6 @@ var _ = Describe("postgres with tls", func() {
 						configJson = fmt.Sprintf(
 							`{
 									"username": "%s",
-									"password": "%s",
 									"host": "%s",
 									"port": %d,
 									"database": "%s",
@@ -344,7 +339,6 @@ var _ = Describe("postgres with tls", func() {
 									}
 								}`,
 							postgresMutualTlsUsername,
-							postgresPassword,
 							postgresHostName,
 							postgresPort,
 							databaseName,
@@ -374,7 +368,6 @@ var _ = Describe("postgres with tls", func() {
 						configJson = fmt.Sprintf(
 							`{
 									"username": "%s",
-									"password": "%s",
 									"host": "%s",
 									"port": %d,
 									"database": "%s",
@@ -389,7 +382,6 @@ var _ = Describe("postgres with tls", func() {
 									}
 								}`,
 							postgresMutualTlsUsername,
-							postgresPassword,
 							postgresHostName,
 							postgresPort,
 							databaseName,
@@ -408,7 +400,6 @@ var _ = Describe("postgres with tls", func() {
 						configJson = fmt.Sprintf(
 							`{
 							"username": "%s",
-							"password": "%s",
 							"host": "%s",
 							"port": %d,
 							"database": "%s",
@@ -421,7 +412,6 @@ var _ = Describe("postgres with tls", func() {
 							}
 						}`,
 							postgresMutualTlsUsername,
-							postgresPassword,
 							postgresHostName,
 							postgresPort,
 							databaseName,
