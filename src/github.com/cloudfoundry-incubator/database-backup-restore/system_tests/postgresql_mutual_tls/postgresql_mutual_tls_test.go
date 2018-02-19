@@ -72,6 +72,7 @@ var _ = Describe("postgres with mutual tls", func() {
 			os.Getenv("SSH_PROXY_HOST"),
 			os.Getenv("SSH_PROXY_USER"),
 			os.Getenv("SSH_PROXY_KEY_FILE"),
+			true,
 		)
 
 		pgConnection.OpenSuccessfully("postgres")

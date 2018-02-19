@@ -37,13 +37,15 @@ type PostgresConnection struct {
 	clientKeyPath  string
 	db             *sql.DB
 
+	sslEnabled bool
+
 	proxyHost       string
 	proxyUsername   string
 	proxyPrivateKey string
 	proxySession    *gexec.Session
 }
 
-func NewPostgresConnection(hostname string, port int, username, password, proxyHost, proxyUsername, proxyPrivateKey string) *PostgresConnection {
+func NewPostgresConnection(hostname string, port int, username, password, proxyHost, proxyUsername, proxyPrivateKey string, sslEnabled bool) *PostgresConnection {
 	return &PostgresConnection{
 		hostname:        hostname,
 		port:            port,
@@ -52,10 +54,11 @@ func NewPostgresConnection(hostname string, port int, username, password, proxyH
 		proxyHost:       proxyHost,
 		proxyUsername:   proxyUsername,
 		proxyPrivateKey: proxyPrivateKey,
+		sslEnabled:      sslEnabled,
 	}
 }
 
-func NewMutualTlsPostgresConnection(hostname string, port int, username, password, clientCertPath, clientKeyPath, proxyHost, proxyUsername, proxyPrivateKey string) *PostgresConnection {
+func NewMutualTlsPostgresConnection(hostname string, port int, username, password, clientCertPath, clientKeyPath, proxyHost, proxyUsername, proxyPrivateKey string, sslEnabled bool) *PostgresConnection {
 	return &PostgresConnection{
 		hostname:        hostname,
 		port:            port,
@@ -66,6 +69,7 @@ func NewMutualTlsPostgresConnection(hostname string, port int, username, passwor
 		proxyHost:       proxyHost,
 		proxyUsername:   proxyUsername,
 		proxyPrivateKey: proxyPrivateKey,
+		sslEnabled:      sslEnabled,
 	}
 }
 
@@ -151,11 +155,12 @@ func (c *PostgresConnection) SwitchToDb(dbName string) {
 }
 
 func (c *PostgresConnection) connect(hostname string, port int, dbName string) (*sql.DB, error) {
-	db, err := sql.Open("postgres", c.connectionString(hostname, port, dbName, "require"))
-	if err != nil {
-		db, err = sql.Open("postgres", c.connectionString(hostname, port, dbName, "disable"))
+	if c.sslEnabled {
+		return sql.Open("postgres", c.connectionString(hostname, port, dbName, "require"))
+
+	} else {
+		return sql.Open("postgres", c.connectionString(hostname, port, dbName, "disable"))
 	}
-	return db, err
 }
 
 func (c *PostgresConnection) connectionString(hostname string, port int, dbName, sslMode string) string {

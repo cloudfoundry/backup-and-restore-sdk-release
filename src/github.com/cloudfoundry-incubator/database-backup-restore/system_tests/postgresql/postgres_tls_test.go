@@ -39,6 +39,7 @@ var _ = Describe("postgres with tls", func() {
 			os.Getenv("SSH_PROXY_HOST"),
 			os.Getenv("SSH_PROXY_USER"),
 			os.Getenv("SSH_PROXY_KEY_FILE"),
+			false,
 		)
 
 		pgConnection.OpenSuccessfully("postgres")
@@ -74,6 +75,7 @@ var _ = Describe("postgres with tls", func() {
 				os.Getenv("SSH_PROXY_HOST"),
 				os.Getenv("SSH_PROXY_USER"),
 				os.Getenv("SSH_PROXY_KEY_FILE"),
+				false,
 			).Open(databaseName)
 
 			Expect(err).To(MatchError(MatchRegexp("no pg_hba.conf entry for host \".*\", user \"ssl_user\", database \".*\", SSL off")))
