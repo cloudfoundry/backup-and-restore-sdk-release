@@ -82,11 +82,10 @@ var _ = Describe("postgres with tls", func() {
 	})
 
 	Context("when the db user requires TLS", func() {
-		BeforeEach(func() {
-			if os.Getenv("TEST_SSL_USER_REQUIRES_SSL") == "false" {
-				return
-			}
-
+		if os.Getenv("TEST_SSL_USER_REQUIRES_SSL") == "false" {
+			return
+		}
+		It("can't connect with ssl disabled", func() {
 			err := NewPostgresConnection(
 				postgresHostName,
 				postgresPort,
@@ -100,11 +99,12 @@ var _ = Describe("postgres with tls", func() {
 
 			Expect(err).To(MatchError(MatchRegexp("no pg_hba.conf entry for host \".*\", user \"ssl_user\", database \".*\", SSL off")))
 		})
+	})
 
-		Context("when TLS info is not provided in the config", func() {
-			BeforeEach(func() {
-				configJson = fmt.Sprintf(
-					`{
+	Context("when TLS info is not provided in the config", func() {
+		BeforeEach(func() {
+			configJson = fmt.Sprintf(
+				`{
 						"username": "%s",
 						"password": "%s",
 						"host": "%s",
@@ -112,42 +112,42 @@ var _ = Describe("postgres with tls", func() {
 						"database": "%s",
 						"adapter": "postgres"
 					}`,
-					postgresUsername,
-					postgresPassword,
-					postgresHostName,
-					postgresPort,
-					databaseName,
-				)
-			})
-
-			It("works", func() {
-				brJob.RunOnVMAndSucceed(
-					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
-						dbDumpPath, configPath))
-
-				pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
-
-				brJob.RunOnVMAndSucceed(
-					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
-						dbDumpPath, configPath))
-
-				Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).To(ConsistOf("Old Person"))
-			})
+				postgresUsername,
+				postgresPassword,
+				postgresHostName,
+				postgresPort,
+				databaseName,
+			)
 		})
 
-		Context("when TLS info is provided in the config", func() {
-			Context("And host verification is not skipped", func() {
-				if os.Getenv("TEST_TLS_VERIFY_IDENTITY") == "false" {
-					fmt.Println("**********************************************")
-					fmt.Println("Not testing TLS with Verify Identity")
-					fmt.Println("**********************************************")
-					return
-				}
+		It("works", func() {
+			brJob.RunOnVMAndSucceed(
+				fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+					dbDumpPath, configPath))
 
-				Context("And the CA cert is correct", func() {
-					BeforeEach(func() {
-						configJson = fmt.Sprintf(
-							`{
+			pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
+
+			brJob.RunOnVMAndSucceed(
+				fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
+					dbDumpPath, configPath))
+
+			Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).To(ConsistOf("Old Person"))
+		})
+	})
+
+	Context("when TLS info is provided in the config", func() {
+		Context("And host verification is not skipped", func() {
+			if os.Getenv("TEST_TLS_VERIFY_IDENTITY") == "false" {
+				fmt.Println("**********************************************")
+				fmt.Println("Not testing TLS with Verify Identity")
+				fmt.Println("**********************************************")
+				return
+			}
+
+			Context("And the CA cert is correct", func() {
+				BeforeEach(func() {
+					configJson = fmt.Sprintf(
+						`{
 							"username": "%s",
 							"password": "%s",
 							"host": "%s",
@@ -160,36 +160,36 @@ var _ = Describe("postgres with tls", func() {
 								}
 							}
 						}`,
-							postgresUsername,
-							postgresPassword,
-							postgresHostName,
-							postgresPort,
-							databaseName,
-							EscapeNewLines(postgresCaCert),
-						)
-					})
+						postgresUsername,
+						postgresPassword,
+						postgresHostName,
+						postgresPort,
+						databaseName,
+						EscapeNewLines(postgresCaCert),
+					)
+				})
 
-					It("works", func() {
-						brJob.RunOnVMAndSucceed(
-							fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
-								dbDumpPath, configPath))
+				It("works", func() {
+					brJob.RunOnVMAndSucceed(
+						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+							dbDumpPath, configPath))
 
-						pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
+					pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
 
-						brJob.RunOnVMAndSucceed(
-							fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
-								dbDumpPath, configPath))
+					brJob.RunOnVMAndSucceed(
+						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
+							dbDumpPath, configPath))
 
-						Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).To(ConsistOf("Old Person"))
-					})
+					Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).To(ConsistOf("Old Person"))
 				})
 			})
+		})
 
-			Context("And host verification is skipped", func() {
-				Context("And the CA cert is correct", func() {
-					BeforeEach(func() {
-						configJson = fmt.Sprintf(
-							`{
+		Context("And host verification is skipped", func() {
+			Context("And the CA cert is correct", func() {
+				BeforeEach(func() {
+					configJson = fmt.Sprintf(
+						`{
 							"username": "%s",
 							"password": "%s",
 							"host": "%s",
@@ -203,34 +203,34 @@ var _ = Describe("postgres with tls", func() {
 								}
 							}
 						}`,
-							postgresUsername,
-							postgresPassword,
-							postgresHostName,
-							postgresPort,
-							databaseName,
-							EscapeNewLines(postgresCaCert),
-						)
-					})
-
-					It("works", func() {
-						brJob.RunOnVMAndSucceed(
-							fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
-								dbDumpPath, configPath))
-
-						pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
-
-						brJob.RunOnVMAndSucceed(
-							fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
-								dbDumpPath, configPath))
-
-						Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).To(ConsistOf("Old Person"))
-					})
+						postgresUsername,
+						postgresPassword,
+						postgresHostName,
+						postgresPort,
+						databaseName,
+						EscapeNewLines(postgresCaCert),
+					)
 				})
 
-				Context("And the CA cert is malformed", func() {
-					BeforeEach(func() {
-						configJson = fmt.Sprintf(
-							`{
+				It("works", func() {
+					brJob.RunOnVMAndSucceed(
+						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+							dbDumpPath, configPath))
+
+					pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
+
+					brJob.RunOnVMAndSucceed(
+						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
+							dbDumpPath, configPath))
+
+					Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).To(ConsistOf("Old Person"))
+				})
+			})
+
+			Context("And the CA cert is malformed", func() {
+				BeforeEach(func() {
+					configJson = fmt.Sprintf(
+						`{
 									"username": "%s",
 									"password": "%s",
 									"host": "%s",
@@ -244,132 +244,6 @@ var _ = Describe("postgres with tls", func() {
 										}
 									}
 								}`,
-							postgresUsername,
-							postgresPassword,
-							postgresHostName,
-							postgresPort,
-							databaseName,
-						)
-					})
-
-					It("does not work", func() {
-						Expect(brJob.RunOnInstance("/var/vcap/jobs/database-backup-restorer/bin/backup",
-							"--artifact-file", dbDumpPath, "--config", configPath)).To(gexec.Exit(1))
-					})
-				})
-			})
-		})
-	})
-
-	Context("when the db user requires TLS and Mutual TLS", func() {
-	})
-
-	Context("when the db user does not require TLS", func() {
-		Context("and host verification is not skipped", func() {
-			if os.Getenv("TEST_TLS_VERIFY_IDENTITY") == "false" {
-				return
-			}
-
-			Context("and the correct CA cert is provided", func() {
-				BeforeEach(func() {
-					configJson = fmt.Sprintf(
-						`{
-						"username": "%s",
-						"password": "%s",
-						"host": "%s",
-						"port": %d,
-						"database": "%s",
-						"adapter": "postgres",
-						"tls": {
-							"cert": {
-								"ca": "%s"
-							}
-						}
-					}`,
-						postgresUsername,
-						postgresPassword,
-						postgresHostName,
-						postgresPort,
-						databaseName,
-						EscapeNewLines(postgresCaCert),
-					)
-				})
-
-				It("works", func() {
-					brJob.RunOnVMAndSucceed(
-						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
-							dbDumpPath, configPath))
-
-					pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
-
-					brJob.RunOnVMAndSucceed(
-						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
-							dbDumpPath, configPath))
-
-					Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).To(ConsistOf("Old Person"))
-				})
-			})
-		})
-
-		Context("and host verification is skipped", func() {
-			Context("and the correct CA cert is provided", func() {
-				BeforeEach(func() {
-					configJson = fmt.Sprintf(
-						`{
-						"username": "%s",
-						"password": "%s",
-						"host": "%s",
-						"port": %d,
-						"database": "%s",
-						"adapter": "postgres",
-						"tls": {
-							"skip_host_verify": true,
-							"cert": {
-								"ca": "%s"
-							}
-						}
-					}`,
-						postgresUsername,
-						postgresPassword,
-						postgresHostName,
-						postgresPort,
-						databaseName,
-						EscapeNewLines(postgresCaCert),
-					)
-				})
-
-				It("works", func() {
-					brJob.RunOnVMAndSucceed(
-						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
-							dbDumpPath, configPath))
-
-					pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
-
-					brJob.RunOnVMAndSucceed(
-						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
-							dbDumpPath, configPath))
-
-					Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).To(ConsistOf("Old Person"))
-				})
-			})
-
-			Context("and the CA cert is malformed", func() {
-				BeforeEach(func() {
-					configJson = fmt.Sprintf(
-						`{
-								"username": "%s",
-								"password": "%s",
-								"host": "%s",
-								"port": %d,
-								"database": "%s",
-								"adapter": "postgres",
-								"tls": {
-									"skip_host_verify": true,
-									"cert": {
-										"ca": "fooooooo"
-									}
-								}
-							}`,
 						postgresUsername,
 						postgresPassword,
 						postgresHostName,
