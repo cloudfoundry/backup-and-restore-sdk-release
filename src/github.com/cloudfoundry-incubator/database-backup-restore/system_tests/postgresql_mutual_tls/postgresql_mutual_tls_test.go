@@ -83,12 +83,12 @@ var _ = Describe("postgres with mutual tls", func() {
 	})
 
 	AfterEach(func() {
-		os.Remove(postgresClientCertPath)
-		os.Remove(postgresClientKeyPath)
-
 		pgConnection.SwitchToDb("postgres")
 		pgConnection.RunSQLCommand("DROP DATABASE " + databaseName)
 		pgConnection.Close()
+
+		os.Remove(postgresClientCertPath)
+		os.Remove(postgresClientKeyPath)
 
 		brJob.RunOnVMAndSucceed(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath))
 	})
