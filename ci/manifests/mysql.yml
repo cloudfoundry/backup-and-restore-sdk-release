@@ -55,6 +55,17 @@ instance_groups:
             db_password: "foo"
             endpoint_username: galera_healthcheck
             endpoint_password: "foo"
+          tls:
+            ca_certificate: "((databases.ca))"
+            server_certificate: "((databases.certificate))"
+            server_key: "((databases.private_key))"
+
+variables:
+- name: databases
+  type: certificate
+  options:
+    is_ca: true
+    common_name: mysql
 
 update:
   canaries: 1
