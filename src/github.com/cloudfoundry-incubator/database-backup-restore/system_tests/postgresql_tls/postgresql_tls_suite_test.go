@@ -1,4 +1,4 @@
-package postgresql
+package postgresql_tls_test
 
 import (
 	"time"
@@ -9,8 +9,8 @@ import (
 	"testing"
 )
 
-func TestPostgresql(t *testing.T) {
+func TestPostgresqlTls(t *testing.T) {
 	RegisterFailHandler(Fail)
 	SetDefaultEventuallyTimeout(15 * time.Minute)
-	RunSpecs(t, "Postgresql Suite")
+	RunSpecs(t, "PostgresqlTls Suite")
 }

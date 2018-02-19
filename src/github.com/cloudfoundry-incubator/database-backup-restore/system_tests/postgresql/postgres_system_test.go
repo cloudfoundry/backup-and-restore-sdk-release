@@ -27,13 +27,37 @@ import (
 
 	. "github.com/cloudfoundry-incubator/database-backup-restore/system_tests/utils"
 
+	"strconv"
+
 	_ "github.com/lib/pq"
 )
+
+var pgConnection *PostgresConnection
+
+var postgresHostName string
+var postgresUsername string
+var postgresPassword string
+var postgresPort int
+
+var brJob JobInstance
 
 var _ = Describe("postgres", func() {
 	var databaseName string
 	var dbDumpPath string
 	var configPath string
+
+	BeforeSuite(func() {
+		brJob = JobInstance{
+			Deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
+			Instance:      MustHaveEnv("SDK_INSTANCE_GROUP"),
+			InstanceIndex: "0",
+		}
+
+		postgresHostName = MustHaveEnv("POSTGRES_HOSTNAME")
+		postgresPort, _ = strconv.Atoi(MustHaveEnv("POSTGRES_PORT"))
+		postgresPassword = MustHaveEnv("POSTGRES_PASSWORD")
+		postgresUsername = MustHaveEnv("POSTGRES_USERNAME")
+	})
 
 	BeforeEach(func() {
 		disambiguationString := DisambiguationString()
@@ -44,7 +68,7 @@ var _ = Describe("postgres", func() {
 		pgConnection = NewPostgresConnection(
 			postgresHostName,
 			postgresPort,
-			postgresNonSslUsername,
+			postgresUsername,
 			postgresPassword,
 			os.Getenv("SSH_PROXY_HOST"),
 			os.Getenv("SSH_PROXY_USER"),
@@ -80,7 +104,7 @@ var _ = Describe("postgres", func() {
 					"database": "%s",
 					"adapter": "postgres"
 				}`,
-				postgresNonSslUsername,
+				postgresUsername,
 				postgresPassword,
 				postgresHostName,
 				databaseName,
@@ -125,7 +149,7 @@ var _ = Describe("postgres", func() {
 					"adapter": "postgres",
 					"tables": ["people"]
 				}`,
-				postgresNonSslUsername,
+				postgresUsername,
 				postgresPassword,
 				postgresHostName,
 				databaseName,
@@ -169,7 +193,7 @@ var _ = Describe("postgres", func() {
 					"adapter": "postgres",
 					"tables": ["people", "lizards"]
 				}`,
-				postgresNonSslUsername,
+				postgresUsername,
 				postgresPassword,
 				postgresHostName,
 				databaseName,

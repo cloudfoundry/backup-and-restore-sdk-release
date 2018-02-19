@@ -1,4 +1,4 @@
-package postgresql
+package postgresql_tls
 
 import (
 	"fmt"
@@ -10,20 +10,40 @@ import (
 	. "github.com/cloudfoundry-incubator/database-backup-restore/system_tests/utils"
 	"github.com/onsi/gomega/gexec"
 
+	"strconv"
+
 	_ "github.com/lib/pq"
 )
 
 var _ = Describe("postgres with tls", func() {
-	if os.Getenv("TEST_TLS") == "false" {
-		fmt.Println("**********************************************")
-		fmt.Println("Not testing TLS")
-		fmt.Println("**********************************************")
-		return
-	}
 	var dbDumpPath string
 	var configPath string
 	var databaseName string
 	var configJson string
+
+	var pgConnection *PostgresConnection
+
+	var postgresHostName string
+	var postgresUsername string
+	var postgresPassword string
+	var postgresPort int
+	var postgresCaCert string
+
+	var brJob JobInstance
+
+	BeforeSuite(func() {
+		brJob = JobInstance{
+			Deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
+			Instance:      MustHaveEnv("SDK_INSTANCE_GROUP"),
+			InstanceIndex: "0",
+		}
+
+		postgresHostName = MustHaveEnv("POSTGRES_HOSTNAME")
+		postgresPort, _ = strconv.Atoi(MustHaveEnv("POSTGRES_PORT"))
+		postgresPassword = MustHaveEnv("POSTGRES_PASSWORD")
+		postgresUsername = MustHaveEnv("POSTGRES_USERNAME")
+		postgresCaCert = os.Getenv("POSTGRES_CA_CERT")
+	})
 
 	BeforeEach(func() {
 		disambiguationString := DisambiguationString()
@@ -34,12 +54,12 @@ var _ = Describe("postgres with tls", func() {
 		pgConnection = NewPostgresConnection(
 			postgresHostName,
 			postgresPort,
-			postgresNonSslUsername,
+			postgresUsername,
 			postgresPassword,
 			os.Getenv("SSH_PROXY_HOST"),
 			os.Getenv("SSH_PROXY_USER"),
 			os.Getenv("SSH_PROXY_KEY_FILE"),
-			false,
+			true,
 		)
 
 		pgConnection.OpenSuccessfully("postgres")
@@ -70,7 +90,7 @@ var _ = Describe("postgres with tls", func() {
 			err := NewPostgresConnection(
 				postgresHostName,
 				postgresPort,
-				postgresSslUsername,
+				postgresUsername,
 				postgresPassword,
 				os.Getenv("SSH_PROXY_HOST"),
 				os.Getenv("SSH_PROXY_USER"),
@@ -92,7 +112,7 @@ var _ = Describe("postgres with tls", func() {
 						"database": "%s",
 						"adapter": "postgres"
 					}`,
-					postgresSslUsername,
+					postgresUsername,
 					postgresPassword,
 					postgresHostName,
 					postgresPort,
@@ -140,7 +160,7 @@ var _ = Describe("postgres with tls", func() {
 								}
 							}
 						}`,
-							postgresSslUsername,
+							postgresUsername,
 							postgresPassword,
 							postgresHostName,
 							postgresPort,
@@ -183,7 +203,7 @@ var _ = Describe("postgres with tls", func() {
 								}
 							}
 						}`,
-							postgresSslUsername,
+							postgresUsername,
 							postgresPassword,
 							postgresHostName,
 							postgresPort,
@@ -224,7 +244,7 @@ var _ = Describe("postgres with tls", func() {
 										}
 									}
 								}`,
-							postgresSslUsername,
+							postgresUsername,
 							postgresPassword,
 							postgresHostName,
 							postgresPort,
@@ -266,7 +286,7 @@ var _ = Describe("postgres with tls", func() {
 							}
 						}
 					}`,
-						postgresNonSslUsername,
+						postgresUsername,
 						postgresPassword,
 						postgresHostName,
 						postgresPort,
@@ -309,7 +329,7 @@ var _ = Describe("postgres with tls", func() {
 							}
 						}
 					}`,
-						postgresNonSslUsername,
+						postgresUsername,
 						postgresPassword,
 						postgresHostName,
 						postgresPort,
@@ -350,7 +370,7 @@ var _ = Describe("postgres with tls", func() {
 									}
 								}
 							}`,
-						postgresNonSslUsername,
+						postgresUsername,
 						postgresPassword,
 						postgresHostName,
 						postgresPort,
