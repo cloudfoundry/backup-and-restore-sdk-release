@@ -19,8 +19,8 @@ name: ((deployment-name))
 
 releases:
 - name: cf-mysql
-  version: 35
-  url: https://bosh.io/d/github.com/cloudfoundry/cf-mysql-release?v=35
+  version: latest
+  url: https://bosh.io/d/github.com/cloudfoundry/cf-mysql-release
 
 stemcells:
 - alias: trusty
