@@ -36,9 +36,9 @@ export BOSH_GW_USER=${SSH_PROXY_USER}
 export BOSH_GW_HOST=${SSH_PROXY_HOST}
 export BOSH_GW_PRIVATE_KEY=/tmp/private.key
 export SSH_PROXY_KEY_FILE=/tmp/private.key
-export MYSQL_CA_CERT="$(cat $PWD/bosh-backup-and-restore-meta/${MYSQL_CA_CERT_PATH})"
-export MYSQL_CLIENT_CERT="$(cat $PWD/bosh-backup-and-restore-meta/${MYSQL_CLIENT_CERT_PATH})"
-export MYSQL_CLIENT_KEY="$(cat $PWD/bosh-backup-and-restore-meta/${MYSQL_CLIENT_KEY_PATH})"
+export MYSQL_CA_CERT="${MYSQL_CA_CERT:-$(cat $PWD/bosh-backup-and-restore-meta/${MYSQL_CA_CERT_PATH})}"
+export MYSQL_CLIENT_CERT="${MYSQL_CLIENT_CERT:-(cat $PWD/bosh-backup-and-restore-meta/${MYSQL_CLIENT_CERT_PATH})}"
+export MYSQL_CLIENT_KEY="${MYSQL_CLIENT_KEY:-(cat $PWD/bosh-backup-and-restore-meta/${MYSQL_CLIENT_KEY_PATH})}"
 
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/database-backup-restore
 dep ensure
