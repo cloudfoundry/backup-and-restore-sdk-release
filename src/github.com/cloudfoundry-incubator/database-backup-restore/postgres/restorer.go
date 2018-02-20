@@ -11,14 +11,16 @@ import (
 )
 
 type Restorer struct {
-	config        config.ConnectionConfig
-	restoreBinary string
+	config            config.ConnectionConfig
+	tempFolderManager config.TempFolderManager
+	restoreBinary     string
 }
 
-func NewRestorer(config config.ConnectionConfig, restoreBinary string) Restorer {
+func NewRestorer(config config.ConnectionConfig, tempFolderManager config.TempFolderManager, restoreBinary string) Restorer {
 	return Restorer{
-		config:        config,
-		restoreBinary: restoreBinary,
+		config:            config,
+		restoreBinary:     restoreBinary,
+		tempFolderManager: tempFolderManager,
 	}
 }
 
@@ -46,7 +48,8 @@ func (r Restorer) Action(artifactFilePath string) error {
 		artifactFilePath,
 	}
 
-	_, _, err = NewPostgresCommand(r.config, r.restoreBinary).WithParams(cmdArgs...).Run()
+	_, _, err = NewPostgresCommand(r.config, r.tempFolderManager, r.restoreBinary).
+		WithParams(cmdArgs...).Run()
 
 	return err
 }

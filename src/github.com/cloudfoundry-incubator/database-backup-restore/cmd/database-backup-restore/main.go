@@ -39,7 +39,13 @@ func main() {
 
 	utilitiesConfig := config.GetUtilitiesConfigFromEnv()
 
-	interactor, err := makeInteractor(flags.IsRestore, utilitiesConfig, connectionConfig)
+	tempFolderManager, err := config.NewTempFolderManager()
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+	defer tempFolderManager.Cleanup()
+
+	interactor, err := makeInteractor(flags.IsRestore, utilitiesConfig, connectionConfig, tempFolderManager)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
@@ -52,11 +58,11 @@ func main() {
 }
 
 func makeInteractor(isRestoreAction bool, utilitiesConfig config.UtilitiesConfig,
-	connectionConfig config.ConnectionConfig) (database.Interactor, error) {
+	connectionConfig config.ConnectionConfig, tempFolderManager config.TempFolderManager) (database.Interactor, error) {
 
 	postgresServerVersionDetector := postgres.NewServerVersionDetector(utilitiesConfig.Postgres96.Client)
 	mysqlServerVersionDetector := mysql.NewServerVersionDetector(utilitiesConfig.Mysql57.Client)
-	interactorFactory := database.NewInteractorFactory(utilitiesConfig, postgresServerVersionDetector, mysqlServerVersionDetector)
+	interactorFactory := database.NewInteractorFactory(utilitiesConfig, postgresServerVersionDetector, mysqlServerVersionDetector, tempFolderManager)
 	return interactorFactory.Make(actionLabel(isRestoreAction), connectionConfig)
 }
 

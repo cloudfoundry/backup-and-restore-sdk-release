@@ -1,8 +1,6 @@
 package mysql
 
 import (
-	"io/ioutil"
-
 	"strings"
 
 	"github.com/cloudfoundry-incubator/database-backup-restore/config"
@@ -12,58 +10,60 @@ type SSLOptionsProvider interface {
 	BuildSSLParams(*config.TlsConfig) []string
 }
 
-type LegacySSLOptionsProvider struct{}
-
-func NewLegacySSLOptionsProvider() LegacySSLOptionsProvider {
-	return LegacySSLOptionsProvider{}
+type LegacySSLOptionsProvider struct {
+	tempFolderManager config.TempFolderManager
 }
 
-func (LegacySSLOptionsProvider) BuildSSLParams(config *config.TlsConfig) []string {
+func NewLegacySSLOptionsProvider(tempFolderManager config.TempFolderManager) LegacySSLOptionsProvider {
+	return LegacySSLOptionsProvider{
+		tempFolderManager: tempFolderManager,
+	}
+}
+
+func (p LegacySSLOptionsProvider) BuildSSLParams(config *config.TlsConfig) []string {
 	var cmdArgs []string
 	if config != nil {
-		caCertFile, _ := ioutil.TempFile("", "")
-		ioutil.WriteFile(caCertFile.Name(), []byte(config.Cert.Ca), 0777)
-		cmdArgs = append(cmdArgs, "--ssl-ca="+caCertFile.Name())
+		caFileName, _ := p.tempFolderManager.WriteTempFile(config.Cert.Ca)
+		cmdArgs = append(cmdArgs, "--ssl-ca="+caFileName)
 		if config.Cert.Certificate != "" {
-			clientCertFile, _ := ioutil.TempFile("", "")
-			ioutil.WriteFile(clientCertFile.Name(), []byte(config.Cert.Certificate), 0777)
-			cmdArgs = append(cmdArgs, "--ssl-cert="+clientCertFile.Name())
+			certFileName, _ := p.tempFolderManager.WriteTempFile(config.Cert.Certificate)
+			cmdArgs = append(cmdArgs, "--ssl-cert="+certFileName)
 		}
 		if config.Cert.PrivateKey != "" {
-			clientKeyFile, _ := ioutil.TempFile("", "")
-			ioutil.WriteFile(clientKeyFile.Name(), []byte(config.Cert.PrivateKey), 0777)
-			cmdArgs = append(cmdArgs, "--ssl-key="+clientKeyFile.Name())
+			clientKeyFileName, _ := p.tempFolderManager.WriteTempFile(config.Cert.PrivateKey)
+			cmdArgs = append(cmdArgs, "--ssl-key="+clientKeyFileName)
 		}
 		if !config.SkipHostVerify {
 			cmdArgs = append(cmdArgs, "--ssl-verify-server-cert")
 		}
 	} else {
-		cmdArgs = append(cmdArgs, "--ssl-cipher="+suportedCipherList())
+		cmdArgs = append(cmdArgs, "--ssl-cipher="+supportedCipherList())
 	}
 	return cmdArgs
 }
 
-type DefaultSSLOptionsProvider struct{}
-
-func NewDefaultSSLProvider() DefaultSSLOptionsProvider {
-	return DefaultSSLOptionsProvider{}
+type DefaultSSLOptionsProvider struct {
+	tempFolderManager config.TempFolderManager
 }
 
-func (DefaultSSLOptionsProvider) BuildSSLParams(config *config.TlsConfig) []string {
+func NewDefaultSSLProvider(tempFolderManager config.TempFolderManager) DefaultSSLOptionsProvider {
+	return DefaultSSLOptionsProvider{
+		tempFolderManager: tempFolderManager,
+	}
+}
+
+func (p DefaultSSLOptionsProvider) BuildSSLParams(config *config.TlsConfig) []string {
 	var cmdArgs []string
 	if config != nil {
-		caCertFile, _ := ioutil.TempFile("", "")
-		ioutil.WriteFile(caCertFile.Name(), []byte(config.Cert.Ca), 0777)
-		cmdArgs = append(cmdArgs, "--ssl-ca="+caCertFile.Name())
+		caFileName, _ := p.tempFolderManager.WriteTempFile(config.Cert.Ca)
+		cmdArgs = append(cmdArgs, "--ssl-ca="+caFileName)
 		if config.Cert.Certificate != "" {
-			clientCertFile, _ := ioutil.TempFile("", "")
-			ioutil.WriteFile(clientCertFile.Name(), []byte(config.Cert.Certificate), 0777)
-			cmdArgs = append(cmdArgs, "--ssl-cert="+clientCertFile.Name())
+			clientKeyFileName, _ := p.tempFolderManager.WriteTempFile(config.Cert.PrivateKey)
+			cmdArgs = append(cmdArgs, "--ssl-cert="+clientKeyFileName)
 		}
 		if config.Cert.PrivateKey != "" {
-			clientKeyFile, _ := ioutil.TempFile("", "")
-			ioutil.WriteFile(clientKeyFile.Name(), []byte(config.Cert.PrivateKey), 0777)
-			cmdArgs = append(cmdArgs, "--ssl-key="+clientKeyFile.Name())
+			clientKeyFileName, _ := p.tempFolderManager.WriteTempFile(config.Cert.PrivateKey)
+			cmdArgs = append(cmdArgs, "--ssl-key="+clientKeyFileName)
 		}
 		if config.SkipHostVerify {
 			cmdArgs = append(cmdArgs, "--ssl-mode=VERIFY_CA")
@@ -74,7 +74,7 @@ func (DefaultSSLOptionsProvider) BuildSSLParams(config *config.TlsConfig) []stri
 	return cmdArgs
 }
 
-func suportedCipherList() string {
+func supportedCipherList() string {
 	return strings.Join(append(OpenSSLCipherList, YaSSLCipherList...), ":")
 }
 
@@ -125,6 +125,7 @@ var OpenSSLCipherList = []string{
 	"SRP-RSA-AES-128-CBC-S",
 	"SRP-RSA-AES-256-CBC-SHA",
 }
+
 var YaSSLCipherList = []string{
 	"AES128-RMD",
 	"AES128-SHA",

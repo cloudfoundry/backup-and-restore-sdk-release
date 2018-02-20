@@ -21,8 +21,6 @@ import (
 	"os"
 	"os/exec"
 
-	"io/ioutil"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -479,10 +477,6 @@ var _ = Describe("Postgres", func() {
 								Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 								Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKey("PGSSLROOTCERT"))
 								Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKeyWithValue("PGSSLMODE", "verify-full"))
-
-								caCertPath := fakePgDump96.Invocations()[0].Env()["PGSSLROOTCERT"]
-								Expect(caCertPath).To(BeAnExistingFile())
-								Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
 							})
 						})
 					})
@@ -542,10 +536,6 @@ var _ = Describe("Postgres", func() {
 								Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 								Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKey("PGSSLROOTCERT"))
 								Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKeyWithValue("PGSSLMODE", "verify-ca"))
-
-								caCertPath := fakePgDump96.Invocations()[0].Env()["PGSSLROOTCERT"]
-								Expect(caCertPath).To(BeAnExistingFile())
-								Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
 							})
 						})
 					})
@@ -612,18 +602,6 @@ var _ = Describe("Postgres", func() {
 								Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKey("PGSSLCERT"))
 								Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKey("PGSSLKEY"))
 								Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKeyWithValue("PGSSLMODE", "verify-full"))
-
-								caCertPath := fakePgDump96.Invocations()[0].Env()["PGSSLROOTCERT"]
-								Expect(caCertPath).To(BeAnExistingFile())
-								Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
-
-								clientCertPath := fakePgDump96.Invocations()[0].Env()["PGSSLCERT"]
-								Expect(clientCertPath).To(BeAnExistingFile())
-								Expect(ioutil.ReadFile(clientCertPath)).To(Equal([]byte("A_CLIENT_CERT")))
-
-								clientKeyPath := fakePgDump96.Invocations()[0].Env()["PGSSLKEY"]
-								Expect(clientKeyPath).To(BeAnExistingFile())
-								Expect(ioutil.ReadFile(clientKeyPath)).To(Equal([]byte("A_CLIENT_KEY")))
 							})
 						})
 					})
@@ -689,18 +667,6 @@ var _ = Describe("Postgres", func() {
 								Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKey("PGSSLCERT"))
 								Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKey("PGSSLKEY"))
 								Expect(fakePgDump96.Invocations()[0].Env()).Should(HaveKeyWithValue("PGSSLMODE", "verify-ca"))
-
-								caCertPath := fakePgDump96.Invocations()[0].Env()["PGSSLROOTCERT"]
-								Expect(caCertPath).To(BeAnExistingFile())
-								Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
-
-								clientCertPath := fakePgDump96.Invocations()[0].Env()["PGSSLCERT"]
-								Expect(clientCertPath).To(BeAnExistingFile())
-								Expect(ioutil.ReadFile(clientCertPath)).To(Equal([]byte("A_CLIENT_CERT")))
-
-								clientKeyPath := fakePgDump96.Invocations()[0].Env()["PGSSLKEY"]
-								Expect(clientKeyPath).To(BeAnExistingFile())
-								Expect(ioutil.ReadFile(clientKeyPath)).To(Equal([]byte("A_CLIENT_KEY")))
 							})
 						})
 					})
@@ -897,10 +863,6 @@ var _ = Describe("Postgres", func() {
 								Expect(fakePgRestore96.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 								Expect(fakePgRestore96.Invocations()[1].Env()).Should(HaveKey("PGSSLROOTCERT"))
 								Expect(fakePgRestore96.Invocations()[1].Env()).Should(HaveKeyWithValue("PGSSLMODE", "verify-full"))
-
-								caCertPath := fakePgRestore96.Invocations()[1].Env()["PGSSLROOTCERT"]
-								Expect(caCertPath).To(BeAnExistingFile())
-								Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
 							})
 						})
 					})
@@ -966,10 +928,6 @@ var _ = Describe("Postgres", func() {
 								Expect(fakePgRestore96.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 								Expect(fakePgRestore96.Invocations()[1].Env()).Should(HaveKey("PGSSLROOTCERT"))
 								Expect(fakePgRestore96.Invocations()[1].Env()).Should(HaveKeyWithValue("PGSSLMODE", "verify-ca"))
-
-								caCertPath := fakePgRestore96.Invocations()[1].Env()["PGSSLROOTCERT"]
-								Expect(caCertPath).To(BeAnExistingFile())
-								Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
 							})
 						})
 					})
@@ -1040,18 +998,6 @@ var _ = Describe("Postgres", func() {
 								Expect(fakePgRestore96.Invocations()[1].Env()).Should(HaveKey("PGSSLCERT"))
 								Expect(fakePgRestore96.Invocations()[1].Env()).Should(HaveKey("PGSSLKEY"))
 								Expect(fakePgRestore96.Invocations()[1].Env()).Should(HaveKeyWithValue("PGSSLMODE", "verify-full"))
-
-								caCertPath := fakePgRestore96.Invocations()[1].Env()["PGSSLROOTCERT"]
-								Expect(caCertPath).To(BeAnExistingFile())
-								Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
-
-								clientCertPath := fakePgRestore96.Invocations()[1].Env()["PGSSLCERT"]
-								Expect(clientCertPath).To(BeAnExistingFile())
-								Expect(ioutil.ReadFile(clientCertPath)).To(Equal([]byte("A_CLIENT_CERT")))
-
-								clientKeyPath := fakePgRestore96.Invocations()[1].Env()["PGSSLKEY"]
-								Expect(clientKeyPath).To(BeAnExistingFile())
-								Expect(ioutil.ReadFile(clientKeyPath)).To(Equal([]byte("A_CLIENT_KEY")))
 							})
 						})
 					})

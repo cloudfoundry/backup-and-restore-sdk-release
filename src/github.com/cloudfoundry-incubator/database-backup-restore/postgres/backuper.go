@@ -5,14 +5,16 @@ import (
 )
 
 type Backuper struct {
-	config       config.ConnectionConfig
-	backupBinary string
+	config            config.ConnectionConfig
+	tempFolderManager config.TempFolderManager
+	backupBinary      string
 }
 
-func NewBackuper(config config.ConnectionConfig, backupBinary string) Backuper {
+func NewBackuper(config config.ConnectionConfig, tempFolderManager config.TempFolderManager, backupBinary string) Backuper {
 	return Backuper{
-		config:       config,
-		backupBinary: backupBinary,
+		config:            config,
+		tempFolderManager: tempFolderManager,
+		backupBinary:      backupBinary,
 	}
 }
 
@@ -28,7 +30,7 @@ func (b Backuper) Action(artifactFilePath string) error {
 		cmdArgs = append(cmdArgs, "-t", tableName)
 	}
 
-	_, _, err := NewPostgresCommand(b.config, b.backupBinary).WithParams(cmdArgs...).Run()
+	_, _, err := NewPostgresCommand(b.config, b.tempFolderManager, b.backupBinary).WithParams(cmdArgs...).Run()
 
 	return err
 }

@@ -48,10 +48,12 @@ var _ = Describe("InteractorFactory", func() {
 	}
 	var postgresServerVersionDetector = new(fakes.FakeServerVersionDetector)
 	var mysqlServerVersionDetector = new(fakes.FakeServerVersionDetector)
+	var tempFolderManager, _ = config.NewTempFolderManager()
 	var interactorFactory = database.NewInteractorFactory(
 		utilitiesConfig,
 		postgresServerVersionDetector,
-		mysqlServerVersionDetector)
+		mysqlServerVersionDetector,
+		tempFolderManager)
 
 	var action database.Action
 	var connectionConfig config.ConnectionConfig
@@ -85,7 +87,11 @@ var _ = Describe("InteractorFactory", func() {
 					Expect(interactor).To(Equal(
 						database.NewTableCheckingInteractor(connectionConfig,
 							postgres.NewTableChecker(connectionConfig, "pg_p6_client"),
-							postgres.NewBackuper(connectionConfig, "pg_p6_dump"),
+							postgres.NewBackuper(
+								connectionConfig,
+								tempFolderManager,
+								"pg_p6_dump",
+							),
 						),
 					))
 				})
@@ -103,7 +109,11 @@ var _ = Describe("InteractorFactory", func() {
 					Expect(interactor).To(Equal(
 						database.NewTableCheckingInteractor(connectionConfig,
 							postgres.NewTableChecker(connectionConfig, "pg_p4_client"),
-							postgres.NewBackuper(connectionConfig, "pg_p4_dump"),
+							postgres.NewBackuper(
+								connectionConfig,
+								tempFolderManager,
+								"pg_p4_dump",
+							),
 						),
 					))
 				})
@@ -136,7 +146,11 @@ var _ = Describe("InteractorFactory", func() {
 
 				It("builds a database.TableCheckingInteractor", func() {
 					Expect(interactor).To(Equal(
-						postgres.NewRestorer(connectionConfig, "pg_p6_restore"),
+						postgres.NewRestorer(
+							connectionConfig,
+							tempFolderManager,
+							"pg_p6_restore",
+						),
 					))
 					Expect(factoryError).NotTo(HaveOccurred())
 				})
@@ -151,7 +165,11 @@ var _ = Describe("InteractorFactory", func() {
 
 				It("builds a database.TableCheckingInteractor", func() {
 					Expect(interactor).To(Equal(
-						postgres.NewRestorer(connectionConfig, "pg_p4_restore"),
+						postgres.NewRestorer(
+							connectionConfig,
+							tempFolderManager,
+							"pg_p4_restore",
+						),
 					))
 					Expect(factoryError).NotTo(HaveOccurred())
 				})
@@ -204,8 +222,11 @@ var _ = Describe("InteractorFactory", func() {
 
 				It("builds a mysql.Backuper", func() {
 					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewBackuper(connectionConfig, "mariadb_dump",
-						mysql.NewLegacySSLOptionsProvider())))
+					Expect(interactor).To(Equal(mysql.NewBackuper(
+						connectionConfig,
+						"mariadb_dump",
+						mysql.NewLegacySSLOptionsProvider(tempFolderManager),
+					)))
 				})
 			})
 
@@ -217,7 +238,11 @@ var _ = Describe("InteractorFactory", func() {
 
 				It("builds a mysql.Backuper", func() {
 					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewBackuper(connectionConfig, "mysql_55_dump", mysql.NewLegacySSLOptionsProvider())))
+					Expect(interactor).To(Equal(mysql.NewBackuper(
+						connectionConfig,
+						"mysql_55_dump",
+						mysql.NewLegacySSLOptionsProvider(tempFolderManager),
+					)))
 				})
 			})
 
@@ -229,19 +254,34 @@ var _ = Describe("InteractorFactory", func() {
 
 				It("builds a mysql.Backuper", func() {
 					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewBackuper(connectionConfig, "mysql_56_dump", mysql.NewLegacySSLOptionsProvider())))
+					Expect(interactor).To(Equal(mysql.NewBackuper(
+						connectionConfig,
+						"mysql_56_dump",
+						mysql.NewLegacySSLOptionsProvider(tempFolderManager),
+					)))
 				})
 			})
 
 			Context("when the version is detected as MySQL 5.7.19", func() {
 				BeforeEach(func() {
 					mysqlServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"mysql", version.SemanticVersion{Major: "5", Minor: "7", Patch: "19"}}, nil)
+						version.DatabaseServerVersion{
+							"mysql",
+							version.SemanticVersion{
+								Major: "5",
+								Minor: "7",
+								Patch: "19"}},
+						nil,
+					)
 				})
 
 				It("builds a mysql.Backuper", func() {
 					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewBackuper(connectionConfig, "mysql_57_dump", mysql.NewDefaultSSLProvider())))
+					Expect(interactor).To(Equal(mysql.NewBackuper(
+						connectionConfig,
+						"mysql_57_dump",
+						mysql.NewDefaultSSLProvider(tempFolderManager),
+					)))
 				})
 			})
 
@@ -275,7 +315,7 @@ var _ = Describe("InteractorFactory", func() {
 					Expect(interactor).To(Equal(mysql.NewRestorer(
 						connectionConfig,
 						"mariadb_restore",
-						mysql.NewLegacySSLOptionsProvider()),
+						mysql.NewLegacySSLOptionsProvider(tempFolderManager)),
 					))
 				})
 			})
@@ -293,7 +333,7 @@ var _ = Describe("InteractorFactory", func() {
 					Expect(interactor).To(Equal(mysql.NewRestorer(
 						connectionConfig,
 						"mysql_55_restore",
-						mysql.NewLegacySSLOptionsProvider()),
+						mysql.NewLegacySSLOptionsProvider(tempFolderManager)),
 					))
 				})
 			})
@@ -311,7 +351,7 @@ var _ = Describe("InteractorFactory", func() {
 					Expect(interactor).To(Equal(mysql.NewRestorer(
 						connectionConfig,
 						"mysql_56_restore",
-						mysql.NewLegacySSLOptionsProvider()),
+						mysql.NewLegacySSLOptionsProvider(tempFolderManager)),
 					))
 				})
 			})
@@ -329,7 +369,7 @@ var _ = Describe("InteractorFactory", func() {
 					Expect(interactor).To(Equal(mysql.NewRestorer(
 						connectionConfig,
 						"mysql_57_restore",
-						mysql.NewDefaultSSLProvider(),
+						mysql.NewDefaultSSLProvider(tempFolderManager),
 					)))
 				})
 			})

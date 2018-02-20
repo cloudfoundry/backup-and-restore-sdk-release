@@ -24,8 +24,6 @@ import (
 	"log"
 	"os"
 
-	"strings"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -218,10 +216,6 @@ var _ = Describe("MySQL", func() {
 							}
 
 							Expect(fakeMysqlDump57.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-
-							caCertPath := strings.Split(fakeMysqlDump57.Invocations()[0].Args()[3], "=")[1]
-							Expect(caCertPath).To(BeAnExistingFile())
-							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
 						})
 					})
 				})
@@ -286,18 +280,6 @@ var _ = Describe("MySQL", func() {
 							}
 
 							Expect(fakeMysqlDump57.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-
-							caCertPath := strings.Split(fakeMysqlDump57.Invocations()[0].Args()[3], "=")[1]
-							Expect(caCertPath).To(BeAnExistingFile())
-							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
-
-							clientCertPath := strings.Split(fakeMysqlDump57.Invocations()[0].Args()[4], "=")[1]
-							Expect(clientCertPath).To(BeAnExistingFile())
-							Expect(ioutil.ReadFile(clientCertPath)).To(Equal([]byte("A_CLIENT_CERT")))
-
-							clientKeyPath := strings.Split(fakeMysqlDump57.Invocations()[0].Args()[5], "=")[1]
-							Expect(clientKeyPath).To(BeAnExistingFile())
-							Expect(ioutil.ReadFile(clientKeyPath)).To(Equal([]byte("A_CLIENT_KEY")))
 						})
 					})
 				})
@@ -538,10 +520,6 @@ var _ = Describe("MySQL", func() {
 							}
 
 							Expect(fakeMysqlClient57.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
-
-							caCertPath := strings.Split(fakeMysqlClient57.Invocations()[1].Args()[3], "=")[1]
-							Expect(caCertPath).To(BeAnExistingFile())
-							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
 						})
 					})
 				})
@@ -604,18 +582,6 @@ var _ = Describe("MySQL", func() {
 
 							Expect(fakeMysqlClient57.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
 							Expect(fakeMysqlClient57.Invocations()[1].Stdin()).Should(ConsistOf("SOME BACKUP SQL"))
-
-							caCertPath := strings.Split(fakeMysqlClient57.Invocations()[1].Args()[3], "=")[1]
-							Expect(caCertPath).To(BeAnExistingFile())
-							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
-
-							clientCertPath := strings.Split(fakeMysqlClient57.Invocations()[1].Args()[4], "=")[1]
-							Expect(clientCertPath).To(BeAnExistingFile())
-							Expect(ioutil.ReadFile(clientCertPath)).To(Equal([]byte("A_CLIENT_CERT")))
-
-							clientKeyPath := strings.Split(fakeMysqlClient57.Invocations()[1].Args()[5], "=")[1]
-							Expect(clientKeyPath).To(BeAnExistingFile())
-							Expect(ioutil.ReadFile(clientKeyPath)).To(Equal([]byte("A_CLIENT_KEY")))
 						})
 					})
 				})
@@ -822,10 +788,6 @@ var _ = Describe("MySQL", func() {
 							}
 
 							Expect(fakeMysqlDump56.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-
-							caCertPath := strings.Split(fakeMysqlDump56.Invocations()[0].Args()[3], "=")[1]
-							Expect(caCertPath).To(BeAnExistingFile())
-							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
 						})
 					})
 				})
@@ -890,18 +852,6 @@ var _ = Describe("MySQL", func() {
 							}
 
 							Expect(fakeMysqlDump56.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-
-							caCertPath := strings.Split(fakeMysqlDump56.Invocations()[0].Args()[3], "=")[1]
-							Expect(caCertPath).To(BeAnExistingFile())
-							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
-
-							clientCertPath := strings.Split(fakeMysqlDump56.Invocations()[0].Args()[4], "=")[1]
-							Expect(clientCertPath).To(BeAnExistingFile())
-							Expect(ioutil.ReadFile(clientCertPath)).To(Equal([]byte("A_CLIENT_CERT")))
-
-							clientKeyPath := strings.Split(fakeMysqlDump56.Invocations()[0].Args()[5], "=")[1]
-							Expect(clientKeyPath).To(BeAnExistingFile())
-							Expect(ioutil.ReadFile(clientKeyPath)).To(Equal([]byte("A_CLIENT_KEY")))
 						})
 					})
 				})
@@ -1142,10 +1092,6 @@ var _ = Describe("MySQL", func() {
 
 							Expect(fakeMysqlClient56.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
 							Expect(fakeMysqlClient56.Invocations()[0].Stdin()).Should(ConsistOf("SOME BACKUP SQL"))
-
-							caCertPath := strings.Split(fakeMysqlClient56.Invocations()[0].Args()[3], "=")[1]
-							Expect(caCertPath).To(BeAnExistingFile())
-							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
 						})
 					})
 				})
@@ -1208,18 +1154,6 @@ var _ = Describe("MySQL", func() {
 
 							Expect(fakeMysqlClient56.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
 							Expect(fakeMysqlClient56.Invocations()[0].Stdin()).Should(ConsistOf("SOME BACKUP SQL"))
-
-							caCertPath := strings.Split(fakeMysqlClient56.Invocations()[0].Args()[3], "=")[1]
-							Expect(caCertPath).To(BeAnExistingFile())
-							Expect(ioutil.ReadFile(caCertPath)).To(Equal([]byte("A_CA_CERT")))
-
-							clientCertPath := strings.Split(fakeMysqlClient56.Invocations()[0].Args()[4], "=")[1]
-							Expect(clientCertPath).To(BeAnExistingFile())
-							Expect(ioutil.ReadFile(clientCertPath)).To(Equal([]byte("A_CLIENT_CERT")))
-
-							clientKeyPath := strings.Split(fakeMysqlClient56.Invocations()[0].Args()[5], "=")[1]
-							Expect(clientKeyPath).To(BeAnExistingFile())
-							Expect(ioutil.ReadFile(clientKeyPath)).To(Equal([]byte("A_CLIENT_KEY")))
 						})
 					})
 				})

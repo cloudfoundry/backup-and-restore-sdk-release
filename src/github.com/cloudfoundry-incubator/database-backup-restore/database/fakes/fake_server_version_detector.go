@@ -10,10 +10,11 @@ import (
 )
 
 type FakeServerVersionDetector struct {
-	GetVersionStub        func(config.ConnectionConfig) (version.DatabaseServerVersion, error)
+	GetVersionStub        func(config.ConnectionConfig, config.TempFolderManager) (version.DatabaseServerVersion, error)
 	getVersionMutex       sync.RWMutex
 	getVersionArgsForCall []struct {
 		arg1 config.ConnectionConfig
+		arg2 config.TempFolderManager
 	}
 	getVersionReturns struct {
 		result1 version.DatabaseServerVersion
@@ -27,16 +28,17 @@ type FakeServerVersionDetector struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeServerVersionDetector) GetVersion(arg1 config.ConnectionConfig) (version.DatabaseServerVersion, error) {
+func (fake *FakeServerVersionDetector) GetVersion(arg1 config.ConnectionConfig, arg2 config.TempFolderManager) (version.DatabaseServerVersion, error) {
 	fake.getVersionMutex.Lock()
 	ret, specificReturn := fake.getVersionReturnsOnCall[len(fake.getVersionArgsForCall)]
 	fake.getVersionArgsForCall = append(fake.getVersionArgsForCall, struct {
 		arg1 config.ConnectionConfig
-	}{arg1})
-	fake.recordInvocation("GetVersion", []interface{}{arg1})
+		arg2 config.TempFolderManager
+	}{arg1, arg2})
+	fake.recordInvocation("GetVersion", []interface{}{arg1, arg2})
 	fake.getVersionMutex.Unlock()
 	if fake.GetVersionStub != nil {
-		return fake.GetVersionStub(arg1)
+		return fake.GetVersionStub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -50,10 +52,10 @@ func (fake *FakeServerVersionDetector) GetVersionCallCount() int {
 	return len(fake.getVersionArgsForCall)
 }
 
-func (fake *FakeServerVersionDetector) GetVersionArgsForCall(i int) config.ConnectionConfig {
+func (fake *FakeServerVersionDetector) GetVersionArgsForCall(i int) (config.ConnectionConfig, config.TempFolderManager) {
 	fake.getVersionMutex.RLock()
 	defer fake.getVersionMutex.RUnlock()
-	return fake.getVersionArgsForCall[i].arg1
+	return fake.getVersionArgsForCall[i].arg1, fake.getVersionArgsForCall[i].arg2
 }
 
 func (fake *FakeServerVersionDetector) GetVersionReturns(result1 version.DatabaseServerVersion, result2 error) {

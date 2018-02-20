@@ -3,14 +3,11 @@ package postgres
 import (
 	"fmt"
 
-	"io/ioutil"
-	"log"
-
 	"github.com/cloudfoundry-incubator/database-backup-restore/config"
 	"github.com/cloudfoundry-incubator/database-backup-restore/runner"
 )
 
-func NewPostgresCommand(config config.ConnectionConfig, cmd string) runner.Command {
+func NewPostgresCommand(config config.ConnectionConfig, tempFolderManager config.TempFolderManager, cmd string) runner.Command {
 	cmdArgs := []string{
 		fmt.Sprintf("--username=%s", config.Username),
 		fmt.Sprintf("--host=%s", config.Host),
@@ -22,12 +19,8 @@ func NewPostgresCommand(config config.ConnectionConfig, cmd string) runner.Comma
 	}
 
 	if config.Tls != nil {
-		caCertFile, err := ioutil.TempFile("", "")
-		if err != nil {
-			log.Fatalf("error creating temp file: %s", err)
-		}
-		ioutil.WriteFile(caCertFile.Name(), []byte(config.Tls.Cert.Ca), 0777)
-		env["PGSSLROOTCERT"] = caCertFile.Name()
+		caCertFileName, _ := tempFolderManager.WriteTempFile(config.Tls.Cert.Ca)
+		env["PGSSLROOTCERT"] = caCertFileName
 
 		if config.Tls.SkipHostVerify {
 			env["PGSSLMODE"] = "verify-ca"
@@ -36,21 +29,13 @@ func NewPostgresCommand(config config.ConnectionConfig, cmd string) runner.Comma
 		}
 
 		if config.Tls.Cert.Certificate != "" {
-			clientCertFile, err := ioutil.TempFile("", "")
-			if err != nil {
-				log.Fatalf("error creating temp file: %s", err)
-			}
-			ioutil.WriteFile(clientCertFile.Name(), []byte(config.Tls.Cert.Certificate), 0777)
-			env["PGSSLCERT"] = clientCertFile.Name()
+			clientCertFileName, _ := tempFolderManager.WriteTempFile(config.Tls.Cert.Ca)
+			env["PGSSLCERT"] = clientCertFileName
 		}
 
 		if config.Tls.Cert.PrivateKey != "" {
-			clientKeyFile, err := ioutil.TempFile("", "")
-			if err != nil {
-				log.Fatalf("error creating temp file: %s", err)
-			}
-			ioutil.WriteFile(clientKeyFile.Name(), []byte(config.Tls.Cert.PrivateKey), 0777)
-			env["PGSSLKEY"] = clientKeyFile.Name()
+			clientKeyFileName, _ := tempFolderManager.WriteTempFile(config.Tls.Cert.Ca)
+			env["PGSSLKEY"] = clientKeyFileName
 		}
 	}
 

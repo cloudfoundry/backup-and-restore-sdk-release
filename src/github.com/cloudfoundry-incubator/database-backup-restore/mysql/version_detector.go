@@ -18,12 +18,13 @@ func NewServerVersionDetector(mysqlPath string) ServerVersionDetector {
 	return ServerVersionDetector{mysqlPath: mysqlPath}
 }
 
-func (d ServerVersionDetector) GetVersion(config config.ConnectionConfig) (version.DatabaseServerVersion, error) {
-	stdout, stderr, err := NewMysqlCommand(config, d.mysqlPath, NewDefaultSSLProvider()).WithParams(
-		"--skip-column-names",
-		"--silent",
-		"--execute=SELECT VERSION()",
-	).Run()
+func (d ServerVersionDetector) GetVersion(config config.ConnectionConfig, tempFolderManager config.TempFolderManager) (version.DatabaseServerVersion, error) {
+	stdout, stderr, err := NewMysqlCommand(config, d.mysqlPath, NewDefaultSSLProvider(tempFolderManager)).
+		WithParams(
+			"--skip-column-names",
+			"--silent",
+			"--execute=SELECT VERSION()",
+		).Run()
 
 	if err != nil {
 		return version.DatabaseServerVersion{}, fmt.Errorf(string(stderr))

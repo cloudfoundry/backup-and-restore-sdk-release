@@ -13,17 +13,20 @@ type InteractorFactory struct {
 	utilitiesConfig               config.UtilitiesConfig
 	postgresServerVersionDetector ServerVersionDetector
 	mysqlServerVersionDetector    ServerVersionDetector
+	tempFolderManager             config.TempFolderManager
 }
 
 func NewInteractorFactory(
 	utilitiesConfig config.UtilitiesConfig,
 	postgresServerVersionDetector ServerVersionDetector,
-	mysqlServerVersionDetector ServerVersionDetector) InteractorFactory {
+	mysqlServerVersionDetector ServerVersionDetector,
+	tempFolderManager config.TempFolderManager) InteractorFactory {
 
 	return InteractorFactory{
 		utilitiesConfig:               utilitiesConfig,
 		postgresServerVersionDetector: postgresServerVersionDetector,
 		mysqlServerVersionDetector:    mysqlServerVersionDetector,
+		tempFolderManager:             tempFolderManager,
 	}
 }
 
@@ -43,7 +46,7 @@ func (f InteractorFactory) Make(action Action, connectionConfig config.Connectio
 }
 
 func (f InteractorFactory) makeMysqlBackuper(config config.ConnectionConfig) (Interactor, error) {
-	mysqldbVersion, err := f.mysqlServerVersionDetector.GetVersion(config)
+	mysqldbVersion, err := f.mysqlServerVersionDetector.GetVersion(config, f.tempFolderManager)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +62,7 @@ func (f InteractorFactory) makeMysqlBackuper(config config.ConnectionConfig) (In
 }
 
 func (f InteractorFactory) makeMysqlRestorer(config config.ConnectionConfig) (Interactor, error) {
-	mysqldbVersion, err := f.mysqlServerVersionDetector.GetVersion(config)
+	mysqldbVersion, err := f.mysqlServerVersionDetector.GetVersion(config, f.tempFolderManager)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +78,7 @@ func (f InteractorFactory) makeMysqlRestorer(config config.ConnectionConfig) (In
 }
 
 func (f InteractorFactory) makePostgresBackuper(config config.ConnectionConfig) (Interactor, error) {
-	postgresVersion, err := f.postgresServerVersionDetector.GetVersion(config)
+	postgresVersion, err := f.postgresServerVersionDetector.GetVersion(config, f.tempFolderManager)
 	if err != nil {
 		return nil, err
 	}
@@ -85,13 +88,13 @@ func (f InteractorFactory) makePostgresBackuper(config config.ConnectionConfig) 
 		return nil, err
 	}
 
-	postgresBackuper := postgres.NewBackuper(config, pgDumpPath)
+	postgresBackuper := postgres.NewBackuper(config, f.tempFolderManager, pgDumpPath)
 	tableChecker := postgres.NewTableChecker(config, psqlPath)
 	return NewTableCheckingInteractor(config, tableChecker, postgresBackuper), nil
 }
 
 func (f InteractorFactory) makePostgresRestorer(config config.ConnectionConfig) (Interactor, error) {
-	postgresVersion, err := f.postgresServerVersionDetector.GetVersion(config)
+	postgresVersion, err := f.postgresServerVersionDetector.GetVersion(config, f.tempFolderManager)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +104,7 @@ func (f InteractorFactory) makePostgresRestorer(config config.ConnectionConfig) 
 		return nil, err
 	}
 
-	return postgres.NewRestorer(config, pgRestorePath), nil
+	return postgres.NewRestorer(config, f.tempFolderManager, pgRestorePath), nil
 }
 
 func (f InteractorFactory) getUtilitiesForMySQL(mysqlVersion version.DatabaseServerVersion) (string, string, error) {
@@ -127,9 +130,9 @@ func (f InteractorFactory) getUtilitiesForMySQL(mysqlVersion version.DatabaseSer
 
 func (f InteractorFactory) getSSLCommandProvider(mysqlVersion version.DatabaseServerVersion) mysql.SSLOptionsProvider {
 	if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "7", "20")) {
-		return mysql.NewDefaultSSLProvider()
+		return mysql.NewDefaultSSLProvider(f.tempFolderManager)
 	} else {
-		return mysql.NewLegacySSLOptionsProvider()
+		return mysql.NewLegacySSLOptionsProvider(f.tempFolderManager)
 	}
 }
 
