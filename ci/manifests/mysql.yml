@@ -59,6 +59,7 @@ instance_groups:
             ca_certificate: "((databases.ca))"
             server_certificate: "((databases.certificate))"
             server_key: "((databases.private_key))"
+          remote_admin_access: true
 
 variables:
 - name: databases
