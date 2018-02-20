@@ -29,12 +29,12 @@ func NewPostgresCommand(config config.ConnectionConfig, tempFolderManager config
 		}
 
 		if config.Tls.Cert.Certificate != "" {
-			clientCertFileName, _ := tempFolderManager.WriteTempFile(config.Tls.Cert.Ca)
+			clientCertFileName, _ := tempFolderManager.WriteTempFile(config.Tls.Cert.Certificate)
 			env["PGSSLCERT"] = clientCertFileName
 		}
 
 		if config.Tls.Cert.PrivateKey != "" {
-			clientKeyFileName, _ := tempFolderManager.WriteTempFile(config.Tls.Cert.Ca)
+			clientKeyFileName, _ := tempFolderManager.WriteTempFile(config.Tls.Cert.PrivateKey)
 			env["PGSSLKEY"] = clientKeyFileName
 		}
 	}

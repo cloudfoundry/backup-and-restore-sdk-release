@@ -58,8 +58,8 @@ func (p DefaultSSLOptionsProvider) BuildSSLParams(config *config.TlsConfig) []st
 		caFileName, _ := p.tempFolderManager.WriteTempFile(config.Cert.Ca)
 		cmdArgs = append(cmdArgs, "--ssl-ca="+caFileName)
 		if config.Cert.Certificate != "" {
-			clientKeyFileName, _ := p.tempFolderManager.WriteTempFile(config.Cert.PrivateKey)
-			cmdArgs = append(cmdArgs, "--ssl-cert="+clientKeyFileName)
+			clientCertFileName, _ := p.tempFolderManager.WriteTempFile(config.Cert.Certificate)
+			cmdArgs = append(cmdArgs, "--ssl-cert="+clientCertFileName)
 		}
 		if config.Cert.PrivateKey != "" {
 			clientKeyFileName, _ := p.tempFolderManager.WriteTempFile(config.Cert.PrivateKey)
