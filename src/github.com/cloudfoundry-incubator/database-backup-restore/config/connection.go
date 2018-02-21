@@ -47,6 +47,20 @@ func ParseAndValidateConnectionConfig(configPath string) (ConnectionConfig, erro
 		return ConnectionConfig{}, fmt.Errorf("Tables specified but empty\n")
 	}
 
+	if connectionConfig.Tls != nil {
+		if connectionConfig.Tls.Cert.Ca == "" {
+			return ConnectionConfig{}, fmt.Errorf("TLS block specified without tls.cert.ca\n")
+		}
+
+		if connectionConfig.Tls.Cert.Certificate != "" && connectionConfig.Tls.Cert.PrivateKey == "" {
+			return ConnectionConfig{}, fmt.Errorf("tls.cert.certificate specified by not tls.cert.private_key\n")
+		}
+
+		if connectionConfig.Tls.Cert.Certificate == "" && connectionConfig.Tls.Cert.PrivateKey != "" {
+			return ConnectionConfig{}, fmt.Errorf("tls.cert.private_key specified by not tls.cert.certificate\n")
+		}
+	}
+
 	return connectionConfig, nil
 }
 

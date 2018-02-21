@@ -92,6 +92,21 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				configGenerator: emptyTablesConfig,
 				expectedOutput:  "Tables specified but empty",
 			}),
+			Entry("tls block without ca", TestEntry{
+				arguments:       "--backup --artifact-file /foo --config %s",
+				configGenerator: tlsBlockWithoutCaConfig,
+				expectedOutput:  "TLS block specified without tls.cert.ca",
+			}),
+			Entry("client cert without client key", TestEntry{
+				arguments:       "--backup --artifact-file /foo --config %s",
+				configGenerator: missingClientKeyConfig,
+				expectedOutput:  "tls.cert.certificate specified by not tls.cert.private_key",
+			}),
+			Entry("client key without client cert", TestEntry{
+				arguments:       "--backup --artifact-file /foo --config %s",
+				configGenerator: missingClientCertConfig,
+				expectedOutput:  "tls.cert.private_key specified by not tls.cert.certificate",
+			}),
 		}
 
 		DescribeTable("raises the appropriate error when",
@@ -205,6 +220,79 @@ func emptyTablesConfig() (string, error) {
 			  "database":"mycooldb",
 			  "adapter":"mysql",
 			  "tables": []
+			}`,
+	)
+	return validConfig.Name(), nil
+}
+
+func tlsBlockWithoutCaConfig() (string, error) {
+	validConfig, err := ioutil.TempFile(os.TempDir(), "")
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Fprint(validConfig,
+		`
+			{
+			  "username":"testuser",
+			  "password":"password",
+			  "host":"127.0.0.1",
+			  "port":1234,
+			  "database":"mycooldb",
+			  "adapter":"mysql",
+			  "tls": {	}
+			}`,
+	)
+	return validConfig.Name(), nil
+}
+
+func missingClientKeyConfig() (string, error) {
+	validConfig, err := ioutil.TempFile(os.TempDir(), "")
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Fprint(validConfig,
+		`
+			{
+			  "username":"testuser",
+			  "password":"password",
+			  "host":"127.0.0.1",
+			  "port":1234,
+			  "database":"mycooldb",
+			  "adapter":"mysql",
+			  "tls": {
+					"cert": {
+						"ca": "ca cert",
+						"certificate": "client certificate"
+					}
+				}
+			}`,
+	)
+	return validConfig.Name(), nil
+}
+
+func missingClientCertConfig() (string, error) {
+	validConfig, err := ioutil.TempFile(os.TempDir(), "")
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Fprint(validConfig,
+		`
+			{
+			  "username":"testuser",
+			  "password":"password",
+			  "host":"127.0.0.1",
+			  "port":1234,
+			  "database":"mycooldb",
+			  "adapter":"mysql",
+			  "tls": {
+					"cert": {
+						"ca": "ca cert",
+						"private_key": "client private key"
+					}
+				}
 			}`,
 	)
 	return validConfig.Name(), nil
