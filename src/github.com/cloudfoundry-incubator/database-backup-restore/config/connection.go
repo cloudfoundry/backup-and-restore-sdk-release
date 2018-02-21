@@ -53,11 +53,11 @@ func ParseAndValidateConnectionConfig(configPath string) (ConnectionConfig, erro
 		}
 
 		if connectionConfig.Tls.Cert.Certificate != "" && connectionConfig.Tls.Cert.PrivateKey == "" {
-			return ConnectionConfig{}, fmt.Errorf("tls.cert.certificate specified by not tls.cert.private_key\n")
+			return ConnectionConfig{}, fmt.Errorf("tls.cert.certificate specified but not tls.cert.private_key\n")
 		}
 
 		if connectionConfig.Tls.Cert.Certificate == "" && connectionConfig.Tls.Cert.PrivateKey != "" {
-			return ConnectionConfig{}, fmt.Errorf("tls.cert.private_key specified by not tls.cert.certificate\n")
+			return ConnectionConfig{}, fmt.Errorf("tls.cert.private_key specified but not tls.cert.certificate\n")
 		}
 	}
 

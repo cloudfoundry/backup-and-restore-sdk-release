@@ -100,12 +100,12 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 			Entry("client cert without client key", TestEntry{
 				arguments:       "--backup --artifact-file /foo --config %s",
 				configGenerator: missingClientKeyConfig,
-				expectedOutput:  "tls.cert.certificate specified by not tls.cert.private_key",
+				expectedOutput:  "tls.cert.certificate specified but not tls.cert.private_key",
 			}),
 			Entry("client key without client cert", TestEntry{
 				arguments:       "--backup --artifact-file /foo --config %s",
 				configGenerator: missingClientCertConfig,
-				expectedOutput:  "tls.cert.private_key specified by not tls.cert.certificate",
+				expectedOutput:  "tls.cert.private_key specified but not tls.cert.certificate",
 			}),
 		}
 
