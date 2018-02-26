@@ -70,6 +70,27 @@ instance_groups:
           aws_access_key_id: ((aws-access-key-id))
           aws_secret_access_key: ((aws-secret-access-key))
   azs: [z1]
+- name: unversioned-backuper
+  instances: 1
+  vm_type: small
+  persistent_disk_type: fifty
+  stemcell: trusty
+  update:
+    serial: true
+  networks:
+  - name: concourse
+  jobs:
+  - name: s3-versioned-blobstore-backup-restorer
+    release: backup-and-restore-sdk
+    properties:
+      enabled: true
+      buckets:
+        bucket_identifier:
+          name: ((s3-unversioned-bucket-name))
+          region: ((s3-unversioned-bucket-region))
+          aws_access_key_id: ((aws-access-key-id))
+          aws_secret_access_key: ((aws-secret-access-key))
+  azs: [z1]
 
 update:
   canaries: 1
