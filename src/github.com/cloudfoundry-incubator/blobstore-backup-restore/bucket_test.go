@@ -359,7 +359,7 @@ func runAwsCommand(accessKey string, secretKey string, baseCmd []string) *bytes.
 	session, err := gexec.Start(awsCmd, io.MultiWriter(GinkgoWriter, outputBuffer), GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 	Eventually(session, 1*time.Minute).Should(gexec.Exit())
-	Expect(session.ExitCode()).To(BeZero())
+	Expect(session.ExitCode()).To(BeZero(), string(session.Err.Contents()))
 
 	return outputBuffer
 }

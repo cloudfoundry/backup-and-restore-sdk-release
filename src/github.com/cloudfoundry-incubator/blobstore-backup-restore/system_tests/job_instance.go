@@ -47,7 +47,7 @@ func (jobInstance *JobInstance) runMysqlSqlCommand(command, database string) *ge
 
 func (jobInstance *JobInstance) runOnVMAndSucceed(command string) *gexec.Session {
 	session := jobInstance.runOnInstance(command)
-	Expect(session).To(gexec.Exit(0))
+	Expect(session).To(gexec.Exit(0), string(session.Err.Contents()))
 
 	return session
 }
