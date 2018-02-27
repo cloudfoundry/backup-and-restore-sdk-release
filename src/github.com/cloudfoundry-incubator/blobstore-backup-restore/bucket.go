@@ -2,6 +2,7 @@ package blobstore
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 )
 
@@ -47,8 +48,16 @@ func (bucket S3Bucket) RegionName() string {
 func (bucket S3Bucket) Versions() ([]Version, error) {
 	s3Cli := NewS3CLI(bucket.awsCliPath, bucket.endpoint, bucket.regionName, bucket.accessKey.Id, bucket.accessKey.Secret)
 
-	output, err := s3Cli.ListObjectVersions(bucket.name)
+	bucketIsVersioned, err := s3Cli.IsVersioned(bucket.name)
+	if err != nil {
+		return nil, err
+	}
 
+	if !bucketIsVersioned {
+		return nil, fmt.Errorf("bucket %s is not versioned", bucket.name)
+	}
+
+	output, err := s3Cli.ListObjectVersions(bucket.name)
 	if err != nil {
 		return nil, err
 	}
@@ -67,16 +76,23 @@ func (bucket S3Bucket) Versions() ([]Version, error) {
 }
 
 func (bucket S3Bucket) CopyVersions(sourceBucketRegion, sourceBucketName string, versionsToCopy []BlobVersion) error {
-	var err error
+	s3Api, err := NewS3API(bucket.endpoint, bucket.regionName, bucket.accessKey.Id, bucket.accessKey.Secret)
 
-	s3API, err := NewS3API(bucket.endpoint, bucket.regionName, bucket.accessKey.Id, bucket.accessKey.Secret)
+	bucketIsVersioned, err := s3Api.IsVersioned(bucket.name)
+	if err != nil {
+		return err
+	}
+
+	if !bucketIsVersioned {
+		return fmt.Errorf("bucket %s is not versioned", bucket.name)
+	}
 
 	if err != nil {
 		return err
 	}
 
 	for _, versionToCopy := range versionsToCopy {
-		err = s3API.CopyVersion(sourceBucketName, versionToCopy.BlobKey, versionToCopy.Id, bucket.name)
+		err = s3Api.CopyVersion(sourceBucketName, versionToCopy.BlobKey, versionToCopy.Id, bucket.name)
 		if err != nil {
 			return err
 		}

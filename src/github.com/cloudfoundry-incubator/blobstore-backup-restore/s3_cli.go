@@ -54,6 +54,29 @@ func (s3Cli S3Cli) ListObjectVersions(s string) ([]byte, error) {
 	return s3Cli.run("list-object-versions", "--bucket", s)
 }
 
+func (s3Cli S3Cli) IsVersioned(bucketName string) (bool, error) {
+	output, err := s3Cli.run("get-bucket-versioning", "--bucket", bucketName)
+	if err != nil {
+		return false, err
+	}
+
+	if len(output) == 0 {
+		return false, nil
+	}
+
+	response := s3VersioningResponse{}
+	err = json.Unmarshal(output, &response)
+	if err != nil {
+		return false, err
+	}
+
+	return response.Status == "Enabled", nil
+}
+
+type s3VersioningResponse struct {
+	Status string
+}
+
 func (s3Cli S3Cli) run(args ...string) ([]byte, error) {
 	outputBuffer := new(bytes.Buffer)
 	errorBuffer := new(bytes.Buffer)

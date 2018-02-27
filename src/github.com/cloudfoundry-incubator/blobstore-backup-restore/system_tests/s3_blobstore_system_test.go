@@ -13,13 +13,17 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
+	"github.com/onsi/gomega/gexec"
 )
 
 var _ = Describe("S3 backuper", func() {
 	var region string
 	var cloneRegion string
+	var unversionedRegion string
 	var bucket string
 	var cloneBucket string
+	var unversionedBucket string
 	var fileName1 string
 	var fileName2 string
 	var fileName3 string
@@ -27,6 +31,7 @@ var _ = Describe("S3 backuper", func() {
 
 	var backuperInstance JobInstance
 	var cloneBackuperInstance JobInstance
+	var unversionedBackuperInstance JobInstance
 
 	BeforeEach(func() {
 		backuperInstance = JobInstance{
@@ -39,25 +44,36 @@ var _ = Describe("S3 backuper", func() {
 			instance:      "clone-backuper",
 			instanceIndex: "0",
 		}
+		unversionedBackuperInstance = JobInstance{
+			deployment:    MustHaveEnv("BOSH_DEPLOYMENT"),
+			instance:      "unversioned-backuper",
+			instanceIndex: "0",
+		}
 
 		region = MustHaveEnv("AWS_TEST_BUCKET_REGION")
 		bucket = MustHaveEnv("AWS_TEST_BUCKET_NAME")
 		cloneRegion = MustHaveEnv("AWS_TEST_CLONE_BUCKET_REGION")
 		cloneBucket = MustHaveEnv("AWS_TEST_CLONE_BUCKET_NAME")
+		unversionedRegion = MustHaveEnv("AWS_TEST_UNVERSIONED_BUCKET_REGION")
+		unversionedBucket = MustHaveEnv("AWS_TEST_UNVERSIONED_BUCKET_NAME")
 
 		deleteAllVersionsFromBucket(region, bucket)
 		deleteAllVersionsFromBucket(cloneRegion, cloneBucket)
+		deleteAllVersionsFromBucket(unversionedRegion, unversionedBucket) // will it work?
 
 		artifactDirPath = "/tmp/s3-versioned-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
 		backuperInstance.runOnVMAndSucceed("mkdir -p " + artifactDirPath)
 		cloneBackuperInstance.runOnVMAndSucceed("mkdir -p " + artifactDirPath)
+		unversionedBackuperInstance.runOnVMAndSucceed("mkdir -p " + artifactDirPath)
 	})
 
 	AfterEach(func() {
 		deleteAllVersionsFromBucket(region, bucket)
 		deleteAllVersionsFromBucket(cloneRegion, cloneBucket)
+		deleteAllVersionsFromBucket(unversionedRegion, unversionedBucket)
 		backuperInstance.runOnVMAndSucceed("rm -rf " + artifactDirPath)
 		cloneBackuperInstance.runOnVMAndSucceed("rm -rf " + artifactDirPath)
+		unversionedBackuperInstance.runOnVMAndSucceed("rm -rf " + artifactDirPath)
 	})
 
 	It("backs up and restores in-place", func() {
@@ -100,6 +116,15 @@ var _ = Describe("S3 backuper", func() {
 
 		Expect(getFileContentsFromBucket(cloneRegion, cloneBucket, fileName1)).To(Equal("FILE1"))
 		Expect(getFileContentsFromBucket(cloneRegion, cloneBucket, fileName2)).To(Equal("FILE2"))
+	})
+
+	It("fails when the bucket is not versioned", func() {
+		session := unversionedBackuperInstance.runOnInstance("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
+			" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
+
+		Expect(session).To(gexec.Exit(1))
+		Expect(session.Out).To(gbytes.Say("is not versioned"))
+		Expect(unversionedBackuperInstance.runOnInstance("stat " + artifactDirPath + "/blobstore.json")).To(gexec.Exit(1))
 	})
 })
 

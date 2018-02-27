@@ -29,25 +29,33 @@ type S3Api struct {
 	s3Client   *s3.S3
 }
 
+func (s3Api S3Api) IsVersioned(bucketName string) (bool, error) {
+	output, err := s3Api.s3Client.GetBucketVersioning(&s3.GetBucketVersioningInput{
+		Bucket: &bucketName,
+	})
+
+	if err != nil {
+		return false, err
+	}
+
+	return output != nil && output.Status != nil && *output.Status == "Enabled", nil
+}
+
 func (s3Api S3Api) CopyVersion(sourceBucketName, blobKey, versionId, destinationBucketName string) error {
-	input := s3.CopyObjectInput{
+	_, err := s3Api.s3Client.CopyObject(&s3.CopyObjectInput{
 		Bucket:     aws.String(destinationBucketName),
 		Key:        aws.String(blobKey),
 		CopySource: aws.String(fmt.Sprintf("/%s/%s?versionId=%s", sourceBucketName, blobKey, versionId)),
-	}
-
-	_, err := s3Api.s3Client.CopyObject(&input)
+	})
 
 	return err
 }
 
 func (s3Api S3Api) DeleteObject(bucketName, file string) error {
-	input := s3.DeleteObjectInput{
+	_, err := s3Api.s3Client.DeleteObject(&s3.DeleteObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(file),
-	}
-
-	_, err := s3Api.s3Client.DeleteObject(&input)
+	})
 
 	return err
 }
