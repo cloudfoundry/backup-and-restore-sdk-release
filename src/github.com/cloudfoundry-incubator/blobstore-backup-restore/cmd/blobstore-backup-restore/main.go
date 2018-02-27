@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os"
 
 	"encoding/json"
@@ -10,13 +9,15 @@ import (
 	"errors"
 	"flag"
 
+	"fmt"
+
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore"
 )
 
 func main() {
 	commandFlags, err := parseFlags()
 	if err != nil {
-		log.Fatal(err.Error())
+		exitWithError(err.Error())
 	}
 
 	awsCliPath := getEnv("AWS_CLI_PATH")
@@ -25,13 +26,13 @@ func main() {
 
 	config, err := ioutil.ReadFile(commandFlags.ConfigPath)
 	if err != nil {
-		log.Fatal("Failed to read config")
+		exitWithError("Failed to read config: %s", err.Error())
 	}
 
 	var bucketsConfig map[string]BucketConfig
 	err = json.Unmarshal(config, &bucketsConfig)
 	if err != nil {
-		log.Fatal("Failed to parse config")
+		exitWithError("Failed to parse config: %s", err.Error())
 	}
 
 	buckets := makeBuckets(awsCliPath, bucketsConfig)
@@ -43,14 +44,19 @@ func main() {
 	}
 
 	if err != nil {
-		log.Fatal(err.Error())
+		exitWithError(err.Error())
 	}
+}
+
+func exitWithError(a ...interface{}) {
+	fmt.Fprintln(os.Stderr, a...)
+	os.Exit(1)
 }
 
 func getEnv(varName string) string {
 	value, exists := os.LookupEnv(varName)
 	if !exists {
-		log.Fatalf("Missing environment variable '%s'", varName)
+		exitWithError("Missing environment variable '%s'", varName)
 	}
 	return value
 }
