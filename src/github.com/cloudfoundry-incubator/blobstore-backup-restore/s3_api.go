@@ -5,6 +5,10 @@ import (
 
 	"math"
 
+	"strings"
+
+	"sort"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -29,6 +33,11 @@ func NewS3API(endpoint, regionName, accessKeyId, accessKeySecret string) (S3Api,
 type S3Api struct {
 	regionName string
 	s3Client   *s3.S3
+}
+
+type partUploadOutput struct {
+	completedPart *s3.CompletedPart
+	err           error
 }
 
 func (s3Api S3Api) IsVersioned(bucketName string) (bool, error) {
@@ -89,32 +98,51 @@ func (s3Api S3Api) copyVersionWithMultipart(sourceBucketName, blobKey, versionId
 		return fmt.Errorf("failed to create multipart upload: %s", err)
 	}
 
-	var partSize int64 = 10 * 1024 * 1024
-	var partNumber int64 = 1
-	var parts []*s3.CompletedPart
-	for i := int64(0); i < blobSize; i += partSize {
-		upperLimit := int64(math.Min(float64(i+partSize-1), float64(blobSize)-1))
+	var partSize int64 = 100 * 1024 * 1024
 
-		copyPartOutput, err := s3Api.s3Client.UploadPartCopy(&s3.UploadPartCopyInput{
-			Bucket:          aws.String(destinationBucketName),
-			Key:             aws.String(blobKey),
-			UploadId:        createOutput.UploadId,
-			CopySource:      aws.String(fmt.Sprintf("/%s/%s?versionId=%s", sourceBucketName, blobKey, versionId)),
-			CopySourceRange: aws.String(fmt.Sprintf("bytes=%d-%d", i, upperLimit)),
-			PartNumber:      aws.Int64(partNumber),
-		})
+	numParts := int64(math.Ceil(float64(blobSize) / float64(partSize)))
+	partUploadOutputs := make(chan partUploadOutput, numParts)
 
-		if err != nil {
-			return fmt.Errorf("failed to upload part with range: %d-%d: %s", i, upperLimit, err)
-		}
-
-		parts = append(parts, &s3.CompletedPart{
-			PartNumber: aws.Int64(partNumber),
-			ETag:       copyPartOutput.CopyPartResult.ETag,
-		})
-
-		partNumber++
+	for i := int64(1); i <= numParts; i++ {
+		go s3Api.partUpload(
+			partUploadOutputs,
+			i,
+			partSize,
+			blobSize,
+			destinationBucketName,
+			sourceBucketName,
+			blobKey,
+			versionId,
+			*createOutput.UploadId,
+		)
 	}
+
+	var parts []*s3.CompletedPart
+	var errors []error
+	for i := int64(0); i < numParts; i++ {
+		partUploadOutput := <-partUploadOutputs
+		if partUploadOutput.err != nil {
+			errors = append(errors, partUploadOutput.err)
+		} else {
+			parts = append(parts, partUploadOutput.completedPart)
+		}
+	}
+
+	if len(errors) != 0 {
+		_, err := s3Api.s3Client.AbortMultipartUpload(&s3.AbortMultipartUploadInput{
+			Bucket:   aws.String(destinationBucketName),
+			Key:      aws.String(blobKey),
+			UploadId: createOutput.UploadId,
+		})
+		if err != nil {
+			errors = append(errors, err)
+		}
+		return formatErrors("errors occurred in multipart upload", errors)
+	}
+
+	sort.Slice(parts, func(i, j int) bool {
+		return *parts[i].PartNumber < *parts[j].PartNumber
+	})
 
 	_, err = s3Api.s3Client.CompleteMultipartUpload(&s3.CompleteMultipartUploadInput{
 		Bucket:   aws.String(destinationBucketName),
@@ -132,6 +160,35 @@ func (s3Api S3Api) copyVersionWithMultipart(sourceBucketName, blobKey, versionId
 	return nil
 }
 
+func (s3Api S3Api) partUpload(partUploadOutputs chan<- partUploadOutput, partNumber, partSize, blobSize int64, destinationBucketName, sourceBucketName, blobKey, versionId, uploadId string) {
+	lowerLimit := (partNumber - 1) * partSize
+	upperLimit := int64(math.Min(float64(partNumber*partSize-1), float64(blobSize-1)))
+
+	copyPartOutput, err := s3Api.s3Client.UploadPartCopy(&s3.UploadPartCopyInput{
+		Bucket:          aws.String(destinationBucketName),
+		Key:             aws.String(blobKey),
+		UploadId:        aws.String(uploadId),
+		CopySource:      aws.String(fmt.Sprintf("/%s/%s?versionId=%s", sourceBucketName, blobKey, versionId)),
+		CopySourceRange: aws.String(fmt.Sprintf("bytes=%d-%d", lowerLimit, upperLimit)),
+		PartNumber:      aws.Int64(partNumber),
+	})
+
+	if err != nil {
+		partUploadOutputs <- partUploadOutput{
+			&s3.CompletedPart{},
+			fmt.Errorf("failed to upload part with range: %d-%d: %s", lowerLimit, upperLimit, err),
+		}
+	} else {
+		partUploadOutputs <- partUploadOutput{
+			&s3.CompletedPart{
+				PartNumber: aws.Int64(partNumber),
+				ETag:       copyPartOutput.CopyPartResult.ETag,
+			},
+			nil,
+		}
+	}
+}
+
 func (s3Api S3Api) DeleteObject(bucketName, file string) error {
 	_, err := s3Api.s3Client.DeleteObject(&s3.DeleteObjectInput{
 		Bucket: aws.String(bucketName),
@@ -139,4 +196,12 @@ func (s3Api S3Api) DeleteObject(bucketName, file string) error {
 	})
 
 	return err
+}
+
+func formatErrors(contextString string, errors []error) error {
+	errorStrings := make([]string, len(errors))
+	for i, err := range errors {
+		errorStrings[i] = err.Error()
+	}
+	return fmt.Errorf("%s: %s", contextString, strings.Join(errorStrings, "\n"))
 }
