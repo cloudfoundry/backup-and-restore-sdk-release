@@ -1,6 +1,9 @@
 # Backup and Restore SDK BOSH release
 
-The Backup and Restore SDK BOSH release allows other BOSH deployed Cloud Foundry components to backup/restore their databases and blobstores.
+The Backup and Restore SDK BOSH release is used for two distinct things:
+
+1. enabling release authors to incorporate database backup & restore functionality in their releases
+1. enabling operators to configure their deployments which use external blobstores to be backed up and restored by [BBR](https://github.com/cloudfoundry-incubator/bosh-backup-and-restore)
 
 **Docs**: [Release Author Guide](http://docs.cloudfoundry.org/bbr/bbr-devguide.html)
 
@@ -8,10 +11,15 @@ The Backup and Restore SDK BOSH release allows other BOSH deployed Cloud Foundry
 
 **Pivotal Tracker**: https://www.pivotaltracker.com/n/projects/1662777
 
-
 ## CI Status
 
 Backup and Restore SDK Release status [![Build SDK Release Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/create-release/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release)
+
+## Developing
+
+This repository using master as the main branch, tested releases are tagged with their versions.
+
+## Incorporating database backups in your release
 
 ### Supported Databases
 
@@ -24,14 +32,7 @@ Backup and Restore SDK Release status [![Build SDK Release Badge](https://backup
 | Postgres | 9.4.x   | [![Postgres Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/postgres-system-tests-9.4/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/postgres-system-tests-9.4) |
 | Postgres | 9.6.x   | [![Postgres Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/postgres-system-tests-9.6/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/postgres-system-tests-9.6) |
 
-
-### Supported Blobstores
-
-| Name         | Status                                                                                                                                                                                                                                                                                                 |
-|:-------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Versioned S3 | [![S3 Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests) |
-
-## Why?
+### Why?
 
 Release authors wanting to write backup and restore scripts frequently need to back up and restore databases (or parts of databases).
 
@@ -39,9 +40,9 @@ Rather than have every team figure out the vagaries of backing up all the differ
 
 Behind the scenes, the SDK parses a configuration file passed to it, which selects the appropriate database backup/restore strategy (e.g. `pg_dump` or `mysql` at the required version) and places the backup artifact in the specified location.
 
-## Config options
+### Config options
 
-The SDK accepts a json document with the following fields
+The SDK accepts a JSON document with the following fields:
 
 | name                  | type         | Optional | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 |:----------------------|:-------------|:---------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -57,18 +58,18 @@ The SDK accepts a json document with the following fields
 | tls.certs.certificate | string       | yes      | Client certificate for Mutual TLS. This must be specified if `tls.certs.private_key` is given. You will not be able to use this option if your database is hosted on RDS as RDS does not support mutual TLS.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | tls.certs.private_key | string       | yes      | Client private key for Mutual TLS, this must be specified if `tls.certs.certificate` is given.  You will not be able to use this option if your database is hosted on RDS as RDS does not support mutual TLS.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
-### Supported Database Adapters
+#### Supported Database Adapters
 
 * `postgres` (auto-detects versions between `9.4.x` and `9.6.x`)
 * `mysql` (auto-detects `MariaDB 10.1.x`, and `MySQL 5.5.x`, `5.6.x`, `5.7.x`. Any other `mysql` variants are not tested)
 
-## Deploying
+### Deploying
 
-### Deploying with `cf-deployment`
+#### Deploying with `cf-deployment`
 
 Users of [cf-deployment](https://github.com/cloudfoundry/cf-deployment) can simply apply the [backup-restore opsfile](https://github.com/cloudfoundry/cf-deployment/blob/master/operations/experimental/enable-backup-restore.yml). This will deploy the `database-backup-restorer` job on a backup restore VM alongside Cloud Foundry.
 
-### Deploying as an instance group
+#### Deploying as an instance group
 
 You should co-locate the `database-backup-restorer` job and your release backup scripts on the same VM. If you use a dedicated backup-and-restore VM instance, co-locate them together on that VM. BOSH Lite is supported for testing.
 
@@ -99,9 +100,9 @@ instance_groups:
 ...
 ```
 
-## Usage from another BOSH job
+### Usage from another BOSH job
 
-### 1. Template `config.json`
+#### 1. Template `config.json`
 
 Your job should template a `config.json` as follows:
 
@@ -115,7 +116,8 @@ Your job should template a `config.json` as follows:
   "database": "name of database to back up",
 }
 ```
-Or if you want to operate on specific tables
+
+Or if you want to operate on specific tables:
 
 ```json
 {
@@ -133,8 +135,7 @@ For the full list of `config.json` properties see [Config options](#config-optio
 
 An example of templating using BOSH Links can be seen in the [cf networking release](https://github.com/cloudfoundry-incubator/cf-networking-release/blob/647f7a71b442c25ec29b1cc6484410946f41935c/jobs/bbr-cfnetworkingdb/templates/config.json.erb).
 
-
-### 2. Write scripts to call the SDK binaries
+#### 2. Write scripts to call the SDK binaries
 
 In your release backup script, call `database-backup-restorer/bin/backup`:
 
@@ -150,9 +151,39 @@ In your release restore script, call `database-backup-restorer/bin/restore`:
 
 The `restore` script will assume that the database schema has already been created, and matches the one of the backup. For BOSH releases, this usually means `restore` can be called after a successful deploy of the release, at the same version as the backup was taken.
 
-#### Usage with [bbr](https://github.com/cloudfoundry-incubator/bosh-backup-and-restore)
+### Usage with [bbr](https://github.com/cloudfoundry-incubator/bosh-backup-and-restore)
 
-For an example of the sdk being used in a release that can be backed up by bbr see the [exemplar release](https://github.com/cloudfoundry-incubator/exemplar-backup-and-restore-release).
+For an example of the SDK being used in a release that can be backed up by BBR see the [exemplar release](https://github.com/cloudfoundry-incubator/exemplar-backup-and-restore-release).
 
-### Developing
-This repository using master as the main branch, tested releases are tagged with their versions.
+## Incorporating external blobstore backups in your deployment
+
+BBR only supports the backup and restore of blobstores stored in versioned, Amazon S3 buckets and in S3-compatible buckets that are versioned and support AWS Signature Version 4. For more details about enabling versioning on your blobstore, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html#enable-versioning).
+
+External blobstores are backed up by storing the current version of each blob, not the actual files. Those versions will be set to be the current versions at restore time. This makes backups and restores faster, but also means that **restores only work if the original bucket still exists**. For more information, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html).
+
+### Supported Blobstores
+
+| Name         | Status                                                                                                                                                                                                                                                                                                 |
+|:-------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Versioned S3 | [![S3 Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests) |
+
+### Deploying
+
+#### Deploying with `cf-deployment`
+
+`cf-deployment` includes ops files for enabling the backup and restore of external blobstores. See the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html#enable-backup-and-restore) for more details.
+
+#### Adding the SDK to your deployment manifest
+
+The external blobstore backup and restore scripts are contained in the `s3-versioned-blobstore-backup-restorer` job. Locate the job on any of the instance groups in your deployment that have a volume attached (i.e. the `/var/vcap/store` folder should exist).
+
+##### Properties
+
+The `s3-versioned-blobstore-backup-restorer` job can be configured using the following properties:
+
+* `enabled` [Boolean]: enables the backup and restore scripts. `true` by default.
+* `buckets` [Hash]: a map from bucket identifiers their their configuration. For each bucket, you'll need to specify the following properties:
+  * `name` [String]: the bucket name
+  * `region` [String]: the bucket region
+  * `aws_access_key_id` [String]: the AWS access key ID for the bucket
+  * `aws_secret_access_key` [String]: the AWS secret access key for the bucket
