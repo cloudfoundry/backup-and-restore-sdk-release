@@ -15,6 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
+const partSize int64 = 100 * 1024 * 1024
+
 func NewS3API(endpoint, regionName, accessKeyId, accessKeySecret string) (S3Api, error) {
 	awsSession, err := session.NewSession(&aws.Config{
 		Region:      &regionName,
@@ -98,8 +100,6 @@ func (s3Api S3Api) copyVersionWithMultipart(sourceBucketName, blobKey, versionId
 		return fmt.Errorf("failed to create multipart upload: %s", err)
 	}
 
-	var partSize int64 = 100 * 1024 * 1024
-
 	numParts := int64(math.Ceil(float64(blobSize) / float64(partSize)))
 	partUploadOutputs := make(chan partUploadOutput, numParts)
 
@@ -107,7 +107,6 @@ func (s3Api S3Api) copyVersionWithMultipart(sourceBucketName, blobKey, versionId
 		go s3Api.partUpload(
 			partUploadOutputs,
 			i,
-			partSize,
 			blobSize,
 			destinationBucketName,
 			sourceBucketName,
@@ -160,23 +159,32 @@ func (s3Api S3Api) copyVersionWithMultipart(sourceBucketName, blobKey, versionId
 	return nil
 }
 
-func (s3Api S3Api) partUpload(partUploadOutputs chan<- partUploadOutput, partNumber, partSize, blobSize int64, destinationBucketName, sourceBucketName, blobKey, versionId, uploadId string) {
-	lowerLimit := (partNumber - 1) * partSize
-	upperLimit := int64(math.Min(float64(partNumber*partSize-1), float64(blobSize-1)))
+func (s3Api S3Api) partUpload(
+	partUploadOutputs chan<- partUploadOutput,
+	partNumber,
+	blobSize int64,
+	destinationBucketName,
+	sourceBucketName,
+	blobKey,
+	versionId,
+	uploadId string) {
+
+	partStart := (partNumber - 1) * partSize
+	partEnd := int64(math.Min(float64(partNumber*partSize-1), float64(blobSize-1)))
 
 	copyPartOutput, err := s3Api.s3Client.UploadPartCopy(&s3.UploadPartCopyInput{
 		Bucket:          aws.String(destinationBucketName),
 		Key:             aws.String(blobKey),
 		UploadId:        aws.String(uploadId),
 		CopySource:      aws.String(fmt.Sprintf("/%s/%s?versionId=%s", sourceBucketName, blobKey, versionId)),
-		CopySourceRange: aws.String(fmt.Sprintf("bytes=%d-%d", lowerLimit, upperLimit)),
+		CopySourceRange: aws.String(fmt.Sprintf("bytes=%d-%d", partStart, partEnd)),
 		PartNumber:      aws.Int64(partNumber),
 	})
 
 	if err != nil {
 		partUploadOutputs <- partUploadOutput{
 			&s3.CompletedPart{},
-			fmt.Errorf("failed to upload part with range: %d-%d: %s", lowerLimit, upperLimit, err),
+			fmt.Errorf("failed to upload part with range: %d-%d: %s", partStart, partEnd, err),
 		}
 	} else {
 		partUploadOutputs <- partUploadOutput{

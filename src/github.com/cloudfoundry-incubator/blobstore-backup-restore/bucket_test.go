@@ -277,9 +277,11 @@ var _ = Describe("S3Bucket", func() {
 		})
 
 		It("works", func() {
-			err := bucketObjectUnderTest.CopyVersions("eu-west-1", "large-blob-test-bucket", []BlobVersion{
-				{BlobKey: "big_file", Id: "YfWcz5KoJzfjKB9gnBI6q7ue_jZGTvkw"},
-			})
+			err := bucketObjectUnderTest.CopyVersions(
+				"eu-west-1",
+				"large-blob-test-bucket", []BlobVersion{
+					{BlobKey: "big_file", Id: "YfWcz5KoJzfjKB9gnBI6q7ue_jZGTvkw"},
+				})
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(listFiles(testBucketName, endpoint, creds.Id, creds.Secret)).To(ConsistOf("big_file"))
