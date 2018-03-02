@@ -187,4 +187,4 @@ The `s3-versioned-blobstore-backup-restorer` job can be configured using the fol
   * `region` [String]: the bucket region
   * `aws_access_key_id` [String]: the AWS access key ID for the bucket
   * `aws_secret_access_key` [String]: the AWS secret access key for the bucket
-  * `endpoint` [String, optional]: the endpoint for your storage server, only needed if you are not using AWS S3
+  * `endpoint` [String]: the endpoint for your storage server, only needed if you are not using AWS S3
