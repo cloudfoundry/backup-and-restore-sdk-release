@@ -248,7 +248,56 @@ var _ = Describe("S3Bucket", func() {
 			})
 		})
 	})
+
+	Describe("CopyVersions with a big file on AWS", func() {
+		var testBucketName string
+		var region string
+		var endpoint string
+		var creds S3AccessKey
+
+		BeforeEach(func() {
+			region = "eu-west-1"
+			endpoint = ""
+			testBucketName = "sdk-integration-test-large-blob-" + strconv.FormatInt(time.Now().UnixNano(), 10)
+
+			creds = S3AccessKey{
+				Id:     os.Getenv("TEST_AWS_ACCESS_KEY_ID"),
+				Secret: os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
+			}
+
+			createBucket(region, testBucketName, endpoint, creds.Id, creds.Secret)
+			enableBucketVersioning(testBucketName, endpoint, creds.Id, creds.Secret)
+
+			bucketObjectUnderTest = NewS3Bucket("aws", testBucketName, region, endpoint, creds)
+		})
+
+		AfterEach(func() {
+			deleteAllVersions(region, testBucketName, endpoint, creds.Id, creds.Secret)
+			deleteBucket(testBucketName, endpoint, creds.Id, creds.Secret)
+		})
+
+		It("works", func() {
+			err := bucketObjectUnderTest.CopyVersions(
+				"eu-west-1",
+				"large-blob-test-bucket", []BlobVersion{
+					{BlobKey: "big_file", Id: "YfWcz5KoJzfjKB9gnBI6q7ue_jZGTvkw"},
+				})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(listFiles(testBucketName, endpoint, creds.Id, creds.Secret)).To(ConsistOf("big_file"))
+
+			localFilePath := downloadFileToTmp(testBucketName, endpoint, "big_file", creds.Id, creds.Secret)
+			Expect(md5(localFilePath)).To(Equal("188f500de28479d67e7375566750472e58e4cec1"))
+		})
+	})
 })
+
+func md5(filePath string) string {
+	output, err := exec.Command("shasum", filePath).Output()
+	Expect(err).NotTo(HaveOccurred())
+	md5 := strings.Split(string(output), " ")[0]
+	return md5
+}
 
 func listFiles(bucket, endpoint string, accessKey string, secretKey string) []string {
 	baseCmd := constructBaseCmd(endpoint)
@@ -261,7 +310,7 @@ func listFiles(bucket, endpoint string, accessKey string, secretKey string) []st
 	var response ListResponse
 	json.Unmarshal(outputBuffer.Bytes(), &response)
 
-	keys := []string{}
+	var keys []string
 	for _, entry := range response.Contents {
 		keys = append(keys, entry.Key)
 	}
@@ -308,6 +357,22 @@ func uploadFile(bucket, endpoint, key, body, accessKey, secretKey string) string
 	return response.VersionId
 }
 
+func downloadFileToTmp(bucket, endpoint, key, accessKey, secretKey string) string {
+	bodyFile, _ := ioutil.TempFile("", key)
+	bodyFile.Close()
+
+	baseCmd := constructBaseCmd(endpoint)
+	baseCmd = append(baseCmd, "s3api",
+		"get-object",
+		"--bucket", bucket,
+		"--key", key,
+		bodyFile.Name())
+
+	runAwsCommandWithTimout(accessKey, secretKey, baseCmd, 5*time.Minute)
+
+	return bodyFile.Name()
+}
+
 func createBucket(region, bucket, endpoint, accessKey, secretKey string) {
 	baseCmd := constructBaseCmd(endpoint)
 	baseCmd = append(baseCmd, "s3api",
@@ -352,13 +417,17 @@ func deleteFile(bucket, endpoint, key, accessKey, secretKey string) string {
 }
 
 func runAwsCommand(accessKey string, secretKey string, baseCmd []string) *bytes.Buffer {
+	return runAwsCommandWithTimout(accessKey, secretKey, baseCmd, 1*time.Minute)
+}
+
+func runAwsCommandWithTimout(accessKey string, secretKey string, baseCmd []string, timeout time.Duration) *bytes.Buffer {
 	outputBuffer := new(bytes.Buffer)
 	awsCmd := newAwsCommand(accessKey, secretKey, baseCmd)
 
 	fmt.Fprintf(GinkgoWriter, "Running command: aws %s", strings.Join(baseCmd, " "))
 	session, err := gexec.Start(awsCmd, io.MultiWriter(GinkgoWriter, outputBuffer), GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
-	Eventually(session, 1*time.Minute).Should(gexec.Exit())
+	Eventually(session, timeout).Should(gexec.Exit())
 	Expect(session.ExitCode()).To(BeZero(), string(session.Err.Contents()))
 
 	return outputBuffer

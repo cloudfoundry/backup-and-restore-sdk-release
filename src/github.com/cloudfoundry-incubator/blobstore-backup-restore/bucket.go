@@ -91,8 +91,18 @@ func (bucket S3Bucket) CopyVersions(sourceBucketRegion, sourceBucketName string,
 		return err
 	}
 
+	sourceS3Api, err := NewS3API(bucket.endpoint, sourceBucketRegion, bucket.accessKey.Id, bucket.accessKey.Secret)
+	if err != nil {
+		return err
+	}
+
 	for _, versionToCopy := range versionsToCopy {
-		err = s3Api.CopyVersion(sourceBucketName, versionToCopy.BlobKey, versionToCopy.Id, bucket.name)
+		blobSize, err := sourceS3Api.GetBlobSize(sourceBucketName, versionToCopy.BlobKey, versionToCopy.Id)
+		if err != nil {
+			return err
+		}
+
+		err = s3Api.CopyVersion(sourceBucketName, versionToCopy.BlobKey, versionToCopy.Id, bucket.name, blobSize)
 		if err != nil {
 			return err
 		}
