@@ -53,13 +53,13 @@ var _ = Describe("mysql", func() {
 					databaseName,
 				)
 				brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
-			})
-
-			It("backs up and restores the database successfully", func() {
 				brJob.RunOnVMAndSucceed(
 					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 						dbDumpPath, configPath))
 
+			})
+
+			It("restores the database successfully", func() {
 				RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
 				RunSQLCommand("UPDATE places SET NAME = 'New Place';", connection)
 
@@ -76,6 +76,20 @@ var _ = Describe("mysql", func() {
 				Expect(FetchSQLColumn("SELECT name FROM places;", connection)).NotTo(
 					ConsistOf("New Place"))
 			})
+
+			Context("when tables do not exist", func() {
+				It("restores the tables successfully", func() {
+					RunSQLCommand("DROP TABLE people;", connection)
+
+					brJob.RunOnVMAndSucceed(
+						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
+							configPath, dbDumpPath))
+
+					Expect(FetchSQLColumn("SELECT name FROM people;", connection)).
+						To(ConsistOf("Old Person"))
+				})
+			})
+
 		})
 
 		Context("when some existing 'tables' are specified in config", func() {

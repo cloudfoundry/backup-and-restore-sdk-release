@@ -726,6 +726,7 @@ var _ = Describe("Postgres", func() {
 						"--format=custom",
 						fmt.Sprintf("--dbname=%s", databaseName),
 						"--clean",
+						"--if-exists",
 						HavePrefix("--use-list="),
 						artifactFile,
 					}
@@ -789,6 +790,7 @@ var _ = Describe("Postgres", func() {
 							"--format=custom",
 							fmt.Sprintf("--dbname=%s", databaseName),
 							"--clean",
+							"--if-exists",
 							HavePrefix("--use-list="),
 							artifactFile,
 						}
@@ -854,6 +856,7 @@ var _ = Describe("Postgres", func() {
 									"--format=custom",
 									fmt.Sprintf("--dbname=%s", databaseName),
 									"--clean",
+									"--if-exists",
 									HavePrefix("--use-list="),
 									artifactFile,
 								}
@@ -919,6 +922,7 @@ var _ = Describe("Postgres", func() {
 									"--format=custom",
 									fmt.Sprintf("--dbname=%s", databaseName),
 									"--clean",
+									"--if-exists",
 									HavePrefix("--use-list="),
 									artifactFile,
 								}
@@ -987,6 +991,7 @@ var _ = Describe("Postgres", func() {
 									"--format=custom",
 									fmt.Sprintf("--dbname=%s", databaseName),
 									"--clean",
+									"--if-exists",
 									HavePrefix("--use-list="),
 									artifactFile,
 								}
