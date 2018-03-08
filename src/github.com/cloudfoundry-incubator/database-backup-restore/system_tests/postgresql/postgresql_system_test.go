@@ -93,7 +93,7 @@ var _ = Describe("postgres", func() {
 		brJob.RunOnVMAndSucceed(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath))
 	})
 
-	Context("database backup is successful", func() {
+	Context("database dump is successful", func() {
 		BeforeEach(func() {
 			configJson := fmt.Sprintf(
 				`{
@@ -110,13 +110,14 @@ var _ = Describe("postgres", func() {
 				databaseName,
 			)
 			brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+		})
+
+		It("backs up the Postgres database", func() {
 			brJob.RunOnVMAndSucceed(
 				fmt.Sprintf(`/var/vcap/jobs/database-backup-restorer/bin/backup --config %s --artifact-file %s`,
 					configPath, dbDumpPath))
 			brJob.RunOnVMAndSucceed(fmt.Sprintf("ls -l %s", dbDumpPath))
-		})
 
-		It("restores the Postgres database", func() {
 			pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
 			pgConnection.RunSQLCommand("UPDATE places SET NAME = 'New Place';")
 
@@ -132,19 +133,6 @@ var _ = Describe("postgres", func() {
 				To(ConsistOf("Old Place"))
 			Expect(pgConnection.FetchSQLColumn("SELECT name FROM places;")).
 				NotTo(ConsistOf("New Place"))
-		})
-
-		Context("when tables do not exist", func() {
-			It("restores the tables successfully", func() {
-				pgConnection.RunSQLCommand("DROP TABLE people;")
-
-				brJob.RunOnVMAndSucceed(
-					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
-						configPath, dbDumpPath))
-
-				Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
-					To(ConsistOf("Old Person"))
-			})
 		})
 
 	})
