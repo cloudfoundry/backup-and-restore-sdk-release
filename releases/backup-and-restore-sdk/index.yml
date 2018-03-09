@@ -28,4 +28,6 @@ builds:
     version: 1.5.0
   48ef6026-035d-4df9-9475-781ff3e76751:
     version: 1.5.1
+  91caa178-671e-4a2d-83c7-1fa68fd0eba5:
+    version: 1.5.2
 format-version: '2'
