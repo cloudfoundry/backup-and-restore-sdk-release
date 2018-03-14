@@ -40,3 +40,4 @@ properties:
         region: "eu-west-1"
         aws_access_key_id: "AWS_ACCESS_KEY_ID"
         aws_secret_access_key: "AWS_SECRET_ACCESS_KEY"
+        endpoint: "endpoint_to_s3_compatible_blobstore" # only configure if connecting to non-aws s3-compatible blobstore. e.g. ecs
