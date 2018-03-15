@@ -21,6 +21,9 @@ releases:
 - name: backup-and-restore-sdk
   version: ((backup-and-restore-sdk-release-version))
   url: ((backup-and-restore-sdk-release-url))
+- name: minio
+  version: latest
+  url: https://bosh.io/d/github.com/minio/minio-boshrelease
 
 stemcells:
 - alias: trusty
@@ -91,6 +94,45 @@ instance_groups:
           aws_access_key_id: ((aws-access-key-id))
           aws_secret_access_key: ((aws-secret-access-key))
   azs: [z1]
+- name: unversioned-custom-ca-cert-backuper
+  instances: 1
+  vm_type: small
+  persistent_disk_type: fifty
+  stemcell: trusty
+  update:
+    serial: true
+  networks:
+  - name: concourse
+  jobs:
+  - name: s3-versioned-blobstore-backup-restorer # temporarily using the versioned job until non-versioned is implemented
+    release: backup-and-restore-sdk
+    properties:
+      enabled: true
+      buckets:
+        bucket_identifier:
+          name: ((s3-unversioned-bucket-name))
+          region: ((s3-unversioned-bucket-region))
+          aws_access_key_id: ((aws-access-key-id))
+          aws_secret_access_key: ((aws-secret-access-key))
+  azs: [z1]
+- name: minio
+  azs: [z1]
+  instances: 1
+  vm_type: small
+  persistent_disk_type: fifty
+  stemcell: trusty
+  networks:
+  - name: concourse
+  jobs:
+  - name: minio-server
+    release: minio
+    properties:
+      credential:
+        accesskey: ((minio-access-key))
+        secretkey: ((minio-secret-key))
+      port: 9000
+
+
 
 update:
   canaries: 1
