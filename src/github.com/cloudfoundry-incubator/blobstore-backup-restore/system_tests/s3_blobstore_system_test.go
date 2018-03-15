@@ -32,6 +32,7 @@ var _ = Describe("S3 backuper", func() {
 	var backuperInstance JobInstance
 	var cloneBackuperInstance JobInstance
 	var unversionedBackuperInstance JobInstance
+	var unversionedCustomCaCertBackuperInstance JobInstance
 
 	BeforeEach(func() {
 		backuperInstance = JobInstance{
@@ -47,6 +48,11 @@ var _ = Describe("S3 backuper", func() {
 		unversionedBackuperInstance = JobInstance{
 			deployment:    MustHaveEnv("BOSH_DEPLOYMENT"),
 			instance:      "unversioned-backuper",
+			instanceIndex: "0",
+		}
+		unversionedCustomCaCertBackuperInstance = JobInstance{
+			deployment:    MustHaveEnv("BOSH_DEPLOYMENT"),
+			instance:      "unversioned-custom-ca-cert-backuper",
 			instanceIndex: "0",
 		}
 
@@ -125,6 +131,14 @@ var _ = Describe("S3 backuper", func() {
 		Expect(session).To(gexec.Exit(1))
 		Expect(session.Out).To(gbytes.Say("is not versioned"))
 		Expect(unversionedBackuperInstance.runOnInstance("stat " + artifactDirPath + "/blobstore.json")).To(gexec.Exit(1))
+	})
+
+	It("connects with a blobstore with custom CA cert", func() {
+		session := unversionedCustomCaCertBackuperInstance.runOnInstance("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
+			" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
+
+		Expect(session).To(gexec.Exit(1))
+		Expect(session.Out).NotTo(gbytes.Say("CERTIFICATE_VERIFY_FAILED"))
 	})
 })
 
