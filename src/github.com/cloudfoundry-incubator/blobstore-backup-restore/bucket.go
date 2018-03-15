@@ -108,11 +108,6 @@ func (bucket S3Bucket) CopyVersions(sourceBucketRegion, sourceBucketName string,
 		}
 	}
 
-	var keysThatShouldBePresentInBucket []string
-	for _, versionToCopy := range versionsToCopy {
-		keysThatShouldBePresentInBucket = append(keysThatShouldBePresentInBucket, versionToCopy.BlobKey)
-	}
-
 	return nil
 }
 
