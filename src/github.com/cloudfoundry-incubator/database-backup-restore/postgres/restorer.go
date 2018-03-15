@@ -44,7 +44,7 @@ func (r Restorer) Action(artifactFilePath string) error {
 		"--format=custom",
 		"--dbname=" + r.config.Database,
 		"--clean",
-                "--if-exists",
+		"--if-exists",
 		fmt.Sprintf("--use-list=%s", listFile.Name()),
 		artifactFilePath,
 	}
