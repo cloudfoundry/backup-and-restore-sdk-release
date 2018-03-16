@@ -19,9 +19,10 @@ const partSize int64 = 100 * 1024 * 1024
 
 func NewS3API(endpoint, regionName, accessKeyId, accessKeySecret string) (S3Api, error) {
 	awsSession, err := session.NewSession(&aws.Config{
-		Region:      &regionName,
-		Credentials: credentials.NewStaticCredentials(accessKeyId, accessKeySecret, ""),
-		Endpoint:    aws.String(endpoint),
+		Region:           &regionName,
+		Credentials:      credentials.NewStaticCredentials(accessKeyId, accessKeySecret, ""),
+		Endpoint:         aws.String(endpoint),
+		S3ForcePathStyle: aws.Bool(true),
 	})
 
 	if err != nil {
