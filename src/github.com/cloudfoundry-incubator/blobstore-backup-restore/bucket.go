@@ -13,7 +13,6 @@ type Bucket interface {
 }
 
 type S3Bucket struct {
-	awsCliPath string
 	name       string
 	regionName string
 	accessKey  S3AccessKey
@@ -25,9 +24,8 @@ type S3AccessKey struct {
 	Secret string
 }
 
-func NewS3Bucket(awsCliPath, name, region, endpoint string, accessKey S3AccessKey) S3Bucket {
+func NewS3Bucket(name, region, endpoint string, accessKey S3AccessKey) S3Bucket {
 	return S3Bucket{
-		awsCliPath: awsCliPath,
 		name:       name,
 		regionName: region,
 		accessKey:  accessKey,

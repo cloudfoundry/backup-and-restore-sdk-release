@@ -1,7 +1,3 @@
-aws-cli/awscli-bundle-1.11.91.zip:
-  size: 8947005
-  object_id: 8b827dd1-825b-44c0-61a3-1c621afad6a4
-  sha: fb57bc0a89e755cc3016b4ec6767b0d5b82f1885
 boost/boost_1_59_0.tar.gz:
   size: 83709983
   object_id: 2bb21a57-51e9-471f-660a-edc788238fee
@@ -34,7 +30,3 @@ postgres/postgresql-9.6.3.tar.gz:
   size: 25536998
   object_id: 0c2ebc06-e261-4bdb-a049-2c74fca31217
   sha: f596ca487e0c4d41ccc628b1d69b180fb23402db
-python/Python-3.6.2.tgz:
-  size: 22580749
-  object_id: 15eed7a1-bd40-49bc-5738-187b4146990a
-  sha: b157ed490a453387874b354b743d1ae656680403

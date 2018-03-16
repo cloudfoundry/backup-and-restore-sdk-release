@@ -3,8 +3,6 @@
 set -e
 
 <% if p('enabled') %>
-export AWS_CLI_PATH=/var/vcap/packages/backup-and-restore-sdk-aws-cli/bin/aws
-
 /var/vcap/packages/blobstore-backup-restorer/bin/blobstore-backup-restore \
     --backup \
     --config /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/config/buckets.json \

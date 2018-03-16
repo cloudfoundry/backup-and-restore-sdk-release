@@ -20,8 +20,6 @@ func main() {
 		exitWithError(err.Error())
 	}
 
-	awsCliPath := getEnv("AWS_CLI_PATH")
-
 	artifact := blobstore.NewFileArtifact(commandFlags.ArtifactFilePath)
 
 	config, err := ioutil.ReadFile(commandFlags.ConfigPath)
@@ -35,7 +33,7 @@ func main() {
 		exitWithError("Failed to parse config: %s", err.Error())
 	}
 
-	buckets := makeBuckets(awsCliPath, bucketsConfig)
+	buckets := makeBuckets(bucketsConfig)
 
 	if commandFlags.IsRestore {
 		err = blobstore.NewRestorer(buckets, artifact).Restore()
@@ -61,12 +59,11 @@ func getEnv(varName string) string {
 	return value
 }
 
-func makeBuckets(awsCliPath string, config map[string]BucketConfig) map[string]blobstore.Bucket {
+func makeBuckets(config map[string]BucketConfig) map[string]blobstore.Bucket {
 	var buckets = map[string]blobstore.Bucket{}
 
 	for identifier, bucketConfig := range config {
 		buckets[identifier] = blobstore.NewS3Bucket(
-			awsCliPath,
 			bucketConfig.Name,
 			bucketConfig.Region,
 			bucketConfig.Endpoint,

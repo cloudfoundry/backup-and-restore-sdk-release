@@ -1,4 +1,0 @@
-set -e
-
-unzip aws-cli/awscli-bundle-1.11.91.zip
-/var/vcap/packages/backup-and-restore-sdk-python/bin/python3 ./awscli-bundle/install -i $BOSH_INSTALL_TARGET

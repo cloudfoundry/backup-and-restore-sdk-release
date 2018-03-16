@@ -24,8 +24,6 @@ templates:
 
 packages:
 - blobstore-backup-restorer
-- backup-and-restore-sdk-aws-cli
-- backup-and-restore-sdk-python
 
 properties:
   enabled:
