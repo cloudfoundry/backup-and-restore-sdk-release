@@ -58,7 +58,7 @@ var _ = Describe("S3Bucket", func() {
 			createBucket(mainRegion, unversionedBucketName, endpoint, accessKey, secretKey)
 			uploadFile(unversionedBucketName, endpoint, "unversioned-test", "UNVERSIONED-TEST", accessKey, secretKey)
 
-			bucketObjectUnderTest = NewS3Bucket("aws", versionedBucketName, mainRegion, endpoint, creds)
+			bucketObjectUnderTest = NewS3Bucket(versionedBucketName, mainRegion, endpoint, creds)
 		})
 
 		AfterEach(func() {
@@ -89,7 +89,7 @@ var _ = Describe("S3Bucket", func() {
 
 			Context("when retrieving versions fails", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest = NewS3Bucket("aws", versionedBucketName, mainRegion, endpoint, S3AccessKey{})
+					bucketObjectUnderTest = NewS3Bucket(versionedBucketName, mainRegion, endpoint, S3AccessKey{})
 				})
 
 				It("returns the error", func() {
@@ -100,7 +100,7 @@ var _ = Describe("S3Bucket", func() {
 
 			Context("when the bucket is not versioned", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest = NewS3Bucket("aws", unversionedBucketName, mainRegion, endpoint, creds)
+					bucketObjectUnderTest = NewS3Bucket(unversionedBucketName, mainRegion, endpoint, creds)
 				})
 
 				It("fails", func() {
@@ -137,7 +137,7 @@ var _ = Describe("S3Bucket", func() {
 
 			Context("when putting versions fails", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest = NewS3Bucket("aws", versionedBucketName, mainRegion, endpoint, S3AccessKey{})
+					bucketObjectUnderTest = NewS3Bucket(versionedBucketName, mainRegion, endpoint, S3AccessKey{})
 				})
 
 				It("errors", func() {
@@ -147,7 +147,7 @@ var _ = Describe("S3Bucket", func() {
 
 			Context("when the bucket is not versioned", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest = NewS3Bucket("aws", unversionedBucketName, mainRegion, endpoint, creds)
+					bucketObjectUnderTest = NewS3Bucket(unversionedBucketName, mainRegion, endpoint, creds)
 				})
 
 				It("fails", func() {
@@ -231,7 +231,7 @@ var _ = Describe("S3Bucket", func() {
 			}
 
 			deleteAllVersions(region, bucketName, endpoint, creds.Id, creds.Secret)
-			bucketObjectUnderTest = NewS3Bucket("aws", bucketName, region, endpoint, creds)
+			bucketObjectUnderTest = NewS3Bucket(bucketName, region, endpoint, creds)
 		})
 
 		Context("when backup an empty bucket", func() {
@@ -268,7 +268,7 @@ var _ = Describe("S3Bucket", func() {
 			createBucket(region, testBucketName, endpoint, creds.Id, creds.Secret)
 			enableBucketVersioning(testBucketName, endpoint, creds.Id, creds.Secret)
 
-			bucketObjectUnderTest = NewS3Bucket("aws", testBucketName, region, endpoint, creds)
+			bucketObjectUnderTest = NewS3Bucket(testBucketName, region, endpoint, creds)
 		})
 
 		AfterEach(func() {
@@ -293,7 +293,7 @@ var _ = Describe("S3Bucket", func() {
 
 	Describe("Versions with lots of versions on AWS", func() {
 		BeforeEach(func() {
-			bucketObjectUnderTest = NewS3Bucket("aws", "sdk-big-bucket-integration-test", "eu-west-1", "", S3AccessKey{
+			bucketObjectUnderTest = NewS3Bucket("sdk-big-bucket-integration-test", "eu-west-1", "", S3AccessKey{
 				Id:     os.Getenv("TEST_AWS_ACCESS_KEY_ID"),
 				Secret: os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
 			})
