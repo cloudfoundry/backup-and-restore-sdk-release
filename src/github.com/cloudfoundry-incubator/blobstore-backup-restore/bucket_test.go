@@ -28,6 +28,7 @@ import (
 
 var _ = Describe("S3Bucket", func() {
 	var bucketObjectUnderTest S3Bucket
+	var err error
 
 	var firstVersionOfTest1 string
 	var secondVersionOfTest1 string
@@ -58,7 +59,8 @@ var _ = Describe("S3Bucket", func() {
 			createBucket(mainRegion, unversionedBucketName, endpoint, accessKey, secretKey)
 			uploadFile(unversionedBucketName, endpoint, "unversioned-test", "UNVERSIONED-TEST", accessKey, secretKey)
 
-			bucketObjectUnderTest = NewS3Bucket(versionedBucketName, mainRegion, endpoint, creds)
+			bucketObjectUnderTest, err = NewS3Bucket(versionedBucketName, mainRegion, endpoint, creds)
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		AfterEach(func() {
@@ -69,7 +71,6 @@ var _ = Describe("S3Bucket", func() {
 
 		Describe("Versions", func() {
 			var versions []Version
-			var err error
 
 			JustBeforeEach(func() {
 				versions, err = bucketObjectUnderTest.Versions()
@@ -89,18 +90,19 @@ var _ = Describe("S3Bucket", func() {
 
 			Context("when retrieving versions fails", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest = NewS3Bucket(versionedBucketName, mainRegion, endpoint, S3AccessKey{})
+					bucketObjectUnderTest, err = NewS3Bucket(versionedBucketName, mainRegion, endpoint, S3AccessKey{})
+					Expect(err).NotTo(HaveOccurred())
 				})
 
 				It("returns the error", func() {
 					Expect(versions).To(BeNil())
-					Expect(err).To(MatchError(ContainSubstring("failed to retrieve versions from bucket")))
+					Expect(err).To(MatchError(MatchRegexp("failed to check if bucket (.*) is versioned")))
 				})
 			})
 
 			Context("when the bucket is not versioned", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest = NewS3Bucket(unversionedBucketName, mainRegion, endpoint, creds)
+					bucketObjectUnderTest, err = NewS3Bucket(unversionedBucketName, mainRegion, endpoint, creds)
 				})
 
 				It("fails", func() {
@@ -111,8 +113,6 @@ var _ = Describe("S3Bucket", func() {
 		})
 
 		Describe("CopyVersions from same bucket", func() {
-			var err error
-
 			BeforeEach(func() {
 				uploadFile(versionedBucketName, endpoint, "test-3", "TEST-3-A", accessKey, secretKey)
 			})
@@ -137,7 +137,7 @@ var _ = Describe("S3Bucket", func() {
 
 			Context("when putting versions fails", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest = NewS3Bucket(versionedBucketName, mainRegion, endpoint, S3AccessKey{})
+					bucketObjectUnderTest, err = NewS3Bucket(versionedBucketName, mainRegion, endpoint, S3AccessKey{})
 				})
 
 				It("errors", func() {
@@ -147,7 +147,7 @@ var _ = Describe("S3Bucket", func() {
 
 			Context("when the bucket is not versioned", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest = NewS3Bucket(unversionedBucketName, mainRegion, endpoint, creds)
+					bucketObjectUnderTest, err = NewS3Bucket(unversionedBucketName, mainRegion, endpoint, creds)
 				})
 
 				It("fails", func() {
@@ -159,7 +159,6 @@ var _ = Describe("S3Bucket", func() {
 		Describe("CopyVersions from different bucket", func() {
 			var secondaryBucketName string
 			var versionOfFileWhichWasSubsequentlyDeleted, versionOfFileToBeRestored string
-			var err error
 
 			BeforeEach(func() {
 				deleteAllVersions(mainRegion, versionedBucketName, endpoint, accessKey, secretKey)
@@ -231,7 +230,7 @@ var _ = Describe("S3Bucket", func() {
 			}
 
 			deleteAllVersions(region, bucketName, endpoint, creds.Id, creds.Secret)
-			bucketObjectUnderTest = NewS3Bucket(bucketName, region, endpoint, creds)
+			bucketObjectUnderTest, err = NewS3Bucket(bucketName, region, endpoint, creds)
 		})
 
 		Context("when backup an empty bucket", func() {
@@ -268,7 +267,7 @@ var _ = Describe("S3Bucket", func() {
 			createBucket(region, testBucketName, endpoint, creds.Id, creds.Secret)
 			enableBucketVersioning(testBucketName, endpoint, creds.Id, creds.Secret)
 
-			bucketObjectUnderTest = NewS3Bucket(testBucketName, region, endpoint, creds)
+			bucketObjectUnderTest, err = NewS3Bucket(testBucketName, region, endpoint, creds)
 		})
 
 		AfterEach(func() {
@@ -287,13 +286,13 @@ var _ = Describe("S3Bucket", func() {
 			Expect(listFiles(testBucketName, endpoint, creds.Id, creds.Secret)).To(ConsistOf("big_file"))
 
 			localFilePath := downloadFileToTmp(testBucketName, endpoint, "big_file", creds.Id, creds.Secret)
-			Expect(md5(localFilePath)).To(Equal("188f500de28479d67e7375566750472e58e4cec1"))
+			Expect(shasum(localFilePath)).To(Equal("188f500de28479d67e7375566750472e58e4cec1"))
 		})
 	})
 
 	Describe("Versions with lots of versions on AWS", func() {
 		BeforeEach(func() {
-			bucketObjectUnderTest = NewS3Bucket("sdk-big-bucket-integration-test", "eu-west-1", "", S3AccessKey{
+			bucketObjectUnderTest, err = NewS3Bucket("sdk-big-bucket-integration-test", "eu-west-1", "", S3AccessKey{
 				Id:     os.Getenv("TEST_AWS_ACCESS_KEY_ID"),
 				Secret: os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
 			})
@@ -308,7 +307,7 @@ var _ = Describe("S3Bucket", func() {
 	})
 })
 
-func md5(filePath string) string {
+func shasum(filePath string) string {
 	output, err := exec.Command("shasum", filePath).Output()
 	Expect(err).NotTo(HaveOccurred())
 	md5 := strings.Split(string(output), " ")[0]
