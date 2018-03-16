@@ -54,6 +54,33 @@ func (s3Api S3Api) IsVersioned(bucketName string) (bool, error) {
 	return output != nil && output.Status != nil && *output.Status == "Enabled", nil
 }
 
+func (s3Api S3Api) ListObjectVersions(bucketName string) ([]Version, error) {
+	var versions []Version
+
+	err := s3Api.s3Client.ListObjectVersionsPages(&s3.ListObjectVersionsInput{
+		Bucket: aws.String(bucketName),
+	}, func(output *s3.ListObjectVersionsOutput, lastPage bool) bool {
+		for _, v := range output.Versions {
+			fmt.Println(*v.Key)
+
+			version := Version{
+				Key:      *v.Key,
+				Id:       *v.VersionId,
+				IsLatest: *v.IsLatest,
+			}
+			versions = append(versions, version)
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return versions, nil
+}
+
 func (s3Api S3Api) GetBlobSize(bucketName, blobKey, versionId string) (int64, error) {
 	headObjectOutput, err := s3Api.s3Client.HeadObject(&s3.HeadObjectInput{
 		Bucket:    aws.String(bucketName),

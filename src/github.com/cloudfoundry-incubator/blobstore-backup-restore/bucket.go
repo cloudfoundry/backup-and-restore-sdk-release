@@ -1,9 +1,7 @@
 package blobstore
 
 import (
-	"encoding/json"
 	"fmt"
-	"strings"
 )
 
 //go:generate counterfeiter -o fakes/fake_bucket.go . Bucket
@@ -46,33 +44,23 @@ func (bucket S3Bucket) RegionName() string {
 }
 
 func (bucket S3Bucket) Versions() ([]Version, error) {
-	s3Cli := NewS3CLI(bucket.awsCliPath, bucket.endpoint, bucket.regionName, bucket.accessKey.Id, bucket.accessKey.Secret)
+	s3Api, err := NewS3API(bucket.endpoint, bucket.regionName, bucket.accessKey.Id, bucket.accessKey.Secret)
 
-	bucketIsVersioned, err := s3Cli.IsVersioned(bucket.name)
+	bucketIsVersioned, err := s3Api.IsVersioned(bucket.name)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to retrieve versions from bucket %s: %s", bucket.name, err)
 	}
 
 	if !bucketIsVersioned {
 		return nil, fmt.Errorf("bucket %s is not versioned", bucket.name)
 	}
 
-	output, err := s3Cli.ListObjectVersions(bucket.name)
+	versions, err := s3Api.ListObjectVersions(bucket.name)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to retrieve versions from bucket %s: %s", bucket.name, err)
 	}
 
-	if strings.TrimSpace(string(output)) == "" {
-		return []Version{}, nil
-	}
-
-	response := S3ListVersionsResponse{}
-	err = json.Unmarshal(output, &response)
-	if err != nil {
-		return nil, err
-	}
-
-	return response.Versions, nil
+	return versions, nil
 }
 
 func (bucket S3Bucket) CopyVersions(sourceBucketRegion, sourceBucketName string, versionsToCopy []BlobVersion) error {
@@ -111,20 +99,8 @@ func (bucket S3Bucket) CopyVersions(sourceBucketRegion, sourceBucketName string,
 	return nil
 }
 
-type S3ListVersionsResponse struct {
-	Versions []Version
-}
-
 type Version struct {
 	Key      string
 	Id       string `json:"VersionId"`
 	IsLatest bool
-}
-
-type S3ListResponse struct {
-	Contents []Object
-}
-
-type Object struct {
-	Key string
 }

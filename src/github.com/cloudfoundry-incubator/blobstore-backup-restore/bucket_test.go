@@ -94,7 +94,7 @@ var _ = Describe("S3Bucket", func() {
 
 				It("returns the error", func() {
 					Expect(versions).To(BeNil())
-					Expect(err).To(MatchError(ContainSubstring("An error occurred")))
+					Expect(err).To(MatchError(ContainSubstring("failed to retrieve versions from bucket")))
 				})
 			})
 
@@ -288,6 +288,22 @@ var _ = Describe("S3Bucket", func() {
 
 			localFilePath := downloadFileToTmp(testBucketName, endpoint, "big_file", creds.Id, creds.Secret)
 			Expect(md5(localFilePath)).To(Equal("188f500de28479d67e7375566750472e58e4cec1"))
+		})
+	})
+
+	Describe("Versions with lots of versions on AWS", func() {
+		BeforeEach(func() {
+			bucketObjectUnderTest = NewS3Bucket("aws", "sdk-big-bucket-integration-test", "eu-west-1", "", S3AccessKey{
+				Id:     os.Getenv("TEST_AWS_ACCESS_KEY_ID"),
+				Secret: os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
+			})
+		})
+
+		It("works", func() {
+			versions, err := bucketObjectUnderTest.Versions()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(versions)).To(Equal(1001))
 		})
 	})
 })
