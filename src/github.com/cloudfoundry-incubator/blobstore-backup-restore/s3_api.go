@@ -61,8 +61,6 @@ func (s3Api S3Api) ListObjectVersions(bucketName string) ([]Version, error) {
 		Bucket: aws.String(bucketName),
 	}, func(output *s3.ListObjectVersionsOutput, lastPage bool) bool {
 		for _, v := range output.Versions {
-			fmt.Println(*v.Key)
-
 			version := Version{
 				Key:      *v.Key,
 				Id:       *v.VersionId,
