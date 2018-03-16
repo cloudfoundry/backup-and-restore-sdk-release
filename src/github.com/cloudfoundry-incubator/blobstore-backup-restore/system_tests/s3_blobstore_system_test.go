@@ -139,6 +139,7 @@ var _ = Describe("S3 backuper", func() {
 
 		Expect(session).To(gexec.Exit(1))
 		Expect(session.Out).NotTo(gbytes.Say("CERTIFICATE_VERIFY_FAILED"))
+		Expect(session.Out).NotTo(gbytes.Say("no such host"))
 	})
 })
 
