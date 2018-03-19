@@ -110,6 +110,19 @@ var _ = Describe("S3Bucket", func() {
 					Expect(err).To(MatchError(ContainSubstring("is not versioned")))
 				})
 			})
+
+			Context("when the bucket has a lot of versions", func() {
+				BeforeEach(func() {
+					bucketObjectUnderTest, err = NewS3Bucket("sdk-big-bucket-integration-test", mainRegion, endpoint, creds)
+				})
+
+				It("works", func() {
+					versions, err := bucketObjectUnderTest.Versions()
+
+					Expect(err).NotTo(HaveOccurred())
+					Expect(len(versions)).To(Equal(2001))
+				})
+			})
 		})
 
 		Describe("CopyVersions from same bucket", func() {
@@ -287,22 +300,6 @@ var _ = Describe("S3Bucket", func() {
 
 			localFilePath := downloadFileToTmp(testBucketName, endpoint, "big_file", creds.Id, creds.Secret)
 			Expect(shasum(localFilePath)).To(Equal("188f500de28479d67e7375566750472e58e4cec1"))
-		})
-	})
-
-	Describe("Versions with lots of versions on AWS", func() {
-		BeforeEach(func() {
-			bucketObjectUnderTest, err = NewS3Bucket("sdk-big-bucket-integration-test", "eu-west-1", "", S3AccessKey{
-				Id:     os.Getenv("TEST_AWS_ACCESS_KEY_ID"),
-				Secret: os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
-			})
-		})
-
-		It("works", func() {
-			versions, err := bucketObjectUnderTest.Versions()
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(versions)).To(Equal(1001))
 		})
 	})
 })
