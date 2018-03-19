@@ -33,7 +33,10 @@ func main() {
 		exitWithError("Failed to parse config: %s", err.Error())
 	}
 
-	buckets := makeBuckets(bucketsConfig)
+	buckets, err := makeBuckets(bucketsConfig)
+	if err != nil {
+		exitWithError("Failed to establish session: %s", err.Error())
+	}
 
 	if commandFlags.IsRestore {
 		err = blobstore.NewRestorer(buckets, artifact).Restore()
@@ -59,11 +62,12 @@ func getEnv(varName string) string {
 	return value
 }
 
-func makeBuckets(config map[string]BucketConfig) map[string]blobstore.Bucket {
+func makeBuckets(config map[string]BucketConfig) (map[string]blobstore.Bucket, error) {
 	var buckets = map[string]blobstore.Bucket{}
 
+	var err error
 	for identifier, bucketConfig := range config {
-		buckets[identifier] = blobstore.NewS3Bucket(
+		buckets[identifier], err = blobstore.NewS3Bucket(
 			bucketConfig.Name,
 			bucketConfig.Region,
 			bucketConfig.Endpoint,
@@ -72,9 +76,13 @@ func makeBuckets(config map[string]BucketConfig) map[string]blobstore.Bucket {
 				Secret: bucketConfig.AwsSecretAccessKey,
 			},
 		)
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return buckets
+	return buckets, nil
 }
 
 type BucketConfig struct {
