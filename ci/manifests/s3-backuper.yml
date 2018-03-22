@@ -73,7 +73,7 @@ instance_groups:
           aws_access_key_id: ((aws-access-key-id))
           aws_secret_access_key: ((aws-secret-access-key))
   azs: [z1]
-- name: unversioned-backuper
+- name: versioned-backuper-unversioned-bucket
   instances: 1
   vm_type: small
   persistent_disk_type: fifty
@@ -89,8 +89,8 @@ instance_groups:
       enabled: true
       buckets:
         bucket_identifier:
-          name: ((s3-unversioned-bucket-name))
-          region: ((s3-unversioned-bucket-region))
+          name: ((s3-unversioned-bucket-name-for-versioned-backuper))
+          region: ((s3-unversioned-bucket-region-for-versioned-backuper))
           aws_access_key_id: ((aws-access-key-id))
           aws_secret_access_key: ((aws-secret-access-key))
   azs: [z1]
@@ -133,7 +133,29 @@ instance_groups:
         accesskey: ((minio-access-key))
         secretkey: ((minio-secret-key))
       port: 9000
-
+- name: s3-unversioned-backuper
+  instances: 1
+  vm_type: small
+  persistent_disk_type: fifty
+  stemcell: trusty
+  update:
+    serial: true
+  networks:
+  - name: concourse
+  jobs:
+  - name: s3-unversioned-blobstore-backup-restorer
+    release: backup-and-restore-sdk
+    properties:
+      enabled: true
+      buckets:
+        bucket_identifier:
+          name: ((s3-unversioned-bucket-name))
+          region: ((s3-unversioned-bucket-region))
+          aws_access_key_id: ((aws-access-key-id))
+          aws_secret_access_key: ((aws-secret-access-key))
+          backup:
+            name: ((s3-unversioned-backup-bucket-name))
+            region: ((s3-unversioned-backup-bucket-region))
 
 
 update:

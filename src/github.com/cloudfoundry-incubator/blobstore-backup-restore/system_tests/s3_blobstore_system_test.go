@@ -47,7 +47,7 @@ var _ = Describe("S3 backuper", func() {
 		}
 		unversionedBackuperInstance = JobInstance{
 			deployment:    MustHaveEnv("BOSH_DEPLOYMENT"),
-			instance:      "unversioned-backuper",
+			instance:      "versioned-backuper-unversioned-bucket",
 			instanceIndex: "0",
 		}
 		unversionedCustomCaCertBackuperInstance = JobInstance{
