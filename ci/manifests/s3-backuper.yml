@@ -134,6 +134,7 @@ instance_groups:
         secretkey: ((minio-secret-key))
       port: 9000
 - name: s3-unversioned-backuper
+  azs: [z1]
   instances: 1
   vm_type: small
   persistent_disk_type: fifty
@@ -156,7 +157,6 @@ instance_groups:
           backup:
             name: ((s3-unversioned-backup-bucket-name))
             region: ((s3-unversioned-backup-bucket-region))
-
 
 update:
   canaries: 1
