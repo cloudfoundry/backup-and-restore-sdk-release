@@ -30,4 +30,6 @@ builds:
     version: 1.5.1
   91caa178-671e-4a2d-83c7-1fa68fd0eba5:
     version: 1.5.2
+  1c14bf46-8259-4456-b768-f4c3201d881c:
+    version: 1.5.3
 format-version: '2'
