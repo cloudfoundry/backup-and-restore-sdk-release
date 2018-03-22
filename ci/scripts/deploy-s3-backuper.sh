@@ -34,9 +34,13 @@ bosh-cli --non-interactive \
   --var=aws-secret-access-key=${AWS_SECRET_ACCESS_KEY} \
   --var=s3-bucket-name=${S3_BUCKET_NAME} \
   --var=s3-cloned-bucket-name=${S3_CLONED_BUCKET_NAME} \
-  --var=s3-unversioned-bucket-name=${S3_UNVERSIONED_BUCKET_NAME} \
   --var=s3-region=${S3_REGION} \
   --var=s3-cloned-bucket-region=${S3_CLONED_BUCKET_REGION} \
+  --var=s3-unversioned-bucket-name-for-versioned-backuper=${S3_UNVERSIONED_BUCKET_NAME_FOR_VERSIONED_BACKUPER} \
+  --var=s3-unversioned-bucket-region-for-versioned-backuper=${S3_UNVERSIONED_BUCKET_REGION_FOR_VERSIONED_BACKUPER} \
+  --var=s3-unversioned-bucket-name=${S3_UNVERSIONED_BUCKET_NAME} \
   --var=s3-unversioned-bucket-region=${S3_UNVERSIONED_BUCKET_REGION} \
+  --var=s3-unversioned-backup-bucket-name=${S3_UNVERSIONED_BACKUP_BUCKET_NAME} \
+  --var=s3-unversioned-backup-bucket-region=${S3_UNVERSIONED_BACKUP_BUCKET_REGION} \
   --var=minio-access-key=${MINIO_ACCESS_KEY} \
   --var=minio-secret-key=${MINIO_SECRET_KEY}
