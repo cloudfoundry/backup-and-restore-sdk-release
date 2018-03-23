@@ -9,7 +9,7 @@ func NewVersionedRestorer(destinationBuckets map[string]Bucket, sourceArtifact A
 	return VersionedRestorer{destinationBuckets: destinationBuckets, sourceArtifact: sourceArtifact}
 }
 
-func (r VersionedRestorer) Restore() error {
+func (r VersionedRestorer) Run() error {
 	bucketSnapshots, err := r.sourceArtifact.Load()
 	if err != nil {
 		return err

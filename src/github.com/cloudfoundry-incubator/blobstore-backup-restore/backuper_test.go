@@ -36,7 +36,7 @@ var _ = Describe("VersionedBackuper", func() {
 	})
 
 	JustBeforeEach(func() {
-		err = backuper.Backup()
+		err = backuper.Run()
 	})
 
 	Context("when the buckets have data", func() {

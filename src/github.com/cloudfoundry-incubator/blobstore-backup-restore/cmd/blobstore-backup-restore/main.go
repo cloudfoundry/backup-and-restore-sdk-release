@@ -38,12 +38,14 @@ func main() {
 		exitWithError("Failed to establish session: %s", err.Error())
 	}
 
+	var runner blobstore.Runner
 	if commandFlags.IsRestore {
-		err = blobstore.NewVersionedRestorer(buckets, versionedArtifact).Restore()
+		runner = blobstore.NewVersionedRestorer(buckets, versionedArtifact)
 	} else {
-		err = blobstore.NewVersionedBackuper(buckets, versionedArtifact).Backup()
+		runner = blobstore.NewVersionedBackuper(buckets, versionedArtifact)
 	}
 
+	err = runner.Run()
 	if err != nil {
 		exitWithError(err.Error())
 	}

@@ -36,7 +36,7 @@ var _ = Describe("VersionedRestorer", func() {
 	})
 
 	JustBeforeEach(func() {
-		err = restorer.Restore()
+		err = restorer.Run()
 	})
 
 	Context("when the artifact is valid and copying versions to buckets works", func() {

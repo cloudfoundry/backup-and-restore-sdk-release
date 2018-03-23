@@ -14,7 +14,7 @@ func NewVersionedBackuper(sourceBuckets map[string]Bucket, destinationArtifact A
 	}
 }
 
-func (b VersionedBackuper) Backup() error {
+func (b VersionedBackuper) Run() error {
 	bucketSnapshots := map[string]BucketSnapshot{}
 
 	for identifier, bucketToBackup := range b.sourceBuckets {
