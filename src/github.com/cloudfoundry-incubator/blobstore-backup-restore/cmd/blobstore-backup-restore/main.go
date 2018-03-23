@@ -20,7 +20,7 @@ func main() {
 		exitWithError(err.Error())
 	}
 
-	artifact := blobstore.NewFileArtifact(commandFlags.ArtifactFilePath)
+	versionedArtifact := blobstore.NewVersionedFileArtifact(commandFlags.ArtifactFilePath)
 
 	config, err := ioutil.ReadFile(commandFlags.ConfigPath)
 	if err != nil {
@@ -39,9 +39,9 @@ func main() {
 	}
 
 	if commandFlags.IsRestore {
-		err = blobstore.NewRestorer(buckets, artifact).Restore()
+		err = blobstore.NewVersionedRestorer(buckets, versionedArtifact).Restore()
 	} else {
-		err = blobstore.NewBackuper(buckets, artifact).Backup()
+		err = blobstore.NewVersionedBackuper(buckets, versionedArtifact).Backup()
 	}
 
 	if err != nil {

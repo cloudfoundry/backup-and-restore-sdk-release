@@ -1,15 +1,15 @@
 package blobstore
 
-type Restorer struct {
+type VersionedRestorer struct {
 	destinationBuckets map[string]Bucket
 	sourceArtifact     Artifact
 }
 
-func NewRestorer(destinationBuckets map[string]Bucket, sourceArtifact Artifact) Restorer {
-	return Restorer{destinationBuckets: destinationBuckets, sourceArtifact: sourceArtifact}
+func NewVersionedRestorer(destinationBuckets map[string]Bucket, sourceArtifact Artifact) VersionedRestorer {
+	return VersionedRestorer{destinationBuckets: destinationBuckets, sourceArtifact: sourceArtifact}
 }
 
-func (r Restorer) Restore() error {
+func (r VersionedRestorer) Restore() error {
 	bucketSnapshots, err := r.sourceArtifact.Load()
 	if err != nil {
 		return err

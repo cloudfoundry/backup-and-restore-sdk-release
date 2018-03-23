@@ -13,15 +13,15 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("FileArtifact", func() {
+var _ = Describe("VersionedFileArtifact", func() {
 	var backupDir string
 	var artifactPath string
-	var fileArtifact FileArtifact
+	var fileArtifact VersionedFileArtifact
 
 	BeforeEach(func() {
 		backupDir, _ = ioutil.TempDir("", "bbr_test_")
 		artifactPath = filepath.Join(backupDir, "blobstore.json")
-		fileArtifact = NewFileArtifact(artifactPath)
+		fileArtifact = NewVersionedFileArtifact(artifactPath)
 	})
 
 	AfterEach(func() {
@@ -64,7 +64,7 @@ var _ = Describe("FileArtifact", func() {
 
 	Context("when saving the file fails", func() {
 		BeforeEach(func() {
-			fileArtifact = NewFileArtifact("/this/path/does/not/exist")
+			fileArtifact = NewVersionedFileArtifact("/this/path/does/not/exist")
 		})
 
 		It("returns an error", func() {
@@ -75,7 +75,7 @@ var _ = Describe("FileArtifact", func() {
 
 	Context("when reading the file fails", func() {
 		BeforeEach(func() {
-			fileArtifact = NewFileArtifact("/this/path/does/not/exist")
+			fileArtifact = NewVersionedFileArtifact("/this/path/does/not/exist")
 		})
 
 		It("returns an error", func() {

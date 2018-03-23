@@ -12,15 +12,15 @@ type Artifact interface {
 	Load() (map[string]BucketSnapshot, error)
 }
 
-type FileArtifact struct {
+type VersionedFileArtifact struct {
 	filePath string
 }
 
-func NewFileArtifact(filePath string) FileArtifact {
-	return FileArtifact{filePath: filePath}
+func NewVersionedFileArtifact(filePath string) VersionedFileArtifact {
+	return VersionedFileArtifact{filePath: filePath}
 }
 
-func (a FileArtifact) Save(backup map[string]BucketSnapshot) error {
+func (a VersionedFileArtifact) Save(backup map[string]BucketSnapshot) error {
 	marshalledBackup, err := json.MarshalIndent(backup, "", "  ")
 	if err != nil {
 		return err
@@ -34,7 +34,7 @@ func (a FileArtifact) Save(backup map[string]BucketSnapshot) error {
 	return nil
 }
 
-func (a FileArtifact) Load() (map[string]BucketSnapshot, error) {
+func (a VersionedFileArtifact) Load() (map[string]BucketSnapshot, error) {
 	bytes, err := ioutil.ReadFile(a.filePath)
 	if err != nil {
 		return nil, fmt.Errorf("could not read backup file: %s", err.Error())

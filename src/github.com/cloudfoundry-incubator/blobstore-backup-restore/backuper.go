@@ -2,19 +2,19 @@ package blobstore
 
 import "fmt"
 
-type Backuper struct {
+type VersionedBackuper struct {
 	sourceBuckets       map[string]Bucket
 	destinationArtifact Artifact
 }
 
-func NewBackuper(sourceBuckets map[string]Bucket, destinationArtifact Artifact) Backuper {
-	return Backuper{
+func NewVersionedBackuper(sourceBuckets map[string]Bucket, destinationArtifact Artifact) VersionedBackuper {
+	return VersionedBackuper{
 		sourceBuckets:       sourceBuckets,
 		destinationArtifact: destinationArtifact,
 	}
 }
 
-func (b Backuper) Backup() error {
+func (b VersionedBackuper) Backup() error {
 	bucketSnapshots := map[string]BucketSnapshot{}
 
 	for identifier, bucketToBackup := range b.sourceBuckets {

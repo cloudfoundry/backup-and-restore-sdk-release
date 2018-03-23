@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Restorer", func() {
+var _ = Describe("VersionedRestorer", func() {
 	var dropletsBucket *fakes.FakeBucket
 	var buildpacksBucket *fakes.FakeBucket
 	var packagesBucket *fakes.FakeBucket
@@ -19,7 +19,7 @@ var _ = Describe("Restorer", func() {
 
 	var err error
 
-	var restorer Restorer
+	var restorer VersionedRestorer
 
 	BeforeEach(func() {
 		dropletsBucket = new(fakes.FakeBucket)
@@ -28,7 +28,7 @@ var _ = Describe("Restorer", func() {
 
 		artifact = new(fakes.FakeArtifact)
 
-		restorer = NewRestorer(map[string]Bucket{
+		restorer = NewVersionedRestorer(map[string]Bucket{
 			"droplets":   dropletsBucket,
 			"buildpacks": buildpacksBucket,
 			"packages":   packagesBucket,

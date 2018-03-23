@@ -10,7 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore/fakes"
 )
 
-var _ = Describe("Backuper", func() {
+var _ = Describe("VersionedBackuper", func() {
 	var dropletsBucket *fakes.FakeBucket
 	var buildpacksBucket *fakes.FakeBucket
 	var packagesBucket *fakes.FakeBucket
@@ -19,7 +19,7 @@ var _ = Describe("Backuper", func() {
 
 	var err error
 
-	var backuper Backuper
+	var backuper VersionedBackuper
 
 	BeforeEach(func() {
 		dropletsBucket = new(fakes.FakeBucket)
@@ -28,7 +28,7 @@ var _ = Describe("Backuper", func() {
 
 		artifact = new(fakes.FakeArtifact)
 
-		backuper = NewBackuper(map[string]Bucket{
+		backuper = NewVersionedBackuper(map[string]Bucket{
 			"droplets":   dropletsBucket,
 			"buildpacks": buildpacksBucket,
 			"packages":   packagesBucket,
