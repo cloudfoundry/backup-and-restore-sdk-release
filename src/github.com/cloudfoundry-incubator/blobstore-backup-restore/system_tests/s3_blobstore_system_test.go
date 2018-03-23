@@ -145,7 +145,7 @@ var _ = Describe("S3 backuper", func() {
 })
 
 func getFileContentsFromBucket(region, bucket, key string) string {
-	outputBuffer := runAwsCommandOnBucket(
+	outputBuffer := runAwsCommandOnBucketSuccessfully(
 		"--region", region,
 		"s3",
 		"cp",
@@ -156,7 +156,7 @@ func getFileContentsFromBucket(region, bucket, key string) string {
 }
 
 func listFilesFromBucket(region, bucket string) []string {
-	outputBuffer := runAwsCommandOnBucket(
+	outputBuffer := runAwsCommandOnBucketSuccessfully(
 		"--region", region,
 		"s3api",
 		"list-objects",
@@ -179,29 +179,22 @@ func uploadTimestampedFileToBucket(region, bucket, prefix, body string) string {
 	return fileName
 }
 
-func writeFileInBucket(region, bucket, key, body string) string {
+func writeFileInBucket(region, bucket, key, body string) {
 	bodyFile, _ := ioutil.TempFile("", key)
 	bodyFile.WriteString(body)
 	bodyFile.Close()
 
-	outputBuffer := runAwsCommandOnBucket(
+	runAwsCommandOnBucketSuccessfully(
 		"--region", region,
 		"s3api",
 		"put-object",
 		"--bucket", bucket,
 		"--key", key,
 		"--body", bodyFile.Name())
-
-	var response PutResponse
-	json.Unmarshal(outputBuffer.Bytes(), &response)
-
-	Expect(response.VersionId).NotTo(BeEmpty(), "Bucket must be versioned!")
-
-	return response.VersionId
 }
 
 func deleteFileFromBucket(region, bucket, key string) string {
-	outputBuffer := runAwsCommandOnBucket(
+	outputBuffer := runAwsCommandOnBucketSuccessfully(
 		"--region", region,
 		"s3api",
 		"delete-object",
@@ -215,7 +208,7 @@ func deleteFileFromBucket(region, bucket, key string) string {
 }
 
 func deleteVersionFromBucket(region, bucket, key, versionId string) string {
-	outputBuffer := runAwsCommandOnBucket(
+	outputBuffer := runAwsCommandOnBucketSuccessfully(
 		"--region", region,
 		"s3api",
 		"delete-object",
@@ -230,7 +223,7 @@ func deleteVersionFromBucket(region, bucket, key, versionId string) string {
 }
 
 func deleteAllVersionsFromBucket(region, bucket string) {
-	outputBuffer := runAwsCommandOnBucket(
+	outputBuffer := runAwsCommandOnBucketSuccessfully(
 		"--region", region,
 		"s3api",
 		"list-object-versions",
@@ -248,7 +241,7 @@ func deleteAllVersionsFromBucket(region, bucket string) {
 	}
 }
 
-func runAwsCommandOnBucket(args ...string) *bytes.Buffer {
+func runAwsCommandOnBucketSuccessfully(args ...string) *bytes.Buffer {
 	outputBuffer := new(bytes.Buffer)
 	errorBuffer := new(bytes.Buffer)
 
