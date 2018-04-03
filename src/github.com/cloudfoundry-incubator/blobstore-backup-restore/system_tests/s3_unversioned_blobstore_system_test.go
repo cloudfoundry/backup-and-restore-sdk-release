@@ -1,3 +1,19 @@
+// Copyright (C) 2017-Present Pivotal Software, Inc. All rights reserved.
+//
+// This program and the accompanying materials are made available under
+// the terms of the under the Apache License, Version 2.0 (the "License”);
+// you may not use this file except in compliance with the License.
+//
+// You may obtain a copy of the License at
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package system_tests
 
 import (
@@ -9,6 +25,7 @@ import (
 
 	"os"
 
+	. "github.com/cloudfoundry-incubator/blobstore-backup-restore/system_tests/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -27,9 +44,9 @@ var _ = Describe("S3 unversioned backuper", func() {
 
 	BeforeEach(func() {
 		unversionedBackuperInstance = JobInstance{
-			deployment:    MustHaveEnv("BOSH_DEPLOYMENT"),
-			instance:      "s3-unversioned-backuper",
-			instanceIndex: "0",
+			Deployment:    MustHaveEnv("BOSH_DEPLOYMENT"),
+			Instance:      "s3-unversioned-backuper",
+			InstanceIndex: "0",
 		}
 
 		region = MustHaveEnv("S3_UNVERSIONED_BUCKET_REGION")
@@ -38,35 +55,38 @@ var _ = Describe("S3 unversioned backuper", func() {
 		backupRegion = MustHaveEnv("S3_UNVERSIONED_BACKUP_BUCKET_REGION")
 		backupBucket = MustHaveEnv("S3_UNVERSIONED_BACKUP_BUCKET_NAME")
 
+		DeleteAllFilesFromBucket(region, bucket)
+		DeleteAllFilesFromBucket(backupRegion, backupBucket)
+
 		instanceArtifactDirPath = "/tmp/s3-unversioned-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
-		unversionedBackuperInstance.runOnVMAndSucceed("mkdir -p " + instanceArtifactDirPath)
+		unversionedBackuperInstance.RunOnVMAndSucceed("mkdir -p " + instanceArtifactDirPath)
 		var err error
 		localArtifact, err = ioutil.TempFile("", "blobstore-")
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	AfterEach(func() {
-		unversionedBackuperInstance.runOnVMAndSucceed("rm -rf " + instanceArtifactDirPath)
+		unversionedBackuperInstance.RunOnVMAndSucceed("rm -rf " + instanceArtifactDirPath)
 		err := os.Remove(localArtifact.Name())
 		Expect(err).NotTo(HaveOccurred())
-		deleteAllFilesFromBucket(region, bucket)
-		deleteAllFilesFromBucket(backupRegion, backupBucket)
+		DeleteAllFilesFromBucket(region, bucket)
+		DeleteAllFilesFromBucket(backupRegion, backupBucket)
 	})
 
 	It("backs up from the source bucket to the backup bucket", func() {
-		blobKey = uploadTimestampedFileToBucket(region, bucket, "some/folder/file1", "FILE1")
+		blobKey = UploadTimestampedFileToBucket(region, bucket, "some/folder/file1", "FILE1")
 
-		unversionedBackuperInstance.runOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
+		unversionedBackuperInstance.RunOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
 			" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/backup")
 
-		filesList := listFilesFromBucket(backupRegion, backupBucket)
+		filesList := ListFilesFromBucket(backupRegion, backupBucket)
 
 		Expect(filesList).To(ConsistOf(MatchRegexp(
 			"\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/my_bucket/" + blobKey + "$")))
 
-		Expect(getFileContentsFromBucket(backupRegion, backupBucket, filesList[0])).To(Equal("FILE1"))
+		Expect(GetFileContentsFromBucket(backupRegion, backupBucket, filesList[0])).To(Equal("FILE1"))
 
-		session := unversionedBackuperInstance.downloadFromInstance(
+		session := unversionedBackuperInstance.DownloadFromInstance(
 			instanceArtifactDirPath+"/blobstore.json", localArtifact.Name())
 		Expect(session).Should(gexec.Exit(0))
 		fileContents, err := ioutil.ReadFile(localArtifact.Name())
