@@ -149,7 +149,7 @@ instance_groups:
     properties:
       enabled: true
       buckets:
-        bucket_identifier:
+        my_bucket:
           name: ((s3-unversioned-bucket-name))
           region: ((s3-unversioned-bucket-region))
           aws_access_key_id: ((aws-access-key-id))
