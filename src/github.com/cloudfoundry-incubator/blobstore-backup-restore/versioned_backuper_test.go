@@ -11,24 +11,24 @@ import (
 )
 
 var _ = Describe("VersionedBackuper", func() {
-	var dropletsBucket *fakes.FakeBucket
-	var buildpacksBucket *fakes.FakeBucket
-	var packagesBucket *fakes.FakeBucket
+	var dropletsBucket *fakes.FakeVersionedBucket
+	var buildpacksBucket *fakes.FakeVersionedBucket
+	var packagesBucket *fakes.FakeVersionedBucket
 
-	var artifact *fakes.FakeArtifact
+	var artifact *fakes.FakeVersionedArtifact
 
 	var err error
 
 	var backuper VersionedBackuper
 
 	BeforeEach(func() {
-		dropletsBucket = new(fakes.FakeBucket)
-		buildpacksBucket = new(fakes.FakeBucket)
-		packagesBucket = new(fakes.FakeBucket)
+		dropletsBucket = new(fakes.FakeVersionedBucket)
+		buildpacksBucket = new(fakes.FakeVersionedBucket)
+		packagesBucket = new(fakes.FakeVersionedBucket)
 
-		artifact = new(fakes.FakeArtifact)
+		artifact = new(fakes.FakeVersionedArtifact)
 
-		backuper = NewVersionedBackuper(map[string]Bucket{
+		backuper = NewVersionedBackuper(map[string]VersionedBucket{
 			"droplets":   dropletsBucket,
 			"buildpacks": buildpacksBucket,
 			"packages":   packagesBucket,

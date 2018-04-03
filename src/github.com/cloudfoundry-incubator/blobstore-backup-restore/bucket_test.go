@@ -26,19 +26,18 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("S3Bucket", func() {
-	var bucketObjectUnderTest S3Bucket
+var _ = Describe("S3VersionedBucket", func() {
+	var bucketObjectUnderTest S3VersionedBucket
 	var err error
 
-	var firstVersionOfTest1 string
-	var secondVersionOfTest1 string
-	var thirdVersionOfTest1 string
-	var firstVersionOfTest2 string
-	var deletedVersionOfTest2 string
+	var firstVersionOfFile1 string
+	var secondVersionOfFile1 string
+	var thirdVersionOfFile1 string
+	var firstVersionOfFile2 string
+	var deletedVersionOfFile2 string
 
-	RunBucketTests := func(mainRegion, secondaryRegion, endpoint, accessKey, secretKey string) {
-		var versionedBucketName string
-		var unversionedBucketName string
+	RunVersionedBucketTests := func(mainRegion, secondaryRegion, endpoint, accessKey, secretKey string) {
+		var bucket TestS3Bucket
 
 		var creds = S3AccessKey{
 			Id:     accessKey,
@@ -46,27 +45,20 @@ var _ = Describe("S3Bucket", func() {
 		}
 
 		BeforeEach(func() {
-			versionedBucketName = "sdk-integration-test-" + strconv.FormatInt(time.Now().UnixNano(), 10)
-			createBucket(mainRegion, versionedBucketName, endpoint, accessKey, secretKey)
-			enableBucketVersioning(versionedBucketName, endpoint, accessKey, secretKey)
-			firstVersionOfTest1 = uploadFile(versionedBucketName, endpoint, "test-1", "TEST-1-A", accessKey, secretKey)
-			secondVersionOfTest1 = uploadFile(versionedBucketName, endpoint, "test-1", "TEST-1-B", accessKey, secretKey)
-			thirdVersionOfTest1 = uploadFile(versionedBucketName, endpoint, "test-1", "TEST-1-C", accessKey, secretKey)
-			firstVersionOfTest2 = uploadFile(versionedBucketName, endpoint, "test-2", "TEST-2-A", accessKey, secretKey)
-			deletedVersionOfTest2 = deleteFile(versionedBucketName, endpoint, "test-2", accessKey, secretKey)
+			bucket = setUpVersionedS3Bucket(mainRegion, endpoint, creds)
 
-			unversionedBucketName = "sdk-unversioned-integration-test-" + strconv.FormatInt(time.Now().UnixNano(), 10)
-			createBucket(mainRegion, unversionedBucketName, endpoint, accessKey, secretKey)
-			uploadFile(unversionedBucketName, endpoint, "unversioned-test", "UNVERSIONED-TEST", accessKey, secretKey)
+			firstVersionOfFile1 = uploadFile(bucket.Name, endpoint, "test-1", "1-A", creds)
+			secondVersionOfFile1 = uploadFile(bucket.Name, endpoint, "test-1", "1-B", creds)
+			thirdVersionOfFile1 = uploadFile(bucket.Name, endpoint, "test-1", "1-C", creds)
+			firstVersionOfFile2 = uploadFile(bucket.Name, endpoint, "test-2", "2-A", creds)
+			deletedVersionOfFile2 = deleteFile(bucket.Name, endpoint, "test-2", creds)
 
-			bucketObjectUnderTest, err = NewS3Bucket(versionedBucketName, mainRegion, endpoint, creds)
+			bucketObjectUnderTest, err = NewS3VersionedBucket(bucket.Name, bucket.Region, endpoint, creds)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		AfterEach(func() {
-			deleteAllVersions(mainRegion, versionedBucketName, endpoint, accessKey, secretKey)
-			deleteBucket(versionedBucketName, endpoint, accessKey, secretKey)
-			deleteBucket(unversionedBucketName, endpoint, accessKey, secretKey)
+			tearDownVersionedBucket(bucket.Name, endpoint, creds)
 		})
 
 		Describe("Versions", func() {
@@ -80,29 +72,44 @@ var _ = Describe("S3Bucket", func() {
 				It("returns a list of all versions in the bucket", func() {
 					Expect(err).NotTo(HaveOccurred())
 					Expect(versions).To(ConsistOf(
-						Version{Id: firstVersionOfTest1, Key: "test-1", IsLatest: false},
-						Version{Id: secondVersionOfTest1, Key: "test-1", IsLatest: false},
-						Version{Id: thirdVersionOfTest1, Key: "test-1", IsLatest: true},
-						Version{Id: firstVersionOfTest2, Key: "test-2", IsLatest: false},
+						Version{Id: firstVersionOfFile1, Key: "test-1", IsLatest: false},
+						Version{Id: secondVersionOfFile1, Key: "test-1", IsLatest: false},
+						Version{Id: thirdVersionOfFile1, Key: "test-1", IsLatest: true},
+						Version{Id: firstVersionOfFile2, Key: "test-2", IsLatest: false},
 					))
 				})
 			})
 
-			Context("when retrieving versions fails", func() {
+			Context("when the bucket can't be reached", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest, err = NewS3Bucket(versionedBucketName, mainRegion, endpoint, S3AccessKey{})
+					bucketObjectUnderTest, err = NewS3VersionedBucket(
+						bucket.Name,
+						bucket.Region,
+						endpoint,
+						S3AccessKey{Id: "NOT RIGHT", Secret: "NOT RIGHT"},
+					)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
 				It("returns the error", func() {
 					Expect(versions).To(BeNil())
-					Expect(err).To(MatchError(MatchRegexp("failed to check if bucket (.*) is versioned")))
+					Expect(err).To(MatchError(MatchRegexp("could not check if bucket (.*) is versioned")))
 				})
 			})
 
 			Context("when the bucket is not versioned", func() {
+
+				var unversionedBucket TestS3Bucket
+
 				BeforeEach(func() {
-					bucketObjectUnderTest, err = NewS3Bucket(unversionedBucketName, mainRegion, endpoint, creds)
+					unversionedBucket = setUpS3UnversionedBucket(mainRegion, endpoint, creds)
+					uploadFile(unversionedBucket.Name, endpoint, "unversioned-test", "UNVERSIONED-TEST", creds)
+
+					bucketObjectUnderTest, err = NewS3VersionedBucket(unversionedBucket.Name, unversionedBucket.Region, endpoint, creds)
+				})
+
+				AfterEach(func() {
+					tearDownBucket(unversionedBucket.Name, endpoint, creds)
 				})
 
 				It("fails", func() {
@@ -111,9 +118,10 @@ var _ = Describe("S3Bucket", func() {
 				})
 			})
 
-			Context("when the bucket has a lot of versions", func() {
+			Context("when the bucket has a lot of files", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest, err = NewS3Bucket("sdk-big-bucket-integration-test", mainRegion, endpoint, creds)
+					bucketObjectUnderTest, err = NewS3VersionedBucket("sdk-big-bucket-integration-test",
+						mainRegion, endpoint, creds)
 				})
 
 				It("works", func() {
@@ -127,30 +135,35 @@ var _ = Describe("S3Bucket", func() {
 
 		Describe("CopyVersions from same bucket", func() {
 			BeforeEach(func() {
-				uploadFile(versionedBucketName, endpoint, "test-3", "TEST-3-A", accessKey, secretKey)
+				uploadFile(bucket.Name, endpoint, "test-3", "TEST-3-A", creds)
 			})
 
 			JustBeforeEach(func() {
-				err = bucketObjectUnderTest.CopyVersions(mainRegion, versionedBucketName, []BlobVersion{
-					{BlobKey: "test-1", Id: secondVersionOfTest1},
-					{BlobKey: "test-2", Id: firstVersionOfTest2},
+				err = bucketObjectUnderTest.CopyVersions(bucket.Region, bucket.Name, []BlobVersion{
+					{BlobKey: "test-1", Id: secondVersionOfFile1},
+					{BlobKey: "test-2", Id: firstVersionOfFile2},
 				})
 			})
 
 			Context("when putting versions succeeds", func() {
-				It("restores the versions to the specified ones and does not delete blobs that are not specified from the bucket", func() {
+				It("restores files to versions specified in the backup and does not delete pre-existing blobs", func() {
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(listFiles(versionedBucketName, endpoint, accessKey, secretKey)).To(ConsistOf("test-1", "test-2", "test-3"))
-					Expect(getFileContents(versionedBucketName, endpoint, "test-1", accessKey, secretKey)).To(Equal("TEST-1-B"))
-					Expect(getFileContents(versionedBucketName, endpoint, "test-2", accessKey, secretKey)).To(Equal("TEST-2-A"))
-					Expect(getFileContents(versionedBucketName, endpoint, "test-3", accessKey, secretKey)).To(Equal("TEST-3-A"))
+					Expect(listFiles(bucket.Name, endpoint, creds)).To(ConsistOf(
+						"test-1", "test-2", "test-3"))
+					Expect(getFileContents(bucket.Name, endpoint, "test-1", creds)).To(Equal(
+						"1-B"))
+					Expect(getFileContents(bucket.Name, endpoint, "test-2", creds)).To(Equal(
+						"2-A"))
+					Expect(getFileContents(bucket.Name, endpoint, "test-3", creds)).To(Equal(
+						"TEST-3-A"))
 				})
 			})
 
 			Context("when putting versions fails", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest, err = NewS3Bucket(versionedBucketName, mainRegion, endpoint, S3AccessKey{})
+					bucketObjectUnderTest, err = NewS3VersionedBucket(bucket.Name,
+						bucket.Region, endpoint, S3AccessKey{})
 				})
 
 				It("errors", func() {
@@ -159,8 +172,18 @@ var _ = Describe("S3Bucket", func() {
 			})
 
 			Context("when the bucket is not versioned", func() {
+
+				var unversionedBucket TestS3Bucket
+
 				BeforeEach(func() {
-					bucketObjectUnderTest, err = NewS3Bucket(unversionedBucketName, mainRegion, endpoint, creds)
+					unversionedBucket = setUpS3UnversionedBucket(mainRegion, endpoint, creds)
+					uploadFile(unversionedBucket.Name, endpoint, "unversioned-test", "UNVERSIONED-TEST", creds)
+
+					bucketObjectUnderTest, err = NewS3VersionedBucket(unversionedBucket.Name, unversionedBucket.Region, endpoint, creds)
+				})
+
+				AfterEach(func() {
+					tearDownBucket(unversionedBucket.Name, endpoint, creds)
 				})
 
 				It("fails", func() {
@@ -169,23 +192,34 @@ var _ = Describe("S3Bucket", func() {
 			})
 		})
 
-		Describe("CopyVersions from different bucket", func() {
-			var secondaryBucketName string
+		Describe("CopyVersions from different bucket in different region", func() {
+			var secondaryBucket TestS3Bucket
 			var versionOfFileWhichWasSubsequentlyDeleted, versionOfFileToBeRestored string
 
 			BeforeEach(func() {
-				deleteAllVersions(mainRegion, versionedBucketName, endpoint, accessKey, secretKey)
-				secondaryBucketName = "sdk-integration-test-secondary" + strconv.FormatInt(time.Now().UnixNano(), 10)
-				createBucket(secondaryRegion, secondaryBucketName, endpoint, accessKey, secretKey)
-				enableBucketVersioning(secondaryBucketName, endpoint, accessKey, secretKey)
-				versionOfFileToBeRestored = uploadFile(secondaryBucketName, endpoint, "file-to-restore", "whatever", accessKey, secretKey)
-				versionOfFileWhichWasSubsequentlyDeleted = uploadFile(secondaryBucketName, endpoint, "deleted-file-to-restore", "whatever", accessKey, secretKey)
-				deleteFile(secondaryBucketName, endpoint, "deleted-file-to-restore", accessKey, secretKey)
-				uploadFile(versionedBucketName, endpoint, "file-to-be-destroyed-by-restore", "whatever", accessKey, secretKey)
+				clearOutVersionedBucket(bucket.Name, endpoint, creds)
+				secondaryBucket = setUpVersionedS3Bucket(secondaryRegion, endpoint, creds)
+				versionOfFileToBeRestored = uploadFile(
+					secondaryBucket.Name,
+					endpoint,
+					"file-to-restore",
+					"whatever",
+					creds,
+				)
+				versionOfFileWhichWasSubsequentlyDeleted = uploadFile(
+					secondaryBucket.Name,
+					endpoint,
+					"deleted-file-to-restore",
+					"whatever",
+					creds,
+				)
+				deleteFile(secondaryBucket.Name, endpoint, "deleted-file-to-restore", creds)
+				uploadFile(bucket.Name, endpoint, "file-to-be-destroyed-by-restore",
+					"whatever", creds)
 			})
 
 			JustBeforeEach(func() {
-				err = bucketObjectUnderTest.CopyVersions(secondaryRegion, secondaryBucketName,
+				err = bucketObjectUnderTest.CopyVersions(secondaryBucket.Region, secondaryBucket.Name,
 					[]BlobVersion{
 						{BlobKey: "file-to-restore", Id: versionOfFileToBeRestored},
 						{BlobKey: "deleted-file-to-restore", Id: versionOfFileWhichWasSubsequentlyDeleted},
@@ -195,20 +229,19 @@ var _ = Describe("S3Bucket", func() {
 			It("restores files from the secondary to the main bucket and does not delete pre-existing blobs", func() {
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(listFiles(versionedBucketName, endpoint, accessKey, secretKey)).To(
+				Expect(listFiles(bucket.Name, endpoint, creds)).To(
 					ConsistOf("file-to-restore", "deleted-file-to-restore", "file-to-be-destroyed-by-restore"),
 				)
 			})
 
 			AfterEach(func() {
-				deleteAllVersions(secondaryRegion, secondaryBucketName, endpoint, accessKey, secretKey)
-				deleteBucket(secondaryBucketName, endpoint, accessKey, secretKey)
+				tearDownVersionedBucket(secondaryBucket.Name, endpoint, creds)
 			})
 		})
 	}
 
 	Describe("AWS S3 bucket", func() {
-		RunBucketTests(
+		RunVersionedBucketTests(
 			"eu-west-1",
 			"us-west-1",
 			"",
@@ -218,7 +251,7 @@ var _ = Describe("S3Bucket", func() {
 	})
 
 	Describe("ECS S3-compatible bucket", func() {
-		RunBucketTests(
+		RunVersionedBucketTests(
 			"eu-west-1",
 			"us-east-1",
 			"https://object.ecstestdrive.com",
@@ -242,8 +275,8 @@ var _ = Describe("S3Bucket", func() {
 				Secret: os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
 			}
 
-			deleteAllVersions(region, bucketName, endpoint, creds.Id, creds.Secret)
-			bucketObjectUnderTest, err = NewS3Bucket(bucketName, region, endpoint, creds)
+			clearOutVersionedBucket(bucketName, endpoint, creds)
+			bucketObjectUnderTest, err = NewS3VersionedBucket(bucketName, region, endpoint, creds)
 		})
 
 		Context("when backup an empty bucket", func() {
@@ -262,7 +295,7 @@ var _ = Describe("S3Bucket", func() {
 	})
 
 	Describe("CopyVersions with a big file on AWS", func() {
-		var testBucketName string
+		var destinationBucket TestS3Bucket
 		var region string
 		var endpoint string
 		var creds S3AccessKey
@@ -270,22 +303,20 @@ var _ = Describe("S3Bucket", func() {
 		BeforeEach(func() {
 			region = "eu-west-1"
 			endpoint = ""
-			testBucketName = "sdk-integration-test-large-blob-" + strconv.FormatInt(time.Now().UnixNano(), 10)
 
 			creds = S3AccessKey{
 				Id:     os.Getenv("TEST_AWS_ACCESS_KEY_ID"),
 				Secret: os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
 			}
 
-			createBucket(region, testBucketName, endpoint, creds.Id, creds.Secret)
-			enableBucketVersioning(testBucketName, endpoint, creds.Id, creds.Secret)
+			destinationBucket = setUpVersionedS3Bucket(region, endpoint, creds)
 
-			bucketObjectUnderTest, err = NewS3Bucket(testBucketName, region, endpoint, creds)
+			bucketObjectUnderTest, err = NewS3VersionedBucket(destinationBucket.Name, region, endpoint, creds)
 		})
 
 		AfterEach(func() {
-			deleteAllVersions(region, testBucketName, endpoint, creds.Id, creds.Secret)
-			deleteBucket(testBucketName, endpoint, creds.Id, creds.Secret)
+			clearOutVersionedBucket(destinationBucket.Name, endpoint, creds)
+			tearDownBucket(destinationBucket.Name, endpoint, creds)
 		})
 
 		It("works", func() {
@@ -296,28 +327,182 @@ var _ = Describe("S3Bucket", func() {
 				})
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(listFiles(testBucketName, endpoint, creds.Id, creds.Secret)).To(ConsistOf("big_file"))
+			Expect(listFiles(destinationBucket.Name, endpoint, creds)).To(ConsistOf("big_file"))
 
-			localFilePath := downloadFileToTmp(testBucketName, endpoint, "big_file", creds.Id, creds.Secret)
+			localFilePath := downloadFileToTmp(destinationBucket.Name, endpoint, "big_file", creds)
 			Expect(shasum(localFilePath)).To(Equal("188f500de28479d67e7375566750472e58e4cec1"))
 		})
 	})
 })
 
-func shasum(filePath string) string {
-	output, err := exec.Command("shasum", filePath).Output()
-	Expect(err).NotTo(HaveOccurred())
-	md5 := strings.Split(string(output), " ")[0]
-	return md5
-}
+var _ = Describe("S3UnversionedBucket", func() {
+	var (
+		liveBucket            TestS3Bucket
+		bucketObjectUnderTest S3UnversionedBucket
+		err                   error
+		liveRegion            string
+		endpoint              string
+		accessKey             string
+		secretKey             string
+		testFile1             string
+		testFile2             string
+		creds                 S3AccessKey
+	)
 
-func listFiles(bucket, endpoint string, accessKey string, secretKey string) []string {
+	BeforeEach(func() {
+		liveRegion = "eu-west-1"
+		endpoint = ""
+		accessKey = os.Getenv("TEST_AWS_ACCESS_KEY_ID")
+		secretKey = os.Getenv("TEST_AWS_SECRET_ACCESS_KEY")
+		creds = S3AccessKey{Id: accessKey, Secret: secretKey}
+
+		liveBucket = setUpS3UnversionedBucket(liveRegion, endpoint, creds)
+		testFile1 = uploadFile(liveBucket.Name, endpoint, "path1/file1", "FILE1", creds)
+		testFile2 = uploadFile(liveBucket.Name, endpoint, "path2/file2", "FILE2", creds)
+
+	})
+
+	Describe("ListFiles", func() {
+		var files []string
+
+		BeforeEach(func() {
+			bucketObjectUnderTest, err = NewS3UnversionedBucket(liveBucket.Name, liveBucket.Region, endpoint, creds)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			tearDownBucket(liveBucket.Name, endpoint, creds)
+		})
+
+		JustBeforeEach(func() {
+			files, err = bucketObjectUnderTest.ListFiles()
+		})
+
+		It("should list all the files", func() {
+			Expect(err).NotTo(HaveOccurred())
+			Expect(files).To(ConsistOf([]string{"path1/file1", "path2/file2"}))
+		})
+
+		Context("when s3 list-objects errors", func() {
+			BeforeEach(func() {
+				bucketObjectUnderTest, err = NewS3UnversionedBucket("does-not-exist", "eu-west-1", "", creds)
+			})
+			It("errors", func() {
+				Expect(err).To(MatchError(ContainSubstring("failed to list files from bucket does-not-exist")))
+			})
+
+		})
+
+		Context("when the bucket has a lot of files", func() {
+			BeforeEach(func() {
+				bucketObjectUnderTest, err = NewS3UnversionedBucket(
+					"sdk-unversioned-big-bucket-integration-test", "eu-west-1", endpoint, creds)
+			})
+
+			It("works", func() {
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(files)).To(Equal(2001))
+			})
+		})
+	})
+
+	Describe("Copy", func() {
+		var (
+			backedUpFiles         []string
+			bucketObjectUnderTest S3UnversionedBucket
+			backupBucket          TestS3Bucket
+			backupRegion          string
+		)
+
+		BeforeEach(func() {
+			backupRegion = "us-west-1"
+			backupBucket = setUpS3UnversionedBucket(backupRegion, endpoint, creds)
+
+			bucketObjectUnderTest, err = NewS3UnversionedBucket(backupBucket.Name, backupBucket.Region, endpoint, creds)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			tearDownBucket(backupBucket.Name, endpoint, creds)
+		})
+
+		JustBeforeEach(func() {
+			err = bucketObjectUnderTest.Copy(
+				"path1/file1", "2012_02_13_23_12_02/bucketIdFromDeployment",
+				liveBucket.Name, liveBucket.Region)
+		})
+
+		It("copies the file to the backup bucket", func() {
+			Expect(err).NotTo(HaveOccurred())
+			backedUpFiles = listFiles(bucketObjectUnderTest.Name(), endpoint, creds)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(backedUpFiles).To(ConsistOf([]string{"2012_02_13_23_12_02/bucketIdFromDeployment/path1/file1"}))
+			Expect(getFileContents(
+				backupBucket.Name,
+				endpoint,
+				"2012_02_13_23_12_02/bucketIdFromDeployment/path1/file1",
+				creds),
+			).To(Equal(
+				"FILE1"))
+		})
+	})
+
+	Describe("CopyFiles with a big file on AWS", func() {
+		var endpoint string
+		var creds S3AccessKey
+		var preExistingBigFileBucketConfig TestS3Bucket
+		var destinationBucket TestS3Bucket
+		var err error
+
+		BeforeEach(func() {
+			endpoint = ""
+			creds = S3AccessKey{
+				Id:     os.Getenv("TEST_AWS_ACCESS_KEY_ID"),
+				Secret: os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
+			}
+			preExistingBigFileBucketConfig = TestS3Bucket{
+				Name:   "large-blob-test-bucket-unversioned",
+				Region: "eu-west-1",
+			}
+
+			destinationBucket = setUpS3UnversionedBucket("eu-west-1", endpoint, creds)
+
+			bucketObjectUnderTest, err = NewS3UnversionedBucket(destinationBucket.Name, destinationBucket.Region, endpoint, creds)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			tearDownBucket(destinationBucket.Name, endpoint, creds)
+		})
+
+		JustBeforeEach(func() {
+			err = bucketObjectUnderTest.Copy("big_file", "path/to/file",
+				preExistingBigFileBucketConfig.Name, preExistingBigFileBucketConfig.Region)
+
+		})
+		It("works", func() {
+			By("succeeding")
+			Expect(err).NotTo(HaveOccurred())
+
+			By("copying the large file")
+			Expect(listFiles(destinationBucket.Name, endpoint, creds)).To(ConsistOf("path/to/file/big_file"))
+
+			By("not corrupting the large file")
+			Expect(
+				shasum(downloadFileToTmp(destinationBucket.Name, endpoint, "path/to/file/big_file", creds))).To(
+				Equal("188f500de28479d67e7375566750472e58e4cec1"))
+		})
+	})
+
+})
+
+func listFiles(bucket, endpoint string, creds S3AccessKey) []string {
 	baseCmd := constructBaseCmd(endpoint)
 	baseCmd = append(baseCmd, "s3api",
 		"list-objects",
 		"--bucket", bucket)
 
-	outputBuffer := runAwsCommand(accessKey, secretKey, baseCmd)
+	outputBuffer := runAwsCommand(creds.Id, creds.Secret, baseCmd)
 
 	var response ListResponse
 	json.Unmarshal(outputBuffer.Bytes(), &response)
@@ -330,27 +515,20 @@ func listFiles(bucket, endpoint string, accessKey string, secretKey string) []st
 	return keys
 }
 
-func constructBaseCmd(endpoint string) []string {
-	if endpoint != "" {
-		return []string{"--endpoint", endpoint}
-	}
-	return []string{}
-}
-
-func getFileContents(bucket, endpoint, key string, accessKey string, secretKey string) string {
+func getFileContents(bucket, endpoint, key string, creds S3AccessKey) string {
 	baseCmd := constructBaseCmd(endpoint)
 	baseCmd = append(baseCmd, "s3",
 		"cp",
 		fmt.Sprintf("s3://%s/%s", bucket, key),
 		"-")
 
-	outputBuffer := runAwsCommand(accessKey, secretKey, baseCmd)
+	outputBuffer := runAwsCommand(creds.Id, creds.Secret, baseCmd)
 
 	return outputBuffer.String()
 }
 
-func uploadFile(bucket, endpoint, key, body, accessKey, secretKey string) string {
-	bodyFile, _ := ioutil.TempFile("", key)
+func uploadFile(bucket, endpoint, key, body string, creds S3AccessKey) string {
+	bodyFile, _ := ioutil.TempFile("", "")
 	bodyFile.WriteString(body)
 	bodyFile.Close()
 
@@ -361,7 +539,7 @@ func uploadFile(bucket, endpoint, key, body, accessKey, secretKey string) string
 		"--key", key,
 		"--body", bodyFile.Name())
 
-	outputBuffer := runAwsCommand(accessKey, secretKey, baseCmd)
+	outputBuffer := runAwsCommand(creds.Id, creds.Secret, baseCmd)
 
 	var response PutResponse
 	json.Unmarshal(outputBuffer.Bytes(), &response)
@@ -369,8 +547,8 @@ func uploadFile(bucket, endpoint, key, body, accessKey, secretKey string) string
 	return response.VersionId
 }
 
-func downloadFileToTmp(bucket, endpoint, key, accessKey, secretKey string) string {
-	bodyFile, _ := ioutil.TempFile("", key)
+func downloadFileToTmp(bucket, endpoint, key string, creds S3AccessKey) string {
+	bodyFile, _ := ioutil.TempFile("", "")
 	bodyFile.Close()
 
 	baseCmd := constructBaseCmd(endpoint)
@@ -380,52 +558,111 @@ func downloadFileToTmp(bucket, endpoint, key, accessKey, secretKey string) strin
 		"--key", key,
 		bodyFile.Name())
 
-	runAwsCommandWithTimout(accessKey, secretKey, baseCmd, 5*time.Minute)
+	runAwsCommandWithTimout(creds.Id, creds.Secret, baseCmd, 5*time.Minute)
 
 	return bodyFile.Name()
 }
 
-func createBucket(region, bucket, endpoint, accessKey, secretKey string) {
+func setUpS3UnversionedBucket(region, endpoint string, creds S3AccessKey) TestS3Bucket {
+	bucketName := "sdk-integration-test-" + strconv.FormatInt(time.Now().UnixNano(), 10)
+
 	baseCmd := constructBaseCmd(endpoint)
 	baseCmd = append(baseCmd, "s3api",
 		"create-bucket",
-		"--bucket", bucket,
+		"--bucket", bucketName,
 		"--region", region,
 		"--create-bucket-configuration", "LocationConstraint="+region)
 
-	runAwsCommand(accessKey, secretKey, baseCmd)
+	runAwsCommand(creds.Id, creds.Secret, baseCmd)
+	return TestS3Bucket{Name: bucketName, Region: region}
 }
 
-func enableBucketVersioning(bucket, endpoint, accessKey, secretKey string) {
+func setUpVersionedS3Bucket(region, endpoint string, creds S3AccessKey) TestS3Bucket {
+	testBucket := setUpS3UnversionedBucket(region, endpoint, creds)
+	enableBucketVersioning(testBucket.Name, endpoint, creds)
+	return testBucket
+}
+
+func enableBucketVersioning(bucket, endpoint string, creds S3AccessKey) {
 	baseCmd := constructBaseCmd(endpoint)
 	baseCmd = append(baseCmd, "s3api",
 		"put-bucket-versioning",
 		"--bucket", bucket,
 		"--versioning-configuration", "Status=Enabled")
 
-	runAwsCommand(accessKey, secretKey, baseCmd)
+	runAwsCommand(creds.Id, creds.Secret, baseCmd)
 }
 
-func deleteBucket(bucket, endpoint, accessKey, secretKey string) {
+func tearDownBucket(bucket, endpoint string, creds S3AccessKey) {
 	baseCmd := constructBaseCmd(endpoint)
 	baseCmd = append(baseCmd, "s3", "rb", "s3://"+bucket, "--force")
 
-	runAwsCommand(accessKey, secretKey, baseCmd)
+	runAwsCommand(creds.Id, creds.Secret, baseCmd)
 }
 
-func deleteFile(bucket, endpoint, key, accessKey, secretKey string) string {
+func tearDownVersionedBucket(bucket, endpoint string, creds S3AccessKey) {
+	clearOutVersionedBucket(bucket, endpoint, creds)
+	tearDownBucket(bucket, endpoint, creds)
+}
+
+func deleteFile(bucket, endpoint, key string, creds S3AccessKey) string {
 	baseCmd := constructBaseCmd(endpoint)
 	baseCmd = append(baseCmd, "s3api",
 		"delete-object",
 		"--bucket", bucket,
 		"--key", key)
 
-	outputBuffer := runAwsCommand(accessKey, secretKey, baseCmd)
+	outputBuffer := runAwsCommand(creds.Id, creds.Secret, baseCmd)
 
 	var response PutResponse
 	json.Unmarshal(outputBuffer.Bytes(), &response)
 
 	return response.VersionId
+}
+
+func deleteVersion(bucket, endpoint, key, versionId string, creds S3AccessKey) {
+	baseCmd := constructBaseCmd(endpoint)
+	baseCmd = append(baseCmd, "s3api",
+		"delete-object",
+		"--bucket", bucket,
+		"--key", key,
+		"--version-id", versionId)
+	runAwsCommand(creds.Id, creds.Secret, baseCmd)
+}
+
+func clearOutVersionedBucket(bucket, endpoint string, creds S3AccessKey) {
+	baseCmd := constructBaseCmd(endpoint)
+	baseCmd = append(baseCmd, "s3api",
+		"list-object-versions",
+		"--bucket", bucket)
+
+	outputBuffer := runAwsCommand(creds.Id, creds.Secret, baseCmd)
+
+	var response VersionsResponse
+	json.Unmarshal(outputBuffer.Bytes(), &response)
+
+	for _, version := range response.Versions {
+		deleteVersion(bucket, endpoint, version.Key, version.VersionId, creds)
+	}
+
+	for _, version := range response.DeleteMarkers {
+		deleteVersion(bucket, endpoint, version.Key, version.VersionId, creds)
+	}
+}
+
+func constructBaseCmd(endpoint string) []string {
+	if endpoint != "" {
+		return []string{"--endpoint", endpoint}
+	}
+	return []string{}
+}
+
+func newAwsCommand(accessKey string, secretKey string, baseCmd []string) *exec.Cmd {
+	awsCmd := exec.Command("aws", baseCmd...)
+	awsCmd.Env = append(awsCmd.Env, "AWS_ACCESS_KEY_ID="+accessKey)
+	awsCmd.Env = append(awsCmd.Env, "AWS_SECRET_ACCESS_KEY="+secretKey)
+
+	return awsCmd
 }
 
 func runAwsCommand(accessKey string, secretKey string, baseCmd []string) *bytes.Buffer {
@@ -445,42 +682,11 @@ func runAwsCommandWithTimout(accessKey string, secretKey string, baseCmd []strin
 	return outputBuffer
 }
 
-func deleteVersion(bucket, endpoint, key, versionId string, accessKey string, secretKey string) {
-	baseCmd := constructBaseCmd(endpoint)
-	baseCmd = append(baseCmd, "s3api",
-		"delete-object",
-		"--bucket", bucket,
-		"--key", key,
-		"--version-id", versionId)
-	runAwsCommand(accessKey, secretKey, baseCmd)
-}
-
-func deleteAllVersions(region, bucket, endpoint string, accessKey string, secretKey string) {
-	baseCmd := constructBaseCmd(endpoint)
-	baseCmd = append(baseCmd, "s3api",
-		"list-object-versions",
-		"--bucket", bucket)
-
-	outputBuffer := runAwsCommand(accessKey, secretKey, baseCmd)
-
-	var response VersionsResponse
-	json.Unmarshal(outputBuffer.Bytes(), &response)
-
-	for _, version := range response.Versions {
-		deleteVersion(bucket, endpoint, version.Key, version.VersionId, accessKey, secretKey)
-	}
-
-	for _, version := range response.DeleteMarkers {
-		deleteVersion(bucket, endpoint, version.Key, version.VersionId, accessKey, secretKey)
-	}
-}
-
-func newAwsCommand(accessKey string, secretKey string, baseCmd []string) *exec.Cmd {
-	awsCmd := exec.Command("aws", baseCmd...)
-	awsCmd.Env = append(awsCmd.Env, "AWS_ACCESS_KEY_ID="+accessKey)
-	awsCmd.Env = append(awsCmd.Env, "AWS_SECRET_ACCESS_KEY="+secretKey)
-
-	return awsCmd
+func shasum(filePath string) string {
+	output, err := exec.Command("shasum", filePath).Output()
+	Expect(err).NotTo(HaveOccurred())
+	md5 := strings.Split(string(output), " ")[0]
+	return md5
 }
 
 type PutResponse struct {
@@ -503,4 +709,9 @@ type ListResponse struct {
 
 type ListResponseEntry struct {
 	Key string
+}
+
+type TestS3Bucket struct {
+	Name   string
+	Region string
 }

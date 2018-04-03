@@ -11,24 +11,24 @@ import (
 )
 
 var _ = Describe("VersionedRestorer", func() {
-	var dropletsBucket *fakes.FakeBucket
-	var buildpacksBucket *fakes.FakeBucket
-	var packagesBucket *fakes.FakeBucket
+	var dropletsBucket *fakes.FakeVersionedBucket
+	var buildpacksBucket *fakes.FakeVersionedBucket
+	var packagesBucket *fakes.FakeVersionedBucket
 
-	var artifact *fakes.FakeArtifact
+	var artifact *fakes.FakeVersionedArtifact
 
 	var err error
 
 	var restorer VersionedRestorer
 
 	BeforeEach(func() {
-		dropletsBucket = new(fakes.FakeBucket)
-		buildpacksBucket = new(fakes.FakeBucket)
-		packagesBucket = new(fakes.FakeBucket)
+		dropletsBucket = new(fakes.FakeVersionedBucket)
+		buildpacksBucket = new(fakes.FakeVersionedBucket)
+		packagesBucket = new(fakes.FakeVersionedBucket)
 
-		artifact = new(fakes.FakeArtifact)
+		artifact = new(fakes.FakeVersionedArtifact)
 
-		restorer = NewVersionedRestorer(map[string]Bucket{
+		restorer = NewVersionedRestorer(map[string]VersionedBucket{
 			"droplets":   dropletsBucket,
 			"buildpacks": buildpacksBucket,
 			"packages":   packagesBucket,

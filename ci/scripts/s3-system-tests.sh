@@ -24,6 +24,11 @@ export AWS_TEST_CLONE_BUCKET_NAME
 export AWS_TEST_CLONE_BUCKET_REGION
 export AWS_TEST_UNVERSIONED_BUCKET_NAME
 export AWS_TEST_UNVERSIONED_BUCKET_REGION
+export S3_UNVERSIONED_BUCKET_NAME
+export S3_UNVERSIONED_BUCKET_REGION
+export S3_UNVERSIONED_BACKUP_BUCKET_NAME
+export S3_UNVERSIONED_BACKUP_BUCKET_REGION
+
 
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/blobstore-backup-restore
 dep ensure

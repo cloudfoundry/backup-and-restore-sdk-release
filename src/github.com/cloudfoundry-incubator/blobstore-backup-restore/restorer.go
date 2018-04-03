@@ -1,12 +1,25 @@
 package blobstore
 
 type VersionedRestorer struct {
-	destinationBuckets map[string]Bucket
-	sourceArtifact     Artifact
+	destinationBuckets map[string]VersionedBucket
+	sourceArtifact     VersionedArtifact
 }
 
-func NewVersionedRestorer(destinationBuckets map[string]Bucket, sourceArtifact Artifact) VersionedRestorer {
+type UnversionedRestorer struct {
+}
+
+func (b UnversionedRestorer) Run() error {
+	panic("Run not implemented for UnversionedRestorer")
+	return nil
+}
+
+func NewVersionedRestorer(destinationBuckets map[string]VersionedBucket, sourceArtifact VersionedArtifact) VersionedRestorer {
 	return VersionedRestorer{destinationBuckets: destinationBuckets, sourceArtifact: sourceArtifact}
+}
+
+func NewUnversionedRestorer(sourceBuckets map[string]UnversionedBucketPair, destinationArtifact UnversionedArtifact) UnversionedRestorer {
+	panic("NewUnversionedRestorer not implemented")
+	return UnversionedRestorer{}
 }
 
 func (r VersionedRestorer) Run() error {

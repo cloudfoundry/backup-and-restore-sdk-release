@@ -165,7 +165,7 @@ func listFilesFromBucket(region, bucket string) []string {
 	var response ListResponse
 	json.Unmarshal(outputBuffer.Bytes(), &response)
 
-	keys := []string{}
+	var keys []string
 	for _, entry := range response.Contents {
 		keys = append(keys, entry.Key)
 	}
@@ -180,7 +180,7 @@ func uploadTimestampedFileToBucket(region, bucket, prefix, body string) string {
 }
 
 func writeFileInBucket(region, bucket, key, body string) {
-	bodyFile, _ := ioutil.TempFile("", key)
+	bodyFile, _ := ioutil.TempFile("", "")
 	bodyFile.WriteString(body)
 	bodyFile.Close()
 
@@ -205,6 +205,13 @@ func deleteFileFromBucket(region, bucket, key string) string {
 	json.Unmarshal(outputBuffer.Bytes(), &response)
 
 	return response.VersionId
+}
+
+func deleteAllFilesFromBucket(region, bucket string) {
+	files := listFilesFromBucket(region, bucket)
+	for _, file := range files {
+		deleteFileFromBucket(region, bucket, file)
+	}
 }
 
 func deleteVersionFromBucket(region, bucket, key, versionId string) string {

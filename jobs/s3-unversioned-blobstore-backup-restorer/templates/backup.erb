@@ -6,6 +6,6 @@ set -e
 /var/vcap/packages/blobstore-backup-restorer/bin/blobstore-backup-restore \
     --backup \
     --unversioned \
-    --config /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/config/buckets.json \
+    --config /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/config/buckets.json \
     --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
 <% end %>
