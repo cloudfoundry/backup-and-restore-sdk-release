@@ -13,14 +13,14 @@ var _ = Describe("S3VersionedBucket", func() {
 	var bucketObjectUnderTest S3VersionedBucket
 	var err error
 
-	var firstVersionOfFile1 string
-	var secondVersionOfFile1 string
-	var thirdVersionOfFile1 string
-	var firstVersionOfFile2 string
-	var deletedVersionOfFile2 string
-
 	RunVersionedBucketTests := func(mainRegion, secondaryRegion, endpoint, accessKey, secretKey string) {
 		var bucket TestS3Bucket
+
+		var firstVersionOfFile1 string
+		var secondVersionOfFile1 string
+		var thirdVersionOfFile1 string
+		var firstVersionOfFile2 string
+		var deletedVersionOfFile2 string
 
 		var creds = S3AccessKey{
 			Id:     accessKey,
