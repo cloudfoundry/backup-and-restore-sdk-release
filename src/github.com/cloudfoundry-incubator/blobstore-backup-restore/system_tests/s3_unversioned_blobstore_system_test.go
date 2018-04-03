@@ -40,10 +40,10 @@ var _ = Describe("S3 unversioned backuper", func() {
 
 	var blobKey string
 	var localArtifact *os.File
-	var unversionedBackuperInstance JobInstance
+	var backuperInstance JobInstance
 
 	BeforeEach(func() {
-		unversionedBackuperInstance = JobInstance{
+		backuperInstance = JobInstance{
 			Deployment:    MustHaveEnv("BOSH_DEPLOYMENT"),
 			Instance:      "s3-unversioned-backuper",
 			InstanceIndex: "0",
@@ -59,14 +59,14 @@ var _ = Describe("S3 unversioned backuper", func() {
 		DeleteAllFilesFromBucket(backupRegion, backupBucket)
 
 		instanceArtifactDirPath = "/tmp/s3-unversioned-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
-		unversionedBackuperInstance.RunOnVMAndSucceed("mkdir -p " + instanceArtifactDirPath)
+		backuperInstance.RunOnVMAndSucceed("mkdir -p " + instanceArtifactDirPath)
 		var err error
 		localArtifact, err = ioutil.TempFile("", "blobstore-")
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	AfterEach(func() {
-		unversionedBackuperInstance.RunOnVMAndSucceed("rm -rf " + instanceArtifactDirPath)
+		backuperInstance.RunOnVMAndSucceed("rm -rf " + instanceArtifactDirPath)
 		err := os.Remove(localArtifact.Name())
 		Expect(err).NotTo(HaveOccurred())
 		DeleteAllFilesFromBucket(region, bucket)
@@ -76,7 +76,7 @@ var _ = Describe("S3 unversioned backuper", func() {
 	It("backs up from the source bucket to the backup bucket", func() {
 		blobKey = UploadTimestampedFileToBucket(region, bucket, "some/folder/file1", "FILE1")
 
-		unversionedBackuperInstance.RunOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
+		backuperInstance.RunOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
 			" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/backup")
 
 		filesList := ListFilesFromBucket(backupRegion, backupBucket)
@@ -86,7 +86,7 @@ var _ = Describe("S3 unversioned backuper", func() {
 
 		Expect(GetFileContentsFromBucket(backupRegion, backupBucket, filesList[0])).To(Equal("FILE1"))
 
-		session := unversionedBackuperInstance.DownloadFromInstance(
+		session := backuperInstance.DownloadFromInstance(
 			instanceArtifactDirPath+"/blobstore.json", localArtifact.Name())
 		Expect(session).Should(gexec.Exit(0))
 		fileContents, err := ioutil.ReadFile(localArtifact.Name())

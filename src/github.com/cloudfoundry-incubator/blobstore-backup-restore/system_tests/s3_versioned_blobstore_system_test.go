@@ -41,9 +41,9 @@ var _ = Describe("S3 versioned backuper", func() {
 	var artifactDirPath string
 
 	var backuperInstance JobInstance
-	var cloneBackuperInstance JobInstance
-	var unversionedBackuperInstance JobInstance
-	var unversionedCustomCaCertBackuperInstance JobInstance
+	var backuperInstanceWithClonedBucket JobInstance
+	var backuperInstanceWithUnversionedBucket JobInstance
+	var backuperInstanceWithCustomCaCertBlobstore JobInstance
 
 	BeforeEach(func() {
 		backuperInstance = JobInstance{
@@ -51,17 +51,17 @@ var _ = Describe("S3 versioned backuper", func() {
 			Instance:      "backuper",
 			InstanceIndex: "0",
 		}
-		cloneBackuperInstance = JobInstance{
+		backuperInstanceWithClonedBucket = JobInstance{
 			Deployment:    MustHaveEnv("BOSH_DEPLOYMENT"),
 			Instance:      "clone-backuper",
 			InstanceIndex: "0",
 		}
-		unversionedBackuperInstance = JobInstance{
+		backuperInstanceWithUnversionedBucket = JobInstance{
 			Deployment:    MustHaveEnv("BOSH_DEPLOYMENT"),
 			Instance:      "versioned-backuper-unversioned-bucket",
 			InstanceIndex: "0",
 		}
-		unversionedCustomCaCertBackuperInstance = JobInstance{
+		backuperInstanceWithCustomCaCertBlobstore = JobInstance{
 			Deployment:    MustHaveEnv("BOSH_DEPLOYMENT"),
 			Instance:      "unversioned-custom-ca-cert-backuper",
 			InstanceIndex: "0",
@@ -80,8 +80,8 @@ var _ = Describe("S3 versioned backuper", func() {
 
 		artifactDirPath = "/tmp/s3-versioned-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
 		backuperInstance.RunOnVMAndSucceed("mkdir -p " + artifactDirPath)
-		cloneBackuperInstance.RunOnVMAndSucceed("mkdir -p " + artifactDirPath)
-		unversionedBackuperInstance.RunOnVMAndSucceed("mkdir -p " + artifactDirPath)
+		backuperInstanceWithClonedBucket.RunOnVMAndSucceed("mkdir -p " + artifactDirPath)
+		backuperInstanceWithUnversionedBucket.RunOnVMAndSucceed("mkdir -p " + artifactDirPath)
 	})
 
 	AfterEach(func() {
@@ -89,8 +89,8 @@ var _ = Describe("S3 versioned backuper", func() {
 		DeleteAllVersionsFromBucket(cloneRegion, cloneBucket)
 		DeleteAllVersionsFromBucket(unversionedRegion, unversionedBucket)
 		backuperInstance.RunOnVMAndSucceed("rm -rf " + artifactDirPath)
-		cloneBackuperInstance.RunOnVMAndSucceed("rm -rf " + artifactDirPath)
-		unversionedBackuperInstance.RunOnVMAndSucceed("rm -rf " + artifactDirPath)
+		backuperInstanceWithClonedBucket.RunOnVMAndSucceed("rm -rf " + artifactDirPath)
+		backuperInstanceWithUnversionedBucket.RunOnVMAndSucceed("rm -rf " + artifactDirPath)
 	})
 
 	It("backs up and restores in-place", func() {
@@ -123,9 +123,9 @@ var _ = Describe("S3 versioned backuper", func() {
 			" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
 
 		backuperInstance.DownloadFromInstance(artifactDirPath+"/blobstore.json", "/tmp/blobstore.json")
-		cloneBackuperInstance.UploadToInstance("/tmp/blobstore.json", artifactDirPath+"/blobstore.json")
+		backuperInstanceWithClonedBucket.UploadToInstance("/tmp/blobstore.json", artifactDirPath+"/blobstore.json")
 
-		cloneBackuperInstance.RunOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
+		backuperInstanceWithClonedBucket.RunOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
 			" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/restore")
 
 		filesList := ListFilesFromBucket(cloneRegion, cloneBucket)
@@ -136,16 +136,16 @@ var _ = Describe("S3 versioned backuper", func() {
 	})
 
 	It("fails when the bucket is not versioned", func() {
-		session := unversionedBackuperInstance.RunOnInstance("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
+		session := backuperInstanceWithUnversionedBucket.RunOnInstance("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
 			" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
 
 		Expect(session).To(gexec.Exit(1))
 		Expect(session.Out).To(gbytes.Say("is not versioned"))
-		Expect(unversionedBackuperInstance.RunOnInstance("stat " + artifactDirPath + "/blobstore.json")).To(gexec.Exit(1))
+		Expect(backuperInstanceWithUnversionedBucket.RunOnInstance("stat " + artifactDirPath + "/blobstore.json")).To(gexec.Exit(1))
 	})
 
 	It("connects with a blobstore with custom CA cert", func() {
-		session := unversionedCustomCaCertBackuperInstance.RunOnInstance("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
+		session := backuperInstanceWithCustomCaCertBlobstore.RunOnInstance("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
 			" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
 
 		Expect(session).To(gexec.Exit(1))
