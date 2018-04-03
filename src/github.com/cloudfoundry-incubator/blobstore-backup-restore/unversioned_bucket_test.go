@@ -67,7 +67,7 @@ var _ = Describe("S3UnversionedBucket", func() {
 
 		})
 
-		PContext("when the bucket has a lot of files", func() {
+		Context("when the bucket has a lot of files", func() {
 			BeforeEach(func() {
 				bucketObjectUnderTest, err = NewS3UnversionedBucket(
 					"sdk-unversioned-big-bucket-integration-test", "eu-west-1", endpoint, creds)
