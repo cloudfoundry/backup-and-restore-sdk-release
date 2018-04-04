@@ -1,5 +1,7 @@
 package blobstore
 
+import "github.com/cloudfoundry-incubator/blobstore-backup-restore/s3"
+
 //go:generate counterfeiter -o fakes/fake_unversioned_bucket_pair.go . UnversionedBucketPair
 type UnversionedBucketPair interface {
 	Backup(backupLocation string) (BackupBucketAddress, error)
@@ -10,38 +12,22 @@ type S3BucketPair struct {
 	BackupBucket UnversionedBucket
 }
 
-func NewS3BucketPair(liveBucketName, liveBucketRegion, endpoint string, accessKey S3AccessKey,
+func NewS3BucketPair(liveBucketName, liveBucketRegion, endpoint string, accessKey s3.S3AccessKey,
 	backupBucketName string, backupBucketRegion string) (S3BucketPair, error) {
 
-	liveS3Client, err := newS3Client(liveBucketRegion, endpoint, accessKey)
+	liveS3Bucket, err := s3.NewBucket(liveBucketName, liveBucketRegion, endpoint, accessKey)
 	if err != nil {
 		return S3BucketPair{}, err
 	}
 
-	backupS3Client, err := newS3Client(backupBucketRegion, endpoint, accessKey)
+	backupS3Bucket, err := s3.NewBucket(backupBucketName, backupBucketRegion, endpoint, accessKey)
 	if err != nil {
 		return S3BucketPair{}, err
 	}
 
 	return S3BucketPair{
-		LiveBucket: S3UnversionedBucket{
-			S3Bucket{
-				name:       liveBucketName,
-				regionName: liveBucketRegion,
-				s3Client:   liveS3Client,
-				accessKey:  accessKey,
-				endpoint:   endpoint,
-			},
-		},
-		BackupBucket: S3UnversionedBucket{
-			S3Bucket{
-				name:       backupBucketName,
-				regionName: backupBucketRegion,
-				s3Client:   backupS3Client,
-				accessKey:  accessKey,
-				endpoint:   endpoint,
-			},
-		},
+		LiveBucket:   NewS3UnversionedBucket(liveS3Bucket),
+		BackupBucket: NewS3UnversionedBucket(backupS3Bucket),
 	}, nil
 }
 

@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	blobstore "github.com/cloudfoundry-incubator/blobstore-backup-restore"
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/s3"
 )
 
 type FakeVersionedBucket struct {
@@ -26,15 +27,15 @@ type FakeVersionedBucket struct {
 	regionNameReturnsOnCall map[int]struct {
 		result1 string
 	}
-	VersionsStub        func() ([]blobstore.Version, error)
+	VersionsStub        func() ([]s3.Version, error)
 	versionsMutex       sync.RWMutex
 	versionsArgsForCall []struct{}
 	versionsReturns     struct {
-		result1 []blobstore.Version
+		result1 []s3.Version
 		result2 error
 	}
 	versionsReturnsOnCall map[int]struct {
-		result1 []blobstore.Version
+		result1 []s3.Version
 		result2 error
 	}
 	CopyVersionsStub        func(regionName, bucketName string, versions []blobstore.BlobVersion) error
@@ -134,7 +135,7 @@ func (fake *FakeVersionedBucket) RegionNameReturnsOnCall(i int, result1 string) 
 	}{result1}
 }
 
-func (fake *FakeVersionedBucket) Versions() ([]blobstore.Version, error) {
+func (fake *FakeVersionedBucket) Versions() ([]s3.Version, error) {
 	fake.versionsMutex.Lock()
 	ret, specificReturn := fake.versionsReturnsOnCall[len(fake.versionsArgsForCall)]
 	fake.versionsArgsForCall = append(fake.versionsArgsForCall, struct{}{})
@@ -155,24 +156,24 @@ func (fake *FakeVersionedBucket) VersionsCallCount() int {
 	return len(fake.versionsArgsForCall)
 }
 
-func (fake *FakeVersionedBucket) VersionsReturns(result1 []blobstore.Version, result2 error) {
+func (fake *FakeVersionedBucket) VersionsReturns(result1 []s3.Version, result2 error) {
 	fake.VersionsStub = nil
 	fake.versionsReturns = struct {
-		result1 []blobstore.Version
+		result1 []s3.Version
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeVersionedBucket) VersionsReturnsOnCall(i int, result1 []blobstore.Version, result2 error) {
+func (fake *FakeVersionedBucket) VersionsReturnsOnCall(i int, result1 []s3.Version, result2 error) {
 	fake.VersionsStub = nil
 	if fake.versionsReturnsOnCall == nil {
 		fake.versionsReturnsOnCall = make(map[int]struct {
-			result1 []blobstore.Version
+			result1 []s3.Version
 			result2 error
 		})
 	}
 	fake.versionsReturnsOnCall[i] = struct {
-		result1 []blobstore.Version
+		result1 []s3.Version
 		result2 error
 	}{result1, result2}
 }

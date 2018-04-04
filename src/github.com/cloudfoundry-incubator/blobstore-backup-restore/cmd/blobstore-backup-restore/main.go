@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore"
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/s3"
 )
 
 func main() {
@@ -97,21 +98,21 @@ func getEnv(varName string) string {
 func makeBuckets(config map[string]BucketConfig) (map[string]blobstore.VersionedBucket, error) {
 	var buckets = map[string]blobstore.VersionedBucket{}
 
-	var err error
 	for identifier, bucketConfig := range config {
-		buckets[identifier], err = blobstore.NewS3VersionedBucket(
+		s3Bucket, err := s3.NewBucket(
 			bucketConfig.Name,
 			bucketConfig.Region,
 			bucketConfig.Endpoint,
-			blobstore.S3AccessKey{
+			s3.S3AccessKey{
 				Id:     bucketConfig.AwsAccessKeyId,
 				Secret: bucketConfig.AwsSecretAccessKey,
 			},
 		)
-
 		if err != nil {
 			return nil, err
 		}
+
+		buckets[identifier] = blobstore.NewS3VersionedBucket(s3Bucket)
 	}
 
 	return buckets, nil
@@ -126,7 +127,7 @@ func makeBucketPairs(config map[string]BucketConfigWithBackupBucket) (map[string
 			bucketConfig.Name,
 			bucketConfig.Region,
 			bucketConfig.Endpoint,
-			blobstore.S3AccessKey{
+			s3.S3AccessKey{
 				Id:     bucketConfig.AwsAccessKeyId,
 				Secret: bucketConfig.AwsSecretAccessKey,
 			},

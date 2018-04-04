@@ -2,6 +2,8 @@ package blobstore
 
 import (
 	"fmt"
+
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/s3"
 )
 
 type VersionedBackuper struct {
@@ -49,7 +51,7 @@ func containsNullVersion(latestVersions []BlobVersion) bool {
 	return false
 }
 
-func filterLatest(versions []Version) []BlobVersion {
+func filterLatest(versions []s3.Version) []BlobVersion {
 	var filteredVersions []BlobVersion
 	for _, version := range versions {
 		if version.IsLatest {
