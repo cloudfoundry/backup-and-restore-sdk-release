@@ -2,7 +2,7 @@ package blobstore_test
 
 import (
 	. "github.com/cloudfoundry-incubator/blobstore-backup-restore"
-	"github.com/cloudfoundry-incubator/blobstore-backup-restore/fakes"
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/s3/fakes"
 
 	"fmt"
 

@@ -7,11 +7,11 @@ import (
 )
 
 type VersionedBackuper struct {
-	sourceBuckets       map[string]VersionedBucket
+	sourceBuckets       map[string]s3.VersionedBucket
 	destinationArtifact VersionedArtifact
 }
 
-func NewVersionedBackuper(sourceBuckets map[string]VersionedBucket, destinationArtifact VersionedArtifact) VersionedBackuper {
+func NewVersionedBackuper(sourceBuckets map[string]s3.VersionedBucket, destinationArtifact VersionedArtifact) VersionedBackuper {
 	return VersionedBackuper{
 		sourceBuckets:       sourceBuckets,
 		destinationArtifact: destinationArtifact,

@@ -40,11 +40,6 @@ type ListResponseEntry struct {
 	Key string
 }
 
-type TestS3Bucket struct {
-	Name   string
-	Region string
-}
-
 func listFiles(bucket, endpoint string, creds s3.S3AccessKey) []string {
 	baseCmd := constructBaseCmd(endpoint)
 	baseCmd = append(baseCmd, "s3api",
@@ -112,7 +107,7 @@ func downloadFileToTmp(bucket, endpoint, key string, creds s3.S3AccessKey) strin
 	return bodyFile.Name()
 }
 
-func setUpS3UnversionedBucket(region, endpoint string, creds s3.S3AccessKey) TestS3Bucket {
+func setUpS3UnversionedBucket(region, endpoint string, creds s3.S3AccessKey) string {
 	bucketName := "sdk-integration-test-" + strconv.FormatInt(time.Now().UnixNano(), 10)
 
 	baseCmd := constructBaseCmd(endpoint)
@@ -123,13 +118,13 @@ func setUpS3UnversionedBucket(region, endpoint string, creds s3.S3AccessKey) Tes
 		"--create-bucket-configuration", "LocationConstraint="+region)
 
 	runAwsCommand(creds.Id, creds.Secret, baseCmd)
-	return TestS3Bucket{Name: bucketName, Region: region}
+	return bucketName
 }
 
-func setUpVersionedS3Bucket(region, endpoint string, creds s3.S3AccessKey) TestS3Bucket {
-	testBucket := setUpS3UnversionedBucket(region, endpoint, creds)
-	enableBucketVersioning(testBucket.Name, endpoint, creds)
-	return testBucket
+func setUpVersionedS3Bucket(region, endpoint string, creds s3.S3AccessKey) string {
+	testBucketName := setUpS3UnversionedBucket(region, endpoint, creds)
+	enableBucketVersioning(testBucketName, endpoint, creds)
+	return testBucketName
 }
 
 func enableBucketVersioning(bucket, endpoint string, creds s3.S3AccessKey) {

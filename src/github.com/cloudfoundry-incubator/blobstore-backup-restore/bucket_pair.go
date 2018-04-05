@@ -8,8 +8,8 @@ type UnversionedBucketPair interface {
 }
 
 type S3BucketPair struct {
-	LiveBucket   UnversionedBucket
-	BackupBucket UnversionedBucket
+	LiveBucket   s3.UnversionedBucket
+	BackupBucket s3.UnversionedBucket
 }
 
 func NewS3BucketPair(liveBucketName, liveBucketRegion, endpoint string, accessKey s3.S3AccessKey,
@@ -26,8 +26,8 @@ func NewS3BucketPair(liveBucketName, liveBucketRegion, endpoint string, accessKe
 	}
 
 	return S3BucketPair{
-		LiveBucket:   NewS3UnversionedBucket(liveS3Bucket),
-		BackupBucket: NewS3UnversionedBucket(backupS3Bucket),
+		LiveBucket:   liveS3Bucket,
+		BackupBucket: backupS3Bucket,
 	}, nil
 }
 

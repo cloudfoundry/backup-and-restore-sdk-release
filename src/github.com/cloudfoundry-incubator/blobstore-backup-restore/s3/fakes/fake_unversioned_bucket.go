@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	blobstore "github.com/cloudfoundry-incubator/blobstore-backup-restore"
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/s3"
 )
 
 type FakeUnversionedBucket struct {
@@ -259,4 +259,4 @@ func (fake *FakeUnversionedBucket) recordInvocation(key string, args []interface
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ blobstore.UnversionedBucket = new(FakeUnversionedBucket)
+var _ s3.UnversionedBucket = new(FakeUnversionedBucket)

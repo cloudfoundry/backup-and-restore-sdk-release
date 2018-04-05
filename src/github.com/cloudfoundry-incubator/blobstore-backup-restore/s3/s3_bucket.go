@@ -34,6 +34,23 @@ type Version struct {
 	IsLatest bool
 }
 
+//go:generate counterfeiter -o fakes/fake_unversioned_bucket.go . UnversionedBucket
+type UnversionedBucket interface {
+	Name() string
+	RegionName() string
+	Copy(key, destinationPath, originBucketName, originBucketRegion string) error
+	ListFiles() ([]string, error)
+}
+
+//go:generate counterfeiter -o fakes/fake_versioned_bucket.go . VersionedBucket
+type VersionedBucket interface {
+	Name() string
+	RegionName() string
+	CopyVersion(blobKey, versionId, originBucketName, originBucketRegion string) error
+	Versions() ([]Version, error)
+	CheckIfVersioned() error
+}
+
 func NewBucket(bucketName, bucketRegion, endpoint string, accessKey S3AccessKey) (S3Bucket, error) {
 	s3Client, err := newS3Client(bucketRegion, endpoint, accessKey)
 	if err != nil {
@@ -121,7 +138,7 @@ func (bucket S3Bucket) CheckIfVersioned() error {
 }
 
 func (bucket S3Bucket) Copy(blobKey, destinationPath, originBucketName, originBucketRegion string) error {
-	return bucket.CopyVersion(
+	return bucket.copyVersion(
 		blobKey,
 		"null",
 		destinationPath,
@@ -130,7 +147,17 @@ func (bucket S3Bucket) Copy(blobKey, destinationPath, originBucketName, originBu
 	)
 }
 
-func (bucket S3Bucket) CopyVersion(blobKey, versionId, destinationPath, originBucketName, originBucketRegion string) error {
+func (bucket S3Bucket) CopyVersion(blobKey, versionId, originBucketName, originBucketRegion string) error {
+	return bucket.copyVersion(
+		blobKey,
+		versionId,
+		"",
+		originBucketName,
+		originBucketRegion,
+	)
+}
+
+func (bucket S3Bucket) copyVersion(blobKey, versionId, destinationPath, originBucketName, originBucketRegion string) error {
 	blobSize, err := bucket.getBlobSize(originBucketName, originBucketRegion, blobKey, versionId)
 	if err != nil {
 		return err

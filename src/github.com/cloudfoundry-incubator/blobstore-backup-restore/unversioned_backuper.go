@@ -11,6 +11,18 @@ type UnversionedBackuper struct {
 	destinationArtifact UnversionedArtifact
 }
 
+func NewUnversionedBackuper(
+	bucketPairs map[string]UnversionedBucketPair,
+	destinationArtifact UnversionedArtifact,
+	clock Clock,
+) UnversionedBackuper {
+	return UnversionedBackuper{
+		bucketPairs:         bucketPairs,
+		destinationArtifact: destinationArtifact,
+		clock:               clock,
+	}
+}
+
 func (b UnversionedBackuper) Run() error {
 	timestamp := b.clock.Now()
 	addresses := map[string]BackupBucketAddress{}
@@ -22,16 +34,4 @@ func (b UnversionedBackuper) Run() error {
 		addresses[id] = address
 	}
 	return b.destinationArtifact.Save(addresses)
-}
-
-func NewUnversionedBackuper(
-	bucketPairs map[string]UnversionedBucketPair,
-	destinationArtifact UnversionedArtifact,
-	clock Clock,
-) UnversionedBackuper {
-	return UnversionedBackuper{
-		bucketPairs:         bucketPairs,
-		destinationArtifact: destinationArtifact,
-		clock:               clock,
-	}
 }

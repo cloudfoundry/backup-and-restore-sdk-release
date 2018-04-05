@@ -3,8 +3,6 @@ package blobstore_test
 import (
 	"os"
 
-	. "github.com/cloudfoundry-incubator/blobstore-backup-restore"
-
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore/s3"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -31,12 +29,13 @@ var _ = Describe("S3UnversionedBucket", func() {
 		)
 	})
 
-	Describe("CopyFiles with a big file on AWS", func() {
+	Describe("Copy with a big file on AWS", func() {
 		var endpoint string
 		var creds s3.S3AccessKey
-		var preExistingBigFileBucketConfig TestS3Bucket
-		var destinationBucket TestS3Bucket
-		var bucketObjectUnderTest S3UnversionedBucket
+		var preExistingBigFileBucketName string
+		var destinationBucketName string
+		var region string
+		var bucketObjectUnderTest s3.UnversionedBucket
 		var err error
 
 		BeforeEach(func() {
@@ -45,25 +44,21 @@ var _ = Describe("S3UnversionedBucket", func() {
 				Id:     os.Getenv("TEST_AWS_ACCESS_KEY_ID"),
 				Secret: os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
 			}
-			preExistingBigFileBucketConfig = TestS3Bucket{
-				Name:   "large-blob-test-bucket-unversioned",
-				Region: "eu-west-1",
-			}
+			region = "eu-west-1"
+			preExistingBigFileBucketName = "large-blob-test-bucket-unversioned"
+			destinationBucketName = setUpS3UnversionedBucket("eu-west-1", endpoint, creds)
 
-			destinationBucket = setUpS3UnversionedBucket("eu-west-1", endpoint, creds)
-
-			s3Bucket, err := s3.NewBucket(destinationBucket.Name, destinationBucket.Region, endpoint, creds)
+			bucketObjectUnderTest, err = s3.NewBucket(destinationBucketName, region, endpoint, creds)
 			Expect(err).NotTo(HaveOccurred())
-			bucketObjectUnderTest = NewS3UnversionedBucket(s3Bucket)
 		})
 
 		AfterEach(func() {
-			tearDownBucket(destinationBucket.Name, endpoint, creds)
+			tearDownBucket(destinationBucketName, endpoint, creds)
 		})
 
 		JustBeforeEach(func() {
 			err = bucketObjectUnderTest.Copy("big_file", "path/to/file",
-				preExistingBigFileBucketConfig.Name, preExistingBigFileBucketConfig.Region)
+				preExistingBigFileBucketName, region)
 
 		})
 
@@ -72,11 +67,11 @@ var _ = Describe("S3UnversionedBucket", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			By("copying the large file")
-			Expect(listFiles(destinationBucket.Name, endpoint, creds)).To(ConsistOf("path/to/file/big_file"))
+			Expect(listFiles(destinationBucketName, endpoint, creds)).To(ConsistOf("path/to/file/big_file"))
 
 			By("not corrupting the large file")
 			Expect(
-				shasum(downloadFileToTmp(destinationBucket.Name, endpoint, "path/to/file/big_file", creds))).To(
+				shasum(downloadFileToTmp(destinationBucketName, endpoint, "path/to/file/big_file", creds))).To(
 				Equal("188f500de28479d67e7375566750472e58e4cec1"))
 		})
 	})
@@ -84,8 +79,8 @@ var _ = Describe("S3UnversionedBucket", func() {
 
 func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, secretKey string) {
 	var (
-		liveBucket            TestS3Bucket
-		bucketObjectUnderTest S3UnversionedBucket
+		liveBucketName        string
+		bucketObjectUnderTest s3.UnversionedBucket
 		err                   error
 		testFile1             string
 		testFile2             string
@@ -95,22 +90,21 @@ func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, se
 	BeforeEach(func() {
 		creds = s3.S3AccessKey{Id: accessKey, Secret: secretKey}
 
-		liveBucket = setUpS3UnversionedBucket(liveRegion, endpoint, creds)
-		testFile1 = uploadFile(liveBucket.Name, endpoint, "path1/file1", "FILE1", creds)
-		testFile2 = uploadFile(liveBucket.Name, endpoint, "path2/file2", "FILE2", creds)
+		liveBucketName = setUpS3UnversionedBucket(liveRegion, endpoint, creds)
+		testFile1 = uploadFile(liveBucketName, endpoint, "path1/file1", "FILE1", creds)
+		testFile2 = uploadFile(liveBucketName, endpoint, "path2/file2", "FILE2", creds)
 	})
 
 	AfterEach(func() {
-		tearDownBucket(liveBucket.Name, endpoint, creds)
+		tearDownBucket(liveBucketName, endpoint, creds)
 	})
 
 	Describe("ListFiles", func() {
 		var files []string
 
 		BeforeEach(func() {
-			s3Bucket, err := s3.NewBucket(liveBucket.Name, liveBucket.Region, endpoint, creds)
+			bucketObjectUnderTest, err = s3.NewBucket(liveBucketName, liveRegion, endpoint, creds)
 			Expect(err).NotTo(HaveOccurred())
-			bucketObjectUnderTest = NewS3UnversionedBucket(s3Bucket)
 		})
 
 		JustBeforeEach(func() {
@@ -124,9 +118,8 @@ func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, se
 
 		Context("when s3 list-objects errors", func() {
 			BeforeEach(func() {
-				s3Bucket, err := s3.NewBucket("does-not-exist", liveRegion, endpoint, creds)
+				bucketObjectUnderTest, err = s3.NewBucket("does-not-exist", liveRegion, endpoint, creds)
 				Expect(err).NotTo(HaveOccurred())
-				bucketObjectUnderTest = NewS3UnversionedBucket(s3Bucket)
 			})
 
 			It("errors", func() {
@@ -137,9 +130,8 @@ func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, se
 
 		Context("when the bucket has a lot of files", func() {
 			BeforeEach(func() {
-				s3Bucket, err := s3.NewBucket("sdk-unversioned-big-bucket-integration-test", liveRegion, endpoint, creds)
+				bucketObjectUnderTest, err = s3.NewBucket("sdk-unversioned-big-bucket-integration-test", liveRegion, endpoint, creds)
 				Expect(err).NotTo(HaveOccurred())
-				bucketObjectUnderTest = NewS3UnversionedBucket(s3Bucket)
 			})
 
 			It("works", func() {
@@ -151,26 +143,25 @@ func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, se
 
 	Describe("Copy", func() {
 		var (
-			backedUpFiles []string
-			backupBucket  TestS3Bucket
+			backedUpFiles    []string
+			backupBucketName string
 		)
 
 		BeforeEach(func() {
-			backupBucket = setUpS3UnversionedBucket(backupRegion, endpoint, creds)
+			backupBucketName = setUpS3UnversionedBucket(backupRegion, endpoint, creds)
 
-			s3Bucket, err := s3.NewBucket(backupBucket.Name, backupBucket.Region, endpoint, creds)
+			bucketObjectUnderTest, err = s3.NewBucket(backupBucketName, backupRegion, endpoint, creds)
 			Expect(err).NotTo(HaveOccurred())
-			bucketObjectUnderTest = NewS3UnversionedBucket(s3Bucket)
 		})
 
 		AfterEach(func() {
-			tearDownBucket(backupBucket.Name, endpoint, creds)
+			tearDownBucket(backupBucketName, endpoint, creds)
 		})
 
 		JustBeforeEach(func() {
 			err = bucketObjectUnderTest.Copy(
 				"path1/file1", "2012_02_13_23_12_02/bucketIdFromDeployment",
-				liveBucket.Name, liveBucket.Region)
+				liveBucketName, liveRegion)
 		})
 
 		It("copies the file to the backup bucket", func() {
@@ -179,12 +170,11 @@ func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, se
 			Expect(err).NotTo(HaveOccurred())
 			Expect(backedUpFiles).To(ConsistOf([]string{"2012_02_13_23_12_02/bucketIdFromDeployment/path1/file1"}))
 			Expect(getFileContents(
-				backupBucket.Name,
+				backupBucketName,
 				endpoint,
 				"2012_02_13_23_12_02/bucketIdFromDeployment/path1/file1",
 				creds),
-			).To(Equal(
-				"FILE1"))
+			).To(Equal("FILE1"))
 		})
 	})
 }

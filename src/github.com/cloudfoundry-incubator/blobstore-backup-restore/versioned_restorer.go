@@ -1,11 +1,13 @@
 package blobstore
 
+import "github.com/cloudfoundry-incubator/blobstore-backup-restore/s3"
+
 type VersionedRestorer struct {
-	destinationBuckets map[string]VersionedBucket
+	destinationBuckets map[string]s3.VersionedBucket
 	sourceArtifact     VersionedArtifact
 }
 
-func NewVersionedRestorer(destinationBuckets map[string]VersionedBucket, sourceArtifact VersionedArtifact) VersionedRestorer {
+func NewVersionedRestorer(destinationBuckets map[string]s3.VersionedBucket, sourceArtifact VersionedArtifact) VersionedRestorer {
 	return VersionedRestorer{destinationBuckets: destinationBuckets, sourceArtifact: sourceArtifact}
 }
 
@@ -17,12 +19,23 @@ func (r VersionedRestorer) Run() error {
 
 	for identifier, destinationBucket := range r.destinationBuckets {
 		bucketSnapshot := bucketSnapshots[identifier]
-		err = destinationBucket.CopyVersions(
-			bucketSnapshot.RegionName,
-			bucketSnapshot.BucketName,
-			bucketSnapshot.Versions)
+
+		err := destinationBucket.CheckIfVersioned()
 		if err != nil {
 			return err
+		}
+
+		for _, versionToCopy := range bucketSnapshot.Versions {
+			err = destinationBucket.CopyVersion(
+				versionToCopy.BlobKey,
+				versionToCopy.Id,
+				bucketSnapshot.BucketName,
+				bucketSnapshot.RegionName,
+			)
+
+			if err != nil {
+				return err
+			}
 		}
 	}
 
