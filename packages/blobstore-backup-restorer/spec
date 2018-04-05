@@ -9,6 +9,7 @@ dependencies:
 files:
 - github.com/cloudfoundry-incubator/blobstore-backup-restore/cmd/blobstore-backup-restore/*.go
 - github.com/cloudfoundry-incubator/blobstore-backup-restore/*.go
+- github.com/cloudfoundry-incubator/blobstore-backup-restore/s3/*.go
 - github.com/cloudfoundry-incubator/blobstore-backup-restore/vendor/github.com/aws/aws-sdk-go/aws/*.go
 - github.com/cloudfoundry-incubator/blobstore-backup-restore/vendor/github.com/aws/aws-sdk-go/aws/awserr/*.go
 - github.com/cloudfoundry-incubator/blobstore-backup-restore/vendor/github.com/aws/aws-sdk-go/aws/awsutil/*.go
