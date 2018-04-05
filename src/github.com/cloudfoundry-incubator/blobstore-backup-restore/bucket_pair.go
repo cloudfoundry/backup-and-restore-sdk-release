@@ -12,25 +12,6 @@ type S3BucketPair struct {
 	BackupBucket s3.UnversionedBucket
 }
 
-func NewS3BucketPair(liveBucketName, liveBucketRegion, endpoint string, accessKey s3.S3AccessKey,
-	backupBucketName string, backupBucketRegion string) (S3BucketPair, error) {
-
-	liveS3Bucket, err := s3.NewBucket(liveBucketName, liveBucketRegion, endpoint, accessKey)
-	if err != nil {
-		return S3BucketPair{}, err
-	}
-
-	backupS3Bucket, err := s3.NewBucket(backupBucketName, backupBucketRegion, endpoint, accessKey)
-	if err != nil {
-		return S3BucketPair{}, err
-	}
-
-	return S3BucketPair{
-		LiveBucket:   liveS3Bucket,
-		BackupBucket: backupS3Bucket,
-	}, nil
-}
-
 func (p S3BucketPair) Backup(backupLocation string) (BackupBucketAddress, error) {
 	files, err := p.LiveBucket.ListFiles()
 	if err != nil {

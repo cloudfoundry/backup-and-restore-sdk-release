@@ -75,37 +75,51 @@ var _ = Describe("VersionedRestorer", func() {
 		})
 
 		It("restores a backup to the corresponding buckets", func() {
-			Expect(err).NotTo(HaveOccurred())
+			By("successfully running", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
 
-			Expect(dropletsBucket.CopyVersionCallCount()).To(Equal(2))
+			By("Checking the buckets are versioned", func() {
+				Expect(dropletsBucket.CheckIfVersionedCallCount()).To(Equal(1))
+				Expect(buildpacksBucket.CheckIfVersionedCallCount()).To(Equal(1))
+				Expect(packagesBucket.CheckIfVersionedCallCount()).To(Equal(1))
+			})
 
-			expectedBlobKey, expectedVersionId, expectedSourceBucketName, expectedSourceRegionName := dropletsBucket.CopyVersionArgsForCall(0)
-			Expect(expectedBlobKey).To(Equal("one"))
-			Expect(expectedVersionId).To(Equal("13"))
-			Expect(expectedSourceBucketName).To(Equal("my_droplets_bucket"))
-			Expect(expectedSourceRegionName).To(Equal("my_droplets_region"))
+			By("Calling CopyVersion for each object in the droplets bucket", func() {
+				Expect(dropletsBucket.CopyVersionCallCount()).To(Equal(2))
 
-			expectedBlobKey, expectedVersionId, expectedSourceBucketName, expectedSourceRegionName = dropletsBucket.CopyVersionArgsForCall(1)
-			Expect(expectedBlobKey).To(Equal("two"))
-			Expect(expectedVersionId).To(Equal("22"))
-			Expect(expectedSourceBucketName).To(Equal("my_droplets_bucket"))
-			Expect(expectedSourceRegionName).To(Equal("my_droplets_region"))
+				expectedBlobKey, expectedVersionId, expectedSourceBucketName, expectedSourceRegionName := dropletsBucket.CopyVersionArgsForCall(0)
+				Expect(expectedBlobKey).To(Equal("one"))
+				Expect(expectedVersionId).To(Equal("13"))
+				Expect(expectedSourceBucketName).To(Equal("my_droplets_bucket"))
+				Expect(expectedSourceRegionName).To(Equal("my_droplets_region"))
 
-			Expect(buildpacksBucket.CopyVersionCallCount()).To(Equal(1))
+				expectedBlobKey, expectedVersionId, expectedSourceBucketName, expectedSourceRegionName = dropletsBucket.CopyVersionArgsForCall(1)
+				Expect(expectedBlobKey).To(Equal("two"))
+				Expect(expectedVersionId).To(Equal("22"))
+				Expect(expectedSourceBucketName).To(Equal("my_droplets_bucket"))
+				Expect(expectedSourceRegionName).To(Equal("my_droplets_region"))
+			})
 
-			expectedBlobKey, expectedVersionId, expectedSourceBucketName, expectedSourceRegionName = buildpacksBucket.CopyVersionArgsForCall(0)
-			Expect(expectedBlobKey).To(Equal("three"))
-			Expect(expectedVersionId).To(Equal("32"))
-			Expect(expectedSourceBucketName).To(Equal("my_buildpacks_bucket"))
-			Expect(expectedSourceRegionName).To(Equal("my_buildpacks_region"))
+			By("Calling CopyVersions for each object in the buildpacks bucket", func() {
+				Expect(buildpacksBucket.CopyVersionCallCount()).To(Equal(1))
 
-			Expect(packagesBucket.CopyVersionCallCount()).To(Equal(1))
+				expectedBlobKey, expectedVersionId, expectedSourceBucketName, expectedSourceRegionName := buildpacksBucket.CopyVersionArgsForCall(0)
+				Expect(expectedBlobKey).To(Equal("three"))
+				Expect(expectedVersionId).To(Equal("32"))
+				Expect(expectedSourceBucketName).To(Equal("my_buildpacks_bucket"))
+				Expect(expectedSourceRegionName).To(Equal("my_buildpacks_region"))
+			})
 
-			expectedBlobKey, expectedVersionId, expectedSourceBucketName, expectedSourceRegionName = packagesBucket.CopyVersionArgsForCall(0)
-			Expect(expectedBlobKey).To(Equal("four"))
-			Expect(expectedVersionId).To(Equal("43"))
-			Expect(expectedSourceBucketName).To(Equal("my_packages_bucket"))
-			Expect(expectedSourceRegionName).To(Equal("my_packages_region"))
+			By("Calling CopyVersions for each object in the packages bucket", func() {
+				Expect(packagesBucket.CopyVersionCallCount()).To(Equal(1))
+
+				expectedBlobKey, expectedVersionId, expectedSourceBucketName, expectedSourceRegionName := packagesBucket.CopyVersionArgsForCall(0)
+				Expect(expectedBlobKey).To(Equal("four"))
+				Expect(expectedVersionId).To(Equal("43"))
+				Expect(expectedSourceBucketName).To(Equal("my_packages_bucket"))
+				Expect(expectedSourceRegionName).To(Equal("my_packages_region"))
+			})
 		})
 	})
 

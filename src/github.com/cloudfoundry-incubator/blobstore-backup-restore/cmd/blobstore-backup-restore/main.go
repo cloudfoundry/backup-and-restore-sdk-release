@@ -95,8 +95,8 @@ func getEnv(varName string) string {
 	return value
 }
 
-func makeBuckets(config map[string]BucketConfig) (map[string]blobstore.VersionedBucket, error) {
-	var buckets = map[string]blobstore.VersionedBucket{}
+func makeBuckets(config map[string]BucketConfig) (map[string]s3.VersionedBucket, error) {
+	var buckets = map[string]s3.VersionedBucket{}
 
 	for identifier, bucketConfig := range config {
 		s3Bucket, err := s3.NewBucket(
@@ -112,7 +112,7 @@ func makeBuckets(config map[string]BucketConfig) (map[string]blobstore.Versioned
 			return nil, err
 		}
 
-		buckets[identifier] = blobstore.NewS3VersionedBucket(s3Bucket)
+		buckets[identifier] = s3Bucket
 	}
 
 	return buckets, nil
@@ -121,9 +121,8 @@ func makeBuckets(config map[string]BucketConfig) (map[string]blobstore.Versioned
 func makeBucketPairs(config map[string]BucketConfigWithBackupBucket) (map[string]blobstore.UnversionedBucketPair, error) {
 	var buckets = map[string]blobstore.UnversionedBucketPair{}
 
-	var err error
 	for identifier, bucketConfig := range config {
-		buckets[identifier], err = blobstore.NewS3BucketPair(
+		liveBucket, err := s3.NewBucket(
 			bucketConfig.Name,
 			bucketConfig.Region,
 			bucketConfig.Endpoint,
@@ -131,13 +130,25 @@ func makeBucketPairs(config map[string]BucketConfigWithBackupBucket) (map[string
 				Id:     bucketConfig.AwsAccessKeyId,
 				Secret: bucketConfig.AwsSecretAccessKey,
 			},
-			bucketConfig.Backup.Name,
-			bucketConfig.Backup.Region,
 		)
-
 		if err != nil {
 			return nil, err
 		}
+
+		backupBucket, err := s3.NewBucket(
+			bucketConfig.Backup.Name,
+			bucketConfig.Backup.Region,
+			bucketConfig.Endpoint,
+			s3.S3AccessKey{
+				Id:     bucketConfig.AwsAccessKeyId,
+				Secret: bucketConfig.AwsSecretAccessKey,
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		buckets[identifier] = blobstore.S3BucketPair{LiveBucket: liveBucket, BackupBucket: backupBucket}
 	}
 
 	return buckets, nil
