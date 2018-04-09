@@ -108,6 +108,31 @@ var _ = Describe("UnversionedRestorer", func() {
 		})
 	})
 
+	Context("When there is a bucket pair that is recorded to have been empty on backup", func() {
+
+		BeforeEach(func() {
+
+			artifact.LoadReturns(map[string]BackupBucketAddress{
+				"droplets": {
+					BucketName:   "artifact_backup_droplet_bucket",
+					BucketRegion: "artifact_backup_droplet_region",
+					Path:         "timestamp/droplets",
+				},
+				"packages": {
+					BucketName:   "artifact_backup_package_bucket",
+					BucketRegion: "artifact_backup_package_region",
+					Path:         "timestamp2/packages",
+					EmptyBackup:  true,
+				},
+			}, nil)
+		})
+
+		It("does not attempt to restore that pair", func() {
+			Expect(dropletsBucketPair.RestoreCallCount()).To(Equal(1))
+			Expect(packagesBucketPair.RestoreCallCount()).To(Equal(0))
+		})
+	})
+
 	Context("When there is a bucket referenced in the artifact that is not in the restore config", func() {
 		BeforeEach(func() {
 			artifact.LoadReturns(map[string]BackupBucketAddress{

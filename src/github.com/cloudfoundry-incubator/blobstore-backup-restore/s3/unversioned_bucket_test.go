@@ -161,9 +161,6 @@ func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, se
 				Expect(files).To(ConsistOf("leaf/node"))
 			})
 		})
-
-		//TODO error handling when directory doesn't exist
-
 	})
 
 	Describe("CopyObject", func() {

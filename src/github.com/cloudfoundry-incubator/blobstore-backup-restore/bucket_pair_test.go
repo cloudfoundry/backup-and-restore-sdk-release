@@ -193,4 +193,15 @@ var _ = Describe("Restore", func() {
 			Expect(err).To(MatchError(ContainSubstring("cannot copy object")))
 		})
 	})
+
+	Context("When listFiles returns no files", func() {
+		BeforeEach(func() {
+			backupBucket.ListFilesReturns([]string{}, nil)
+		})
+
+		It("errors saying there should be a backup", func() {
+			Expect(err).To(MatchError(ContainSubstring("no files found in 2015-12-13-05-06-07/my_bucket " +
+				"in bucket backupBucket to restore")))
+		})
+	})
 })

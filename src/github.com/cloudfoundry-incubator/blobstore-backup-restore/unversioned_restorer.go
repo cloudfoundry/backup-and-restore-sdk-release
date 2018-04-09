@@ -35,7 +35,9 @@ func (b UnversionedRestorer) Run() error {
 		if !exists {
 			return fmt.Errorf("cannot restore bucket %s, not found in backup artifact", key)
 		}
-		err = pair.Restore(address.Path)
+		if !address.EmptyBackup {
+			err = pair.Restore(address.Path)
+		}
 		if err != nil {
 			return err
 		}

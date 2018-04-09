@@ -77,5 +77,3 @@ var _ = Describe("UnversionedBackuper", func() {
 		})
 	})
 })
-
-//TODO error handling - bail on first bucket that errors?
