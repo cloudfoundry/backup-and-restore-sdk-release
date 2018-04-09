@@ -47,14 +47,18 @@ var _ = Describe("Backup", func() {
 		})
 
 		By("calling copy for each file in the bucket", func() {
-			Expect(backupBucket.CopyCallCount()).To(Equal(2))
-			expectedKey, expectedDestinationPath, expectedOriginBucketName, expectedOriginBucketRegion := backupBucket.CopyArgsForCall(0)
+			Expect(backupBucket.CopyObjectCallCount()).To(Equal(2))
+			expectedKey, expectedOriginPath, expectedDestinationPath, expectedOriginBucketName, expectedOriginBucketRegion :=
+				backupBucket.CopyObjectArgsForCall(0)
 			Expect(expectedKey).To(Equal("path1/file1"))
+			Expect(expectedOriginPath).To(Equal(""))
 			Expect(expectedDestinationPath).To(Equal("destination-string"))
 			Expect(expectedOriginBucketName).To(Equal("liveBucket"))
 			Expect(expectedOriginBucketRegion).To(Equal("liveBucketRegion"))
-			expectedKey, expectedDestinationPath, expectedOriginBucketName, expectedOriginBucketRegion = backupBucket.CopyArgsForCall(1)
+			expectedKey, expectedOriginPath, expectedDestinationPath, expectedOriginBucketName, expectedOriginBucketRegion =
+				backupBucket.CopyObjectArgsForCall(1)
 			Expect(expectedKey).To(Equal("path2/file2"))
+			Expect(expectedOriginPath).To(Equal(""))
 			Expect(expectedDestinationPath).To(Equal("destination-string"))
 			Expect(expectedOriginBucketName).To(Equal("liveBucket"))
 			Expect(expectedOriginBucketRegion).To(Equal("liveBucketRegion"))
@@ -79,13 +83,79 @@ var _ = Describe("Backup", func() {
 		})
 	})
 
-	Context("when Copy fails", func() {
+	Context("when CopyObject fails", func() {
 		BeforeEach(func() {
-			backupBucket.CopyReturns(fmt.Errorf("cannot copy file"))
+			backupBucket.CopyObjectReturns(fmt.Errorf("cannot copy file"))
 		})
 
 		It("should fail", func() {
 			Expect(err).To(MatchError("cannot copy file"))
+		})
+	})
+})
+
+var _ = Describe("Restore", func() {
+	var (
+		backupBucket *fakes.FakeUnversionedBucket
+		liveBucket   *fakes.FakeUnversionedBucket
+		pair         UnversionedBucketPair
+		err          error
+	)
+
+	JustBeforeEach(func() {
+		err = pair.Restore("2015-12-13-05-06-07/my_bucket")
+	})
+
+	BeforeEach(func() {
+		backupBucket = new(fakes.FakeUnversionedBucket)
+		backupBucket.NameReturns("backupBucket")
+		backupBucket.RegionNameReturns("backupRegion")
+
+		liveBucket = new(fakes.FakeUnversionedBucket)
+
+		backupBucket.ListFilesReturns([]string{"my_key"}, nil)
+
+		pair = S3BucketPair{
+			LiveBucket:   liveBucket,
+			BackupBucket: backupBucket,
+		}
+	})
+
+	It("successfully copies from the backup bucket to the live bucket", func() {
+		By("not returning an error", func() {
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		By("copying from the backup location to the live location", func() {
+			Expect(backupBucket.ListFilesCallCount()).To(Equal(1))
+			Expect(backupBucket.ListFilesArgsForCall(0)).To(Equal("2015-12-13-05-06-07/my_bucket"))
+			Expect(liveBucket.CopyObjectCallCount()).To(Equal(1))
+			key, originPath, destinationPath, originBucketName, originBucketRegion := liveBucket.CopyObjectArgsForCall(0)
+			Expect(key).To(Equal("my_key"))
+			Expect(originPath).To(Equal("2015-12-13-05-06-07/my_bucket"))
+			Expect(destinationPath).To(Equal(""))
+			Expect(originBucketName).To(Equal(backupBucket.Name()))
+			Expect(originBucketRegion).To(Equal(backupBucket.RegionName()))
+		})
+	})
+
+	Context("When ListFiles errors", func() {
+		BeforeEach(func() {
+			backupBucket.ListFilesReturns([]string{}, fmt.Errorf("cannot list files"))
+		})
+
+		It("errors", func() {
+			Expect(err).To(MatchError(ContainSubstring("cannot list files")))
+		})
+	})
+
+	Context("When CopyObject errors", func() {
+		BeforeEach(func() {
+			liveBucket.CopyObjectReturns(fmt.Errorf("cannot copy object"))
+		})
+
+		It("errors", func() {
+			Expect(err).To(MatchError(ContainSubstring("cannot copy object")))
 		})
 	})
 })

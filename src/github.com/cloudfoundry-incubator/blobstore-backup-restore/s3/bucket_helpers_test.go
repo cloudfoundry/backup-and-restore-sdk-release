@@ -107,7 +107,7 @@ func downloadFileToTmp(bucket, endpoint, key string, creds s3.S3AccessKey) strin
 	return bodyFile.Name()
 }
 
-func setUpS3UnversionedBucket(region, endpoint string, creds s3.S3AccessKey) string {
+func setUpUnversionedBucket(region, endpoint string, creds s3.S3AccessKey) string {
 	bucketName := "sdk-integration-test-" + strconv.FormatInt(time.Now().UnixNano(), 10)
 
 	baseCmd := constructBaseCmd(endpoint)
@@ -121,8 +121,8 @@ func setUpS3UnversionedBucket(region, endpoint string, creds s3.S3AccessKey) str
 	return bucketName
 }
 
-func setUpVersionedS3Bucket(region, endpoint string, creds s3.S3AccessKey) string {
-	testBucketName := setUpS3UnversionedBucket(region, endpoint, creds)
+func setUpVersionedBucket(region, endpoint string, creds s3.S3AccessKey) string {
+	testBucketName := setUpUnversionedBucket(region, endpoint, creds)
 	enableBucketVersioning(testBucketName, endpoint, creds)
 	return testBucketName
 }

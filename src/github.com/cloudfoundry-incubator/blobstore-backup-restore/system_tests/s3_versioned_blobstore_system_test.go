@@ -28,7 +28,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("S3 versioned backuper", func() {
+var _ = Describe("S3 versioned backup and restore", func() {
 	var region string
 	var cloneRegion string
 	var unversionedRegion string

@@ -21,6 +21,17 @@ type FakeUnversionedBucketPair struct {
 		result1 blobstore.BackupBucketAddress
 		result2 error
 	}
+	RestoreStub        func(backupLocation string) error
+	restoreMutex       sync.RWMutex
+	restoreArgsForCall []struct {
+		backupLocation string
+	}
+	restoreReturns struct {
+		result1 error
+	}
+	restoreReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -76,11 +87,61 @@ func (fake *FakeUnversionedBucketPair) BackupReturnsOnCall(i int, result1 blobst
 	}{result1, result2}
 }
 
+func (fake *FakeUnversionedBucketPair) Restore(backupLocation string) error {
+	fake.restoreMutex.Lock()
+	ret, specificReturn := fake.restoreReturnsOnCall[len(fake.restoreArgsForCall)]
+	fake.restoreArgsForCall = append(fake.restoreArgsForCall, struct {
+		backupLocation string
+	}{backupLocation})
+	fake.recordInvocation("Restore", []interface{}{backupLocation})
+	fake.restoreMutex.Unlock()
+	if fake.RestoreStub != nil {
+		return fake.RestoreStub(backupLocation)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.restoreReturns.result1
+}
+
+func (fake *FakeUnversionedBucketPair) RestoreCallCount() int {
+	fake.restoreMutex.RLock()
+	defer fake.restoreMutex.RUnlock()
+	return len(fake.restoreArgsForCall)
+}
+
+func (fake *FakeUnversionedBucketPair) RestoreArgsForCall(i int) string {
+	fake.restoreMutex.RLock()
+	defer fake.restoreMutex.RUnlock()
+	return fake.restoreArgsForCall[i].backupLocation
+}
+
+func (fake *FakeUnversionedBucketPair) RestoreReturns(result1 error) {
+	fake.RestoreStub = nil
+	fake.restoreReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeUnversionedBucketPair) RestoreReturnsOnCall(i int, result1 error) {
+	fake.RestoreStub = nil
+	if fake.restoreReturnsOnCall == nil {
+		fake.restoreReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.restoreReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeUnversionedBucketPair) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.backupMutex.RLock()
 	defer fake.backupMutex.RUnlock()
+	fake.restoreMutex.RLock()
+	defer fake.restoreMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

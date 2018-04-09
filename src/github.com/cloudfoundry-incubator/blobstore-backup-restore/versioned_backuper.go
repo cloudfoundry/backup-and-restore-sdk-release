@@ -22,7 +22,7 @@ func (b VersionedBackuper) Run() error {
 	bucketSnapshots := map[string]BucketSnapshot{}
 
 	for identifier, bucketToBackup := range b.sourceBuckets {
-		versions, err := bucketToBackup.Versions()
+		versions, err := bucketToBackup.ListVersions()
 		if err != nil {
 			return err
 		}

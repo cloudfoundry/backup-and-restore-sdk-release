@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("S3UnversionedBucket", func() {
+var _ = Describe("UnversionedBucket", func() {
 	Describe("AWS S3 buckets", func() {
 		RunUnversionedBucketTests(
 			"eu-west-1",
@@ -29,7 +29,7 @@ var _ = Describe("S3UnversionedBucket", func() {
 		)
 	})
 
-	Describe("Copy with a big file on AWS", func() {
+	Describe("CopyObject with a big file on AWS", func() {
 		var endpoint string
 		var creds s3.S3AccessKey
 		var preExistingBigFileBucketName string
@@ -46,7 +46,7 @@ var _ = Describe("S3UnversionedBucket", func() {
 			}
 			region = "eu-west-1"
 			preExistingBigFileBucketName = "large-blob-test-bucket-unversioned"
-			destinationBucketName = setUpS3UnversionedBucket("eu-west-1", endpoint, creds)
+			destinationBucketName = setUpUnversionedBucket("eu-west-1", endpoint, creds)
 
 			bucketObjectUnderTest, err = s3.NewBucket(destinationBucketName, region, endpoint, creds)
 			Expect(err).NotTo(HaveOccurred())
@@ -57,8 +57,13 @@ var _ = Describe("S3UnversionedBucket", func() {
 		})
 
 		JustBeforeEach(func() {
-			err = bucketObjectUnderTest.Copy("big_file", "path/to/file",
-				preExistingBigFileBucketName, region)
+			err = bucketObjectUnderTest.CopyObject(
+				"big_file",
+				"",
+				"path/to/file",
+				preExistingBigFileBucketName,
+				region,
+			)
 
 		})
 
@@ -84,14 +89,16 @@ func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, se
 		err                   error
 		testFile1             string
 		testFile2             string
+		liveFile              string
 		creds                 s3.S3AccessKey
 	)
 
 	BeforeEach(func() {
 		creds = s3.S3AccessKey{Id: accessKey, Secret: secretKey}
 
-		liveBucketName = setUpS3UnversionedBucket(liveRegion, endpoint, creds)
+		liveBucketName = setUpUnversionedBucket(liveRegion, endpoint, creds)
 		testFile1 = uploadFile(liveBucketName, endpoint, "path1/file1", "FILE1", creds)
+		liveFile = uploadFile(liveBucketName, endpoint, "live/location/leaf/node", "CONTENTS", creds)
 		testFile2 = uploadFile(liveBucketName, endpoint, "path2/file2", "FILE2", creds)
 	})
 
@@ -107,48 +114,66 @@ func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, se
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		JustBeforeEach(func() {
-			files, err = bucketObjectUnderTest.ListFiles()
-		})
+		Context("When I ask for a list of all the files in the bucket", func() {
 
-		It("should list all the files", func() {
-			Expect(err).NotTo(HaveOccurred())
-			Expect(files).To(ConsistOf([]string{"path1/file1", "path2/file2"}))
-		})
+			JustBeforeEach(func() {
+				files, err = bucketObjectUnderTest.ListFiles("")
+			})
 
-		Context("when s3 list-objects errors", func() {
-			BeforeEach(func() {
-				bucketObjectUnderTest, err = s3.NewBucket("does-not-exist", liveRegion, endpoint, creds)
+			It("should list all the files", func() {
 				Expect(err).NotTo(HaveOccurred())
+				Expect(files).To(ConsistOf([]string{"path1/file1", "live/location/leaf/node", "path2/file2"}))
 			})
 
-			It("errors", func() {
-				Expect(err).To(MatchError(ContainSubstring("failed to list files from bucket does-not-exist")))
+			Context("when s3 list-objects errors", func() {
+				BeforeEach(func() {
+					bucketObjectUnderTest, err = s3.NewBucket("does-not-exist", liveRegion, endpoint, creds)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("errors", func() {
+					Expect(err).To(MatchError(ContainSubstring("failed to list files from bucket does-not-exist")))
+				})
+
+			})
+
+			Context("when the bucket has a lot of files", func() {
+				BeforeEach(func() {
+					bucketObjectUnderTest, err = s3.NewBucket("sdk-unversioned-big-bucket-integration-test", liveRegion, endpoint, creds)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("works", func() {
+					Expect(err).NotTo(HaveOccurred())
+					Expect(len(files)).To(Equal(2001))
+				})
 			})
 
 		})
 
-		Context("when the bucket has a lot of files", func() {
-			BeforeEach(func() {
-				bucketObjectUnderTest, err = s3.NewBucket("sdk-unversioned-big-bucket-integration-test", liveRegion, endpoint, creds)
-				Expect(err).NotTo(HaveOccurred())
+		Context("When I ask for a list of files in a directory", func() {
+			JustBeforeEach(func() {
+				files, err = bucketObjectUnderTest.ListFiles("live/location")
 			})
 
-			It("works", func() {
+			It("should list all the files in the directory", func() {
 				Expect(err).NotTo(HaveOccurred())
-				Expect(len(files)).To(Equal(2001))
+				Expect(files).To(ConsistOf("leaf/node"))
 			})
 		})
+
+		//TODO error handling when directory doesn't exist
+
 	})
 
-	Describe("Copy", func() {
+	Describe("CopyObject", func() {
 		var (
 			backedUpFiles    []string
 			backupBucketName string
 		)
 
 		BeforeEach(func() {
-			backupBucketName = setUpS3UnversionedBucket(backupRegion, endpoint, creds)
+			backupBucketName = setUpUnversionedBucket(backupRegion, endpoint, creds)
 
 			bucketObjectUnderTest, err = s3.NewBucket(backupBucketName, backupRegion, endpoint, creds)
 			Expect(err).NotTo(HaveOccurred())
@@ -159,22 +184,26 @@ func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, se
 		})
 
 		JustBeforeEach(func() {
-			err = bucketObjectUnderTest.Copy(
-				"path1/file1", "2012_02_13_23_12_02/bucketIdFromDeployment",
-				liveBucketName, liveRegion)
+			err = bucketObjectUnderTest.CopyObject(
+				"leaf/node",
+				"live/location",
+				"2012_02_13_23_12_02/bucketIdFromDeployment",
+				liveBucketName,
+				liveRegion,
+			)
 		})
 
 		It("copies the file to the backup bucket", func() {
 			Expect(err).NotTo(HaveOccurred())
 			backedUpFiles = listFiles(bucketObjectUnderTest.Name(), endpoint, creds)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(backedUpFiles).To(ConsistOf([]string{"2012_02_13_23_12_02/bucketIdFromDeployment/path1/file1"}))
+			Expect(backedUpFiles).To(ConsistOf([]string{"2012_02_13_23_12_02/bucketIdFromDeployment/leaf/node"}))
 			Expect(getFileContents(
 				backupBucketName,
 				endpoint,
-				"2012_02_13_23_12_02/bucketIdFromDeployment/path1/file1",
+				"2012_02_13_23_12_02/bucketIdFromDeployment/leaf/node",
 				creds),
-			).To(Equal("FILE1"))
+			).To(Equal("CONTENTS"))
 		})
 	})
 }

@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("S3VersionedBucket", func() {
+var _ = Describe("VersionedBucket", func() {
 	var bucketObjectUnderTest s3.VersionedBucket
 	var err error
 
@@ -27,7 +27,7 @@ var _ = Describe("S3VersionedBucket", func() {
 		}
 
 		BeforeEach(func() {
-			bucketName = setUpVersionedS3Bucket(mainRegion, endpoint, creds)
+			bucketName = setUpVersionedBucket(mainRegion, endpoint, creds)
 
 			firstVersionOfFile1 = uploadFile(bucketName, endpoint, "test-1", "1-A", creds)
 			secondVersionOfFile1 = uploadFile(bucketName, endpoint, "test-1", "1-B", creds)
@@ -43,11 +43,11 @@ var _ = Describe("S3VersionedBucket", func() {
 			tearDownVersionedBucket(bucketName, endpoint, creds)
 		})
 
-		Describe("Versions", func() {
+		Describe("ListVersions", func() {
 			var versions []s3.Version
 
 			JustBeforeEach(func() {
-				versions, err = bucketObjectUnderTest.Versions()
+				versions, err = bucketObjectUnderTest.ListVersions()
 			})
 
 			Context("when retrieving versions succeeds", func() {
@@ -83,7 +83,7 @@ var _ = Describe("S3VersionedBucket", func() {
 				var unversionedBucketName string
 
 				BeforeEach(func() {
-					unversionedBucketName = setUpS3UnversionedBucket(mainRegion, endpoint, creds)
+					unversionedBucketName = setUpUnversionedBucket(mainRegion, endpoint, creds)
 					uploadFile(unversionedBucketName, endpoint, "unversioned-test", "UNVERSIONED-TEST", creds)
 
 					bucketObjectUnderTest, err = s3.NewBucket(unversionedBucketName, mainRegion, endpoint, creds)
@@ -107,7 +107,7 @@ var _ = Describe("S3VersionedBucket", func() {
 				})
 
 				It("works", func() {
-					versions, err := bucketObjectUnderTest.Versions()
+					versions, err := bucketObjectUnderTest.ListVersions()
 
 					Expect(err).NotTo(HaveOccurred())
 					Expect(len(versions)).To(Equal(2001))
@@ -145,7 +145,7 @@ var _ = Describe("S3VersionedBucket", func() {
 
 			BeforeEach(func() {
 				clearOutVersionedBucket(bucketName, endpoint, creds)
-				secondaryBucketName = setUpVersionedS3Bucket(secondaryRegion, endpoint, creds)
+				secondaryBucketName = setUpVersionedBucket(secondaryRegion, endpoint, creds)
 				versionOfFileWhichWasSubsequentlyDeleted = uploadFile(
 					secondaryBucketName,
 					endpoint,
@@ -218,7 +218,7 @@ var _ = Describe("S3VersionedBucket", func() {
 
 		Context("when listing versions for an empty bucket", func() {
 			It("does not fail", func() {
-				_, err := bucketObjectUnderTest.Versions()
+				_, err := bucketObjectUnderTest.ListVersions()
 				Expect(err).NotTo(HaveOccurred())
 			})
 		})
@@ -239,7 +239,7 @@ var _ = Describe("S3VersionedBucket", func() {
 				Secret: os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
 			}
 
-			destinationBucketName = setUpVersionedS3Bucket(region, endpoint, creds)
+			destinationBucketName = setUpVersionedBucket(region, endpoint, creds)
 
 			bucketObjectUnderTest, err = s3.NewBucket(destinationBucketName, region, endpoint, creds)
 			Expect(err).NotTo(HaveOccurred())

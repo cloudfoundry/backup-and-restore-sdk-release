@@ -9,9 +9,6 @@ import (
 
 var _ = Describe("UnversionedBackuper", func() {
 
-	// TODO: create three fake buckets with backup buckets, two of which share a backup bucket and
-	//   verify the expected copy calls are made.
-
 	var (
 		dropletBucketPair   *fakes.FakeUnversionedBucketPair
 		artifact            *fakes.FakeUnversionedArtifact

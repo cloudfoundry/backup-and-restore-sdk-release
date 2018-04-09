@@ -31,14 +31,13 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("S3 unversioned backuper", func() {
+var _ = Describe("S3 unversioned backup and restore", func() {
 	var region string
 	var bucket string
 	var backupRegion string
 	var backupBucket string
 	var instanceArtifactDirPath string
 
-	var blobKey string
 	var localArtifact *os.File
 	var backuperInstance JobInstance
 
@@ -73,32 +72,54 @@ var _ = Describe("S3 unversioned backuper", func() {
 		DeleteAllFilesFromBucket(backupRegion, backupBucket)
 	})
 
-	It("backs up from the source bucket to the backup bucket", func() {
-		blobKey = UploadTimestampedFileToBucket(region, bucket, "some/folder/file1", "FILE1")
+	It("backs up and restores an unversioned bucket", func() {
+		var (
+			preBackupFiles   []string
+			backupFiles      []string
+			postRestoreFiles []string
+		)
 
-		backuperInstance.RunOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
-			" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/backup")
+		By("backing up from the source bucket to the backup bucket", func() {
+			WriteFileInBucket(region, bucket, "original/path/to/file", "FILE1")
+			preBackupFiles = ListFilesFromBucket(backupRegion, backupBucket)
 
-		filesList := ListFilesFromBucket(backupRegion, backupBucket)
+			backuperInstance.RunOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
+				" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/backup")
 
-		Expect(filesList).To(ConsistOf(MatchRegexp(
-			"\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/my_bucket/" + blobKey + "$")))
+			backupFiles = ListFilesFromBucket(backupRegion, backupBucket)
+			Expect(backupFiles).To(ConsistOf(MatchRegexp(
+				"\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/my_bucket/original/path/to/file" + "$")))
+			Expect(GetFileContentsFromBucket(backupRegion, backupBucket, backupFiles[0])).To(Equal("FILE1"))
+		})
 
-		Expect(GetFileContentsFromBucket(backupRegion, backupBucket, filesList[0])).To(Equal("FILE1"))
+		By("writing a helpful backup artifact file", func() {
+			session := backuperInstance.DownloadFromInstance(
+				instanceArtifactDirPath+"/blobstore.json", localArtifact.Name())
 
-		session := backuperInstance.DownloadFromInstance(
-			instanceArtifactDirPath+"/blobstore.json", localArtifact.Name())
-		Expect(session).Should(gexec.Exit(0))
-		fileContents, err := ioutil.ReadFile(localArtifact.Name())
-		Expect(err).NotTo(HaveOccurred())
-		Expect(fileContents).To(ContainSubstring("\"my_bucket\": {"))
-		Expect(fileContents).To(ContainSubstring("\"bucket_name\": \"" + backupBucket + "\""))
-		Expect(fileContents).To(ContainSubstring("\"bucket_region\": \"" + backupRegion + "\""))
-		Expect(fileContents).To(MatchRegexp(
-			"\"path\": \"\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}\\/my_bucket\""))
-	})
+			Expect(session).Should(gexec.Exit(0))
 
-	PIt("connects with a blobstore with custom CA cert", func() {
+			fileContents, err := ioutil.ReadFile(localArtifact.Name())
 
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fileContents).To(ContainSubstring("\"my_bucket\": {"))
+			Expect(fileContents).To(ContainSubstring("\"bucket_name\": \"" + backupBucket + "\""))
+			Expect(fileContents).To(ContainSubstring("\"bucket_region\": \"" + backupRegion + "\""))
+			Expect(fileContents).To(MatchRegexp(
+				"\"path\": \"\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}\\/my_bucket\""))
+		})
+
+		DeleteAllFilesFromBucket(region, bucket)
+		Expect(ListFilesFromBucket(region, bucket)).To(HaveLen(0))
+		WriteFileInBucket(region, bucket, "should/be/left/alone", "STILL_HERE")
+
+		By("restoring from the backup bucket to the source bucket", func() {
+			backuperInstance.RunOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
+				" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/restore")
+
+			postRestoreFiles = ListFilesFromBucket(region, bucket)
+			Expect(postRestoreFiles).To(ConsistOf([]string{"should/be/left/alone", "original/path/to/file"}))
+			Expect(GetFileContentsFromBucket(region, bucket, "original/path/to/file")).To(Equal("FILE1"))
+			Expect(GetFileContentsFromBucket(region, bucket, "should/be/left/alone")).To(Equal("STILL_HERE"))
+		})
 	})
 })

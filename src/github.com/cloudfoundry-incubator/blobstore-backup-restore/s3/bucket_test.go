@@ -8,9 +8,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("S3Bucket", func() {
+var _ = Describe("Bucket", func() {
 
-	Describe("CheckIfVersioned", func() {
+	Describe("IsVersioned", func() {
 		Context("when the bucket is not versioned", func() {
 
 			var unversionedBucketName string
@@ -28,7 +28,7 @@ var _ = Describe("S3Bucket", func() {
 					Secret: os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
 				}
 
-				unversionedBucketName = setUpS3UnversionedBucket(unversionedBucketRegion, endpoint, creds)
+				unversionedBucketName = setUpUnversionedBucket(unversionedBucketRegion, endpoint, creds)
 				uploadFile(unversionedBucketName, endpoint, "unversioned-test", "UNVERSIONED-TEST", creds)
 
 				bucketObjectUnderTest, err = s3.NewBucket(unversionedBucketName, unversionedBucketRegion, endpoint, creds)
