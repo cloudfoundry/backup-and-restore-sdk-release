@@ -1,6 +1,8 @@
 package blobstore_test
 
 import (
+	"fmt"
+
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore"
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore/fakes"
 	. "github.com/onsi/ginkgo"
@@ -15,6 +17,7 @@ var _ = Describe("UnversionedBackuper", func() {
 		fakeClock           *fakes.FakeClock
 		backuper            blobstore.UnversionedBackuper
 		backupBucketAddress blobstore.BackupBucketAddress
+		err                 error
 	)
 
 	BeforeEach(func() {
@@ -35,7 +38,7 @@ var _ = Describe("UnversionedBackuper", func() {
 	})
 
 	JustBeforeEach(func() {
-		backuper.Run()
+		err = backuper.Run()
 	})
 
 	It("copies from the live bucket to the backup bucket", func() {
@@ -48,6 +51,30 @@ var _ = Describe("UnversionedBackuper", func() {
 		Expect(artifact.SaveArgsForCall(0)).To(Equal(map[string]blobstore.BackupBucketAddress{
 			"droplets": backupBucketAddress,
 		}))
+	})
+
+	Context("When the Backup call fails", func() {
+		BeforeEach(func() {
+			dropletBucketPair.BackupReturns(blobstore.BackupBucketAddress{}, fmt.Errorf("BACKUP ERROR"))
+		})
+
+		It("exits gracefully", func() {
+			By("throwing an error", func() {
+				Expect(err).To(MatchError("BACKUP ERROR"))
+			})
+			By("not saving an artifact", func() {
+				Expect(artifact.SaveCallCount()).To(Equal(0))
+			})
+		})
+	})
+
+	Context("When saving the artifact fails", func() {
+		BeforeEach(func() {
+			artifact.SaveReturns(fmt.Errorf("SAVE ERROR"))
+		})
+		It("throws an error", func() {
+			Expect(err).To(MatchError("SAVE ERROR"))
+		})
 	})
 })
 
