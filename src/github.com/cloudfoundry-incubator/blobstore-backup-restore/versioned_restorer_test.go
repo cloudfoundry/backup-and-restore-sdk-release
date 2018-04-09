@@ -172,4 +172,37 @@ var _ = Describe("VersionedRestorer", func() {
 			Expect(err).To(MatchError("failed to put version to bucket 'buildpacks'"))
 		})
 	})
+
+	Context("when there isn't a corresponding bucket recorded in backup artifact", func() {
+		BeforeEach(func() {
+			artifact.LoadReturns(map[string]BucketSnapshot{
+				"droplets": {
+					BucketName: "my_droplets_bucket",
+					RegionName: "my_droplets_region",
+					Versions: []BlobVersion{
+						{BlobKey: "one", Id: "13"},
+						{BlobKey: "two", Id: "22"},
+					},
+				},
+				"buildpacks": {
+					BucketName: "my_buildpacks_bucket",
+					RegionName: "my_buildpacks_region",
+					Versions: []BlobVersion{
+						{BlobKey: "three", Id: "32"},
+					},
+				},
+			}, nil)
+
+			restorer = NewVersionedRestorer(map[string]s3.VersionedBucket{
+				"droplets":   dropletsBucket,
+				"buildpacks": buildpacksBucket,
+				"packages":   packagesBucket,
+			}, artifact)
+		})
+
+		It("fails and returns a useful error", func() {
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError("no entry found in backup artifact for bucket: packages"))
+		})
+	})
 })

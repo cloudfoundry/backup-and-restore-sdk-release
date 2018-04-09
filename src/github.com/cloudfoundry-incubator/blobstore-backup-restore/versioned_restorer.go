@@ -1,6 +1,10 @@
 package blobstore
 
-import "github.com/cloudfoundry-incubator/blobstore-backup-restore/s3"
+import (
+	"fmt"
+
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/s3"
+)
 
 type VersionedRestorer struct {
 	destinationBuckets map[string]s3.VersionedBucket
@@ -18,7 +22,11 @@ func (r VersionedRestorer) Run() error {
 	}
 
 	for identifier, destinationBucket := range r.destinationBuckets {
-		bucketSnapshot := bucketSnapshots[identifier]
+		bucketSnapshot, exists := bucketSnapshots[identifier]
+
+		if !exists {
+			return fmt.Errorf("no entry found in backup artifact for bucket: %s", identifier)
+		}
 
 		err := destinationBucket.CheckIfVersioned()
 		if err != nil {
