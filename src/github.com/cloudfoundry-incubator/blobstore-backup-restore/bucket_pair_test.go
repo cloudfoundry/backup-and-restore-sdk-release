@@ -27,7 +27,6 @@ var _ = Describe("Backup", func() {
 			LiveBucket:   liveBucket,
 			BackupBucket: backupBucket}
 
-		liveBucket.ListFilesReturns([]string{"path1/file1", "path2/file2"}, nil)
 		liveBucket.NameReturns("liveBucket")
 		liveBucket.RegionNameReturns("liveBucketRegion")
 		backupBucket.NameReturns("backupBucket")
@@ -38,39 +37,84 @@ var _ = Describe("Backup", func() {
 		address, err = bucketPair.Backup("destination-string")
 	})
 
-	It("copies all the files in the bucket", func() {
-		By("not failing", func() {
-			Expect(err).NotTo(HaveOccurred())
-		})
-		By("Listing the files in the bucket", func() {
-			Expect(liveBucket.ListFilesCallCount()).To(Equal(1))
+	Context("When there are files in the bucket", func() {
+
+		BeforeEach(func() {
+			liveBucket.ListFilesReturns([]string{"path1/file1", "path2/file2"}, nil)
 		})
 
-		By("calling copy for each file in the bucket", func() {
-			Expect(backupBucket.CopyObjectCallCount()).To(Equal(2))
-			expectedKey, expectedOriginPath, expectedDestinationPath, expectedOriginBucketName, expectedOriginBucketRegion :=
-				backupBucket.CopyObjectArgsForCall(0)
-			Expect(expectedKey).To(Equal("path1/file1"))
-			Expect(expectedOriginPath).To(Equal(""))
-			Expect(expectedDestinationPath).To(Equal("destination-string"))
-			Expect(expectedOriginBucketName).To(Equal("liveBucket"))
-			Expect(expectedOriginBucketRegion).To(Equal("liveBucketRegion"))
-			expectedKey, expectedOriginPath, expectedDestinationPath, expectedOriginBucketName, expectedOriginBucketRegion =
-				backupBucket.CopyObjectArgsForCall(1)
-			Expect(expectedKey).To(Equal("path2/file2"))
-			Expect(expectedOriginPath).To(Equal(""))
-			Expect(expectedDestinationPath).To(Equal("destination-string"))
-			Expect(expectedOriginBucketName).To(Equal("liveBucket"))
-			Expect(expectedOriginBucketRegion).To(Equal("liveBucketRegion"))
+		It("copies all the files in the bucket", func() {
+			By("succeeding", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			By("Listing the files in the bucket", func() {
+				Expect(liveBucket.ListFilesCallCount()).To(Equal(1))
+			})
+
+			By("calling copy for each file in the bucket", func() {
+				Expect(backupBucket.CopyObjectCallCount()).To(Equal(2))
+				expectedKey, expectedOriginPath, expectedDestinationPath, expectedOriginBucketName, expectedOriginBucketRegion :=
+					backupBucket.CopyObjectArgsForCall(0)
+				Expect(expectedKey).To(Equal("path1/file1"))
+				Expect(expectedOriginPath).To(Equal(""))
+				Expect(expectedDestinationPath).To(Equal("destination-string"))
+				Expect(expectedOriginBucketName).To(Equal("liveBucket"))
+				Expect(expectedOriginBucketRegion).To(Equal("liveBucketRegion"))
+				expectedKey, expectedOriginPath, expectedDestinationPath, expectedOriginBucketName, expectedOriginBucketRegion =
+					backupBucket.CopyObjectArgsForCall(1)
+				Expect(expectedKey).To(Equal("path2/file2"))
+				Expect(expectedOriginPath).To(Equal(""))
+				Expect(expectedDestinationPath).To(Equal("destination-string"))
+				Expect(expectedOriginBucketName).To(Equal("liveBucket"))
+				Expect(expectedOriginBucketRegion).To(Equal("liveBucketRegion"))
+			})
+
+			By("returning the address of the backup bucket", func() {
+				Expect(address).To(Equal(BackupBucketAddress{
+					BucketName:   "backupBucket",
+					BucketRegion: "backupBucketRegion",
+					Path:         "destination-string",
+					EmptyBackup:  false,
+				}))
+			})
 		})
 
-		By("returning the address of the backup bucket", func() {
-			Expect(address).To(Equal(BackupBucketAddress{
-				BucketName:   "backupBucket",
-				BucketRegion: "backupBucketRegion",
-				Path:         "destination-string",
-			}))
+		Context("when CopyObject fails", func() {
+			BeforeEach(func() {
+				backupBucket.CopyObjectReturns(fmt.Errorf("cannot copy file"))
+			})
+
+			It("should fail", func() {
+				Expect(err).To(MatchError("cannot copy file"))
+			})
 		})
+	})
+
+	Context("When there are no files in the bucket", func() {
+		BeforeEach(func() {
+			liveBucket.ListFilesReturns([]string{}, nil)
+		})
+
+		It("Records that information in the backup artifact", func() {
+
+			By("succeeding", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			By("not calling copy", func() {
+				Expect(backupBucket.CopyObjectCallCount()).To(Equal(0))
+			})
+
+			By("recording that the backup was empty", func() {
+				Expect(address).To(Equal(BackupBucketAddress{
+					BucketName:   "backupBucket",
+					BucketRegion: "backupBucketRegion",
+					Path:         "destination-string",
+					EmptyBackup:  true,
+				}))
+			})
+		})
+
 	})
 
 	Context("when ListFiles fails", func() {
@@ -83,15 +127,6 @@ var _ = Describe("Backup", func() {
 		})
 	})
 
-	Context("when CopyObject fails", func() {
-		BeforeEach(func() {
-			backupBucket.CopyObjectReturns(fmt.Errorf("cannot copy file"))
-		})
-
-		It("should fail", func() {
-			Expect(err).To(MatchError("cannot copy file"))
-		})
-	})
 })
 
 var _ = Describe("Restore", func() {

@@ -28,10 +28,12 @@ func (p S3BucketPair) Backup(backupLocation string) (BackupBucketAddress, error)
 			return BackupBucketAddress{}, err
 		}
 	}
+
 	return BackupBucketAddress{
 		BucketName:   p.BackupBucket.Name(),
 		BucketRegion: p.BackupBucket.RegionName(),
 		Path:         backupLocation,
+		EmptyBackup:  len(files) == 0,
 	}, nil
 }
 

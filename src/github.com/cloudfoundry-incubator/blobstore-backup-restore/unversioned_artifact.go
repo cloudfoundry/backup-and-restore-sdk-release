@@ -16,6 +16,7 @@ type BackupBucketAddress struct {
 	BucketName   string `json:"bucket_name"`
 	BucketRegion string `json:"bucket_region"`
 	Path         string `json:"path"`
+	EmptyBackup  bool   `json:empty_backup`
 }
 
 type UnversionedFileArtifact struct {
