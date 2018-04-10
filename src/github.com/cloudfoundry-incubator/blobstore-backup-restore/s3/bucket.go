@@ -18,12 +18,12 @@ const partSize int64 = 100 * 1024 * 1024
 type Bucket struct {
 	name       string
 	regionName string
-	accessKey  S3AccessKey
+	accessKey  AccessKey
 	endpoint   string
 	s3Client   *s3.S3
 }
 
-type S3AccessKey struct {
+type AccessKey struct {
 	Id     string
 	Secret string
 }
@@ -51,7 +51,7 @@ type VersionedBucket interface {
 	CheckIfVersioned() error
 }
 
-func NewBucket(bucketName, bucketRegion, endpoint string, accessKey S3AccessKey) (Bucket, error) {
+func NewBucket(bucketName, bucketRegion, endpoint string, accessKey AccessKey) (Bucket, error) {
 	s3Client, err := newS3Client(bucketRegion, endpoint, accessKey)
 	if err != nil {
 		return Bucket{}, err
@@ -326,7 +326,7 @@ func formatErrors(contextString string, errors []error) error {
 	return fmt.Errorf("%s: %s", contextString, strings.Join(errorStrings, "\n"))
 }
 
-func newS3Client(regionName string, endpoint string, accessKey S3AccessKey) (*s3.S3, error) {
+func newS3Client(regionName string, endpoint string, accessKey AccessKey) (*s3.S3, error) {
 	awsSession, err := session.NewSession(&aws.Config{
 		Region:           &regionName,
 		Credentials:      credentials.NewStaticCredentials(accessKey.Id, accessKey.Secret, ""),

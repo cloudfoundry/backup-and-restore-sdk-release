@@ -100,7 +100,7 @@ func makeBuckets(config map[string]BucketConfig) (map[string]s3.VersionedBucket,
 			bucketConfig.Name,
 			bucketConfig.Region,
 			bucketConfig.Endpoint,
-			s3.S3AccessKey{
+			s3.AccessKey{
 				Id:     bucketConfig.AwsAccessKeyId,
 				Secret: bucketConfig.AwsSecretAccessKey,
 			},
@@ -123,7 +123,7 @@ func makeBucketPairs(config map[string]BucketConfigWithBackupBucket) (map[string
 			bucketConfig.Name,
 			bucketConfig.Region,
 			bucketConfig.Endpoint,
-			s3.S3AccessKey{
+			s3.AccessKey{
 				Id:     bucketConfig.AwsAccessKeyId,
 				Secret: bucketConfig.AwsSecretAccessKey,
 			},
@@ -136,7 +136,7 @@ func makeBucketPairs(config map[string]BucketConfigWithBackupBucket) (map[string
 			bucketConfig.Backup.Name,
 			bucketConfig.Backup.Region,
 			bucketConfig.Endpoint,
-			s3.S3AccessKey{
+			s3.AccessKey{
 				Id:     bucketConfig.AwsAccessKeyId,
 				Secret: bucketConfig.AwsSecretAccessKey,
 			},

@@ -16,14 +16,14 @@ var _ = Describe("Bucket", func() {
 			var unversionedBucketName string
 			var unversionedBucketRegion string
 			var endpoint string
-			var creds s3.S3AccessKey
+			var creds s3.AccessKey
 			var err error
 			var bucketObjectUnderTest s3.VersionedBucket
 
 			BeforeEach(func() {
 				endpoint = ""
 				unversionedBucketRegion = "eu-west-1"
-				creds = s3.S3AccessKey{
+				creds = s3.AccessKey{
 					Id:     os.Getenv("TEST_AWS_ACCESS_KEY_ID"),
 					Secret: os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
 				}

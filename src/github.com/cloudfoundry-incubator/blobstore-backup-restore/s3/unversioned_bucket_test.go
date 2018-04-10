@@ -31,7 +31,7 @@ var _ = Describe("UnversionedBucket", func() {
 
 	Describe("CopyObject with a big file on AWS", func() {
 		var endpoint string
-		var creds s3.S3AccessKey
+		var creds s3.AccessKey
 		var preExistingBigFileBucketName string
 		var destinationBucketName string
 		var region string
@@ -40,7 +40,7 @@ var _ = Describe("UnversionedBucket", func() {
 
 		BeforeEach(func() {
 			endpoint = ""
-			creds = s3.S3AccessKey{
+			creds = s3.AccessKey{
 				Id:     os.Getenv("TEST_AWS_ACCESS_KEY_ID"),
 				Secret: os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
 			}
@@ -90,11 +90,11 @@ func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, se
 		testFile1             string
 		testFile2             string
 		liveFile              string
-		creds                 s3.S3AccessKey
+		creds                 s3.AccessKey
 	)
 
 	BeforeEach(func() {
-		creds = s3.S3AccessKey{Id: accessKey, Secret: secretKey}
+		creds = s3.AccessKey{Id: accessKey, Secret: secretKey}
 
 		liveBucketName = setUpUnversionedBucket(liveRegion, endpoint, creds)
 		testFile1 = uploadFile(liveBucketName, endpoint, "path1/file1", "FILE1", creds)

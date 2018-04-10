@@ -21,7 +21,7 @@ var _ = Describe("VersionedBucket", func() {
 		var firstVersionOfFile2 string
 		var deletedVersionOfFile2 string
 
-		var creds = s3.S3AccessKey{
+		var creds = s3.AccessKey{
 			Id:     accessKey,
 			Secret: secretKey,
 		}
@@ -68,7 +68,7 @@ var _ = Describe("VersionedBucket", func() {
 						bucketName,
 						mainRegion,
 						endpoint,
-						s3.S3AccessKey{Id: "NOT RIGHT", Secret: "NOT RIGHT"},
+						s3.AccessKey{Id: "NOT RIGHT", Secret: "NOT RIGHT"},
 					)
 					Expect(err).NotTo(HaveOccurred())
 				})
@@ -129,7 +129,7 @@ var _ = Describe("VersionedBucket", func() {
 
 			Context("when putting versions fails", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest, err = s3.NewBucket(bucketName, mainRegion, endpoint, s3.S3AccessKey{})
+					bucketObjectUnderTest, err = s3.NewBucket(bucketName, mainRegion, endpoint, s3.AccessKey{})
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -206,7 +206,7 @@ var _ = Describe("VersionedBucket", func() {
 			bucketName = "bbr-integration-test-bucket-empty"
 			endpoint = ""
 
-			creds := s3.S3AccessKey{
+			creds := s3.AccessKey{
 				Id:     os.Getenv("TEST_AWS_ACCESS_KEY_ID"),
 				Secret: os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
 			}
@@ -228,13 +228,13 @@ var _ = Describe("VersionedBucket", func() {
 		var destinationBucketName string
 		var region string
 		var endpoint string
-		var creds s3.S3AccessKey
+		var creds s3.AccessKey
 
 		BeforeEach(func() {
 			region = "eu-west-1"
 			endpoint = ""
 
-			creds = s3.S3AccessKey{
+			creds = s3.AccessKey{
 				Id:     os.Getenv("TEST_AWS_ACCESS_KEY_ID"),
 				Secret: os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
 			}

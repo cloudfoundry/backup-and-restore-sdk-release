@@ -40,7 +40,7 @@ type ListResponseEntry struct {
 	Key string
 }
 
-func listFiles(bucket, endpoint string, creds s3.S3AccessKey) []string {
+func listFiles(bucket, endpoint string, creds s3.AccessKey) []string {
 	baseCmd := constructBaseCmd(endpoint)
 	baseCmd = append(baseCmd, "s3api",
 		"list-objects",
@@ -59,7 +59,7 @@ func listFiles(bucket, endpoint string, creds s3.S3AccessKey) []string {
 	return keys
 }
 
-func getFileContents(bucket, endpoint, key string, creds s3.S3AccessKey) string {
+func getFileContents(bucket, endpoint, key string, creds s3.AccessKey) string {
 	baseCmd := constructBaseCmd(endpoint)
 	baseCmd = append(baseCmd, "s3",
 		"cp",
@@ -71,7 +71,7 @@ func getFileContents(bucket, endpoint, key string, creds s3.S3AccessKey) string 
 	return outputBuffer.String()
 }
 
-func uploadFile(bucket, endpoint, key, body string, creds s3.S3AccessKey) string {
+func uploadFile(bucket, endpoint, key, body string, creds s3.AccessKey) string {
 	bodyFile, _ := ioutil.TempFile("", "")
 	bodyFile.WriteString(body)
 	bodyFile.Close()
@@ -91,7 +91,7 @@ func uploadFile(bucket, endpoint, key, body string, creds s3.S3AccessKey) string
 	return response.VersionId
 }
 
-func downloadFileToTmp(bucket, endpoint, key string, creds s3.S3AccessKey) string {
+func downloadFileToTmp(bucket, endpoint, key string, creds s3.AccessKey) string {
 	bodyFile, _ := ioutil.TempFile("", "")
 	bodyFile.Close()
 
@@ -107,7 +107,7 @@ func downloadFileToTmp(bucket, endpoint, key string, creds s3.S3AccessKey) strin
 	return bodyFile.Name()
 }
 
-func setUpUnversionedBucket(region, endpoint string, creds s3.S3AccessKey) string {
+func setUpUnversionedBucket(region, endpoint string, creds s3.AccessKey) string {
 	bucketName := "sdk-integration-test-" + strconv.FormatInt(time.Now().UnixNano(), 10)
 
 	baseCmd := constructBaseCmd(endpoint)
@@ -121,13 +121,13 @@ func setUpUnversionedBucket(region, endpoint string, creds s3.S3AccessKey) strin
 	return bucketName
 }
 
-func setUpVersionedBucket(region, endpoint string, creds s3.S3AccessKey) string {
+func setUpVersionedBucket(region, endpoint string, creds s3.AccessKey) string {
 	testBucketName := setUpUnversionedBucket(region, endpoint, creds)
 	enableBucketVersioning(testBucketName, endpoint, creds)
 	return testBucketName
 }
 
-func enableBucketVersioning(bucket, endpoint string, creds s3.S3AccessKey) {
+func enableBucketVersioning(bucket, endpoint string, creds s3.AccessKey) {
 	baseCmd := constructBaseCmd(endpoint)
 	baseCmd = append(baseCmd, "s3api",
 		"put-bucket-versioning",
@@ -137,19 +137,19 @@ func enableBucketVersioning(bucket, endpoint string, creds s3.S3AccessKey) {
 	runAwsCommand(creds.Id, creds.Secret, baseCmd)
 }
 
-func tearDownBucket(bucket, endpoint string, creds s3.S3AccessKey) {
+func tearDownBucket(bucket, endpoint string, creds s3.AccessKey) {
 	baseCmd := constructBaseCmd(endpoint)
 	baseCmd = append(baseCmd, "s3", "rb", "s3://"+bucket, "--force")
 
 	runAwsCommand(creds.Id, creds.Secret, baseCmd)
 }
 
-func tearDownVersionedBucket(bucket, endpoint string, creds s3.S3AccessKey) {
+func tearDownVersionedBucket(bucket, endpoint string, creds s3.AccessKey) {
 	clearOutVersionedBucket(bucket, endpoint, creds)
 	tearDownBucket(bucket, endpoint, creds)
 }
 
-func deleteFile(bucket, endpoint, key string, creds s3.S3AccessKey) string {
+func deleteFile(bucket, endpoint, key string, creds s3.AccessKey) string {
 	baseCmd := constructBaseCmd(endpoint)
 	baseCmd = append(baseCmd, "s3api",
 		"delete-object",
@@ -164,7 +164,7 @@ func deleteFile(bucket, endpoint, key string, creds s3.S3AccessKey) string {
 	return response.VersionId
 }
 
-func deleteVersion(bucket, endpoint, key, versionId string, creds s3.S3AccessKey) {
+func deleteVersion(bucket, endpoint, key, versionId string, creds s3.AccessKey) {
 	baseCmd := constructBaseCmd(endpoint)
 	baseCmd = append(baseCmd, "s3api",
 		"delete-object",
@@ -174,7 +174,7 @@ func deleteVersion(bucket, endpoint, key, versionId string, creds s3.S3AccessKey
 	runAwsCommand(creds.Id, creds.Secret, baseCmd)
 }
 
-func clearOutVersionedBucket(bucket, endpoint string, creds s3.S3AccessKey) {
+func clearOutVersionedBucket(bucket, endpoint string, creds s3.AccessKey) {
 	baseCmd := constructBaseCmd(endpoint)
 	baseCmd = append(baseCmd, "s3api",
 		"list-object-versions",
