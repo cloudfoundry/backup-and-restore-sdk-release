@@ -15,6 +15,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore"
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore/s3"
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/unversioned"
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore/versioned"
 )
 
@@ -61,12 +62,12 @@ func main() {
 			exitWithError("Failed to establish session: %s", err.Error())
 		}
 
-		artifact := blobstore.NewUnversionedFileArtifact(commandFlags.ArtifactFilePath)
+		artifact := unversioned.NewFileArtifact(commandFlags.ArtifactFilePath)
 
 		if commandFlags.IsRestore {
-			runner = blobstore.NewUnversionedRestorer(buckets, artifact)
+			runner = unversioned.NewRestorer(buckets, artifact)
 		} else {
-			runner = blobstore.NewUnversionedBackuper(buckets, artifact, clock{})
+			runner = unversioned.NewBackuper(buckets, artifact, clock{})
 		}
 	}
 
@@ -111,8 +112,8 @@ func makeBuckets(config map[string]BucketConfig) (map[string]s3.VersionedBucket,
 	return buckets, nil
 }
 
-func makeBucketPairs(config map[string]BucketConfigWithBackupBucket) (map[string]blobstore.UnversionedBucketPair, error) {
-	var buckets = map[string]blobstore.UnversionedBucketPair{}
+func makeBucketPairs(config map[string]BucketConfigWithBackupBucket) (map[string]unversioned.BucketPair, error) {
+	var buckets = map[string]unversioned.BucketPair{}
 
 	for identifier, bucketConfig := range config {
 		liveBucket, err := s3.NewBucket(
@@ -141,7 +142,7 @@ func makeBucketPairs(config map[string]BucketConfigWithBackupBucket) (map[string
 			return nil, err
 		}
 
-		buckets[identifier] = blobstore.S3BucketPair{LiveBucket: liveBucket, BackupBucket: backupBucket}
+		buckets[identifier] = unversioned.S3BucketPair{LiveBucket: liveBucket, BackupBucket: backupBucket}
 	}
 
 	return buckets, nil

@@ -1,4 +1,4 @@
-package blobstore
+package unversioned
 
 import (
 	"encoding/json"
@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 )
 
-//go:generate counterfeiter -o fakes/fake_unversioned_artifact.go . UnversionedArtifact
-type UnversionedArtifact interface {
+//go:generate counterfeiter -o fakes/fake_artifact.go . Artifact
+type Artifact interface {
 	Save(backup map[string]BackupBucketAddress) error
 	Load() (map[string]BackupBucketAddress, error)
 }
@@ -19,15 +19,15 @@ type BackupBucketAddress struct {
 	EmptyBackup  bool   `json:"empty_backup"`
 }
 
-type UnversionedFileArtifact struct {
+type FileArtifact struct {
 	filePath string
 }
 
-func NewUnversionedFileArtifact(filePath string) UnversionedFileArtifact {
-	return UnversionedFileArtifact{filePath: filePath}
+func NewFileArtifact(filePath string) FileArtifact {
+	return FileArtifact{filePath: filePath}
 }
 
-func (a UnversionedFileArtifact) Save(backup map[string]BackupBucketAddress) error {
+func (a FileArtifact) Save(backup map[string]BackupBucketAddress) error {
 	marshalledBackup, err := json.MarshalIndent(backup, "", "  ")
 	if err != nil {
 		return err
@@ -41,7 +41,7 @@ func (a UnversionedFileArtifact) Save(backup map[string]BackupBucketAddress) err
 	return nil
 }
 
-func (a UnversionedFileArtifact) Load() (map[string]BackupBucketAddress, error) {
+func (a FileArtifact) Load() (map[string]BackupBucketAddress, error) {
 	bytes, err := ioutil.ReadFile(a.filePath)
 	if err != nil {
 		return nil, fmt.Errorf("could not read backup file: %s", err.Error())

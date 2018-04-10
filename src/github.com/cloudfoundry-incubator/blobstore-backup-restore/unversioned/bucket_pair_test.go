@@ -1,8 +1,8 @@
-package blobstore_test
+package unversioned_test
 
 import (
-	. "github.com/cloudfoundry-incubator/blobstore-backup-restore"
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore/s3/fakes"
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/unversioned"
 
 	"fmt"
 
@@ -15,15 +15,15 @@ var _ = Describe("Backup", func() {
 	var (
 		liveBucket   *fakes.FakeUnversionedBucket
 		backupBucket *fakes.FakeUnversionedBucket
-		bucketPair   S3BucketPair
-		address      BackupBucketAddress
+		bucketPair   unversioned.S3BucketPair
+		address      unversioned.BackupBucketAddress
 		err          error
 	)
 
 	BeforeEach(func() {
 		liveBucket = new(fakes.FakeUnversionedBucket)
 		backupBucket = new(fakes.FakeUnversionedBucket)
-		bucketPair = S3BucketPair{
+		bucketPair = unversioned.S3BucketPair{
 			LiveBucket:   liveBucket,
 			BackupBucket: backupBucket}
 
@@ -70,7 +70,7 @@ var _ = Describe("Backup", func() {
 			})
 
 			By("returning the address of the backup bucket", func() {
-				Expect(address).To(Equal(BackupBucketAddress{
+				Expect(address).To(Equal(unversioned.BackupBucketAddress{
 					BucketName:   "backupBucket",
 					BucketRegion: "backupBucketRegion",
 					Path:         "destination-string",
@@ -106,7 +106,7 @@ var _ = Describe("Backup", func() {
 			})
 
 			By("recording that the backup was empty", func() {
-				Expect(address).To(Equal(BackupBucketAddress{
+				Expect(address).To(Equal(unversioned.BackupBucketAddress{
 					BucketName:   "backupBucket",
 					BucketRegion: "backupBucketRegion",
 					Path:         "destination-string",
@@ -133,7 +133,7 @@ var _ = Describe("Restore", func() {
 	var (
 		backupBucket *fakes.FakeUnversionedBucket
 		liveBucket   *fakes.FakeUnversionedBucket
-		pair         UnversionedBucketPair
+		pair         unversioned.BucketPair
 		err          error
 	)
 
@@ -150,7 +150,7 @@ var _ = Describe("Restore", func() {
 
 		backupBucket.ListFilesReturns([]string{"my_key"}, nil)
 
-		pair = S3BucketPair{
+		pair = unversioned.S3BucketPair{
 			LiveBucket:   liveBucket,
 			BackupBucket: backupBucket,
 		}

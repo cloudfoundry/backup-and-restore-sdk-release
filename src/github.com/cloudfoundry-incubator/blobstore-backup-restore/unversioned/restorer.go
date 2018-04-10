@@ -1,20 +1,20 @@
-package blobstore
+package unversioned
 
 import "fmt"
 
-type UnversionedRestorer struct {
-	bucketPairs map[string]UnversionedBucketPair
-	artifact    UnversionedArtifact
+type Restorer struct {
+	bucketPairs map[string]BucketPair
+	artifact    Artifact
 }
 
-func NewUnversionedRestorer(bucketPairs map[string]UnversionedBucketPair, artifact UnversionedArtifact) UnversionedRestorer {
-	return UnversionedRestorer{
+func NewRestorer(bucketPairs map[string]BucketPair, artifact Artifact) Restorer {
+	return Restorer{
 		bucketPairs: bucketPairs,
 		artifact:    artifact,
 	}
 }
 
-func (b UnversionedRestorer) Run() error {
+func (b Restorer) Run() error {
 	backupBucketAddresses, err := b.artifact.Load()
 	if err != nil {
 		return err

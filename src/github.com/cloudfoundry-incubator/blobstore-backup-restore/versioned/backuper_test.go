@@ -17,7 +17,7 @@ var _ = Describe("Backuper", func() {
 	var buildpacksBucket *s3fakes.FakeVersionedBucket
 	var packagesBucket *s3fakes.FakeVersionedBucket
 
-	var artifact *fakes.FakeVersionedArtifact
+	var artifact *fakes.FakeArtifact
 
 	var err error
 
@@ -28,7 +28,7 @@ var _ = Describe("Backuper", func() {
 		buildpacksBucket = new(s3fakes.FakeVersionedBucket)
 		packagesBucket = new(s3fakes.FakeVersionedBucket)
 
-		artifact = new(fakes.FakeVersionedArtifact)
+		artifact = new(fakes.FakeArtifact)
 
 		backuper = versioned.NewBackuper(map[string]s3.VersionedBucket{
 			"droplets":   dropletsBucket,

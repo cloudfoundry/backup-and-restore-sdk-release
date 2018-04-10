@@ -4,21 +4,21 @@ package fakes
 import (
 	"sync"
 
-	blobstore "github.com/cloudfoundry-incubator/blobstore-backup-restore"
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/unversioned"
 )
 
-type FakeUnversionedBucketPair struct {
-	BackupStub        func(backupLocation string) (blobstore.BackupBucketAddress, error)
+type FakeBucketPair struct {
+	BackupStub        func(backupLocation string) (unversioned.BackupBucketAddress, error)
 	backupMutex       sync.RWMutex
 	backupArgsForCall []struct {
 		backupLocation string
 	}
 	backupReturns struct {
-		result1 blobstore.BackupBucketAddress
+		result1 unversioned.BackupBucketAddress
 		result2 error
 	}
 	backupReturnsOnCall map[int]struct {
-		result1 blobstore.BackupBucketAddress
+		result1 unversioned.BackupBucketAddress
 		result2 error
 	}
 	RestoreStub        func(backupLocation string) error
@@ -36,7 +36,7 @@ type FakeUnversionedBucketPair struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeUnversionedBucketPair) Backup(backupLocation string) (blobstore.BackupBucketAddress, error) {
+func (fake *FakeBucketPair) Backup(backupLocation string) (unversioned.BackupBucketAddress, error) {
 	fake.backupMutex.Lock()
 	ret, specificReturn := fake.backupReturnsOnCall[len(fake.backupArgsForCall)]
 	fake.backupArgsForCall = append(fake.backupArgsForCall, struct {
@@ -53,41 +53,41 @@ func (fake *FakeUnversionedBucketPair) Backup(backupLocation string) (blobstore.
 	return fake.backupReturns.result1, fake.backupReturns.result2
 }
 
-func (fake *FakeUnversionedBucketPair) BackupCallCount() int {
+func (fake *FakeBucketPair) BackupCallCount() int {
 	fake.backupMutex.RLock()
 	defer fake.backupMutex.RUnlock()
 	return len(fake.backupArgsForCall)
 }
 
-func (fake *FakeUnversionedBucketPair) BackupArgsForCall(i int) string {
+func (fake *FakeBucketPair) BackupArgsForCall(i int) string {
 	fake.backupMutex.RLock()
 	defer fake.backupMutex.RUnlock()
 	return fake.backupArgsForCall[i].backupLocation
 }
 
-func (fake *FakeUnversionedBucketPair) BackupReturns(result1 blobstore.BackupBucketAddress, result2 error) {
+func (fake *FakeBucketPair) BackupReturns(result1 unversioned.BackupBucketAddress, result2 error) {
 	fake.BackupStub = nil
 	fake.backupReturns = struct {
-		result1 blobstore.BackupBucketAddress
+		result1 unversioned.BackupBucketAddress
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeUnversionedBucketPair) BackupReturnsOnCall(i int, result1 blobstore.BackupBucketAddress, result2 error) {
+func (fake *FakeBucketPair) BackupReturnsOnCall(i int, result1 unversioned.BackupBucketAddress, result2 error) {
 	fake.BackupStub = nil
 	if fake.backupReturnsOnCall == nil {
 		fake.backupReturnsOnCall = make(map[int]struct {
-			result1 blobstore.BackupBucketAddress
+			result1 unversioned.BackupBucketAddress
 			result2 error
 		})
 	}
 	fake.backupReturnsOnCall[i] = struct {
-		result1 blobstore.BackupBucketAddress
+		result1 unversioned.BackupBucketAddress
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeUnversionedBucketPair) Restore(backupLocation string) error {
+func (fake *FakeBucketPair) Restore(backupLocation string) error {
 	fake.restoreMutex.Lock()
 	ret, specificReturn := fake.restoreReturnsOnCall[len(fake.restoreArgsForCall)]
 	fake.restoreArgsForCall = append(fake.restoreArgsForCall, struct {
@@ -104,26 +104,26 @@ func (fake *FakeUnversionedBucketPair) Restore(backupLocation string) error {
 	return fake.restoreReturns.result1
 }
 
-func (fake *FakeUnversionedBucketPair) RestoreCallCount() int {
+func (fake *FakeBucketPair) RestoreCallCount() int {
 	fake.restoreMutex.RLock()
 	defer fake.restoreMutex.RUnlock()
 	return len(fake.restoreArgsForCall)
 }
 
-func (fake *FakeUnversionedBucketPair) RestoreArgsForCall(i int) string {
+func (fake *FakeBucketPair) RestoreArgsForCall(i int) string {
 	fake.restoreMutex.RLock()
 	defer fake.restoreMutex.RUnlock()
 	return fake.restoreArgsForCall[i].backupLocation
 }
 
-func (fake *FakeUnversionedBucketPair) RestoreReturns(result1 error) {
+func (fake *FakeBucketPair) RestoreReturns(result1 error) {
 	fake.RestoreStub = nil
 	fake.restoreReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeUnversionedBucketPair) RestoreReturnsOnCall(i int, result1 error) {
+func (fake *FakeBucketPair) RestoreReturnsOnCall(i int, result1 error) {
 	fake.RestoreStub = nil
 	if fake.restoreReturnsOnCall == nil {
 		fake.restoreReturnsOnCall = make(map[int]struct {
@@ -135,7 +135,7 @@ func (fake *FakeUnversionedBucketPair) RestoreReturnsOnCall(i int, result1 error
 	}{result1}
 }
 
-func (fake *FakeUnversionedBucketPair) Invocations() map[string][][]interface{} {
+func (fake *FakeBucketPair) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.backupMutex.RLock()
@@ -149,7 +149,7 @@ func (fake *FakeUnversionedBucketPair) Invocations() map[string][][]interface{} 
 	return copiedInvocations
 }
 
-func (fake *FakeUnversionedBucketPair) recordInvocation(key string, args []interface{}) {
+func (fake *FakeBucketPair) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -161,4 +161,4 @@ func (fake *FakeUnversionedBucketPair) recordInvocation(key string, args []inter
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ blobstore.UnversionedBucketPair = new(FakeUnversionedBucketPair)
+var _ unversioned.BucketPair = new(FakeBucketPair)

@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	blobstore "github.com/cloudfoundry-incubator/blobstore-backup-restore"
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/unversioned"
 )
 
 type FakeClock struct {
@@ -85,4 +85,4 @@ func (fake *FakeClock) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ blobstore.Clock = new(FakeClock)
+var _ unversioned.Clock = new(FakeClock)

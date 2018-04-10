@@ -1,27 +1,26 @@
-package blobstore_test
+package unversioned_test
 
 import (
 	"os"
-
-	. "github.com/cloudfoundry-incubator/blobstore-backup-restore"
 
 	"io/ioutil"
 
 	"path/filepath"
 
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/unversioned"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("UnversionedFileArtifact", func() {
+var _ = Describe("FileArtifact", func() {
 	var backupDir string
 	var artifactPath string
-	var fileArtifact UnversionedArtifact
+	var fileArtifact unversioned.Artifact
 
 	BeforeEach(func() {
 		backupDir, _ = ioutil.TempDir("", "bbr_test_")
 		artifactPath = filepath.Join(backupDir, "blobstore.json")
-		fileArtifact = NewUnversionedFileArtifact(artifactPath)
+		fileArtifact = unversioned.NewFileArtifact(artifactPath)
 	})
 
 	AfterEach(func() {
@@ -29,7 +28,7 @@ var _ = Describe("UnversionedFileArtifact", func() {
 	})
 
 	It("saves the artifact to a file", func() {
-		backup := map[string]BackupBucketAddress{
+		backup := map[string]unversioned.BackupBucketAddress{
 			"droplets": {
 				BucketName:   "my_droplets_bucket",
 				BucketRegion: "my_droplets_region",
@@ -57,18 +56,18 @@ var _ = Describe("UnversionedFileArtifact", func() {
 
 	Context("when saving the file fails", func() {
 		BeforeEach(func() {
-			fileArtifact = NewUnversionedFileArtifact("/this/path/does/not/exist")
+			fileArtifact = unversioned.NewFileArtifact("/this/path/does/not/exist")
 		})
 
 		It("returns an error", func() {
-			err := fileArtifact.Save(map[string]BackupBucketAddress{})
+			err := fileArtifact.Save(map[string]unversioned.BackupBucketAddress{})
 			Expect(err).To(MatchError(ContainSubstring("could not write backup file")))
 		})
 	})
 
 	Context("when reading the file fails", func() {
 		BeforeEach(func() {
-			fileArtifact = NewUnversionedFileArtifact("/this/path/does/not/exist")
+			fileArtifact = unversioned.NewFileArtifact("/this/path/does/not/exist")
 		})
 
 		It("returns an error", func() {

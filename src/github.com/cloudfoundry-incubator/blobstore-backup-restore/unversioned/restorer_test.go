@@ -1,34 +1,34 @@
-package blobstore_test
+package unversioned_test
 
 import (
 	"fmt"
 
-	. "github.com/cloudfoundry-incubator/blobstore-backup-restore"
-	"github.com/cloudfoundry-incubator/blobstore-backup-restore/fakes"
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/unversioned"
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/unversioned/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("UnversionedRestorer", func() {
+var _ = Describe("Restorer", func() {
 	var (
-		dropletsBucketPair *fakes.FakeUnversionedBucketPair
-		packagesBucketPair *fakes.FakeUnversionedBucketPair
+		dropletsBucketPair *fakes.FakeBucketPair
+		packagesBucketPair *fakes.FakeBucketPair
 
-		bucketPairs map[string]UnversionedBucketPair
+		bucketPairs map[string]unversioned.BucketPair
 
-		artifact *fakes.FakeUnversionedArtifact
+		artifact *fakes.FakeArtifact
 
 		err error
 
-		restorer UnversionedRestorer
+		restorer unversioned.Restorer
 	)
 
 	BeforeEach(func() {
-		dropletsBucketPair = new(fakes.FakeUnversionedBucketPair)
-		packagesBucketPair = new(fakes.FakeUnversionedBucketPair)
+		dropletsBucketPair = new(fakes.FakeBucketPair)
+		packagesBucketPair = new(fakes.FakeBucketPair)
 
-		artifact = new(fakes.FakeUnversionedArtifact)
-		artifact.LoadReturns(map[string]BackupBucketAddress{
+		artifact = new(fakes.FakeArtifact)
+		artifact.LoadReturns(map[string]unversioned.BackupBucketAddress{
 			"droplets": {
 				BucketName:   "artifact_backup_droplet_bucket",
 				BucketRegion: "artifact_backup_droplet_region",
@@ -41,12 +41,12 @@ var _ = Describe("UnversionedRestorer", func() {
 			},
 		}, nil)
 
-		bucketPairs = map[string]UnversionedBucketPair{
+		bucketPairs = map[string]unversioned.BucketPair{
 			"droplets": dropletsBucketPair,
 			"packages": packagesBucketPair,
 		}
 
-		restorer = NewUnversionedRestorer(bucketPairs, artifact)
+		restorer = unversioned.NewRestorer(bucketPairs, artifact)
 	})
 
 	JustBeforeEach(func() {
@@ -90,17 +90,17 @@ var _ = Describe("UnversionedRestorer", func() {
 	})
 
 	Context("When there is a bucket pair in the restore config that is not in the backup artifact", func() {
-		var notInArtifactPair *fakes.FakeUnversionedBucketPair
+		var notInArtifactPair *fakes.FakeBucketPair
 
 		BeforeEach(func() {
-			notInArtifactPair = new(fakes.FakeUnversionedBucketPair)
+			notInArtifactPair = new(fakes.FakeBucketPair)
 
-			bucketPairs = map[string]UnversionedBucketPair{
+			bucketPairs = map[string]unversioned.BucketPair{
 				"droplets":        dropletsBucketPair,
 				"packages":        packagesBucketPair,
 				"not-in-artifact": notInArtifactPair,
 			}
-			restorer = NewUnversionedRestorer(bucketPairs, artifact)
+			restorer = unversioned.NewRestorer(bucketPairs, artifact)
 		})
 
 		It("returns an error", func() {
@@ -112,7 +112,7 @@ var _ = Describe("UnversionedRestorer", func() {
 
 		BeforeEach(func() {
 
-			artifact.LoadReturns(map[string]BackupBucketAddress{
+			artifact.LoadReturns(map[string]unversioned.BackupBucketAddress{
 				"droplets": {
 					BucketName:   "artifact_backup_droplet_bucket",
 					BucketRegion: "artifact_backup_droplet_region",
@@ -135,7 +135,7 @@ var _ = Describe("UnversionedRestorer", func() {
 
 	Context("When there is a bucket referenced in the artifact that is not in the restore config", func() {
 		BeforeEach(func() {
-			artifact.LoadReturns(map[string]BackupBucketAddress{
+			artifact.LoadReturns(map[string]unversioned.BackupBucketAddress{
 				"droplets": {
 					BucketName:   "artifact_backup_droplet_bucket",
 					BucketRegion: "artifact_backup_droplet_region",

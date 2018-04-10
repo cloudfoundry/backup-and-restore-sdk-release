@@ -1,4 +1,4 @@
-package blobstore
+package unversioned
 
 import (
 	"fmt"
@@ -6,8 +6,8 @@ import (
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore/s3"
 )
 
-//go:generate counterfeiter -o fakes/fake_unversioned_bucket_pair.go . UnversionedBucketPair
-type UnversionedBucketPair interface {
+//go:generate counterfeiter -o fakes/fake_bucket_pair.go . BucketPair
+type BucketPair interface {
 	Backup(backupLocation string) (BackupBucketAddress, error)
 	Restore(backupLocation string) error
 }

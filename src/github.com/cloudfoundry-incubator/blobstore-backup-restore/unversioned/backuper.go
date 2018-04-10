@@ -1,29 +1,29 @@
-package blobstore
+package unversioned
 
 //go:generate counterfeiter -o fakes/fake_clock.go . Clock
 type Clock interface {
 	Now() string
 }
 
-type UnversionedBackuper struct {
-	bucketPairs         map[string]UnversionedBucketPair
+type Backuper struct {
+	bucketPairs         map[string]BucketPair
 	clock               Clock
-	destinationArtifact UnversionedArtifact
+	destinationArtifact Artifact
 }
 
-func NewUnversionedBackuper(
-	bucketPairs map[string]UnversionedBucketPair,
-	destinationArtifact UnversionedArtifact,
+func NewBackuper(
+	bucketPairs map[string]BucketPair,
+	destinationArtifact Artifact,
 	clock Clock,
-) UnversionedBackuper {
-	return UnversionedBackuper{
+) Backuper {
+	return Backuper{
 		bucketPairs:         bucketPairs,
 		destinationArtifact: destinationArtifact,
 		clock:               clock,
 	}
 }
 
-func (b UnversionedBackuper) Run() error {
+func (b Backuper) Run() error {
 	timestamp := b.clock.Now()
 	addresses := map[string]BackupBucketAddress{}
 	for id, pair := range b.bucketPairs {

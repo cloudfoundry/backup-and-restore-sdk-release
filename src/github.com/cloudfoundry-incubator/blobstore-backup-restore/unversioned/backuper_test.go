@@ -1,40 +1,40 @@
-package blobstore_test
+package unversioned_test
 
 import (
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/blobstore-backup-restore"
-	"github.com/cloudfoundry-incubator/blobstore-backup-restore/fakes"
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/unversioned"
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/unversioned/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("UnversionedBackuper", func() {
+var _ = Describe("Backuper", func() {
 
 	var (
-		dropletBucketPair   *fakes.FakeUnversionedBucketPair
-		artifact            *fakes.FakeUnversionedArtifact
+		dropletBucketPair   *fakes.FakeBucketPair
+		artifact            *fakes.FakeArtifact
 		fakeClock           *fakes.FakeClock
-		backuper            blobstore.UnversionedBackuper
-		backupBucketAddress blobstore.BackupBucketAddress
+		backuper            unversioned.Backuper
+		backupBucketAddress unversioned.BackupBucketAddress
 		err                 error
 	)
 
 	BeforeEach(func() {
-		dropletBucketPair = new(fakes.FakeUnversionedBucketPair)
-		backupBucketAddress = blobstore.BackupBucketAddress{
+		dropletBucketPair = new(fakes.FakeBucketPair)
+		backupBucketAddress = unversioned.BackupBucketAddress{
 			BucketName:   "the-backup-bucket",
 			BucketRegion: "the-backup-region",
 			Path:         "time-now-in-seconds/droplets",
 		}
 		dropletBucketPair.BackupReturns(backupBucketAddress, nil)
-		artifact = new(fakes.FakeUnversionedArtifact)
-		bucketPairs := map[string]blobstore.UnversionedBucketPair{
+		artifact = new(fakes.FakeArtifact)
+		bucketPairs := map[string]unversioned.BucketPair{
 			"droplets": dropletBucketPair,
 		}
 		fakeClock = new(fakes.FakeClock)
 		fakeClock.NowReturns("time-now-in-seconds")
-		backuper = blobstore.NewUnversionedBackuper(bucketPairs, artifact, fakeClock)
+		backuper = unversioned.NewBackuper(bucketPairs, artifact, fakeClock)
 	})
 
 	JustBeforeEach(func() {
@@ -48,14 +48,14 @@ var _ = Describe("UnversionedBackuper", func() {
 
 	It("saves the artifact file", func() {
 		Expect(artifact.SaveCallCount()).To(Equal(1))
-		Expect(artifact.SaveArgsForCall(0)).To(Equal(map[string]blobstore.BackupBucketAddress{
+		Expect(artifact.SaveArgsForCall(0)).To(Equal(map[string]unversioned.BackupBucketAddress{
 			"droplets": backupBucketAddress,
 		}))
 	})
 
 	Context("When the Backup call fails", func() {
 		BeforeEach(func() {
-			dropletBucketPair.BackupReturns(blobstore.BackupBucketAddress{}, fmt.Errorf("BACKUP ERROR"))
+			dropletBucketPair.BackupReturns(unversioned.BackupBucketAddress{}, fmt.Errorf("BACKUP ERROR"))
 		})
 
 		It("exits gracefully", func() {
