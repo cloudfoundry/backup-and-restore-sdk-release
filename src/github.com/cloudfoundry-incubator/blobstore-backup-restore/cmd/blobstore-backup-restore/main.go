@@ -13,11 +13,14 @@ import (
 
 	"time"
 
-	"github.com/cloudfoundry-incubator/blobstore-backup-restore"
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore/s3"
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore/unversioned"
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore/versioned"
 )
+
+type Runner interface {
+	Run() error
+}
 
 func main() {
 	commandFlags, err := parseFlags()
@@ -25,7 +28,7 @@ func main() {
 		exitWithError(err.Error())
 	}
 
-	var runner blobstore.Runner
+	var runner Runner
 	config, err := ioutil.ReadFile(commandFlags.ConfigPath)
 	if err != nil {
 		exitWithError("Failed to read config: %s", err.Error())
