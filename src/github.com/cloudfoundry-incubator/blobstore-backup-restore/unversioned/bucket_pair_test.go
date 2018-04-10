@@ -23,9 +23,7 @@ var _ = Describe("Backup", func() {
 	BeforeEach(func() {
 		liveBucket = new(fakes.FakeUnversionedBucket)
 		backupBucket = new(fakes.FakeUnversionedBucket)
-		bucketPair = unversioned.S3BucketPair{
-			LiveBucket:   liveBucket,
-			BackupBucket: backupBucket}
+		bucketPair = unversioned.NewS3BucketPair(liveBucket, backupBucket)
 
 		liveBucket.NameReturns("liveBucket")
 		liveBucket.RegionNameReturns("liveBucketRegion")
@@ -150,10 +148,7 @@ var _ = Describe("Restore", func() {
 
 		backupBucket.ListFilesReturns([]string{"my_key"}, nil)
 
-		pair = unversioned.S3BucketPair{
-			LiveBucket:   liveBucket,
-			BackupBucket: backupBucket,
-		}
+		pair = unversioned.NewS3BucketPair(liveBucket, backupBucket)
 	})
 
 	It("successfully copies from the backup bucket to the live bucket", func() {

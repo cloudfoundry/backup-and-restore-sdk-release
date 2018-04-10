@@ -145,7 +145,7 @@ func makeBucketPairs(config map[string]BucketConfigWithBackupBucket) (map[string
 			return nil, err
 		}
 
-		buckets[identifier] = unversioned.S3BucketPair{LiveBucket: liveBucket, BackupBucket: backupBucket}
+		buckets[identifier] = unversioned.NewS3BucketPair(liveBucket, backupBucket)
 	}
 
 	return buckets, nil
