@@ -1,4 +1,4 @@
-package blobstore_test
+package versioned_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -6,13 +6,13 @@ import (
 
 	"errors"
 
-	. "github.com/cloudfoundry-incubator/blobstore-backup-restore"
-	"github.com/cloudfoundry-incubator/blobstore-backup-restore/fakes"
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore/s3"
 	s3fakes "github.com/cloudfoundry-incubator/blobstore-backup-restore/s3/fakes"
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/versioned"
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/versioned/fakes"
 )
 
-var _ = Describe("VersionedBackuper", func() {
+var _ = Describe("Backuper", func() {
 	var dropletsBucket *s3fakes.FakeVersionedBucket
 	var buildpacksBucket *s3fakes.FakeVersionedBucket
 	var packagesBucket *s3fakes.FakeVersionedBucket
@@ -21,7 +21,7 @@ var _ = Describe("VersionedBackuper", func() {
 
 	var err error
 
-	var backuper VersionedBackuper
+	var backuper versioned.Backuper
 
 	BeforeEach(func() {
 		dropletsBucket = new(s3fakes.FakeVersionedBucket)
@@ -30,7 +30,7 @@ var _ = Describe("VersionedBackuper", func() {
 
 		artifact = new(fakes.FakeVersionedArtifact)
 
-		backuper = NewVersionedBackuper(map[string]s3.VersionedBucket{
+		backuper = versioned.NewBackuper(map[string]s3.VersionedBucket{
 			"droplets":   dropletsBucket,
 			"buildpacks": buildpacksBucket,
 			"packages":   packagesBucket,
@@ -70,11 +70,11 @@ var _ = Describe("VersionedBackuper", func() {
 		})
 
 		It("stores the latest versions in the artifact", func() {
-			Expect(artifact.SaveArgsForCall(0)).To(Equal(map[string]BucketSnapshot{
+			Expect(artifact.SaveArgsForCall(0)).To(Equal(map[string]versioned.BucketSnapshot{
 				"droplets": {
 					BucketName: "my_droplets_bucket",
 					RegionName: "my_droplets_region",
-					Versions: []BlobVersion{
+					Versions: []versioned.BlobVersion{
 						{BlobKey: "one", Id: "13"},
 						{BlobKey: "two", Id: "22"},
 					},
@@ -82,14 +82,14 @@ var _ = Describe("VersionedBackuper", func() {
 				"buildpacks": {
 					BucketName: "my_buildpacks_bucket",
 					RegionName: "my_buildpacks_region",
-					Versions: []BlobVersion{
+					Versions: []versioned.BlobVersion{
 						{BlobKey: "three", Id: "32"},
 					},
 				},
 				"packages": {
 					BucketName: "my_packages_bucket",
 					RegionName: "my_packages_region",
-					Versions: []BlobVersion{
+					Versions: []versioned.BlobVersion{
 						{BlobKey: "four", Id: "43"},
 					},
 				},

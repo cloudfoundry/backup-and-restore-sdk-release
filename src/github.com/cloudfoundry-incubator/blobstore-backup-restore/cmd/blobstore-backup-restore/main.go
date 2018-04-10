@@ -15,6 +15,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore"
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore/s3"
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/versioned"
 )
 
 func main() {
@@ -41,12 +42,12 @@ func main() {
 			exitWithError("Failed to establish session: %s", err.Error())
 		}
 
-		artifact := blobstore.NewVersionedFileArtifact(commandFlags.ArtifactFilePath)
+		artifact := versioned.NewFileArtifact(commandFlags.ArtifactFilePath)
 
 		if commandFlags.IsRestore {
-			runner = blobstore.NewVersionedRestorer(buckets, artifact)
+			runner = versioned.NewRestorer(buckets, artifact)
 		} else {
-			runner = blobstore.NewVersionedBackuper(buckets, artifact)
+			runner = versioned.NewBackuper(buckets, artifact)
 		}
 	} else {
 		var bucketsConfig map[string]BucketConfigWithBackupBucket
@@ -85,14 +86,6 @@ func (c clock) Now() string {
 func exitWithError(a ...interface{}) {
 	fmt.Fprintln(os.Stderr, a...)
 	os.Exit(1)
-}
-
-func getEnv(varName string) string {
-	value, exists := os.LookupEnv(varName)
-	if !exists {
-		exitWithError("Missing environment variable '%s'", varName)
-	}
-	return value
 }
 
 func makeBuckets(config map[string]BucketConfig) (map[string]s3.VersionedBucket, error) {

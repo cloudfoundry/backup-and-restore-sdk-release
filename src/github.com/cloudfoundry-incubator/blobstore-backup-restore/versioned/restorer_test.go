@@ -1,19 +1,18 @@
-package blobstore_test
+package versioned_test
 
 import (
-	. "github.com/cloudfoundry-incubator/blobstore-backup-restore"
-
 	"errors"
 
-	"github.com/cloudfoundry-incubator/blobstore-backup-restore/fakes"
 	s3fakes "github.com/cloudfoundry-incubator/blobstore-backup-restore/s3/fakes"
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/versioned/fakes"
 
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore/s3"
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/versioned"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("VersionedRestorer", func() {
+var _ = Describe("Restorer", func() {
 	var dropletsBucket *s3fakes.FakeVersionedBucket
 	var buildpacksBucket *s3fakes.FakeVersionedBucket
 	var packagesBucket *s3fakes.FakeVersionedBucket
@@ -22,7 +21,7 @@ var _ = Describe("VersionedRestorer", func() {
 
 	var err error
 
-	var restorer VersionedRestorer
+	var restorer versioned.Restorer
 
 	BeforeEach(func() {
 		dropletsBucket = new(s3fakes.FakeVersionedBucket)
@@ -31,7 +30,7 @@ var _ = Describe("VersionedRestorer", func() {
 
 		artifact = new(fakes.FakeVersionedArtifact)
 
-		restorer = NewVersionedRestorer(map[string]s3.VersionedBucket{
+		restorer = versioned.NewRestorer(map[string]s3.VersionedBucket{
 			"droplets":   dropletsBucket,
 			"buildpacks": buildpacksBucket,
 			"packages":   packagesBucket,
@@ -44,11 +43,11 @@ var _ = Describe("VersionedRestorer", func() {
 
 	Context("when the artifact is valid and copying versions to buckets works", func() {
 		BeforeEach(func() {
-			artifact.LoadReturns(map[string]BucketSnapshot{
+			artifact.LoadReturns(map[string]versioned.BucketSnapshot{
 				"droplets": {
 					BucketName: "my_droplets_bucket",
 					RegionName: "my_droplets_region",
-					Versions: []BlobVersion{
+					Versions: []versioned.BlobVersion{
 						{BlobKey: "one", Id: "13"},
 						{BlobKey: "two", Id: "22"},
 					},
@@ -56,14 +55,14 @@ var _ = Describe("VersionedRestorer", func() {
 				"buildpacks": {
 					BucketName: "my_buildpacks_bucket",
 					RegionName: "my_buildpacks_region",
-					Versions: []BlobVersion{
+					Versions: []versioned.BlobVersion{
 						{BlobKey: "three", Id: "32"},
 					},
 				},
 				"packages": {
 					BucketName: "my_packages_bucket",
 					RegionName: "my_packages_region",
-					Versions: []BlobVersion{
+					Versions: []versioned.BlobVersion{
 						{BlobKey: "four", Id: "43"},
 					},
 				},
@@ -138,11 +137,11 @@ var _ = Describe("VersionedRestorer", func() {
 
 	Context("when copying versions on a bucket fails", func() {
 		BeforeEach(func() {
-			artifact.LoadReturns(map[string]BucketSnapshot{
+			artifact.LoadReturns(map[string]versioned.BucketSnapshot{
 				"droplets": {
 					BucketName: "my_droplets_bucket",
 					RegionName: "my_droplets_region",
-					Versions: []BlobVersion{
+					Versions: []versioned.BlobVersion{
 						{BlobKey: "one", Id: "13"},
 						{BlobKey: "two", Id: "22"},
 					},
@@ -150,14 +149,14 @@ var _ = Describe("VersionedRestorer", func() {
 				"buildpacks": {
 					BucketName: "my_buildpacks_bucket",
 					RegionName: "my_buildpacks_region",
-					Versions: []BlobVersion{
+					Versions: []versioned.BlobVersion{
 						{BlobKey: "three", Id: "32"},
 					},
 				},
 				"packages": {
 					BucketName: "my_packages_bucket",
 					RegionName: "my_packages_region",
-					Versions: []BlobVersion{
+					Versions: []versioned.BlobVersion{
 						{BlobKey: "four", Id: "43"},
 					},
 				},
@@ -175,11 +174,11 @@ var _ = Describe("VersionedRestorer", func() {
 
 	Context("when there isn't a corresponding bucket recorded in backup artifact", func() {
 		BeforeEach(func() {
-			artifact.LoadReturns(map[string]BucketSnapshot{
+			artifact.LoadReturns(map[string]versioned.BucketSnapshot{
 				"droplets": {
 					BucketName: "my_droplets_bucket",
 					RegionName: "my_droplets_region",
-					Versions: []BlobVersion{
+					Versions: []versioned.BlobVersion{
 						{BlobKey: "one", Id: "13"},
 						{BlobKey: "two", Id: "22"},
 					},
@@ -187,13 +186,13 @@ var _ = Describe("VersionedRestorer", func() {
 				"buildpacks": {
 					BucketName: "my_buildpacks_bucket",
 					RegionName: "my_buildpacks_region",
-					Versions: []BlobVersion{
+					Versions: []versioned.BlobVersion{
 						{BlobKey: "three", Id: "32"},
 					},
 				},
 			}, nil)
 
-			restorer = NewVersionedRestorer(map[string]s3.VersionedBucket{
+			restorer = versioned.NewRestorer(map[string]s3.VersionedBucket{
 				"droplets":   dropletsBucket,
 				"buildpacks": buildpacksBucket,
 				"packages":   packagesBucket,

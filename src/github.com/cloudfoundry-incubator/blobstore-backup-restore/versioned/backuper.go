@@ -1,4 +1,4 @@
-package blobstore
+package versioned
 
 import (
 	"fmt"
@@ -6,19 +6,19 @@ import (
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore/s3"
 )
 
-type VersionedBackuper struct {
+type Backuper struct {
 	sourceBuckets       map[string]s3.VersionedBucket
-	destinationArtifact VersionedArtifact
+	destinationArtifact Artifact
 }
 
-func NewVersionedBackuper(sourceBuckets map[string]s3.VersionedBucket, destinationArtifact VersionedArtifact) VersionedBackuper {
-	return VersionedBackuper{
+func NewBackuper(sourceBuckets map[string]s3.VersionedBucket, destinationArtifact Artifact) Backuper {
+	return Backuper{
 		sourceBuckets:       sourceBuckets,
 		destinationArtifact: destinationArtifact,
 	}
 }
 
-func (b VersionedBackuper) Run() error {
+func (b Backuper) Run() error {
 	bucketSnapshots := map[string]BucketSnapshot{}
 
 	for identifier, bucketToBackup := range b.sourceBuckets {

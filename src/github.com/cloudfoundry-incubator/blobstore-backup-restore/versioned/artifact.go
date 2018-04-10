@@ -1,4 +1,4 @@
-package blobstore
+package versioned
 
 import (
 	"encoding/json"
@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 )
 
-//go:generate counterfeiter -o fakes/fake_versioned_artifact.go . VersionedArtifact
-type VersionedArtifact interface {
+//go:generate counterfeiter -o fakes/fake_artifact.go . Artifact
+type Artifact interface {
 	Save(backup map[string]BucketSnapshot) error
 	Load() (map[string]BucketSnapshot, error)
 }
@@ -23,15 +23,15 @@ type BlobVersion struct {
 	Id      string `json:"version_id"`
 }
 
-type VersionedFileArtifact struct {
+type FileArtifact struct {
 	filePath string
 }
 
-func NewVersionedFileArtifact(filePath string) VersionedFileArtifact {
-	return VersionedFileArtifact{filePath: filePath}
+func NewFileArtifact(filePath string) FileArtifact {
+	return FileArtifact{filePath: filePath}
 }
 
-func (a VersionedFileArtifact) Save(backup map[string]BucketSnapshot) error {
+func (a FileArtifact) Save(backup map[string]BucketSnapshot) error {
 	marshalledBackup, err := json.MarshalIndent(backup, "", "  ")
 	if err != nil {
 		return err
@@ -45,7 +45,7 @@ func (a VersionedFileArtifact) Save(backup map[string]BucketSnapshot) error {
 	return nil
 }
 
-func (a VersionedFileArtifact) Load() (map[string]BucketSnapshot, error) {
+func (a FileArtifact) Load() (map[string]BucketSnapshot, error) {
 	bytes, err := ioutil.ReadFile(a.filePath)
 	if err != nil {
 		return nil, fmt.Errorf("could not read backup file: %s", err.Error())
