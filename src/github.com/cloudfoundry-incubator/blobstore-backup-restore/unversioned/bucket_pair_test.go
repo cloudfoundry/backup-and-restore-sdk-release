@@ -155,9 +155,9 @@ var _ = Describe("Restore", func() {
 
 		liveBucket = new(fakes.FakeUnversionedBucket)
 
-		backupBucket.ListFilesReturns([]string{"my_key"}, nil)
+		backupBucket.ListFilesReturns([]string{"my_key", "another_key"}, nil)
 
-		pair = unversioned.NewS3BucketPair(liveBucket, backupBucket, execution.NewSerialStrategy())
+		pair = unversioned.NewS3BucketPair(liveBucket, backupBucket, execution.NewParallelStrategy())
 	})
 
 	It("successfully copies from the backup bucket to the live bucket", func() {
@@ -168,13 +168,26 @@ var _ = Describe("Restore", func() {
 		By("copying from the backup location to the live location", func() {
 			Expect(backupBucket.ListFilesCallCount()).To(Equal(1))
 			Expect(backupBucket.ListFilesArgsForCall(0)).To(Equal("2015-12-13-05-06-07/my_bucket"))
-			Expect(liveBucket.CopyObjectCallCount()).To(Equal(1))
+
+			Expect(liveBucket.CopyObjectCallCount()).To(Equal(2))
+
+			var actualKeys []string
+
 			key, originPath, destinationPath, originBucketName, originBucketRegion := liveBucket.CopyObjectArgsForCall(0)
-			Expect(key).To(Equal("my_key"))
 			Expect(originPath).To(Equal("2015-12-13-05-06-07/my_bucket"))
 			Expect(destinationPath).To(Equal(""))
 			Expect(originBucketName).To(Equal(backupBucket.Name()))
 			Expect(originBucketRegion).To(Equal(backupBucket.RegionName()))
+			actualKeys = append(actualKeys, key)
+
+			key, originPath, destinationPath, originBucketName, originBucketRegion = liveBucket.CopyObjectArgsForCall(1)
+			Expect(originPath).To(Equal("2015-12-13-05-06-07/my_bucket"))
+			Expect(destinationPath).To(Equal(""))
+			Expect(originBucketName).To(Equal(backupBucket.Name()))
+			Expect(originBucketRegion).To(Equal(backupBucket.RegionName()))
+			actualKeys = append(actualKeys, key)
+
+			Expect(actualKeys).To(ConsistOf("my_key", "another_key"))
 		})
 	})
 

@@ -63,13 +63,18 @@ func (p S3BucketPair) Restore(backupLocation string) error {
 	if len(filesToRestore) == 0 {
 		return fmt.Errorf("no files found in %s in bucket %s to restore", backupLocation, p.backupBucket.Name())
 	}
-	for _, file := range filesToRestore {
-		err = p.liveBucket.CopyObject(
-			file, backupLocation, "", p.backupBucket.Name(), p.backupBucket.RegionName())
-		if err != nil {
-			return fmt.Errorf("cannot copy object from %s\n %v", p.backupBucket.Name(), err)
-		}
+
+	errs := p.executionStrategy.Run(filesToRestore, func(file string) error {
+		return p.liveBucket.CopyObject(file, backupLocation, "", p.backupBucket.Name(), p.backupBucket.RegionName())
+	})
+
+	if len(errs) != 0 {
+		return formatErrors(
+			fmt.Sprintf("failed to backup bucket %s", p.liveBucket.Name()),
+			errs,
+		)
 	}
+
 	return nil
 }
 
