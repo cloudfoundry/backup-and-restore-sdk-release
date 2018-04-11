@@ -6,6 +6,7 @@ import (
 
 	"fmt"
 
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/execution"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -23,7 +24,7 @@ var _ = Describe("Backup", func() {
 	BeforeEach(func() {
 		liveBucket = new(fakes.FakeUnversionedBucket)
 		backupBucket = new(fakes.FakeUnversionedBucket)
-		bucketPair = unversioned.NewS3BucketPair(liveBucket, backupBucket)
+		bucketPair = unversioned.NewS3BucketPair(liveBucket, backupBucket, execution.NewSerialStrategy())
 
 		liveBucket.NameReturns("liveBucket")
 		liveBucket.RegionNameReturns("liveBucketRegion")
@@ -83,7 +84,7 @@ var _ = Describe("Backup", func() {
 			})
 
 			It("should fail", func() {
-				Expect(err).To(MatchError("cannot copy file"))
+				Expect(err).To(MatchError(ContainSubstring("cannot copy file")))
 			})
 		})
 	})
@@ -148,7 +149,7 @@ var _ = Describe("Restore", func() {
 
 		backupBucket.ListFilesReturns([]string{"my_key"}, nil)
 
-		pair = unversioned.NewS3BucketPair(liveBucket, backupBucket)
+		pair = unversioned.NewS3BucketPair(liveBucket, backupBucket, execution.NewSerialStrategy())
 	})
 
 	It("successfully copies from the backup bucket to the live bucket", func() {

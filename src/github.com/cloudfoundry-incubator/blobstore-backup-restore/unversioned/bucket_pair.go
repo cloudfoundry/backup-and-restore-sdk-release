@@ -3,6 +3,9 @@ package unversioned
 import (
 	"fmt"
 
+	"strings"
+
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/execution"
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore/s3"
 )
 
@@ -13,12 +16,17 @@ type BucketPair interface {
 }
 
 type S3BucketPair struct {
-	liveBucket   s3.UnversionedBucket
-	backupBucket s3.UnversionedBucket
+	liveBucket        s3.UnversionedBucket
+	backupBucket      s3.UnversionedBucket
+	executionStrategy execution.Strategy
 }
 
-func NewS3BucketPair(liveBucket, backupBucket s3.UnversionedBucket) S3BucketPair {
-	return S3BucketPair{liveBucket: liveBucket, backupBucket: backupBucket}
+func NewS3BucketPair(liveBucket, backupBucket s3.UnversionedBucket, executionStrategy execution.Strategy) S3BucketPair {
+	return S3BucketPair{
+		liveBucket:        liveBucket,
+		backupBucket:      backupBucket,
+		executionStrategy: executionStrategy,
+	}
 }
 
 func (p S3BucketPair) Backup(backupLocation string) (BackupBucketAddress, error) {
@@ -26,11 +34,16 @@ func (p S3BucketPair) Backup(backupLocation string) (BackupBucketAddress, error)
 	if err != nil {
 		return BackupBucketAddress{}, err
 	}
-	for _, file := range files {
-		err = p.backupBucket.CopyObject(file, "", backupLocation, p.liveBucket.Name(), p.liveBucket.RegionName())
-		if err != nil {
-			return BackupBucketAddress{}, err
-		}
+
+	errs := p.executionStrategy.Run(files, func(file string) error {
+		return p.backupBucket.CopyObject(file, "", backupLocation, p.liveBucket.Name(), p.liveBucket.RegionName())
+	})
+
+	if len(errs) != 0 {
+		return BackupBucketAddress{}, formatErrors(
+			fmt.Sprintf("failed to backup bucket %s", p.liveBucket.Name()),
+			errs,
+		)
 	}
 
 	return BackupBucketAddress{
@@ -58,4 +71,12 @@ func (p S3BucketPair) Restore(backupLocation string) error {
 		}
 	}
 	return nil
+}
+
+func formatErrors(contextString string, errors []error) error {
+	errorStrings := make([]string, len(errors))
+	for i, err := range errors {
+		errorStrings[i] = err.Error()
+	}
+	return fmt.Errorf("%s: %s", contextString, strings.Join(errorStrings, "\n"))
 }

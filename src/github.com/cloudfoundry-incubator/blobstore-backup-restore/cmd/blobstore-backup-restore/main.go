@@ -13,6 +13,7 @@ import (
 
 	"time"
 
+	"github.com/cloudfoundry-incubator/blobstore-backup-restore/execution"
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore/s3"
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore/unversioned"
 	"github.com/cloudfoundry-incubator/blobstore-backup-restore/versioned"
@@ -145,7 +146,11 @@ func makeBucketPairs(config map[string]BucketConfigWithBackupBucket) (map[string
 			return nil, err
 		}
 
-		buckets[identifier] = unversioned.NewS3BucketPair(liveBucket, backupBucket)
+		buckets[identifier] = unversioned.NewS3BucketPair(
+			liveBucket,
+			backupBucket,
+			execution.NewParallelStrategy(),
+		)
 	}
 
 	return buckets, nil

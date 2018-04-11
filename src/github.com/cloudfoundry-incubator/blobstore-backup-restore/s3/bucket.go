@@ -233,7 +233,8 @@ func (bucket Bucket) copyVersionWithMultipart(sourceBucketName, blobKey, copySou
 		&s3.CreateMultipartUploadInput{
 			Bucket: aws.String(bucket.Name()),
 			Key:    aws.String(destinationKey),
-		})
+		},
+	)
 
 	if err != nil {
 		return fmt.Errorf("failed to create multipart upload: %s", err)
