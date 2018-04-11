@@ -24,7 +24,7 @@ var _ = Describe("Backup", func() {
 	BeforeEach(func() {
 		liveBucket = new(fakes.FakeUnversionedBucket)
 		backupBucket = new(fakes.FakeUnversionedBucket)
-		bucketPair = unversioned.NewS3BucketPair(liveBucket, backupBucket, execution.NewSerialStrategy())
+		bucketPair = unversioned.NewS3BucketPair(liveBucket, backupBucket, execution.NewParallelStrategy())
 
 		liveBucket.NameReturns("liveBucket")
 		liveBucket.RegionNameReturns("liveBucketRegion")
@@ -52,20 +52,26 @@ var _ = Describe("Backup", func() {
 
 			By("calling copy for each file in the bucket", func() {
 				Expect(backupBucket.CopyObjectCallCount()).To(Equal(2))
+
+				var expectedKeys []string
+
 				expectedKey, expectedOriginPath, expectedDestinationPath, expectedOriginBucketName, expectedOriginBucketRegion :=
-					backupBucket.CopyObjectArgsForCall(0)
-				Expect(expectedKey).To(Equal("path1/file1"))
-				Expect(expectedOriginPath).To(Equal(""))
-				Expect(expectedDestinationPath).To(Equal("destination-string"))
-				Expect(expectedOriginBucketName).To(Equal("liveBucket"))
-				Expect(expectedOriginBucketRegion).To(Equal("liveBucketRegion"))
-				expectedKey, expectedOriginPath, expectedDestinationPath, expectedOriginBucketName, expectedOriginBucketRegion =
 					backupBucket.CopyObjectArgsForCall(1)
-				Expect(expectedKey).To(Equal("path2/file2"))
 				Expect(expectedOriginPath).To(Equal(""))
 				Expect(expectedDestinationPath).To(Equal("destination-string"))
 				Expect(expectedOriginBucketName).To(Equal("liveBucket"))
 				Expect(expectedOriginBucketRegion).To(Equal("liveBucketRegion"))
+				expectedKeys = append(expectedKeys, expectedKey)
+
+				expectedKey, expectedOriginPath, expectedDestinationPath, expectedOriginBucketName, expectedOriginBucketRegion =
+					backupBucket.CopyObjectArgsForCall(0)
+				Expect(expectedOriginPath).To(Equal(""))
+				Expect(expectedDestinationPath).To(Equal("destination-string"))
+				Expect(expectedOriginBucketName).To(Equal("liveBucket"))
+				Expect(expectedOriginBucketRegion).To(Equal("liveBucketRegion"))
+				expectedKeys = append(expectedKeys, expectedKey)
+
+				Expect(expectedKeys).To(ConsistOf("path1/file1", "path2/file2"))
 			})
 
 			By("returning the address of the backup bucket", func() {
@@ -80,11 +86,13 @@ var _ = Describe("Backup", func() {
 
 		Context("when CopyObject fails", func() {
 			BeforeEach(func() {
-				backupBucket.CopyObjectReturns(fmt.Errorf("cannot copy file"))
+				backupBucket.CopyObjectReturnsOnCall(0, fmt.Errorf("cannot copy first file"))
+				backupBucket.CopyObjectReturnsOnCall(1, fmt.Errorf("cannot copy second file"))
 			})
 
 			It("should fail", func() {
-				Expect(err).To(MatchError(ContainSubstring("cannot copy file")))
+				Expect(err).To(MatchError(ContainSubstring("cannot copy first file")))
+				Expect(err).To(MatchError(ContainSubstring("cannot copy second file")))
 			})
 		})
 	})
