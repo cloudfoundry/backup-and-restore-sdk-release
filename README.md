@@ -159,11 +159,13 @@ For an example of the SDK being used in a release that can be backed up by BBR s
 
 BBR supports the backup and restore of blobstores stored in Amazon S3 buckets and in S3-compatible buckets.
 
+When restoring to a bucket, BBR will only modify blobs that are recorded in the backup artifact. Any other blobs will not be affected.
+
 ### Supported Blobstores
 
 | Name         | Status                                                                                                                                                                                                                                                                                                 |
 |:-------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| S3 (versioned or unversioned) | [![S3 Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests) |
+| S3-Compatible | [![S3 Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests) |
 
 ### S3-Compatible Unversioned Blobstores
 
@@ -171,7 +173,7 @@ External blobstores are backed up by copying blobs to a backup bucket. The unver
 
 **Restore only works if the backup bucket still exists**. For this reason, you can configure backup buckets to be in a different region.
 
-### S3 Versioned Blobstores
+### S3-Compatible Versioned Blobstores
 The versioned backup-restorer only supports S3-compatible buckets that are versioned and support AWS Signature Version 4. For more details about enabling versioning on your blobstore, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html#enable-versioning).
 
 External blobstores are backed up by storing the current version of each blob, not the actual files. Those versions will be set to be the current versions at restore time. This makes backups and restores faster, but also means that **restores only work if the original bucket still exists**. For more information, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html).
