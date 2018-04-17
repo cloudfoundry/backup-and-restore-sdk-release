@@ -157,15 +157,24 @@ For an example of the SDK being used in a release that can be backed up by BBR s
 
 ## Incorporating external blobstore backups in your deployment
 
-BBR only supports the backup and restore of blobstores stored in versioned, Amazon S3 buckets and in S3-compatible buckets that are versioned and support AWS Signature Version 4. For more details about enabling versioning on your blobstore, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html#enable-versioning).
-
-External blobstores are backed up by storing the current version of each blob, not the actual files. Those versions will be set to be the current versions at restore time. This makes backups and restores faster, but also means that **restores only work if the original bucket still exists**. For more information, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html).
+BBR supports the backup and restore of blobstores stored in Amazon S3 buckets and in S3-compatible buckets.
 
 ### Supported Blobstores
 
 | Name         | Status                                                                                                                                                                                                                                                                                                 |
 |:-------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Versioned S3 | [![S3 Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests) |
+| S3 (versioned or unversioned) | [![S3 Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests) |
+
+### S3-Compatible Unversioned Blobstores
+
+External blobstores are backed up by copying blobs to a backup bucket. The unversioned backup-restorer uses the blobstore's copy functionality to transfer blobs between the buckets to avoid transfering and storing the blobs on your instances.
+
+**Restore only works if the backup bucket still exists**. For this reason, you can configure backup buckets to be in a different region.
+
+### S3 Versioned Blobstores
+The versioned backup-restorer only supports S3-compatible buckets that are versioned and support AWS Signature Version 4. For more details about enabling versioning on your blobstore, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html#enable-versioning).
+
+External blobstores are backed up by storing the current version of each blob, not the actual files. Those versions will be set to be the current versions at restore time. This makes backups and restores faster, but also means that **restores only work if the original bucket still exists**. For more information, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html).
 
 ### Deploying
 
@@ -175,16 +184,73 @@ External blobstores are backed up by storing the current version of each blob, n
 
 #### Adding the SDK to your deployment manifest
 
-The external blobstore backup and restore scripts are contained in the `s3-versioned-blobstore-backup-restorer` job. Locate the job on any of the instance groups in your deployment that have a volume attached (i.e. the `/var/vcap/store` folder should exist).
+The S3-compatible blobstore backup and restore scripts are contained in the `s3-versioned-blobstore-backup-restorer` and `s3-unversioned-blobstore-backup-restorer` jobs. Locate one of the jobs on any of the instance groups in your deployment that has a persistent disk (i.e. the `/var/vcap/store` folder should exist).
 
-##### Properties
+##### S3 Versioned Properties
 
 The `s3-versioned-blobstore-backup-restorer` job can be configured using the following properties:
 
 * `enabled` [Boolean]: enables the backup and restore scripts. `true` by default.
-* `buckets` [Hash]: a map from bucket identifiers their their configuration. For each bucket, you'll need to specify the following properties:
+* `buckets` [Hash]: a map from bucket identifiers to their configuration. For each bucket, you'll need to specify the following properties:
   * `name` [String]: the bucket name
   * `region` [String]: the bucket region
   * `aws_access_key_id` [String]: the AWS access key ID for the bucket
   * `aws_secret_access_key` [String]: the AWS secret access key for the bucket
   * `endpoint` [String]: the endpoint for your storage server, only needed if you are not using AWS S3
+
+Here are example job properties to configure two S3 buckets: `my_bucket` and `other_bucket`.
+
+```yaml
+properties:
+  enabled: true
+  buckets:
+    my_bucket:
+      name: "((my_bucket_key))"
+      region: "((aws_region))"
+      aws_access_key_id: "((my_bucket_access_key_id))"
+      aws_secret_access_key: "((my_bucket_secret_access_key))"
+    other_bucket:
+      name: "((other_bucket_package_directory_key))"
+      region: "((aws_region))"
+      aws_access_key_id: "((other_bucket_access_key_id))"
+      aws_secret_access_key: "((other_bucket_secret_access_key))"
+```
+
+##### S3 Unversioned Properties
+
+The `s3-unversioned-blobstore-backup-restorer` job can be configured using the following properties:
+
+* `enabled` [Boolean]: enables the backup and restore scripts. `true` by default.
+* `buckets` [Hash]: a map from bucket identifiers to their configuration. For each bucket, you'll need to specify the following properties:
+  * `name` [String]: the bucket name
+  * `region` [String]: the bucket region
+  * `aws_access_key_id` [String]: the AWS access key ID for the bucket
+  * `aws_secret_access_key` [String]: the AWS secret access key for the bucket
+  * `endpoint` [String]: the endpoint for your storage server, only needed if you are not using AWS S3
+  * `backup` [Object]: the backup bucket configuration
+    * `name` [String]: the backup bucket name
+    * `region` [String]: the backup bucket region
+
+Here are example job properties to configure two S3 buckets: `my_bucket` and `other_bucket`.
+
+```yaml
+properties:
+  enabled: true
+  buckets:
+    my_bucket:
+      name: "((my_bucket_key))"
+      region: "((aws_region))"
+      aws_access_key_id: "((my_bucket_access_key_id))"
+      aws_secret_access_key: "((my_bucket_secret_access_key))"
+      backup:
+        name: "((my_bucket_backup_key))"
+        region: "((aws_backup_region))"
+    other_bucket:
+      name: "((other_bucket_package_directory_key))"
+      region: "((aws_region))"
+      aws_access_key_id: "((other_bucket_access_key_id))"
+      aws_secret_access_key: "((other_bucket_secret_access_key))"
+      backup:
+        name: "((other_bucket_backup_key))"
+        region: "((aws_backup_region))"
+```
