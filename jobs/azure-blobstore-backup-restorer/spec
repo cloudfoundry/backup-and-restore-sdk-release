@@ -19,6 +19,20 @@ name: azure-blobstore-backup-restorer
 
 templates:
   backup.erb: bin/bbr/backup
+  containers.json.erb: config/containers.json
 
 packages:
 - azure-blobstore-backup-restorer
+
+properties:
+  enabled:
+    default: false
+    description: "Enable backup and restore scripts in this job"
+  containers:
+    default: {}
+    description: "Hash of buckets to backup/restore to"
+    example: |
+      droplets:
+        name: "the_droplets_bucket"
+        azure_account_name: "AZURE_ACCOUNT_NAME"
+        azure_account_key: "AZURE_ACCOUNT_KEY"
