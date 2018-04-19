@@ -8,5 +8,6 @@ dependencies:
 
 files:
 - github.com/cloudfoundry-incubator/azure-blobstore-backup-restore/cmd/azure-blobstore-backup-restore/*.go
+- github.com/cloudfoundry-incubator/azure-blobstore-backup-restore/*.go
 - github.com/cloudfoundry-incubator/azure-blobstore-backup-restore/vendor/github.com/Azure/azure-pipeline-go/pipeline/*.go
 - github.com/cloudfoundry-incubator/azure-blobstore-backup-restore/vendor/github.com/Azure/azure-storage-blob-go/2017-07-29/azblob/*.go

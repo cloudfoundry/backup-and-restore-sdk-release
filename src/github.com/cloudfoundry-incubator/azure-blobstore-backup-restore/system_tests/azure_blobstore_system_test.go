@@ -64,8 +64,8 @@ var _ = Describe("Azure backup and restore", func() {
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(fileContents).To(ContainSubstring("\"name\":\"" + containerName + "\""))
-		Expect(fileContents).To(ContainSubstring("\"name\":\"test_blob_1\",\"hash\":\"R1M39xrrgP7eS+jJHBWu1A==\""))
-		Expect(fileContents).To(ContainSubstring("\"name\":\"test_blob_2\",\"hash\":\"L+IcKub+0Og4CXjKqA1/3w==\""))
-		Expect(fileContents).To(ContainSubstring("\"name\":\"test_blob_3\",\"hash\":\"7VBVkm19ll+P6THGtqGHww==\""))
+		Expect(fileContents).To(ContainSubstring("\"name\":\"" + fileName1 + "\",\"hash\":\"R1M39xrrgP7eS+jJHBWu1A==\""))
+		Expect(fileContents).To(ContainSubstring("\"name\":\"" + fileName2 + "\",\"hash\":\"L+IcKub+0Og4CXjKqA1/3w==\""))
+		Expect(fileContents).To(ContainSubstring("\"name\":\"" + fileName3 + "\",\"hash\":\"7VBVkm19ll+P6THGtqGHww==\""))
 	})
 })
