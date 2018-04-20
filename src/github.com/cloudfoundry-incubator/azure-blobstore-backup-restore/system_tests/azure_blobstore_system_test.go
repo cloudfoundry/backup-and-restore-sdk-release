@@ -21,12 +21,12 @@ var _ = Describe("Azure backup and restore", func() {
 
 	BeforeEach(func() {
 		instance = JobInstance{
-			Deployment:    "azure-backuper",
+			Deployment:    MustHaveEnv("BOSH_DEPLOYMENT"),
 			Instance:      "azure-backuper",
 			InstanceIndex: "0",
 		}
 
-		containerName = "bbr-system-test-azure-container"
+		containerName = MustHaveEnv("AZURE_CONTAINER_NAME")
 
 		fileName1 = "test_file_1_" + strconv.FormatInt(time.Now().Unix(), 10)
 		fileName2 = "test_file_2_" + strconv.FormatInt(time.Now().Unix(), 10)
