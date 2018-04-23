@@ -34,11 +34,11 @@ var _ = Describe("Container", func() {
 			})
 
 			It("returns a list of containers with files and hashes", func() {
-				container, err := azure.NewContainer(azure.ContainerConfig{
-					Name:             containerName,
-					AzureAccountName: os.Getenv("AZURE_ACCOUNT_NAME"),
-					AzureAccountKey:  os.Getenv("AZURE_ACCOUNT_KEY"),
-				})
+				container, err := azure.NewContainer(
+					containerName,
+					os.Getenv("AZURE_ACCOUNT_NAME"),
+					os.Getenv("AZURE_ACCOUNT_KEY"),
+				)
 				Expect(err).NotTo(HaveOccurred())
 
 				writeFileInContainer(containerName, fileName1, "TEST_BLOB_1_OLD")

@@ -39,7 +39,11 @@ func buildContainers(config map[string]azure.ContainerConfig) (map[string]azure.
 	var containers = make(map[string]azure.Container)
 
 	for containerId, containerConfig := range config {
-		container, err := azure.NewContainer(containerConfig)
+		container, err := azure.NewContainer(
+			containerConfig.Name,
+			containerConfig.AzureAccountName,
+			containerConfig.AzureAccountKey,
+		)
 		if err != nil {
 			return nil, err
 		}

@@ -20,18 +20,18 @@ type SDKContainer struct {
 	client azblob.ContainerURL
 }
 
-func NewContainer(containerConfig ContainerConfig) (SDKContainer, error) {
-	credential := azblob.NewSharedKeyCredential(containerConfig.AzureAccountName, containerConfig.AzureAccountKey)
+func NewContainer(name, azureAccountName, azureAccountKey string) (SDKContainer, error) {
+	credential := azblob.NewSharedKeyCredential(azureAccountName, azureAccountKey)
 	pipeline := azblob.NewPipeline(credential, azblob.PipelineOptions{})
-	azureURL, err := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net", containerConfig.AzureAccountName))
+	azureURL, err := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net", azureAccountName))
 	if err != nil {
 		return SDKContainer{}, err
 	}
 
 	serviceURL := azblob.NewServiceURL(*azureURL, pipeline)
 	return SDKContainer{
-		name:   containerConfig.Name,
-		client: serviceURL.NewContainerURL(containerConfig.Name),
+		name:   name,
+		client: serviceURL.NewContainerURL(name),
 	}, nil
 }
 
