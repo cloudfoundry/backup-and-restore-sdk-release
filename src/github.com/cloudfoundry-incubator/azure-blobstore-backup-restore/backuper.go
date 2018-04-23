@@ -27,7 +27,7 @@ func NewBackuper(config map[string]ContainerConfig) Backuper {
 }
 
 func (b Backuper) Backup() (map[string]ContainerBackup, error) {
-	var artifact = make(map[string]ContainerBackup)
+	var backups = make(map[string]ContainerBackup)
 
 	for containerId, containerConfig := range b.config {
 		var blobs []Blob
@@ -56,8 +56,8 @@ func (b Backuper) Backup() (map[string]ContainerBackup, error) {
 			}
 		}
 
-		artifact[containerId] = ContainerBackup{Name: containerConfig.Name, Blobs: blobs}
+		backups[containerId] = ContainerBackup{Name: containerConfig.Name, Blobs: blobs}
 	}
 
-	return artifact, nil
+	return backups, nil
 }

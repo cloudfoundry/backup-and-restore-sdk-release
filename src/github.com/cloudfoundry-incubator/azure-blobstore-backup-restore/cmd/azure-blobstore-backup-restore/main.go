@@ -25,7 +25,8 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	err = azure.NewArtifact(*artifactFilePath).Write(backups)
+	artifact := azure.NewArtifact(*artifactFilePath)
+	err = artifact.Write(backups)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
