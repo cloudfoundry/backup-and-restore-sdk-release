@@ -9,7 +9,7 @@ import (
 )
 
 func DeleteFileInContainer(container, blobName string) {
-	runAzureCommandOnContainerSuccessfully(
+	runAzureCommandSuccessfully(
 		"storage",
 		"blob",
 		"delete",
@@ -22,7 +22,7 @@ func WriteFileInContainer(container, blobName, body string) {
 	bodyFile.WriteString(body)
 	bodyFile.Close()
 
-	runAzureCommandOnContainerSuccessfully(
+	runAzureCommandSuccessfully(
 		"storage",
 		"blob",
 		"upload",
@@ -31,11 +31,16 @@ func WriteFileInContainer(container, blobName, body string) {
 		"--file", bodyFile.Name())
 }
 
-func runAzureCommandOnContainerSuccessfully(args ...string) *bytes.Buffer {
+func runAzureCommandSuccessfully(args ...string) *bytes.Buffer {
 	outputBuffer := new(bytes.Buffer)
 	errorBuffer := new(bytes.Buffer)
 
-	azCmd := exec.Command("az", args...)
+	argsWithCredentials := append(args,
+		"--account-name", MustHaveEnv("AZURE_ACCOUNT_NAME"),
+		"--account-key", MustHaveEnv("AZURE_ACCOUNT_KEY"),
+	)
+
+	azCmd := exec.Command("az", argsWithCredentials...)
 	azCmd.Stdout = outputBuffer
 	azCmd.Stderr = errorBuffer
 
