@@ -32,32 +32,53 @@ func (b Backuper) Backup() (map[string]ContainerBackup, error) {
 	for containerId, containerConfig := range b.config {
 		var blobs []Blob
 
-		credential := azblob.NewSharedKeyCredential(containerConfig.AzureAccountName, containerConfig.AzureAccountKey)
-		pipeline := azblob.NewPipeline(credential, azblob.PipelineOptions{})
-		azureURL, err := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net", containerConfig.AzureAccountName))
+		container, err := NewContainer(containerConfig)
 		if err != nil {
 			return nil, err
 		}
 
-		serviceURL := azblob.NewServiceURL(*azureURL, pipeline)
-		ctx := context.Background()
-		containerURL := serviceURL.NewContainerURL(containerConfig.Name)
-
-		for marker := (azblob.Marker{}); marker.NotDone(); {
-			listBlob, err := containerURL.ListBlobs(ctx, marker, azblob.ListBlobsOptions{})
-			if err != nil {
-				return nil, err
-			}
-
-			marker = listBlob.NextMarker
-
-			for _, blobInfo := range listBlob.Blobs.Blob {
-				blobs = append(blobs, Blob{Name: blobInfo.Name, Hash: *blobInfo.Properties.ContentMD5})
-			}
+		err = container.forEachBlob(func(blobInfo azblob.Blob) {
+			blobs = append(blobs, Blob{Name: blobInfo.Name, Hash: *blobInfo.Properties.ContentMD5})
+		})
+		if err != nil {
+			return nil, err
 		}
 
 		backups[containerId] = ContainerBackup{Name: containerConfig.Name, Blobs: blobs}
 	}
 
 	return backups, nil
+}
+
+type Container struct {
+	client azblob.ContainerURL
+}
+
+func NewContainer(containerConfig ContainerConfig) (Container, error) {
+	credential := azblob.NewSharedKeyCredential(containerConfig.AzureAccountName, containerConfig.AzureAccountKey)
+	pipeline := azblob.NewPipeline(credential, azblob.PipelineOptions{})
+	azureURL, err := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net", containerConfig.AzureAccountName))
+	if err != nil {
+		return Container{}, err
+	}
+
+	serviceURL := azblob.NewServiceURL(*azureURL, pipeline)
+	return Container{client: serviceURL.NewContainerURL(containerConfig.Name)}, nil
+}
+
+func (c Container) forEachBlob(action func(blob azblob.Blob)) error {
+	for marker := (azblob.Marker{}); marker.NotDone(); {
+		page, err := c.client.ListBlobs(context.Background(), marker, azblob.ListBlobsOptions{})
+		if err != nil {
+			return err
+		}
+
+		marker = page.NextMarker
+
+		for _, blobInfo := range page.Blobs.Blob {
+			action(blobInfo)
+		}
+	}
+
+	return nil
 }
