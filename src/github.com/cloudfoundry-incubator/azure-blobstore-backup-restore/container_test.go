@@ -49,22 +49,19 @@ var _ = Describe("Container", func() {
 	})
 
 	Describe("ListBlobs", func() {
-		var container azure.Container
-		var err error
-
-		BeforeEach(func() {
-			container, err = azure.NewContainer(
-				containerName,
-				os.Getenv("AZURE_ACCOUNT_NAME"),
-				os.Getenv("AZURE_ACCOUNT_KEY"),
-			)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
 		Context("when the backup succeeds", func() {
+			var container azure.Container
 			var fileName1, fileName2, fileName3 string
 
 			BeforeEach(func() {
+				var err error
+				container, err = azure.NewContainer(
+					containerName,
+					os.Getenv("AZURE_ACCOUNT_NAME"),
+					os.Getenv("AZURE_ACCOUNT_KEY"),
+				)
+				Expect(err).NotTo(HaveOccurred())
+
 				fileName1 = "test_file_1_" + strconv.FormatInt(time.Now().Unix(), 10)
 				fileName2 = "test_file_2_" + strconv.FormatInt(time.Now().Unix(), 10)
 				fileName3 = "test_file_3_" + strconv.FormatInt(time.Now().Unix(), 10)
@@ -92,6 +89,16 @@ var _ = Describe("Container", func() {
 					{Name: fileName2, Hash: "L+IcKub+0Og4CXjKqA1/3w=="},
 					{Name: fileName3, Hash: "7VBVkm19ll+P6THGtqGHww=="},
 				}))
+			})
+		})
+
+		Context("when listing the blobs fails", func() {
+			It("returns an error", func() {
+				container, err := azure.NewContainer("NON-EXISTENT_CONTAINER", "", "")
+
+				_, err = container.ListBlobs()
+
+				Expect(err.Error()).To(ContainSubstring("failed listing blobs in container 'NON-EXISTENT_CONTAINER':"))
 			})
 		})
 	})

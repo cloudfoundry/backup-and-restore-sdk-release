@@ -49,7 +49,7 @@ func (c SDKContainer) ListBlobs() ([]Blob, error) {
 	for marker := (azblob.Marker{}); marker.NotDone(); {
 		page, err := c.client.ListBlobs(context.Background(), marker, azblob.ListBlobsOptions{})
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed listing blobs in container '%s': %s", c.name, err)
 		}
 
 		marker = page.NextMarker
