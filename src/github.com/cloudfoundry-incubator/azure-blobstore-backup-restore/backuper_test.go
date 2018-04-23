@@ -33,12 +33,15 @@ var _ = Describe("Backuper", func() {
 		})
 
 		It("returns a list of containers with files and hashes", func() {
-			backuper := azure.NewBackuper(map[string]azure.ContainerConfig{
-				"test-container": {
-					Name:             containerName,
-					AzureAccountName: os.Getenv("AZURE_ACCOUNT_NAME"),
-					AzureAccountKey:  os.Getenv("AZURE_ACCOUNT_KEY"),
-				},
+			testContainer, err := azure.NewContainer(azure.ContainerConfig{
+				Name:             containerName,
+				AzureAccountName: os.Getenv("AZURE_ACCOUNT_NAME"),
+				AzureAccountKey:  os.Getenv("AZURE_ACCOUNT_KEY"),
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			backuper := azure.NewBackuper(map[string]azure.Container{
+				"test-container": testContainer,
 			})
 
 			writeFileInContainer(containerName, fileName1, "TEST_BLOB_1_OLD")

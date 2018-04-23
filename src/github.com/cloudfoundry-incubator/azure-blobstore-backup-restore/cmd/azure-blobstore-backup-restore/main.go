@@ -15,19 +15,37 @@ func main() {
 	flag.Parse()
 
 	config, err := azure.ParseConfig(*configFilePath)
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
+	exitOnError(err)
 
-	backuper := azure.NewBackuper(config)
+	containers, err := buildContainers(config)
+	exitOnError(err)
+
+	backuper := azure.NewBackuper(containers)
 	backups, err := backuper.Backup()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
+	exitOnError(err)
 
 	artifact := azure.NewArtifact(*artifactFilePath)
 	err = artifact.Write(backups)
+	exitOnError(err)
+}
+
+func exitOnError(err error) {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
+}
+
+func buildContainers(config map[string]azure.ContainerConfig) (map[string]azure.Container, error) {
+	var containers = make(map[string]azure.Container)
+
+	for containerId, containerConfig := range config {
+		container, err := azure.NewContainer(containerConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		containers[containerId] = container
+	}
+
+	return containers, nil
 }
