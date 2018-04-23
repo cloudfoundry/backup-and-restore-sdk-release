@@ -1,109 +1,83 @@
 package azure_test
 
 import (
-	"bytes"
-	"io/ioutil"
-	"os"
-	"os/exec"
-
-	"strconv"
-	"time"
+	"errors"
 
 	"github.com/cloudfoundry-incubator/azure-blobstore-backup-restore"
+	"github.com/cloudfoundry-incubator/azure-blobstore-backup-restore/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Backuper", func() {
-	Context("when the backup succeeds", func() {
-		var containerName = "bbr-test-azure-container"
+	var firstContainer *fakes.FakeContainer
+	var secondContainer *fakes.FakeContainer
+	var thirdContainer *fakes.FakeContainer
 
-		var fileName1, fileName2, fileName3 string
+	var backuper azure.Backuper
 
-		BeforeEach(func() {
-			fileName1 = "test_file_1_" + strconv.FormatInt(time.Now().Unix(), 10)
-			fileName2 = "test_file_2_" + strconv.FormatInt(time.Now().Unix(), 10)
-			fileName3 = "test_file_3_" + strconv.FormatInt(time.Now().Unix(), 10)
+	BeforeEach(func() {
+		firstContainer = new(fakes.FakeContainer)
+		secondContainer = new(fakes.FakeContainer)
+		thirdContainer = new(fakes.FakeContainer)
+
+		firstContainer.NameReturns("first-container-name")
+		secondContainer.NameReturns("second-container-name")
+		thirdContainer.NameReturns("third-container-name")
+
+		backuper = azure.NewBackuper(map[string]azure.Container{
+			"first":  firstContainer,
+			"second": secondContainer,
+			"third":  thirdContainer,
+		})
+	})
+
+	Describe("Backup", func() {
+		Context("when fetching the blobs succeeds", func() {
+			It("returns a map of all fetched blobs for each container", func() {
+				firstContainer.ListBlobsReturns([]azure.Blob{
+					{Name: "file_1_a", Hash: "1A"},
+					{Name: "file_1_b", Hash: "1B"},
+				}, nil)
+				secondContainer.ListBlobsReturns([]azure.Blob{}, nil)
+				thirdContainer.ListBlobsReturns([]azure.Blob{
+					{Name: "file_3_a", Hash: "3A"},
+				}, nil)
+
+				backups, err := backuper.Backup()
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(backups).To(Equal(map[string]azure.ContainerBackup{
+					"first": {
+						Name: "first-container-name",
+						Blobs: []azure.Blob{
+							{Name: "file_1_a", Hash: "1A"},
+							{Name: "file_1_b", Hash: "1B"},
+						},
+					},
+					"second": {
+						Name:  "second-container-name",
+						Blobs: []azure.Blob{},
+					},
+					"third": {
+						Name: "third-container-name",
+						Blobs: []azure.Blob{
+							{Name: "file_3_a", Hash: "3A"},
+						},
+					},
+				}))
+			})
 		})
 
-		AfterEach(func() {
-			deleteFileInContainer(containerName, fileName1)
-			deleteFileInContainer(containerName, fileName2)
-			deleteFileInContainer(containerName, fileName3)
-		})
+		Context("when fetching the blobs from one of the containers fails", func() {
+			It("returns the error", func() {
+				secondContainer.ListBlobsReturns(nil, errors.New("ooops"))
 
-		It("returns a list of containers with files and hashes", func() {
-			testContainer, err := azure.NewContainer(azure.ContainerConfig{
-				Name:             containerName,
-				AzureAccountName: os.Getenv("AZURE_ACCOUNT_NAME"),
-				AzureAccountKey:  os.Getenv("AZURE_ACCOUNT_KEY"),
+				backups, err := backuper.Backup()
+
+				Expect(err).To(MatchError("ooops"))
+				Expect(backups).To(BeNil())
 			})
-			Expect(err).NotTo(HaveOccurred())
-
-			backuper := azure.NewBackuper(map[string]azure.Container{
-				"test-container": testContainer,
-			})
-
-			writeFileInContainer(containerName, fileName1, "TEST_BLOB_1_OLD")
-			writeFileInContainer(containerName, fileName1, "TEST_BLOB_1")
-			writeFileInContainer(containerName, fileName2, "TEST_BLOB_2_OLDEST")
-			writeFileInContainer(containerName, fileName2, "TEST_BLOB_2_OLD")
-			writeFileInContainer(containerName, fileName2, "TEST_BLOB_2")
-			writeFileInContainer(containerName, fileName3, "TEST_BLOB_3")
-
-			backups, err := backuper.Backup()
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(backups["test-container"]).To(Equal(azure.ContainerBackup{
-				Name: containerName,
-				Blobs: []azure.Blob{
-					{Name: fileName1, Hash: "R1M39xrrgP7eS+jJHBWu1A=="},
-					{Name: fileName2, Hash: "L+IcKub+0Og4CXjKqA1/3w=="},
-					{Name: fileName3, Hash: "7VBVkm19ll+P6THGtqGHww=="},
-				},
-			}))
 		})
 	})
 })
-
-func deleteFileInContainer(containerName, blobName string) {
-	runAzureCommandSuccessfully(
-		"storage",
-		"blob",
-		"delete",
-		"--container-name", containerName,
-		"--name", blobName)
-}
-
-func writeFileInContainer(containerName, blobName, body string) {
-	bodyFile, _ := ioutil.TempFile("", "")
-	bodyFile.WriteString(body)
-	bodyFile.Close()
-
-	runAzureCommandSuccessfully(
-		"storage",
-		"blob",
-		"upload",
-		"--container-name", containerName,
-		"--name", blobName,
-		"--file", bodyFile.Name())
-}
-
-func runAzureCommandSuccessfully(args ...string) *bytes.Buffer {
-	outputBuffer := new(bytes.Buffer)
-	errorBuffer := new(bytes.Buffer)
-
-	argsWithCredentials := append(args,
-		"--account-name", os.Getenv("AZURE_ACCOUNT_NAME"),
-		"--account-key", os.Getenv("AZURE_ACCOUNT_KEY"),
-	)
-
-	azCmd := exec.Command("az", argsWithCredentials...)
-	azCmd.Stdout = outputBuffer
-	azCmd.Stderr = errorBuffer
-
-	err := azCmd.Run()
-	Expect(err).ToNot(HaveOccurred(), errorBuffer.String())
-
-	return outputBuffer
-}

@@ -9,31 +9,37 @@ import (
 	"github.com/Azure/azure-storage-blob-go/2017-07-29/azblob"
 )
 
-type Container struct {
+//go:generate counterfeiter -o fakes/fake_container.go . Container
+type Container interface {
+	Name() string
+	ListBlobs() ([]Blob, error)
+}
+
+type SDKContainer struct {
 	name   string
 	client azblob.ContainerURL
 }
 
-func NewContainer(containerConfig ContainerConfig) (Container, error) {
+func NewContainer(containerConfig ContainerConfig) (SDKContainer, error) {
 	credential := azblob.NewSharedKeyCredential(containerConfig.AzureAccountName, containerConfig.AzureAccountKey)
 	pipeline := azblob.NewPipeline(credential, azblob.PipelineOptions{})
 	azureURL, err := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net", containerConfig.AzureAccountName))
 	if err != nil {
-		return Container{}, err
+		return SDKContainer{}, err
 	}
 
 	serviceURL := azblob.NewServiceURL(*azureURL, pipeline)
-	return Container{
+	return SDKContainer{
 		name:   containerConfig.Name,
 		client: serviceURL.NewContainerURL(containerConfig.Name),
 	}, nil
 }
 
-func (c Container) Name() string {
+func (c SDKContainer) Name() string {
 	return c.name
 }
 
-func (c Container) ListBlobs() ([]Blob, error) {
+func (c SDKContainer) ListBlobs() ([]Blob, error) {
 	var blobs []Blob
 
 	for marker := (azblob.Marker{}); marker.NotDone(); {
