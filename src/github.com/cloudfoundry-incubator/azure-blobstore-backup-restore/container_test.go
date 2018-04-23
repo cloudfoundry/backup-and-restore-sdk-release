@@ -15,10 +15,53 @@ import (
 )
 
 var _ = Describe("Container", func() {
-	Describe("ListBlobs", func() {
-		Context("when the backup succeeds", func() {
-			var containerName = "bbr-test-azure-container"
+	var containerName = "bbr-test-azure-container"
 
+	Describe("NewContainer", func() {
+		It("builds a new Container", func() {
+			container, err := azure.NewContainer(
+				containerName,
+				os.Getenv("AZURE_ACCOUNT_NAME"),
+				os.Getenv("AZURE_ACCOUNT_KEY"),
+			)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(container.Name()).To(Equal(containerName))
+		})
+
+		Context("when the account name is invalid", func() {
+			It("returns an error", func() {
+				container, err := azure.NewContainer("", "\n", "")
+
+				Expect(err).To(MatchError("invalid account name: '\n'"))
+				Expect(container).To(Equal(azure.SDKContainer{}))
+			})
+		})
+
+		Context("when the account key is not valid base64", func() {
+			It("returns an error", func() {
+				container, err := azure.NewContainer("", "", "#")
+
+				Expect(err).To(MatchError(ContainSubstring("invalid credentials:")))
+				Expect(container).To(Equal(azure.SDKContainer{}))
+			})
+		})
+	})
+
+	Describe("ListBlobs", func() {
+		var container azure.Container
+		var err error
+
+		BeforeEach(func() {
+			container, err = azure.NewContainer(
+				containerName,
+				os.Getenv("AZURE_ACCOUNT_NAME"),
+				os.Getenv("AZURE_ACCOUNT_KEY"),
+			)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		Context("when the backup succeeds", func() {
 			var fileName1, fileName2, fileName3 string
 
 			BeforeEach(func() {
@@ -34,13 +77,6 @@ var _ = Describe("Container", func() {
 			})
 
 			It("returns a list of containers with files and hashes", func() {
-				container, err := azure.NewContainer(
-					containerName,
-					os.Getenv("AZURE_ACCOUNT_NAME"),
-					os.Getenv("AZURE_ACCOUNT_KEY"),
-				)
-				Expect(err).NotTo(HaveOccurred())
-
 				writeFileInContainer(containerName, fileName1, "TEST_BLOB_1_OLD")
 				writeFileInContainer(containerName, fileName1, "TEST_BLOB_1")
 				writeFileInContainer(containerName, fileName2, "TEST_BLOB_2_OLDEST")
