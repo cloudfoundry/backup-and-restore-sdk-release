@@ -30,6 +30,9 @@ params:
   TEST_AWS_SECRET_ACCESS_KEY_ID:
   TEST_ECS_ACCESS_KEY_ID:
   TEST_ECS_SECRET_ACCESS_KEY_ID:
+  AZURE_STORAGE_ACCOUNT:
+  AZURE_STORAGE_KEY:
+  AZURE_CONTAINER_NAME:
 
 run:
   path: backup-and-restore-sdk-release/ci/scripts/blobstore-unit-tests.sh
