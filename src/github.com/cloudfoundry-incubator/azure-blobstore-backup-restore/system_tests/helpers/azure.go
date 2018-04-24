@@ -35,12 +35,10 @@ func runAzureCommandSuccessfully(args ...string) *bytes.Buffer {
 	outputBuffer := new(bytes.Buffer)
 	errorBuffer := new(bytes.Buffer)
 
-	argsWithCredentials := append(args,
-		"--account-name", MustHaveEnv("AZURE_ACCOUNT_NAME"),
-		"--account-key", MustHaveEnv("AZURE_ACCOUNT_KEY"),
-	)
+	MustHaveEnv("AZURE_STORAGE_ACCOUNT")
+	MustHaveEnv("AZURE_STORAGE_KEY")
 
-	azCmd := exec.Command("az", argsWithCredentials...)
+	azCmd := exec.Command("az", args...)
 	azCmd.Stdout = outputBuffer
 	azCmd.Stderr = errorBuffer
 

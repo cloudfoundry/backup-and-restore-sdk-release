@@ -32,8 +32,8 @@ export BOSH_CA_CERT=`pwd`/bosh-backup-and-restore-meta/certs/lite-bosh.backup-an
 export BOSH_GW_USER=vcap
 export BOSH_GW_HOST=lite-bosh.backup-and-restore.cf-app.com
 export BOSH_GW_PRIVATE_KEY=`pwd`/bosh-backup-and-restore-meta/genesis-bosh/bosh.pem
-export AZURE_ACCOUNT_NAME
-export AZURE_ACCOUNT_KEY
+export AZURE_STORAGE_ACCOUNT
+export AZURE_STORAGE_KEY
 export AZURE_CONTAINER_NAME
 
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/azure-blobstore-backup-restore

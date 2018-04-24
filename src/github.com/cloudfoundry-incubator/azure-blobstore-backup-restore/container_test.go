@@ -149,6 +149,9 @@ func runAzureCommandSuccessfully(args ...string) *bytes.Buffer {
 	outputBuffer := new(bytes.Buffer)
 	errorBuffer := new(bytes.Buffer)
 
+	mustHaveEnv("AZURE_STORAGE_ACCOUNT")
+	mustHaveEnv("AZURE_STORAGE_KEY")
+
 	azCmd := exec.Command("az", args...)
 	azCmd.Stdout = outputBuffer
 	azCmd.Stderr = errorBuffer

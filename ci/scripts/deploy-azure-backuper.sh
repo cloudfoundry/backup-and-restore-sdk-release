@@ -30,6 +30,6 @@ bosh-cli --non-interactive \
   --var=deployment-name=${BOSH_DEPLOYMENT} \
   --var=backup-and-restore-sdk-release-version=$(cat release-tarball/version) \
   --var=backup-and-restore-sdk-release-url=$(cat release-tarball/url) \
-  --var=azure-account-name=${AZURE_ACCOUNT_NAME} \
-  --var=azure-account-key=${AZURE_ACCOUNT_KEY} \
+  --var=azure-storage-account=${AZURE_STORAGE_ACCOUNT} \
+  --var=azure-storage-key=${AZURE_STORAGE_KEY} \
   --var=azure-container-name=${AZURE_CONTAINER_NAME}
