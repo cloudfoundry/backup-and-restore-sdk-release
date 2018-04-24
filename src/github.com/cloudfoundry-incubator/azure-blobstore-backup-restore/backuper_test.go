@@ -3,6 +3,8 @@ package azure_test
 import (
 	"errors"
 
+	"fmt"
+
 	"github.com/cloudfoundry-incubator/azure-blobstore-backup-restore"
 	"github.com/cloudfoundry-incubator/azure-blobstore-backup-restore/fakes"
 	. "github.com/onsi/ginkgo"
@@ -16,14 +18,18 @@ var _ = Describe("Backuper", func() {
 
 	var backuper azure.Backuper
 
+	const firstContainerName = "first-container-name"
+	const secondContainerName = "second-container-name"
+	const thirdContainerName = "third-container-name"
+
 	BeforeEach(func() {
 		firstContainer = new(fakes.FakeContainer)
 		secondContainer = new(fakes.FakeContainer)
 		thirdContainer = new(fakes.FakeContainer)
 
-		firstContainer.NameReturns("first-container-name")
-		secondContainer.NameReturns("second-container-name")
-		thirdContainer.NameReturns("third-container-name")
+		firstContainer.NameReturns(firstContainerName)
+		secondContainer.NameReturns(secondContainerName)
+		thirdContainer.NameReturns(thirdContainerName)
 
 		backuper = azure.NewBackuper(map[string]azure.Container{
 			"first":  firstContainer,
@@ -49,23 +55,34 @@ var _ = Describe("Backuper", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(backups).To(Equal(map[string]azure.ContainerBackup{
 					"first": {
-						Name: "first-container-name",
+						Name: firstContainerName,
 						Blobs: []azure.Blob{
 							{Name: "file_1_a", Hash: "1A"},
 							{Name: "file_1_b", Hash: "1B"},
 						},
 					},
 					"second": {
-						Name:  "second-container-name",
+						Name:  secondContainerName,
 						Blobs: []azure.Blob{},
 					},
 					"third": {
-						Name: "third-container-name",
+						Name: thirdContainerName,
 						Blobs: []azure.Blob{
 							{Name: "file_3_a", Hash: "3A"},
 						},
 					},
 				}))
+			})
+		})
+
+		Context("when one of the containers does not have soft delete enabled", func() {
+			It("returns the error", func() {
+				secondContainer.SoftDeleteIsDisabledReturns(true, nil)
+
+				_, err := backuper.Backup()
+
+				message := fmt.Sprintf("soft delete is not enabled on container: '%s'", secondContainerName)
+				Expect(err).To(MatchError(message))
 			})
 		})
 

@@ -33,6 +33,9 @@ params:
   AZURE_STORAGE_ACCOUNT:
   AZURE_STORAGE_KEY:
   AZURE_CONTAINER_NAME:
+  AZURE_STORAGE_ACCOUNT_NO_SOFT_DELETE:
+  AZURE_STORAGE_KEY_NO_SOFT_DELETE:
+  AZURE_CONTAINER_NAME_NO_SOFT_DELETE:
 
 run:
   path: backup-and-restore-sdk-release/ci/scripts/blobstore-unit-tests.sh

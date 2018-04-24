@@ -15,24 +15,7 @@ import (
 )
 
 var _ = Describe("Container", func() {
-	var containerName string
-
-	BeforeEach(func() {
-		containerName = mustHaveEnv("AZURE_CONTAINER_NAME")
-	})
-
 	Describe("NewContainer", func() {
-		It("builds a new Container", func() {
-			container, err := azure.NewContainer(
-				containerName,
-				mustHaveEnv("AZURE_STORAGE_ACCOUNT"),
-				mustHaveEnv("AZURE_STORAGE_KEY"),
-			)
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(container.Name()).To(Equal(containerName))
-		})
-
 		Context("when the account name is invalid", func() {
 			It("returns an error", func() {
 				container, err := azure.NewContainer("", "\n", "")
@@ -52,21 +35,64 @@ var _ = Describe("Container", func() {
 		})
 	})
 
+	Describe("Name", func() {
+		It("returns the container name", func() {
+			name := "container-name"
+
+			container, err := azure.NewContainer(name, "", "")
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(container.Name()).To(Equal(name))
+		})
+	})
+
+	Describe("SoftDeleteIsDisabled", func() {
+		Context("when soft delete is enabled on the container's storage service", func() {
+			It("returns true", func() {
+				container := newContainer()
+
+				enabled, err := container.SoftDeleteIsDisabled()
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(enabled).To(BeTrue())
+			})
+		})
+
+		Context("when soft delete is disabled on the container's storage service", func() {
+			It("returns false", func() {
+				container, err := azure.NewContainer(
+					mustHaveEnv("AZURE_CONTAINER_NAME_NO_SOFT_DELETE"),
+					mustHaveEnv("AZURE_STORAGE_ACCOUNT_NO_SOFT_DELETE"),
+					mustHaveEnv("AZURE_STORAGE_KEY_NO_SOFT_DELETE"),
+				)
+
+				enabled, err := container.SoftDeleteIsDisabled()
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(enabled).To(BeFalse())
+			})
+		})
+
+		Context("when retrieving the storage service properties fails", func() {
+			It("returns an error", func() {
+				container, err := azure.NewContainer("", "", "")
+
+				_, err = container.SoftDeleteIsDisabled()
+
+				Expect(err.Error()).To(ContainSubstring("failed fetching properties for storage account: '"))
+			})
+		})
+	})
+
 	Describe("ListBlobs", func() {
 		Context("when the backup succeeds", func() {
 			var container azure.Container
 			var fileName1, fileName2, fileName3 string
 
 			BeforeEach(func() {
-				var err error
-				container, err = azure.NewContainer(
-					containerName,
-					mustHaveEnv("AZURE_STORAGE_ACCOUNT"),
-					mustHaveEnv("AZURE_STORAGE_KEY"),
-				)
-				Expect(err).NotTo(HaveOccurred())
+				container = newContainer()
 
-				deleteAllBlobsInContainer(containerName)
+				deleteAllBlobsInContainer(container.Name())
 
 				fileName1 = "test_file_1_" + strconv.FormatInt(time.Now().Unix(), 10)
 				fileName2 = "test_file_2_" + strconv.FormatInt(time.Now().Unix(), 10)
@@ -74,18 +100,18 @@ var _ = Describe("Container", func() {
 			})
 
 			AfterEach(func() {
-				deleteFileInContainer(containerName, fileName1)
-				deleteFileInContainer(containerName, fileName2)
-				deleteFileInContainer(containerName, fileName3)
+				deleteFileInContainer(container.Name(), fileName1)
+				deleteFileInContainer(container.Name(), fileName2)
+				deleteFileInContainer(container.Name(), fileName3)
 			})
 
 			It("returns a list of containers with files and hashes", func() {
-				writeFileInContainer(containerName, fileName1, "TEST_BLOB_1_OLD")
-				writeFileInContainer(containerName, fileName1, "TEST_BLOB_1")
-				writeFileInContainer(containerName, fileName2, "TEST_BLOB_2_OLDEST")
-				writeFileInContainer(containerName, fileName2, "TEST_BLOB_2_OLD")
-				writeFileInContainer(containerName, fileName2, "TEST_BLOB_2")
-				writeFileInContainer(containerName, fileName3, "TEST_BLOB_3")
+				writeFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_OLD")
+				writeFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
+				writeFileInContainer(container.Name(), fileName2, "TEST_BLOB_2_OLDEST")
+				writeFileInContainer(container.Name(), fileName2, "TEST_BLOB_2_OLD")
+				writeFileInContainer(container.Name(), fileName2, "TEST_BLOB_2")
+				writeFileInContainer(container.Name(), fileName3, "TEST_BLOB_3")
 
 				blobs, err := container.ListBlobs()
 
@@ -100,15 +126,33 @@ var _ = Describe("Container", func() {
 
 		Context("when listing the blobs fails", func() {
 			It("returns an error", func() {
-				container, err := azure.NewContainer("NON-EXISTENT_CONTAINER", "", "")
+				container, err := azure.NewContainer(
+					"NON-EXISTENT-CONTAINER",
+					mustHaveEnv("AZURE_STORAGE_ACCOUNT"),
+					mustHaveEnv("AZURE_STORAGE_KEY"),
+				)
 
 				_, err = container.ListBlobs()
 
-				Expect(err.Error()).To(ContainSubstring("failed listing blobs in container 'NON-EXISTENT_CONTAINER':"))
+				Expect(err.Error()).To(ContainSubstring("failed listing blobs in container 'NON-EXISTENT-CONTAINER':"))
 			})
 		})
 	})
 })
+
+func containerName() string {
+	return mustHaveEnv("AZURE_CONTAINER_NAME")
+}
+
+func newContainer() azure.Container {
+	container, err := azure.NewContainer(
+		containerName(),
+		mustHaveEnv("AZURE_STORAGE_ACCOUNT"),
+		mustHaveEnv("AZURE_STORAGE_KEY"),
+	)
+	Expect(err).NotTo(HaveOccurred())
+	return container
+}
 
 func deleteAllBlobsInContainer(containerName string) {
 	runAzureCommandSuccessfully(

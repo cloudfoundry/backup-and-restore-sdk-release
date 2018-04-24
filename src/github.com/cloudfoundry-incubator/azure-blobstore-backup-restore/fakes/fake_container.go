@@ -17,6 +17,17 @@ type FakeContainer struct {
 	nameReturnsOnCall map[int]struct {
 		result1 string
 	}
+	SoftDeleteIsDisabledStub        func() (bool, error)
+	softDeleteIsDisabledMutex       sync.RWMutex
+	softDeleteIsDisabledArgsForCall []struct{}
+	softDeleteIsDisabledReturns     struct {
+		result1 bool
+		result2 error
+	}
+	softDeleteIsDisabledReturnsOnCall map[int]struct {
+		result1 bool
+		result2 error
+	}
 	ListBlobsStub        func() ([]azure.Blob, error)
 	listBlobsMutex       sync.RWMutex
 	listBlobsArgsForCall []struct{}
@@ -72,6 +83,49 @@ func (fake *FakeContainer) NameReturnsOnCall(i int, result1 string) {
 	}{result1}
 }
 
+func (fake *FakeContainer) SoftDeleteIsDisabled() (bool, error) {
+	fake.softDeleteIsDisabledMutex.Lock()
+	ret, specificReturn := fake.softDeleteIsDisabledReturnsOnCall[len(fake.softDeleteIsDisabledArgsForCall)]
+	fake.softDeleteIsDisabledArgsForCall = append(fake.softDeleteIsDisabledArgsForCall, struct{}{})
+	fake.recordInvocation("SoftDeleteIsDisabled", []interface{}{})
+	fake.softDeleteIsDisabledMutex.Unlock()
+	if fake.SoftDeleteIsDisabledStub != nil {
+		return fake.SoftDeleteIsDisabledStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.softDeleteIsDisabledReturns.result1, fake.softDeleteIsDisabledReturns.result2
+}
+
+func (fake *FakeContainer) SoftDeleteIsDisabledCallCount() int {
+	fake.softDeleteIsDisabledMutex.RLock()
+	defer fake.softDeleteIsDisabledMutex.RUnlock()
+	return len(fake.softDeleteIsDisabledArgsForCall)
+}
+
+func (fake *FakeContainer) SoftDeleteIsDisabledReturns(result1 bool, result2 error) {
+	fake.SoftDeleteIsDisabledStub = nil
+	fake.softDeleteIsDisabledReturns = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeContainer) SoftDeleteIsDisabledReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.SoftDeleteIsDisabledStub = nil
+	if fake.softDeleteIsDisabledReturnsOnCall == nil {
+		fake.softDeleteIsDisabledReturnsOnCall = make(map[int]struct {
+			result1 bool
+			result2 error
+		})
+	}
+	fake.softDeleteIsDisabledReturnsOnCall[i] = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeContainer) ListBlobs() ([]azure.Blob, error) {
 	fake.listBlobsMutex.Lock()
 	ret, specificReturn := fake.listBlobsReturnsOnCall[len(fake.listBlobsArgsForCall)]
@@ -120,6 +174,8 @@ func (fake *FakeContainer) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.nameMutex.RLock()
 	defer fake.nameMutex.RUnlock()
+	fake.softDeleteIsDisabledMutex.RLock()
+	defer fake.softDeleteIsDisabledMutex.RUnlock()
 	fake.listBlobsMutex.RLock()
 	defer fake.listBlobsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

@@ -1,5 +1,7 @@
 package azure
 
+import "fmt"
+
 type Blob struct {
 	Name string `json:"name"`
 	Hash string `json:"hash"`
@@ -22,6 +24,9 @@ func (b Backuper) Backup() (map[string]ContainerBackup, error) {
 	var backups = make(map[string]ContainerBackup)
 
 	for containerId, container := range b.containers {
+		if val, _ := container.SoftDeleteIsDisabled(); val {
+			return nil, fmt.Errorf("soft delete is not enabled on container: '%s'", container.Name())
+		}
 		blobs, err := container.ListBlobs()
 		if err != nil {
 			return nil, err

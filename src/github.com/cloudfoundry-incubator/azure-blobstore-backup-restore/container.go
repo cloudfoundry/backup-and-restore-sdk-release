@@ -6,19 +6,21 @@ import (
 
 	"context"
 
-	"github.com/Azure/azure-storage-blob-go/2017-07-29/azblob"
 	"encoding/base64"
+
+	"github.com/Azure/azure-storage-blob-go/2017-07-29/azblob"
 )
 
 //go:generate counterfeiter -o fakes/fake_container.go . Container
 type Container interface {
 	Name() string
+	SoftDeleteIsDisabled() (bool, error)
 	ListBlobs() ([]Blob, error)
 }
 
 type SDKContainer struct {
-	name   string
-	client azblob.ContainerURL
+	name    string
+	service azblob.ServiceURL
 }
 
 func NewContainer(name, storageAccount, storageKey string) (container SDKContainer, err error) {
@@ -33,10 +35,10 @@ func NewContainer(name, storageAccount, storageKey string) (container SDKContain
 		return SDKContainer{}, fmt.Errorf("invalid account name: '%s'", storageAccount)
 	}
 
-	serviceURL := azblob.NewServiceURL(*azureURL, pipeline)
+	service := azblob.NewServiceURL(*azureURL, pipeline)
 	return SDKContainer{
-		name:   name,
-		client: serviceURL.NewContainerURL(name),
+		name:    name,
+		service: service,
 	}, nil
 }
 
@@ -44,11 +46,25 @@ func (c SDKContainer) Name() string {
 	return c.name
 }
 
+func (c SDKContainer) SoftDeleteIsDisabled() (bool, error) {
+	properties, err := c.service.GetProperties(context.Background())
+	if err != nil {
+		return false, fmt.Errorf("failed fetching properties for storage account: '%s'", err)
+	}
+
+	if properties.DeleteRetentionPolicy == nil {
+		return true, nil
+	}
+
+	return properties.DeleteRetentionPolicy.Enabled, nil
+}
+
 func (c SDKContainer) ListBlobs() ([]Blob, error) {
 	var blobs []Blob
+	client := c.service.NewContainerURL(c.name)
 
 	for marker := (azblob.Marker{}); marker.NotDone(); {
-		page, err := c.client.ListBlobs(context.Background(), marker, azblob.ListBlobsOptions{})
+		page, err := client.ListBlobs(context.Background(), marker, azblob.ListBlobsOptions{})
 		if err != nil {
 			return nil, fmt.Errorf("failed listing blobs in container '%s': %s", c.name, err)
 		}
