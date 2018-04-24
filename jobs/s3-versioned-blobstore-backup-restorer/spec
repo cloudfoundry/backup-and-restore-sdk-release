@@ -23,7 +23,7 @@ templates:
   buckets.json.erb: config/buckets.json
 
 packages:
-- blobstore-backup-restorer
+- s3-blobstore-backup-restorer
 
 properties:
   enabled:

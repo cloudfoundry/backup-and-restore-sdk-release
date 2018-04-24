@@ -14,22 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-config/private.yml
-config/dev.yml
-blobs
-dev_releases
-releases/*.tgz
-releases/**/*.tgz
-.dev_builds
-.final_builds/jobs/**/*.tgz
-.final_builds/packages/**/*.tgz
-.DS_Store
-.idea
-*.swp
-*~
-*#
-#*
-.blobs/
-bin/
-pkg/
-**/secrets.yml
+set -e
+
+mkdir -p ${BOSH_INSTALL_TARGET}/src
+cp -a . ${BOSH_INSTALL_TARGET}/src
+
+export GOPATH=$BOSH_INSTALL_TARGET
+export GOROOT=$(readlink -nf /var/vcap/packages/backup-and-restore-release-golang)
+export PATH=$GOROOT/bin:$PATH
+
+go install github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/cmd/s3-blobstore-backup-restore
+
+rm -rf ${BOSH_INSTALL_TARGET}/src ${BOSH_INSTALL_TARGET}/pkg

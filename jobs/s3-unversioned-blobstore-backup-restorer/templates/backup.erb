@@ -3,7 +3,7 @@
 set -e
 
 <% if p('enabled') %>
-/var/vcap/packages/blobstore-backup-restorer/bin/blobstore-backup-restore \
+/var/vcap/packages/s3-blobstore-backup-restorer/bin/s3-blobstore-backup-restore \
     --backup \
     --unversioned \
     --config /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/config/buckets.json \
