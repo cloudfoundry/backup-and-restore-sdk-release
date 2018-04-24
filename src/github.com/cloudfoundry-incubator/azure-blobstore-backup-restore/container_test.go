@@ -46,7 +46,7 @@ var _ = Describe("Container", func() {
 			It("returns an error", func() {
 				container, err := azure.NewContainer("", "", "#")
 
-				Expect(err).To(MatchError(ContainSubstring("invalid credentials:")))
+				Expect(err).To(MatchError(ContainSubstring("invalid storage key: '")))
 				Expect(container).To(Equal(azure.SDKContainer{}))
 			})
 		})

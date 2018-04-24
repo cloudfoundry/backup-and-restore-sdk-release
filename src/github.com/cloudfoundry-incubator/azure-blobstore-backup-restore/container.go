@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/Azure/azure-storage-blob-go/2017-07-29/azblob"
+	"encoding/base64"
 )
 
 //go:generate counterfeiter -o fakes/fake_container.go . Container
@@ -62,13 +63,11 @@ func (c SDKContainer) ListBlobs() ([]Blob, error) {
 	return blobs, nil
 }
 
-func buildCredential(storageAccount, storageKey string) (credential *azblob.SharedKeyCredential, err error) {
-	defer func() {
-		r := recover()
-		if r != nil {
-			err = fmt.Errorf("invalid credentials: '%s'", r)
-		}
-	}()
+func buildCredential(storageAccount, storageKey string) (*azblob.SharedKeyCredential, error) {
+	_, err := base64.StdEncoding.DecodeString(storageKey)
+	if err != nil {
+		return nil, fmt.Errorf("invalid storage key: '%s'", err)
+	}
 
 	return azblob.NewSharedKeyCredential(storageAccount, storageKey), nil
 }
