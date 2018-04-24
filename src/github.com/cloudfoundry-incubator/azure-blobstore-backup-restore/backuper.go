@@ -24,9 +24,15 @@ func (b Backuper) Backup() (map[string]ContainerBackup, error) {
 	var backups = make(map[string]ContainerBackup)
 
 	for containerId, container := range b.containers {
-		if val, _ := container.SoftDeleteIsDisabled(); val {
+		disabled, err := container.SoftDeleteIsDisabled()
+		if err != nil {
+			return nil, err
+		}
+
+		if disabled {
 			return nil, fmt.Errorf("soft delete is not enabled on container: '%s'", container.Name())
 		}
+
 		blobs, err := container.ListBlobs()
 		if err != nil {
 			return nil, err

@@ -76,13 +76,23 @@ var _ = Describe("Backuper", func() {
 		})
 
 		Context("when one of the containers does not have soft delete enabled", func() {
-			It("returns the error", func() {
+			It("returns an error", func() {
 				secondContainer.SoftDeleteIsDisabledReturns(true, nil)
 
 				_, err := backuper.Backup()
 
 				message := fmt.Sprintf("soft delete is not enabled on container: '%s'", secondContainerName)
 				Expect(err).To(MatchError(message))
+			})
+		})
+
+		Context("when checking soft delete fails", func() {
+			It("returns an error", func() {
+				secondContainer.SoftDeleteIsDisabledReturns(false, errors.New("ooops"))
+
+				_, err := backuper.Backup()
+
+				Expect(err).To(MatchError("ooops"))
 			})
 		})
 
