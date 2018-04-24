@@ -17,8 +17,8 @@ var _ = Describe("ParseConfig", func() {
 			configJson := `{
 				"container_id": {
 					"name": "container_name",
-					"azure_account_name": "ACCOUNT_NAME",
-					"azure_account_key": "ACCOUNT_KEY"
+					"azure_storage_account": "my-storage-account",
+					"azure_storage_key": "my-storage-key"
 				}
 			}`
 			ioutil.WriteFile(configFile.Name(), []byte(configJson), 0644)
@@ -26,9 +26,9 @@ var _ = Describe("ParseConfig", func() {
 			config, err := azure.ParseConfig(configFile.Name())
 
 			Expect(config["container_id"]).To(Equal(azure.ContainerConfig{
-				Name:             "container_name",
-				AzureAccountName: "ACCOUNT_NAME",
-				AzureAccountKey:  "ACCOUNT_KEY",
+				Name:           "container_name",
+				StorageAccount: "my-storage-account",
+				StorageKey:     "my-storage-key",
 			}))
 		})
 	})

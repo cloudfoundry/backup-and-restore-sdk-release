@@ -45,8 +45,8 @@ instance_groups:
       containers:
         droplets:
           name: ((azure-container-name))
-          azure_account_name: ((azure-account-name))
-          azure_account_key: ((azure-account-key))
+          azure_storage_account: ((azure-storage-account))
+          azure_storage_key: ((azure-storage-key))
   azs: [z1]
 
 update:

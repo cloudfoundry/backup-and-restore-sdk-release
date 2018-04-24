@@ -15,14 +15,18 @@ import (
 )
 
 var _ = Describe("Container", func() {
-	var containerName = "bbr-test-azure-container"
+	var containerName string
+
+	BeforeEach(func() {
+		containerName = mustHaveEnv("AZURE_CONTAINER_NAME")
+	})
 
 	Describe("NewContainer", func() {
 		It("builds a new Container", func() {
 			container, err := azure.NewContainer(
 				containerName,
-				os.Getenv("AZURE_ACCOUNT_NAME"),
-				os.Getenv("AZURE_ACCOUNT_KEY"),
+				mustHaveEnv("AZURE_STORAGE_ACCOUNT"),
+				mustHaveEnv("AZURE_STORAGE_KEY"),
 			)
 
 			Expect(err).NotTo(HaveOccurred())
@@ -57,10 +61,12 @@ var _ = Describe("Container", func() {
 				var err error
 				container, err = azure.NewContainer(
 					containerName,
-					os.Getenv("AZURE_ACCOUNT_NAME"),
-					os.Getenv("AZURE_ACCOUNT_KEY"),
+					mustHaveEnv("AZURE_STORAGE_ACCOUNT"),
+					mustHaveEnv("AZURE_STORAGE_KEY"),
 				)
 				Expect(err).NotTo(HaveOccurred())
+
+				deleteAllBlobsInContainer(containerName)
 
 				fileName1 = "test_file_1_" + strconv.FormatInt(time.Now().Unix(), 10)
 				fileName2 = "test_file_2_" + strconv.FormatInt(time.Now().Unix(), 10)
@@ -104,6 +110,18 @@ var _ = Describe("Container", func() {
 	})
 })
 
+func deleteAllBlobsInContainer(containerName string) {
+	runAzureCommandSuccessfully(
+		"storage",
+		"blob",
+		"delete-batch",
+		"--source",
+		"bbr-test-azure-container",
+		"--if-match",
+		"*",
+	)
+}
+
 func deleteFileInContainer(containerName, blobName string) {
 	runAzureCommandSuccessfully(
 		"storage",
@@ -131,12 +149,7 @@ func runAzureCommandSuccessfully(args ...string) *bytes.Buffer {
 	outputBuffer := new(bytes.Buffer)
 	errorBuffer := new(bytes.Buffer)
 
-	argsWithCredentials := append(args,
-		"--account-name", os.Getenv("AZURE_ACCOUNT_NAME"),
-		"--account-key", os.Getenv("AZURE_ACCOUNT_KEY"),
-	)
-
-	azCmd := exec.Command("az", argsWithCredentials...)
+	azCmd := exec.Command("az", args...)
 	azCmd.Stdout = outputBuffer
 	azCmd.Stderr = errorBuffer
 
@@ -144,4 +157,10 @@ func runAzureCommandSuccessfully(args ...string) *bytes.Buffer {
 	Expect(err).ToNot(HaveOccurred(), errorBuffer.String())
 
 	return outputBuffer
+}
+
+func mustHaveEnv(keyname string) string {
+	val := os.Getenv(keyname)
+	Expect(val).NotTo(BeEmpty(), "Need "+keyname+" for the test")
+	return val
 }

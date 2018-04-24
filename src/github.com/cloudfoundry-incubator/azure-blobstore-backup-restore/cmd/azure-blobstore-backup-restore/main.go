@@ -41,8 +41,8 @@ func buildContainers(config map[string]azure.ContainerConfig) (map[string]azure.
 	for containerId, containerConfig := range config {
 		container, err := azure.NewContainer(
 			containerConfig.Name,
-			containerConfig.AzureAccountName,
-			containerConfig.AzureAccountKey,
+			containerConfig.StorageAccount,
+			containerConfig.StorageKey,
 		)
 		if err != nil {
 			return nil, err

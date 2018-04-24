@@ -33,6 +33,6 @@ properties:
     description: "Hash of buckets to backup/restore to"
     example: |
       droplets:
-        name: "the_droplets_bucket"
-        azure_account_name: "AZURE_ACCOUNT_NAME"
-        azure_account_key: "AZURE_ACCOUNT_KEY"
+        name: "the_droplets_container"
+        azure_storage_account: "AZURE_STORAGE_ACCOUNT"
+        azure_storage_key: "AZURE_STORAGE_KEY"

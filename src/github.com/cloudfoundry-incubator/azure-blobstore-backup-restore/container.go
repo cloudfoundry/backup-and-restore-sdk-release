@@ -20,16 +20,16 @@ type SDKContainer struct {
 	client azblob.ContainerURL
 }
 
-func NewContainer(name, azureAccountName, azureAccountKey string) (container SDKContainer, err error) {
-	credential, err := buildCredential(azureAccountName, azureAccountKey)
+func NewContainer(name, storageAccount, storageKey string) (container SDKContainer, err error) {
+	credential, err := buildCredential(storageAccount, storageKey)
 	if err != nil {
 		return SDKContainer{}, err
 	}
 
 	pipeline := azblob.NewPipeline(credential, azblob.PipelineOptions{})
-	azureURL, err := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net", azureAccountName))
+	azureURL, err := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net", storageAccount))
 	if err != nil {
-		return SDKContainer{}, fmt.Errorf("invalid account name: '%s'", azureAccountName)
+		return SDKContainer{}, fmt.Errorf("invalid account name: '%s'", storageAccount)
 	}
 
 	serviceURL := azblob.NewServiceURL(*azureURL, pipeline)
@@ -62,7 +62,7 @@ func (c SDKContainer) ListBlobs() ([]Blob, error) {
 	return blobs, nil
 }
 
-func buildCredential(azureAccountName, azureAccountKey string) (credential *azblob.SharedKeyCredential, err error) {
+func buildCredential(storageAccount, storageKey string) (credential *azblob.SharedKeyCredential, err error) {
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -70,5 +70,5 @@ func buildCredential(azureAccountName, azureAccountKey string) (credential *azbl
 		}
 	}()
 
-	return azblob.NewSharedKeyCredential(azureAccountName, azureAccountKey), nil
+	return azblob.NewSharedKeyCredential(storageAccount, storageKey), nil
 }
