@@ -35,11 +35,9 @@ export AZURE_CONTAINER_NAME_NO_SOFT_DELETE
 export GOPATH=`pwd`/backup-and-restore-sdk-release:"$GOPATH"
 
 pushd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/s3-blobstore-backup-restore
-  dep ensure
   ginkgo -r -v -skipPackage=system_tests -keepGoing --flakeAttempts=2
 popd
 
 pushd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/azure-blobstore-backup-restore
-  dep ensure
   ginkgo -r -v -skipPackage=system_tests -keepGoing --flakeAttempts=2
 popd

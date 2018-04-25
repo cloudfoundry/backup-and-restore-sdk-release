@@ -41,5 +41,4 @@ export POSTGRES_CLIENT_CERT="${POSTGRES_CLIENT_CERT:-$(cat $PWD/bosh-backup-and-
 export POSTGRES_CLIENT_KEY="${POSTGRES_CLIENT_KEY:-$(cat $PWD/bosh-backup-and-restore-meta/${POSTGRES_CLIENT_KEY_PATH})}"
 
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/database-backup-restore
-dep ensure
 ginkgo -v -r system_tests/${TEST_SUITE_NAME} -trace

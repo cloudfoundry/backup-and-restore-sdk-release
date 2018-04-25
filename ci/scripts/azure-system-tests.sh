@@ -37,5 +37,4 @@ export AZURE_STORAGE_KEY
 export AZURE_CONTAINER_NAME
 
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/azure-blobstore-backup-restore
-dep ensure
 ginkgo -v -r system_tests -trace

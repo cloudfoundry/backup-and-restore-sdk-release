@@ -41,5 +41,4 @@ export MYSQL_CLIENT_CERT="${MYSQL_CLIENT_CERT:-$(cat $PWD/bosh-backup-and-restor
 export MYSQL_CLIENT_KEY="${MYSQL_CLIENT_KEY:-$(cat $PWD/bosh-backup-and-restore-meta/${MYSQL_CLIENT_KEY_PATH})}"
 
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/database-backup-restore
-dep ensure
 ginkgo -v -r -trace system_tests/mysql

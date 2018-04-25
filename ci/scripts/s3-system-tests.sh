@@ -31,5 +31,4 @@ export S3_UNVERSIONED_BACKUP_BUCKET_REGION
 
 
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/s3-blobstore-backup-restore
-dep ensure
 ginkgo -v -r system_tests -trace
