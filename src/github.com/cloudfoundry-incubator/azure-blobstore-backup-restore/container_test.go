@@ -46,12 +46,12 @@ var _ = Describe("Container", func() {
 		})
 	})
 
-	Describe("SoftDeleteIsDisabled", func() {
+	Describe("SoftDeleteEnabled", func() {
 		Context("when soft delete is enabled on the container's storage service", func() {
 			It("returns true", func() {
 				container := newContainer()
 
-				enabled, err := container.SoftDeleteIsDisabled()
+				enabled, err := container.SoftDeleteEnabled()
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(enabled).To(BeTrue())
@@ -66,7 +66,7 @@ var _ = Describe("Container", func() {
 					mustHaveEnv("AZURE_STORAGE_KEY_NO_SOFT_DELETE"),
 				)
 
-				enabled, err := container.SoftDeleteIsDisabled()
+				enabled, err := container.SoftDeleteEnabled()
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(enabled).To(BeFalse())
@@ -77,7 +77,7 @@ var _ = Describe("Container", func() {
 			It("returns an error", func() {
 				container, err := azure.NewContainer("", "", "")
 
-				_, err = container.SoftDeleteIsDisabled()
+				_, err = container.SoftDeleteEnabled()
 
 				Expect(err.Error()).To(ContainSubstring("failed fetching properties for storage account: '"))
 			})

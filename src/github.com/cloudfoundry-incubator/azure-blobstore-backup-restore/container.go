@@ -14,7 +14,7 @@ import (
 //go:generate counterfeiter -o fakes/fake_container.go . Container
 type Container interface {
 	Name() string
-	SoftDeleteIsDisabled() (bool, error)
+	SoftDeleteEnabled() (bool, error)
 	ListBlobs() ([]Blob, error)
 }
 
@@ -46,7 +46,7 @@ func (c SDKContainer) Name() string {
 	return c.name
 }
 
-func (c SDKContainer) SoftDeleteIsDisabled() (bool, error) {
+func (c SDKContainer) SoftDeleteEnabled() (bool, error) {
 	properties, err := c.service.GetProperties(context.Background())
 	if err != nil {
 		return false, fmt.Errorf("failed fetching properties for storage account: '%s'", err)

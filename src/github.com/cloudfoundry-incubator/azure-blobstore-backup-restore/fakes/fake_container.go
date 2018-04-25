@@ -17,14 +17,14 @@ type FakeContainer struct {
 	nameReturnsOnCall map[int]struct {
 		result1 string
 	}
-	SoftDeleteIsDisabledStub        func() (bool, error)
-	softDeleteIsDisabledMutex       sync.RWMutex
-	softDeleteIsDisabledArgsForCall []struct{}
-	softDeleteIsDisabledReturns     struct {
+	SoftDeleteEnabledStub        func() (bool, error)
+	softDeleteEnabledMutex       sync.RWMutex
+	softDeleteEnabledArgsForCall []struct{}
+	softDeleteEnabledReturns     struct {
 		result1 bool
 		result2 error
 	}
-	softDeleteIsDisabledReturnsOnCall map[int]struct {
+	softDeleteEnabledReturnsOnCall map[int]struct {
 		result1 bool
 		result2 error
 	}
@@ -83,44 +83,44 @@ func (fake *FakeContainer) NameReturnsOnCall(i int, result1 string) {
 	}{result1}
 }
 
-func (fake *FakeContainer) SoftDeleteIsDisabled() (bool, error) {
-	fake.softDeleteIsDisabledMutex.Lock()
-	ret, specificReturn := fake.softDeleteIsDisabledReturnsOnCall[len(fake.softDeleteIsDisabledArgsForCall)]
-	fake.softDeleteIsDisabledArgsForCall = append(fake.softDeleteIsDisabledArgsForCall, struct{}{})
-	fake.recordInvocation("SoftDeleteIsDisabled", []interface{}{})
-	fake.softDeleteIsDisabledMutex.Unlock()
-	if fake.SoftDeleteIsDisabledStub != nil {
-		return fake.SoftDeleteIsDisabledStub()
+func (fake *FakeContainer) SoftDeleteEnabled() (bool, error) {
+	fake.softDeleteEnabledMutex.Lock()
+	ret, specificReturn := fake.softDeleteEnabledReturnsOnCall[len(fake.softDeleteEnabledArgsForCall)]
+	fake.softDeleteEnabledArgsForCall = append(fake.softDeleteEnabledArgsForCall, struct{}{})
+	fake.recordInvocation("SoftDeleteEnabled", []interface{}{})
+	fake.softDeleteEnabledMutex.Unlock()
+	if fake.SoftDeleteEnabledStub != nil {
+		return fake.SoftDeleteEnabledStub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.softDeleteIsDisabledReturns.result1, fake.softDeleteIsDisabledReturns.result2
+	return fake.softDeleteEnabledReturns.result1, fake.softDeleteEnabledReturns.result2
 }
 
-func (fake *FakeContainer) SoftDeleteIsDisabledCallCount() int {
-	fake.softDeleteIsDisabledMutex.RLock()
-	defer fake.softDeleteIsDisabledMutex.RUnlock()
-	return len(fake.softDeleteIsDisabledArgsForCall)
+func (fake *FakeContainer) SoftDeleteEnabledCallCount() int {
+	fake.softDeleteEnabledMutex.RLock()
+	defer fake.softDeleteEnabledMutex.RUnlock()
+	return len(fake.softDeleteEnabledArgsForCall)
 }
 
-func (fake *FakeContainer) SoftDeleteIsDisabledReturns(result1 bool, result2 error) {
-	fake.SoftDeleteIsDisabledStub = nil
-	fake.softDeleteIsDisabledReturns = struct {
+func (fake *FakeContainer) SoftDeleteEnabledReturns(result1 bool, result2 error) {
+	fake.SoftDeleteEnabledStub = nil
+	fake.softDeleteEnabledReturns = struct {
 		result1 bool
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeContainer) SoftDeleteIsDisabledReturnsOnCall(i int, result1 bool, result2 error) {
-	fake.SoftDeleteIsDisabledStub = nil
-	if fake.softDeleteIsDisabledReturnsOnCall == nil {
-		fake.softDeleteIsDisabledReturnsOnCall = make(map[int]struct {
+func (fake *FakeContainer) SoftDeleteEnabledReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.SoftDeleteEnabledStub = nil
+	if fake.softDeleteEnabledReturnsOnCall == nil {
+		fake.softDeleteEnabledReturnsOnCall = make(map[int]struct {
 			result1 bool
 			result2 error
 		})
 	}
-	fake.softDeleteIsDisabledReturnsOnCall[i] = struct {
+	fake.softDeleteEnabledReturnsOnCall[i] = struct {
 		result1 bool
 		result2 error
 	}{result1, result2}
@@ -174,8 +174,8 @@ func (fake *FakeContainer) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.nameMutex.RLock()
 	defer fake.nameMutex.RUnlock()
-	fake.softDeleteIsDisabledMutex.RLock()
-	defer fake.softDeleteIsDisabledMutex.RUnlock()
+	fake.softDeleteEnabledMutex.RLock()
+	defer fake.softDeleteEnabledMutex.RUnlock()
 	fake.listBlobsMutex.RLock()
 	defer fake.listBlobsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

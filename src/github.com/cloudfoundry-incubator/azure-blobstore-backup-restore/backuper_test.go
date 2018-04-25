@@ -31,6 +31,10 @@ var _ = Describe("Backuper", func() {
 		secondContainer.NameReturns(secondContainerName)
 		thirdContainer.NameReturns(thirdContainerName)
 
+		firstContainer.SoftDeleteEnabledReturns(true, nil)
+		secondContainer.SoftDeleteEnabledReturns(true, nil)
+		thirdContainer.SoftDeleteEnabledReturns(true, nil)
+
 		backuper = azure.NewBackuper(map[string]azure.Container{
 			"first":  firstContainer,
 			"second": secondContainer,
@@ -77,7 +81,7 @@ var _ = Describe("Backuper", func() {
 
 		Context("when one of the containers does not have soft delete enabled", func() {
 			It("returns an error", func() {
-				secondContainer.SoftDeleteIsDisabledReturns(true, nil)
+				secondContainer.SoftDeleteEnabledReturns(false, nil)
 
 				_, err := backuper.Backup()
 
@@ -88,7 +92,7 @@ var _ = Describe("Backuper", func() {
 
 		Context("when checking soft delete fails", func() {
 			It("returns an error", func() {
-				secondContainer.SoftDeleteIsDisabledReturns(false, errors.New("ooops"))
+				secondContainer.SoftDeleteEnabledReturns(false, errors.New("ooops"))
 
 				_, err := backuper.Backup()
 
