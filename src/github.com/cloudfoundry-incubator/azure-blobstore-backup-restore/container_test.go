@@ -55,13 +55,15 @@ var _ = Describe("Container", func() {
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(enabled).To(BeTrue())
+
+				deleteContainer(container.Name())
 			})
 		})
 
 		Context("when soft delete is disabled on the container's storage service", func() {
 			It("returns false", func() {
 				container, err := azure.NewContainer(
-					mustHaveEnv("AZURE_CONTAINER_NAME_NO_SOFT_DELETE"),
+					"",
 					mustHaveEnv("AZURE_STORAGE_ACCOUNT_NO_SOFT_DELETE"),
 					mustHaveEnv("AZURE_STORAGE_KEY_NO_SOFT_DELETE"),
 				)
@@ -90,8 +92,6 @@ var _ = Describe("Container", func() {
 				// arrange
 				container := newContainer()
 
-				deleteAllBlobsInContainer(container.Name())
-
 				fileName1 := "test_file_1_" + strconv.FormatInt(time.Now().Unix(), 10)
 				fileName2 := "test_file_2_" + strconv.FormatInt(time.Now().Unix(), 10)
 				fileName3 := "test_file_3_" + strconv.FormatInt(time.Now().Unix(), 10)
@@ -103,7 +103,7 @@ var _ = Describe("Container", func() {
 				writeFileInContainer(container.Name(), fileName2, "TEST_BLOB_2")
 				writeFileInContainer(container.Name(), fileName3, "TEST_BLOB_3")
 
-				// action
+				// act
 				blobs, err := container.ListBlobs()
 
 				// assert
@@ -115,9 +115,7 @@ var _ = Describe("Container", func() {
 				}))
 
 				// teardown
-				deleteFileInContainer(container.Name(), fileName1)
-				deleteFileInContainer(container.Name(), fileName2)
-				deleteFileInContainer(container.Name(), fileName3)
+				deleteContainer(container.Name())
 			})
 		})
 
@@ -154,12 +152,14 @@ var _ = Describe("Container", func() {
 })
 
 func containerName() string {
-	return mustHaveEnv("AZURE_CONTAINER_NAME")
+	return "sdk-azure-unit-test-" + strconv.FormatInt(time.Now().UnixNano(), 10)
 }
 
 func newContainer() azure.Container {
+	containerName := containerName()
+	createContainer(containerName)
 	container, err := azure.NewContainer(
-		containerName(),
+		containerName,
 		mustHaveEnv("AZURE_STORAGE_ACCOUNT"),
 		mustHaveEnv("AZURE_STORAGE_KEY"),
 	)
@@ -167,25 +167,25 @@ func newContainer() azure.Container {
 	return container
 }
 
-func deleteAllBlobsInContainer(containerName string) {
+func createContainer(name string) {
 	runAzureCommandSuccessfully(
 		"storage",
-		"blob",
-		"delete-batch",
-		"--source",
-		"bbr-test-azure-container",
-		"--if-match",
-		"*",
+		"container",
+		"create",
+		"--name",
+		name,
+		"--fail-on-exist",
 	)
 }
 
-func deleteFileInContainer(containerName, blobName string) {
+func deleteContainer(name string) {
 	runAzureCommandSuccessfully(
 		"storage",
-		"blob",
+		"container",
 		"delete",
-		"--container-name", containerName,
-		"--name", blobName)
+		"--name",
+		name,
+	)
 }
 
 func writeFileInContainer(containerName, blobName, body string) {
