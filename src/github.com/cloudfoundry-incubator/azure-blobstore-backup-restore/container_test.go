@@ -85,27 +85,17 @@ var _ = Describe("Container", func() {
 	})
 
 	Describe("ListBlobs", func() {
-		Context("when the backup succeeds", func() {
-			var container azure.Container
-			var fileName1, fileName2, fileName3 string
-
-			BeforeEach(func() {
-				container = newContainer()
+		Context("when the container has a few files and snapshots", func() {
+			It("returns a list of containers with files and their hashes", func() {
+				// arrange
+				container := newContainer()
 
 				deleteAllBlobsInContainer(container.Name())
 
-				fileName1 = "test_file_1_" + strconv.FormatInt(time.Now().Unix(), 10)
-				fileName2 = "test_file_2_" + strconv.FormatInt(time.Now().Unix(), 10)
-				fileName3 = "test_file_3_" + strconv.FormatInt(time.Now().Unix(), 10)
-			})
+				fileName1 := "test_file_1_" + strconv.FormatInt(time.Now().Unix(), 10)
+				fileName2 := "test_file_2_" + strconv.FormatInt(time.Now().Unix(), 10)
+				fileName3 := "test_file_3_" + strconv.FormatInt(time.Now().Unix(), 10)
 
-			AfterEach(func() {
-				deleteFileInContainer(container.Name(), fileName1)
-				deleteFileInContainer(container.Name(), fileName2)
-				deleteFileInContainer(container.Name(), fileName3)
-			})
-
-			It("returns a list of containers with files and hashes", func() {
 				writeFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_OLD")
 				writeFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
 				writeFileInContainer(container.Name(), fileName2, "TEST_BLOB_2_OLDEST")
@@ -113,14 +103,37 @@ var _ = Describe("Container", func() {
 				writeFileInContainer(container.Name(), fileName2, "TEST_BLOB_2")
 				writeFileInContainer(container.Name(), fileName3, "TEST_BLOB_3")
 
+				// action
 				blobs, err := container.ListBlobs()
 
+				// assert
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(Equal([]azure.Blob{
 					{Name: fileName1, Hash: "R1M39xrrgP7eS+jJHBWu1A=="},
 					{Name: fileName2, Hash: "L+IcKub+0Og4CXjKqA1/3w=="},
 					{Name: fileName3, Hash: "7VBVkm19ll+P6THGtqGHww=="},
 				}))
+
+				// teardown
+				deleteFileInContainer(container.Name(), fileName1)
+				deleteFileInContainer(container.Name(), fileName2)
+				deleteFileInContainer(container.Name(), fileName3)
+			})
+		})
+
+		Context("when the container has a lots of files", func() {
+			It("returns a list of all the files and their hashes", func() {
+				container, err := azure.NewContainer(
+					mustHaveEnv("AZURE_CONTAINER_NAME_MANY_FILES"),
+					mustHaveEnv("AZURE_STORAGE_ACCOUNT"),
+					mustHaveEnv("AZURE_STORAGE_KEY"),
+				)
+				Expect(err).NotTo(HaveOccurred())
+
+				blobs, err := container.ListBlobs()
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(blobs)).To(Equal(10104))
 			})
 		})
 
