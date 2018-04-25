@@ -5,8 +5,21 @@ import (
 	"io/ioutil"
 	"os/exec"
 
+	"strconv"
+	"time"
+
 	. "github.com/onsi/gomega"
 )
+
+func DeleteContainer(name string) {
+	runAzureCommandSuccessfully(
+		"storage",
+		"container",
+		"delete",
+		"--name",
+		name,
+	)
+}
 
 func DeleteFileInContainer(container, blobName string) {
 	runAzureCommandSuccessfully(
@@ -29,6 +42,21 @@ func WriteFileInContainer(container, blobName, body string) {
 		"--container-name", container,
 		"--name", blobName,
 		"--file", bodyFile.Name())
+}
+
+func ContainerName() string {
+	return "sdk-azure-test-" + strconv.FormatInt(time.Now().UnixNano(), 10)
+}
+
+func CreateContainer(name string) {
+	runAzureCommandSuccessfully(
+		"storage",
+		"container",
+		"create",
+		"--name",
+		name,
+		"--fail-on-exist",
+	)
 }
 
 func runAzureCommandSuccessfully(args ...string) *bytes.Buffer {

@@ -1,15 +1,11 @@
 package azure_test
 
 import (
-	"bytes"
-	"io/ioutil"
-	"os"
-	"os/exec"
-
 	"strconv"
 	"time"
 
 	"github.com/cloudfoundry-incubator/azure-blobstore-backup-restore"
+	. "github.com/cloudfoundry-incubator/azure-blobstore-backup-restore/system_tests/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -56,7 +52,7 @@ var _ = Describe("Container", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(enabled).To(BeTrue())
 
-				deleteContainer(container.Name())
+				DeleteContainer(container.Name())
 			})
 		})
 
@@ -64,8 +60,8 @@ var _ = Describe("Container", func() {
 			It("returns false", func() {
 				container, err := azure.NewContainer(
 					"",
-					mustHaveEnv("AZURE_STORAGE_ACCOUNT_NO_SOFT_DELETE"),
-					mustHaveEnv("AZURE_STORAGE_KEY_NO_SOFT_DELETE"),
+					MustHaveEnv("AZURE_STORAGE_ACCOUNT_NO_SOFT_DELETE"),
+					MustHaveEnv("AZURE_STORAGE_KEY_NO_SOFT_DELETE"),
 				)
 
 				enabled, err := container.SoftDeleteEnabled()
@@ -96,12 +92,12 @@ var _ = Describe("Container", func() {
 				fileName2 := "test_file_2_" + strconv.FormatInt(time.Now().Unix(), 10)
 				fileName3 := "test_file_3_" + strconv.FormatInt(time.Now().Unix(), 10)
 
-				writeFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_OLD")
-				writeFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
-				writeFileInContainer(container.Name(), fileName2, "TEST_BLOB_2_OLDEST")
-				writeFileInContainer(container.Name(), fileName2, "TEST_BLOB_2_OLD")
-				writeFileInContainer(container.Name(), fileName2, "TEST_BLOB_2")
-				writeFileInContainer(container.Name(), fileName3, "TEST_BLOB_3")
+				WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_OLD")
+				WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
+				WriteFileInContainer(container.Name(), fileName2, "TEST_BLOB_2_OLDEST")
+				WriteFileInContainer(container.Name(), fileName2, "TEST_BLOB_2_OLD")
+				WriteFileInContainer(container.Name(), fileName2, "TEST_BLOB_2")
+				WriteFileInContainer(container.Name(), fileName3, "TEST_BLOB_3")
 
 				// act
 				blobs, err := container.ListBlobs()
@@ -115,16 +111,16 @@ var _ = Describe("Container", func() {
 				}))
 
 				// teardown
-				deleteContainer(container.Name())
+				DeleteContainer(container.Name())
 			})
 		})
 
 		Context("when the container has a lots of files", func() {
 			It("returns a list of all the files and their hashes", func() {
 				container, err := azure.NewContainer(
-					mustHaveEnv("AZURE_CONTAINER_NAME_MANY_FILES"),
-					mustHaveEnv("AZURE_STORAGE_ACCOUNT"),
-					mustHaveEnv("AZURE_STORAGE_KEY"),
+					MustHaveEnv("AZURE_CONTAINER_NAME_MANY_FILES"),
+					MustHaveEnv("AZURE_STORAGE_ACCOUNT"),
+					MustHaveEnv("AZURE_STORAGE_KEY"),
 				)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -139,8 +135,8 @@ var _ = Describe("Container", func() {
 			It("returns an error", func() {
 				container, err := azure.NewContainer(
 					"NON-EXISTENT-CONTAINER",
-					mustHaveEnv("AZURE_STORAGE_ACCOUNT"),
-					mustHaveEnv("AZURE_STORAGE_KEY"),
+					MustHaveEnv("AZURE_STORAGE_ACCOUNT"),
+					MustHaveEnv("AZURE_STORAGE_KEY"),
 				)
 
 				_, err = container.ListBlobs()
@@ -151,76 +147,17 @@ var _ = Describe("Container", func() {
 	})
 })
 
-func containerName() string {
-	return "sdk-azure-unit-test-" + strconv.FormatInt(time.Now().UnixNano(), 10)
-}
-
 func newContainer() azure.Container {
-	containerName := containerName()
-	createContainer(containerName)
+	containerName := ContainerName()
+
+	CreateContainer(containerName)
+
 	container, err := azure.NewContainer(
 		containerName,
-		mustHaveEnv("AZURE_STORAGE_ACCOUNT"),
-		mustHaveEnv("AZURE_STORAGE_KEY"),
+		MustHaveEnv("AZURE_STORAGE_ACCOUNT"),
+		MustHaveEnv("AZURE_STORAGE_KEY"),
 	)
 	Expect(err).NotTo(HaveOccurred())
+
 	return container
-}
-
-func createContainer(name string) {
-	runAzureCommandSuccessfully(
-		"storage",
-		"container",
-		"create",
-		"--name",
-		name,
-		"--fail-on-exist",
-	)
-}
-
-func deleteContainer(name string) {
-	runAzureCommandSuccessfully(
-		"storage",
-		"container",
-		"delete",
-		"--name",
-		name,
-	)
-}
-
-func writeFileInContainer(containerName, blobName, body string) {
-	bodyFile, _ := ioutil.TempFile("", "")
-	bodyFile.WriteString(body)
-	bodyFile.Close()
-
-	runAzureCommandSuccessfully(
-		"storage",
-		"blob",
-		"upload",
-		"--container-name", containerName,
-		"--name", blobName,
-		"--file", bodyFile.Name())
-}
-
-func runAzureCommandSuccessfully(args ...string) *bytes.Buffer {
-	outputBuffer := new(bytes.Buffer)
-	errorBuffer := new(bytes.Buffer)
-
-	mustHaveEnv("AZURE_STORAGE_ACCOUNT")
-	mustHaveEnv("AZURE_STORAGE_KEY")
-
-	azCmd := exec.Command("az", args...)
-	azCmd.Stdout = outputBuffer
-	azCmd.Stderr = errorBuffer
-
-	err := azCmd.Run()
-	Expect(err).ToNot(HaveOccurred(), errorBuffer.String())
-
-	return outputBuffer
-}
-
-func mustHaveEnv(keyname string) string {
-	val := os.Getenv(keyname)
-	Expect(val).NotTo(BeEmpty(), "Need "+keyname+" for the test")
-	return val
 }
