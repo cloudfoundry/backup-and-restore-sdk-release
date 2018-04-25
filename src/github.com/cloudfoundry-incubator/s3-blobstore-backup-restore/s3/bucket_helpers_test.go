@@ -13,6 +13,8 @@ import (
 	"strconv"
 
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 )
 
