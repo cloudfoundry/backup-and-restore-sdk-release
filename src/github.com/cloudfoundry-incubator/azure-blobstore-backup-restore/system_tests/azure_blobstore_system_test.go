@@ -26,8 +26,7 @@ var _ = Describe("Azure backup and restore", func() {
 			InstanceIndex: "0",
 		}
 
-		containerName = ContainerName()
-		CreateContainer(containerName)
+		containerName = MustHaveEnv("AZURE_CONTAINER_NAME")
 
 		fileName1 = "test_file_1_" + strconv.FormatInt(time.Now().Unix(), 10)
 		fileName2 = "test_file_2_" + strconv.FormatInt(time.Now().Unix(), 10)
@@ -45,7 +44,9 @@ var _ = Describe("Azure backup and restore", func() {
 		err := os.Remove(localArtifact.Name())
 		Expect(err).NotTo(HaveOccurred())
 
-		DeleteContainer(containerName)
+		DeleteFileInContainer(containerName, fileName1)
+		DeleteFileInContainer(containerName, fileName2)
+		DeleteFileInContainer(containerName, fileName3)
 	})
 
 	It("backs up successfully", func() {
