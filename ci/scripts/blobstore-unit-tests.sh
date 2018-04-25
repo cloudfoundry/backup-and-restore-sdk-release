@@ -19,10 +19,10 @@
 set -eu
 
 export TEST_AWS_ACCESS_KEY_ID
-export TEST_AWS_SECRET_ACCESS_KEY_ID
+export TEST_AWS_SECRET_ACCESS_KEY
 
 export TEST_ECS_ACCESS_KEY_ID
-export TEST_ECS_SECRET_ACCESS_KEY_ID
+export TEST_ECS_SECRET_ACCESS_KEY
 
 export AZURE_STORAGE_ACCOUNT
 export AZURE_STORAGE_KEY
@@ -35,7 +35,8 @@ export AZURE_CONTAINER_NAME_NO_SOFT_DELETE
 export GOPATH=`pwd`/backup-and-restore-sdk-release:"$GOPATH"
 
 pushd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/s3-blobstore-backup-restore
-  ginkgo -r -v -skipPackage=system_tests -keepGoing --flakeAttempts=2
+  ginkgo -r -v -keepGoing --flakeAttempts=2 -p s3
+  ginkgo -r -v -skipPackage=system_tests,s3 -keepGoing --flakeAttempts=2
 popd
 
 pushd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/azure-blobstore-backup-restore
