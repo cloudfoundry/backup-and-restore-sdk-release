@@ -33,3 +33,4 @@ releases/**/*.tgz
 bin/
 pkg/
 **/secrets.yml
+.envrc*
