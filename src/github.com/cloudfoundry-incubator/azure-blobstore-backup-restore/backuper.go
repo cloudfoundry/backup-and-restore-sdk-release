@@ -30,7 +30,7 @@ func (b Backuper) Backup() (map[string]ContainerBackup, error) {
 		}
 
 		if !enabled {
-			return nil, fmt.Errorf("soft delete is not enabled on container: '%s'", container.Name())
+			return nil, fmt.Errorf("soft delete is not enabled on the given storage account")
 		}
 
 		blobs, err := container.ListBlobs()

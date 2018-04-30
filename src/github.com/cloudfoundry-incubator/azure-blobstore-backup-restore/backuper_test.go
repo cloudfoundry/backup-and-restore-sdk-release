@@ -3,8 +3,6 @@ package azure_test
 import (
 	"errors"
 
-	"fmt"
-
 	"github.com/cloudfoundry-incubator/azure-blobstore-backup-restore"
 	"github.com/cloudfoundry-incubator/azure-blobstore-backup-restore/fakes"
 	. "github.com/onsi/ginkgo"
@@ -85,8 +83,7 @@ var _ = Describe("Backuper", func() {
 
 				_, err := backuper.Backup()
 
-				message := fmt.Sprintf("soft delete is not enabled on container: '%s'", secondContainerName)
-				Expect(err).To(MatchError(message))
+				Expect(err).To(MatchError("soft delete is not enabled on the given storage account"))
 			})
 		})
 
