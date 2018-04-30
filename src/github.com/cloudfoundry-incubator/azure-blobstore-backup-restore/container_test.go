@@ -84,7 +84,7 @@ var _ = Describe("Container", func() {
 
 	Describe("ListBlobs", func() {
 		Context("when the container has a few files and snapshots", func() {
-			It("returns a list of containers with files and their hashes", func() {
+			It("returns a list of containers with files and their etags", func() {
 				// arrange
 				container := newContainer()
 
@@ -93,11 +93,11 @@ var _ = Describe("Container", func() {
 				fileName3 := "test_file_3_" + strconv.FormatInt(time.Now().Unix(), 10)
 
 				WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_OLD")
-				WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
+				etag1 := WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
 				WriteFileInContainer(container.Name(), fileName2, "TEST_BLOB_2_OLDEST")
 				WriteFileInContainer(container.Name(), fileName2, "TEST_BLOB_2_OLD")
-				WriteFileInContainer(container.Name(), fileName2, "TEST_BLOB_2")
-				WriteFileInContainer(container.Name(), fileName3, "TEST_BLOB_3")
+				etag2 := WriteFileInContainer(container.Name(), fileName2, "TEST_BLOB_2")
+				etag3 := WriteFileInContainer(container.Name(), fileName3, "TEST_BLOB_3")
 
 				// act
 				blobs, err := container.ListBlobs()
@@ -105,9 +105,9 @@ var _ = Describe("Container", func() {
 				// assert
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(Equal([]azure.Blob{
-					{Name: fileName1, Hash: "R1M39xrrgP7eS+jJHBWu1A=="},
-					{Name: fileName2, Hash: "L+IcKub+0Og4CXjKqA1/3w=="},
-					{Name: fileName3, Hash: "7VBVkm19ll+P6THGtqGHww=="},
+					{Name: fileName1, Etag: etag1},
+					{Name: fileName2, Etag: etag2},
+					{Name: fileName3, Etag: etag3},
 				}))
 
 				// teardown
@@ -116,7 +116,7 @@ var _ = Describe("Container", func() {
 		})
 
 		Context("when the container has a lots of files", func() {
-			It("returns a list of all the files and their hashes", func() {
+			It("paginates correctly", func() {
 				container, err := azure.NewContainer(
 					MustHaveEnv("AZURE_CONTAINER_NAME_MANY_FILES"),
 					MustHaveEnv("AZURE_STORAGE_ACCOUNT"),
@@ -148,7 +148,7 @@ var _ = Describe("Container", func() {
 })
 
 func newContainer() azure.Container {
-	containerName := ContainerName()
+	containerName := "sdk-azure-test-" + strconv.FormatInt(time.Now().UnixNano(), 10)
 
 	CreateContainer(containerName)
 

@@ -28,8 +28,8 @@ var _ = Describe("Artifact", func() {
 					"container_id": {
 						Name: "container_name",
 						Blobs: []azure.Blob{
-							{Name: "a_blob", Hash: "abc123"},
-							{Name: "another_blob", Hash: "def456"},
+							{Name: "a_blob", Etag: "abc123"},
+							{Name: "another_blob", Etag: "def456"},
 						},
 					},
 				})
@@ -42,8 +42,8 @@ var _ = Describe("Artifact", func() {
 					"container_id": {
 						"name": "container_name",
 						"blobs": [
-							{ "name": "a_blob", "hash": "abc123" },
-							{"name": "another_blob", "hash": "def456" }
+							{"name": "a_blob", "etag": "abc123"},
+							{"name": "another_blob", "etag": "def456"}
 						]
 					}
 				}`))

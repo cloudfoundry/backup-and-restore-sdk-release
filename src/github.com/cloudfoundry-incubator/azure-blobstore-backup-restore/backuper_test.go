@@ -46,12 +46,12 @@ var _ = Describe("Backuper", func() {
 		Context("when fetching the blobs succeeds", func() {
 			It("returns a map of all fetched blobs for each container", func() {
 				firstContainer.ListBlobsReturns([]azure.Blob{
-					{Name: "file_1_a", Hash: "1A"},
-					{Name: "file_1_b", Hash: "1B"},
+					{Name: "file_1_a", Etag: "1A"},
+					{Name: "file_1_b", Etag: "1B"},
 				}, nil)
 				secondContainer.ListBlobsReturns([]azure.Blob{}, nil)
 				thirdContainer.ListBlobsReturns([]azure.Blob{
-					{Name: "file_3_a", Hash: "3A"},
+					{Name: "file_3_a", Etag: "3A"},
 				}, nil)
 
 				backups, err := backuper.Backup()
@@ -61,8 +61,8 @@ var _ = Describe("Backuper", func() {
 					"first": {
 						Name: firstContainerName,
 						Blobs: []azure.Blob{
-							{Name: "file_1_a", Hash: "1A"},
-							{Name: "file_1_b", Hash: "1B"},
+							{Name: "file_1_a", Etag: "1A"},
+							{Name: "file_1_b", Etag: "1B"},
 						},
 					},
 					"second": {
@@ -72,7 +72,7 @@ var _ = Describe("Backuper", func() {
 					"third": {
 						Name: thirdContainerName,
 						Blobs: []azure.Blob{
-							{Name: "file_3_a", Hash: "3A"},
+							{Name: "file_3_a", Etag: "3A"},
 						},
 					},
 				}))

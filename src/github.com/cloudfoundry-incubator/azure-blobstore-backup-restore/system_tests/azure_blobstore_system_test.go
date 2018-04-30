@@ -51,11 +51,11 @@ var _ = Describe("Azure backup and restore", func() {
 
 	It("backs up successfully", func() {
 		WriteFileInContainer(containerName, fileName1, "TEST_BLOB_1_OLD")
-		WriteFileInContainer(containerName, fileName1, "TEST_BLOB_1")
+		etag1 := WriteFileInContainer(containerName, fileName1, "TEST_BLOB_1")
 		WriteFileInContainer(containerName, fileName2, "TEST_BLOB_2_OLDEST")
 		WriteFileInContainer(containerName, fileName2, "TEST_BLOB_2_OLD")
-		WriteFileInContainer(containerName, fileName2, "TEST_BLOB_2")
-		WriteFileInContainer(containerName, fileName3, "TEST_BLOB_3")
+		etag2 := WriteFileInContainer(containerName, fileName2, "TEST_BLOB_2")
+		etag3 := WriteFileInContainer(containerName, fileName3, "TEST_BLOB_3")
 
 		instance.RunOnInstanceAndSucceed("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/azure-blobstore-backup-restorer/bin/bbr/backup")
 		instance.DownloadFromInstanceAndSucceed(instanceArtifactDirPath+"/blobstore.json", localArtifact.Name())
@@ -64,8 +64,8 @@ var _ = Describe("Azure backup and restore", func() {
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(fileContents).To(ContainSubstring("\"name\":\"" + containerName + "\""))
-		Expect(fileContents).To(ContainSubstring("\"name\":\"" + fileName1 + "\",\"hash\":\"R1M39xrrgP7eS+jJHBWu1A==\""))
-		Expect(fileContents).To(ContainSubstring("\"name\":\"" + fileName2 + "\",\"hash\":\"L+IcKub+0Og4CXjKqA1/3w==\""))
-		Expect(fileContents).To(ContainSubstring("\"name\":\"" + fileName3 + "\",\"hash\":\"7VBVkm19ll+P6THGtqGHww==\""))
+		Expect(fileContents).To(ContainSubstring("\"name\":\"" + fileName1 + "\",\"etag\":\"" + etag1 + "\""))
+		Expect(fileContents).To(ContainSubstring("\"name\":\"" + fileName2 + "\",\"etag\":\"" + etag2 + "\""))
+		Expect(fileContents).To(ContainSubstring("\"name\":\"" + fileName3 + "\",\"etag\":\"" + etag3 + "\""))
 	})
 })

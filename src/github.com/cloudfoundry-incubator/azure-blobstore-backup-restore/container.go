@@ -72,7 +72,7 @@ func (c SDKContainer) ListBlobs() ([]Blob, error) {
 		marker = page.NextMarker
 
 		for _, blobInfo := range page.Blobs.Blob {
-			blobs = append(blobs, Blob{Name: blobInfo.Name, Hash: *blobInfo.Properties.ContentMD5})
+			blobs = append(blobs, Blob{Name: blobInfo.Name, Etag: string(blobInfo.Properties.Etag)})
 		}
 	}
 

@@ -5,8 +5,9 @@ import (
 	"io/ioutil"
 	"os/exec"
 
-	"strconv"
-	"time"
+	"encoding/json"
+
+	"strings"
 
 	. "github.com/onsi/gomega"
 )
@@ -30,22 +31,23 @@ func DeleteFileInContainer(container, blobName string) {
 		"--name", blobName)
 }
 
-func WriteFileInContainer(container, blobName, body string) {
+func WriteFileInContainer(container, blobName, body string) string {
 	bodyFile, _ := ioutil.TempFile("", "")
 	bodyFile.WriteString(body)
 	bodyFile.Close()
 
-	runAzureCommandSuccessfully(
+	outputBuffer := runAzureCommandSuccessfully(
 		"storage",
 		"blob",
 		"upload",
 		"--container-name", container,
 		"--name", blobName,
 		"--file", bodyFile.Name())
-}
 
-func ContainerName() string {
-	return "sdk-azure-test-" + strconv.FormatInt(time.Now().UnixNano(), 10)
+	var output = make(map[string]string)
+	json.Unmarshal(outputBuffer.Bytes(), &output)
+
+	return strings.Trim(output["etag"], "\"")
 }
 
 func CreateContainer(name string) {
