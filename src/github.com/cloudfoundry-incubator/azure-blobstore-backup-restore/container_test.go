@@ -179,14 +179,16 @@ var _ = Describe("Container", func() {
 			})
 		})
 
-		It("when file is deleted", func() {
-			eTag1 = WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
-			DeleteFileInContainer(container.Name(), fileName1)
+		Context("when file is deleted", func() {
+			It("restores it successfully", func() {
+				eTag1 = WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
+				DeleteFileInContainer(container.Name(), fileName1)
 
-			err := container.CopyFrom(container.Name(), fileName1, eTag1)
+				err := container.CopyFrom(container.Name(), fileName1, eTag1)
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ReadFileFromContainer(container.Name(), fileName1)).To(Equal("TEST_BLOB_1"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ReadFileFromContainer(container.Name(), fileName1)).To(Equal("TEST_BLOB_1"))
+			})
 		})
 
 		Context("when the source blob lives in a different container", func() {
@@ -212,10 +214,12 @@ var _ = Describe("Container", func() {
 			})
 		})
 
-		It("when there is no matching snapshot", func() {
-			err := container.CopyFrom(container.Name(), fileName1, "wrong_etag")
+		Context("when there is no matching snapshot", func() {
+			It("returns an error", func() {
+				err := container.CopyFrom(container.Name(), fileName1, "wrong_etag")
 
-			Expect(err).To(MatchError("could not find blob with ETag 'wrong_etag'"))
+				Expect(err).To(MatchError("could not find blob with ETag 'wrong_etag'"))
+			})
 		})
 	})
 })
