@@ -221,6 +221,14 @@ var _ = Describe("Container", func() {
 				Expect(err).To(MatchError("could not find blob with ETag 'wrong_etag'"))
 			})
 		})
+
+		Context("when the container is not reachable", func() {
+			It("returns an error", func() {
+				err := container.CopyFrom("wrong_container", fileName1, eTag1)
+
+				Expect(err).To(HaveOccurred())
+			})
+		})
 	})
 })
 

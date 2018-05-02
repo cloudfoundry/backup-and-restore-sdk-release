@@ -67,7 +67,20 @@ func (c SDKContainer) CopyFrom(sourceContainerName, blobName, eTag string) error
 
 func findBlob(sourceContainerURL azblob.ContainerURL, name, eTag string) (azblob.Blob, error) {
 	for marker := (azblob.Marker{}); marker.NotDone(); {
-		page, _ := sourceContainerURL.ListBlobs(context.Background(), marker, azblob.ListBlobsOptions{Details: azblob.BlobListingDetails{Snapshots: true, Deleted: true}})
+		page, err := sourceContainerURL.ListBlobs(
+			context.Background(),
+			marker,
+			azblob.ListBlobsOptions{
+				Details: azblob.BlobListingDetails{
+					Snapshots: true,
+					Deleted:   true,
+				},
+			},
+		)
+		if err != nil {
+			return azblob.Blob{}, err
+		}
+
 		marker = page.NextMarker
 
 		for _, blob := range page.Blobs.Blob {
