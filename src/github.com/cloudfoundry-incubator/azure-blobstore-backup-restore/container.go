@@ -18,7 +18,7 @@ type Container interface {
 	Name() string
 	SoftDeleteEnabled() (bool, error)
 	ListBlobs() ([]Blob, error)
-	CopyFrom(containerName, blobName, etag string) error
+	CopyFrom(containerName, blobName, eTag string) error
 }
 
 type SDKContainer struct {
@@ -50,14 +50,14 @@ func (c SDKContainer) Name() string {
 }
 
 func (c SDKContainer) CopyFrom(sourceContainerName, blobName, eTag string) error {
-	sourceContainerUrl := c.service.NewContainerURL(sourceContainerName)
+	sourceContainerURL := c.service.NewContainerURL(sourceContainerName)
 
-	sourceSnapshot, err := findBlob(sourceContainerUrl, blobName, eTag)
+	sourceSnapshot, err := findBlob(sourceContainerURL, blobName, eTag)
 	if err != nil {
 		return err
 	}
 
-	err = c.copyBlob(sourceContainerUrl, sourceSnapshot)
+	err = c.copyBlob(sourceContainerURL, sourceSnapshot)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func (c SDKContainer) ListBlobs() ([]Blob, error) {
 		marker = page.NextMarker
 
 		for _, blobInfo := range page.Blobs.Blob {
-			blobs = append(blobs, Blob{Name: blobInfo.Name, Etag: string(blobInfo.Properties.Etag)})
+			blobs = append(blobs, Blob{Name: blobInfo.Name, ETag: string(blobInfo.Properties.Etag)})
 		}
 	}
 

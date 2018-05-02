@@ -41,14 +41,14 @@ var _ = Describe("Restorer", func() {
 					"first": {
 						Name: firstContainerName,
 						Blobs: []azure.Blob{
-							{Name: "file_1_a", Etag: "1A"},
-							{Name: "file_1_b", Etag: "1B"},
+							{Name: "file_1_a", ETag: "1A"},
+							{Name: "file_1_b", ETag: "1B"},
 						},
 					},
 					"second": {
 						Name: secondContainerName,
 						Blobs: []azure.Blob{
-							{Name: "file_2_a", Etag: "2A"},
+							{Name: "file_2_a", ETag: "2A"},
 						},
 					},
 				})
@@ -84,13 +84,13 @@ var _ = Describe("Restorer", func() {
 					"first": {
 						Name: firstContainerName,
 						Blobs: []azure.Blob{
-							{Name: "file_1_a", Etag: "1A"},
+							{Name: "file_1_a", ETag: "1A"},
 						},
 					},
 					"second": {
 						Name: secondContainerName,
 						Blobs: []azure.Blob{
-							{Name: "file_2_a", Etag: "2A"},
+							{Name: "file_2_a", ETag: "2A"},
 						},
 					},
 				})
@@ -121,7 +121,7 @@ var _ = Describe("Restorer", func() {
 				err := restorer.Restore(map[string]azure.ContainerBackup{
 					"first": {
 						Name:  firstContainerName,
-						Blobs: []azure.Blob{{Name: "file_1_a", Etag: "1A"}},
+						Blobs: []azure.Blob{{Name: "file_1_a", ETag: "1A"}},
 					},
 					"second": {
 						Name:  secondContainerName,

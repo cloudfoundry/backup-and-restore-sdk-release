@@ -117,9 +117,9 @@ var _ = Describe("Container", func() {
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(Equal([]azure.Blob{
-					{Name: fileName1, Etag: eTag1},
-					{Name: fileName2, Etag: eTag2},
-					{Name: fileName3, Etag: eTag3},
+					{Name: fileName1, ETag: eTag1},
+					{Name: fileName2, ETag: eTag2},
+					{Name: fileName3, ETag: eTag3},
 				}))
 			})
 		})

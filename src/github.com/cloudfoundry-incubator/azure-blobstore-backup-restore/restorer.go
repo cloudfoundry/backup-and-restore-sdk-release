@@ -26,7 +26,7 @@ func (r Restorer) Restore(backups map[string]ContainerBackup) error {
 	for containerId, sourceContainerBackup := range backups {
 		destinationContainer := r.containers[containerId]
 		for _, blob := range sourceContainerBackup.Blobs {
-			err := destinationContainer.CopyFrom(sourceContainerBackup.Name, blob.Name, blob.Etag)
+			err := destinationContainer.CopyFrom(sourceContainerBackup.Name, blob.Name, blob.ETag)
 			if err != nil {
 				return err
 			}

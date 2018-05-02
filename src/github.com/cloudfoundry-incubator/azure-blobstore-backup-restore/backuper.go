@@ -4,7 +4,7 @@ import "fmt"
 
 type Blob struct {
 	Name string `json:"name"`
-	Etag string `json:"etag"`
+	ETag string `json:"etag"`
 }
 
 type ContainerBackup struct {
