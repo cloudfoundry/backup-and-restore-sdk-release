@@ -35,6 +35,7 @@ export BOSH_GW_PRIVATE_KEY=`pwd`/bosh-backup-and-restore-meta/genesis-bosh/bosh.
 export AZURE_STORAGE_ACCOUNT
 export AZURE_STORAGE_KEY
 export AZURE_CONTAINER_NAME
+export AZURE_CLONE_CONTAINER_NAME
 
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/azure-blobstore-backup-restore
 ginkgo -v -r system_tests -trace
