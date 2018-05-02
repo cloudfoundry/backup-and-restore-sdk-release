@@ -68,6 +68,16 @@ func (jobInstance *JobInstance) DownloadFromInstance(remotePath, localPath strin
 	)
 }
 
+func (jobInstance *JobInstance) UploadToInstance(localPath, remotePath string) *gexec.Session {
+	return runCommand(
+		join(
+			BoshCommand(),
+			forDeployment(jobInstance.Deployment),
+			getUploadCommand(localPath, remotePath, jobInstance.Instance, jobInstance.InstanceIndex),
+		),
+	)
+}
+
 func runCommand(cmd string, args ...string) *gexec.Session {
 	return runCommandWithStream(GinkgoWriter, GinkgoWriter, cmd, args...)
 }

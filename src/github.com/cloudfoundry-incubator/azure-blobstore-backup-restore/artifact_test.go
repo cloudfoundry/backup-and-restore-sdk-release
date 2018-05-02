@@ -62,4 +62,64 @@ var _ = Describe("Artifact", func() {
 			})
 		})
 	})
+
+	Describe("Read", func() {
+		Context("when the artifact file is readable", func() {
+			It("reads the backups", func() {
+				artifactFile, err := ioutil.TempFile("", "azure_restore_artifact")
+				Expect(err).NotTo(HaveOccurred())
+				err = ioutil.WriteFile(artifactFile.Name(), []byte(`{
+					"container_id": {
+						"name": "container_name",
+						"blobs": [
+							{"name": "a_blob", "etag": "abc123"},
+							{"name": "another_blob", "etag": "def456"}
+						]
+					}
+				}`), 0644)
+				Expect(err).NotTo(HaveOccurred())
+
+				artifact = azure.NewArtifact(artifactFile.Name())
+
+				backups, err := artifact.Read()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(backups).To(Equal(map[string]azure.ContainerBackup{
+					"container_id": {
+						Name: "container_name",
+						Blobs: []azure.Blob{
+							{Name: "a_blob", Etag: "abc123"},
+							{Name: "another_blob", Etag: "def456"},
+						},
+					},
+				}))
+			})
+		})
+
+		Context("when the artifact file is not readable", func() {
+			It("reports an error", func() {
+				artifact = azure.NewArtifact("does_not_exist")
+
+				backups, err := artifact.Read()
+
+				Expect(backups).To(BeNil())
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("when the artifact file is not valid JSON", func() {
+			It("reports an error", func() {
+				artifactFile, err := ioutil.TempFile("", "azure_restore_artifact")
+				Expect(err).NotTo(HaveOccurred())
+				err = ioutil.WriteFile(artifactFile.Name(), []byte{}, 0644)
+				Expect(err).NotTo(HaveOccurred())
+
+				artifact = azure.NewArtifact(artifactFile.Name())
+
+				backups, err := artifact.Read()
+
+				Expect(backups).To(BeNil())
+				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
 })

@@ -9,6 +9,8 @@ import (
 
 	"strings"
 
+	"strconv"
+
 	. "github.com/onsi/gomega"
 )
 
@@ -32,7 +34,7 @@ func DeleteFileInContainer(container, blobName string) {
 }
 
 func WriteFileInContainer(container, blobName, body string) string {
-	bodyFile, _ := ioutil.TempFile("", "")
+	bodyFile, _ := ioutil.TempFile("", "write_file_in_container_")
 	bodyFile.WriteString(body)
 	bodyFile.Close()
 
@@ -59,6 +61,41 @@ func CreateContainer(name string) {
 		name,
 		"--fail-on-exist",
 	)
+}
+
+func ReadFileFromContainer(container, blobName string) string {
+	bodyFile, err := ioutil.TempFile("", "read_file_from_container_")
+	Expect(err).NotTo(HaveOccurred())
+
+	runAzureCommandSuccessfully(
+		"storage",
+		"blob",
+		"download",
+		"--container-name", container,
+		"--name", blobName,
+		"--file", bodyFile.Name())
+
+	body, err := ioutil.ReadFile(bodyFile.Name())
+	Expect(err).NotTo(HaveOccurred())
+
+	return string(body)
+}
+
+func NumberOfUndeletedSnapshots(container string) int {
+	outputBuffer := runAzureCommandSuccessfully(
+		"storage",
+		"blob",
+		"list",
+		"--container-name", container,
+		"--include", "s",
+		"--query", "length(@)")
+
+	outputString := string(outputBuffer.Bytes())
+
+	outputNumber, err := strconv.Atoi(strings.TrimSpace(outputString))
+	Expect(err).NotTo(HaveOccurred())
+
+	return outputNumber
 }
 
 func runAzureCommandSuccessfully(args ...string) *bytes.Buffer {

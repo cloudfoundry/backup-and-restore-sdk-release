@@ -8,6 +8,8 @@ import (
 
 	"encoding/base64"
 
+	"time"
+
 	"github.com/Azure/azure-storage-blob-go/2017-07-29/azblob"
 )
 
@@ -16,6 +18,7 @@ type Container interface {
 	Name() string
 	SoftDeleteEnabled() (bool, error)
 	ListBlobs() ([]Blob, error)
+	CopyFrom(containerName, blobName, etag string) error
 }
 
 type SDKContainer struct {
@@ -44,6 +47,76 @@ func NewContainer(name, storageAccount, storageKey string) (container SDKContain
 
 func (c SDKContainer) Name() string {
 	return c.name
+}
+
+func (c SDKContainer) CopyFrom(sourceContainerName, blobName, eTag string) error {
+	sourceContainerUrl := c.service.NewContainerURL(sourceContainerName)
+
+	sourceSnapshot, err := findBlob(sourceContainerUrl, blobName, eTag)
+	if err != nil {
+		return err
+	}
+
+	err = c.copyBlob(sourceContainerUrl, sourceSnapshot)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func findBlob(sourceContainerURL azblob.ContainerURL, name, eTag string) (azblob.Blob, error) {
+	for marker := (azblob.Marker{}); marker.NotDone(); {
+		page, _ := sourceContainerURL.ListBlobs(context.Background(), marker, azblob.ListBlobsOptions{Details: azblob.BlobListingDetails{Snapshots: true, Deleted: true}})
+		marker = page.NextMarker
+
+		for _, blob := range page.Blobs.Blob {
+			if blob.Name == name && string(blob.Properties.Etag) == eTag {
+				return blob, nil
+			}
+		}
+	}
+
+	return azblob.Blob{}, fmt.Errorf("could not find blob with ETag '%s'", eTag)
+}
+
+func (c SDKContainer) copyBlob(sourceContainerURL azblob.ContainerURL, blob azblob.Blob) error {
+	ctx := context.Background()
+
+	sourceBlobURL := sourceContainerURL.NewBlobURL(blob.Name)
+	destinationContainerURL := c.service.NewContainerURL(c.name)
+	destinationBlobURL := destinationContainerURL.NewBlobURL(blob.Name)
+
+	_, err := sourceBlobURL.Undelete(ctx)
+	if err != nil {
+		return err
+	}
+
+	response, err := destinationBlobURL.StartCopy(
+		ctx,
+		sourceBlobURL.WithSnapshot(blob.Snapshot).URL(),
+		azblob.Metadata{},
+		azblob.BlobAccessConditions{},
+		azblob.BlobAccessConditions{},
+	)
+	if err != nil {
+		return err
+	}
+
+	copyStatus := response.CopyStatus()
+	for copyStatus == azblob.CopyStatusPending {
+		time.Sleep(time.Second * 2)
+		getMetadata, err := destinationBlobURL.GetPropertiesAndMetadata(ctx, azblob.BlobAccessConditions{})
+		if err != nil {
+			return err
+		}
+
+		copyStatus = getMetadata.CopyStatus()
+	}
+
+	sourceBlobURL.Delete(ctx, azblob.DeleteSnapshotsOptionOnly, azblob.BlobAccessConditions{})
+
+	return nil
 }
 
 func (c SDKContainer) SoftDeleteEnabled() (bool, error) {

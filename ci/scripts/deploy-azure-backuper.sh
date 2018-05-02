@@ -32,4 +32,5 @@ bosh-cli --non-interactive \
   --var=backup-and-restore-sdk-release-url=$(cat release-tarball/url) \
   --var=azure-storage-account=${AZURE_STORAGE_ACCOUNT} \
   --var=azure-storage-key=${AZURE_STORAGE_KEY} \
-  --var=azure-container-name=${AZURE_CONTAINER_NAME}
+  --var=azure-container-name=${AZURE_CONTAINER_NAME} \
+  --var=azure-clone-container-name=${AZURE_CLONE_CONTAINER_NAME}

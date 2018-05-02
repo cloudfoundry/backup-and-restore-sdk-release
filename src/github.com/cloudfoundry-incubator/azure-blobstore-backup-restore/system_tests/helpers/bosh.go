@@ -46,7 +46,7 @@ func getSSHCommand(instanceName string) string {
 
 func getDownloadCommand(remotePath, localPath, instanceName, instanceIndex string) string {
 	return fmt.Sprintf(
-		"scp --gw-user=%s --gw-host=%s --gw-private-key=%s %s/%s:%s %s",
+		"scp -r --gw-user=%s --gw-host=%s --gw-private-key=%s %s/%s:%s %s",
 		MustHaveEnv("BOSH_GW_USER"),
 		MustHaveEnv("BOSH_GW_HOST"),
 		MustHaveEnv("BOSH_GW_PRIVATE_KEY"),
@@ -54,5 +54,17 @@ func getDownloadCommand(remotePath, localPath, instanceName, instanceIndex strin
 		instanceIndex,
 		remotePath,
 		localPath,
+	)
+}
+func getUploadCommand(localPath, remotePath, instanceName, instanceIndex string) string {
+	return fmt.Sprintf(
+		"scp -r --gw-user=%s --gw-host=%s --gw-private-key=%s %s %s/%s:%s",
+		MustHaveEnv("BOSH_GW_USER"),
+		MustHaveEnv("BOSH_GW_HOST"),
+		MustHaveEnv("BOSH_GW_PRIVATE_KEY"),
+		localPath,
+		instanceName,
+		instanceIndex,
+		remotePath,
 	)
 }

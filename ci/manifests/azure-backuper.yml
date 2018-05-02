@@ -48,6 +48,26 @@ instance_groups:
           azure_storage_account: ((azure-storage-account))
           azure_storage_key: ((azure-storage-key))
   azs: [z1]
+- name: azure-restore-to-clone
+  instances: 1
+  vm_type: small
+  persistent_disk_type: fifty
+  stemcell: trusty
+  update:
+    serial: true
+  networks:
+  - name: concourse
+  jobs:
+  - name: azure-blobstore-backup-restorer
+    release: backup-and-restore-sdk
+    properties:
+      enabled: true
+      containers:
+        droplets:
+          name: ((azure-clone-container-name))
+          azure_storage_account: ((azure-storage-account))
+          azure_storage_key: ((azure-storage-key))
+  azs: [z1]
 
 update:
   canaries: 1

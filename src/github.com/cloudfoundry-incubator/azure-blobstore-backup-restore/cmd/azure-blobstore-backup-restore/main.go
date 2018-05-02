@@ -10,9 +10,18 @@ import (
 func main() {
 	var artifactFilePath = flag.String("artifact-file", "", "Path to the artifact file")
 	var configFilePath = flag.String("config", "", "Path to JSON config file")
-	var _ = flag.Bool("backup", false, "Run blobstore backup")
+	var backupAction = flag.Bool("backup", false, "Run blobstore backup")
+	var restoreAction = flag.Bool("restore", false, "Run blobstore restore")
 
 	flag.Parse()
+
+	if *backupAction && *restoreAction {
+		log.Fatalf("only one of: --backup or --restore can be provided")
+	}
+
+	if !*backupAction && !*restoreAction {
+		log.Fatalf("missing --backup or --restore flag")
+	}
 
 	config, err := azure.ParseConfig(*configFilePath)
 	exitOnError(err)
@@ -20,13 +29,25 @@ func main() {
 	containers, err := buildContainers(config)
 	exitOnError(err)
 
-	backuper := azure.NewBackuper(containers)
-	backups, err := backuper.Backup()
-	exitOnError(err)
-
 	artifact := azure.NewArtifact(*artifactFilePath)
-	err = artifact.Write(backups)
-	exitOnError(err)
+
+	if *backupAction {
+		backuper := azure.NewBackuper(containers)
+
+		backups, err := backuper.Backup()
+		exitOnError(err)
+
+		err = artifact.Write(backups)
+		exitOnError(err)
+	} else {
+		restorer := azure.NewRestorer(containers)
+
+		backups, err := artifact.Read()
+		exitOnError(err)
+
+		err = restorer.Restore(backups)
+		exitOnError(err)
+	}
 }
 
 func exitOnError(err error) {

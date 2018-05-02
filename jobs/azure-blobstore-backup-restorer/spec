@@ -19,6 +19,7 @@ name: azure-blobstore-backup-restorer
 
 templates:
   backup.erb: bin/bbr/backup
+  restore.erb: bin/bbr/restore
   containers.json.erb: config/containers.json
 
 packages:
