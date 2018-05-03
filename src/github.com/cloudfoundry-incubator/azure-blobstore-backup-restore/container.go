@@ -28,7 +28,7 @@ type SDKContainer struct {
 	service azblob.ServiceURL
 }
 
-func NewContainer(name, storageAccount, storageKey string) (container SDKContainer, err error) {
+func NewSDKContainer(name, storageAccount, storageKey string) (container SDKContainer, err error) {
 	credential, err := buildCredential(storageAccount, storageKey)
 	if err != nil {
 		return SDKContainer{}, err

@@ -60,7 +60,7 @@ func buildContainers(config map[string]azure.ContainerConfig) (map[string]azure.
 	var containers = make(map[string]azure.Container)
 
 	for containerId, containerConfig := range config {
-		container, err := azure.NewContainer(
+		container, err := azure.NewSDKContainer(
 			containerConfig.Name,
 			containerConfig.StorageAccount,
 			containerConfig.StorageKey,

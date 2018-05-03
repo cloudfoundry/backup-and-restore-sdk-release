@@ -18,10 +18,10 @@ var _ = Describe("Container", func() {
 	var eTag1, eTag2, eTag3 string
 	var fileName1, fileName2, fileName3 string
 
-	Describe("NewContainer", func() {
+	Describe("NewSDKContainer", func() {
 		Context("when the account name is invalid", func() {
 			It("returns an error", func() {
-				container, err = azure.NewContainer("", "\n", "")
+				container, err = azure.NewSDKContainer("", "\n", "")
 
 				Expect(err).To(MatchError("invalid account name: '\n'"))
 				Expect(container).To(Equal(azure.SDKContainer{}))
@@ -30,7 +30,7 @@ var _ = Describe("Container", func() {
 
 		Context("when the account key is not valid base64", func() {
 			It("returns an error", func() {
-				container, err := azure.NewContainer("", "", "#")
+				container, err := azure.NewSDKContainer("", "", "#")
 
 				Expect(err).To(MatchError(ContainSubstring("invalid storage key: '")))
 				Expect(container).To(Equal(azure.SDKContainer{}))
@@ -42,7 +42,7 @@ var _ = Describe("Container", func() {
 		It("returns the container name", func() {
 			name := "container-name"
 
-			container, err = azure.NewContainer(name, "", "")
+			container, err = azure.NewSDKContainer(name, "", "")
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(container.Name()).To(Equal(name))
@@ -69,7 +69,7 @@ var _ = Describe("Container", func() {
 
 		Context("when soft delete is disabled on the container's storage service", func() {
 			It("returns false", func() {
-				container, err = azure.NewContainer(
+				container, err = azure.NewSDKContainer(
 					"",
 					MustHaveEnv("AZURE_STORAGE_ACCOUNT_NO_SOFT_DELETE"),
 					MustHaveEnv("AZURE_STORAGE_KEY_NO_SOFT_DELETE"),
@@ -84,7 +84,7 @@ var _ = Describe("Container", func() {
 
 		Context("when retrieving the storage service properties fails", func() {
 			It("returns an error", func() {
-				container, err = azure.NewContainer("", "", "")
+				container, err = azure.NewSDKContainer("", "", "")
 
 				_, err = container.SoftDeleteEnabled()
 
@@ -128,7 +128,7 @@ var _ = Describe("Container", func() {
 
 		Context("when the container has a lots of files", func() {
 			It("paginates correctly", func() {
-				container, err := azure.NewContainer(
+				container, err := azure.NewSDKContainer(
 					MustHaveEnv("AZURE_CONTAINER_NAME_MANY_FILES"),
 					MustHaveEnv("AZURE_STORAGE_ACCOUNT"),
 					MustHaveEnv("AZURE_STORAGE_KEY"),
@@ -144,7 +144,7 @@ var _ = Describe("Container", func() {
 
 		Context("when listing the blobs fails", func() {
 			It("returns an error", func() {
-				container, err := azure.NewContainer(
+				container, err := azure.NewSDKContainer(
 					"NON-EXISTENT-CONTAINER",
 					MustHaveEnv("AZURE_STORAGE_ACCOUNT"),
 					MustHaveEnv("AZURE_STORAGE_KEY"),
@@ -237,7 +237,7 @@ func newContainer() azure.Container {
 	containerName := "sdk-azure-test-" + strconv.FormatInt(time.Now().UnixNano(), 10)
 	CreateContainer(containerName)
 
-	container, err := azure.NewContainer(
+	container, err := azure.NewSDKContainer(
 		containerName,
 		MustHaveEnv("AZURE_STORAGE_ACCOUNT"),
 		MustHaveEnv("AZURE_STORAGE_KEY"),
