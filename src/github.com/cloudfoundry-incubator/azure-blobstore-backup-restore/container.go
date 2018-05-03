@@ -10,6 +10,8 @@ import (
 
 	"time"
 
+	"strings"
+
 	"github.com/Azure/azure-storage-blob-go/2017-07-29/azblob"
 )
 
@@ -57,16 +59,31 @@ func (c SDKContainer) CopyBlobsFrom(sourceContainerName string, blobIds []BlobId
 		return err
 	}
 
+	errs := make(chan error, len(blobIds))
 	for _, blobId := range blobIds {
 		sourceBlob, ok := blobs[blobId]
 		if !ok {
 			return fmt.Errorf("no \"%s\" blob with \"%s\" ETag found in container \"%s\"", blobId.Name, blobId.ETag, sourceContainerName)
 		}
 
-		err = c.copyBlob(sourceContainerURL, sourceBlob)
+		go func(blob azblob.Blob) {
+			errs <- c.copyBlob(sourceContainerURL, sourceBlob)
+		}(sourceBlob)
+	}
+
+	var errors []error
+	for range blobIds {
+		err := <-errs
 		if err != nil {
-			return err
+			errors = append(errors, err)
 		}
+	}
+
+	if len(errors) != 0 {
+		return formatErrors(
+			fmt.Sprintf("failed to copy blob from container \"%s\" to \"%s\"", sourceContainerName, c.name),
+			errors,
+		)
 	}
 
 	return nil
@@ -178,4 +195,12 @@ func buildCredential(storageAccount, storageKey string) (*azblob.SharedKeyCreden
 	}
 
 	return azblob.NewSharedKeyCredential(storageAccount, storageKey), nil
+}
+
+func formatErrors(contextString string, errors []error) error {
+	errorStrings := make([]string, len(errors))
+	for i, err := range errors {
+		errorStrings[i] = err.Error()
+	}
+	return fmt.Errorf("%s: %s", contextString, strings.Join(errorStrings, "\n"))
 }
