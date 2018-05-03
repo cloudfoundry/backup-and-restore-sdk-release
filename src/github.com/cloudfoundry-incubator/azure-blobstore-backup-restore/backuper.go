@@ -2,14 +2,14 @@ package azure
 
 import "fmt"
 
-type Blob struct {
+type BlobId struct {
 	Name string `json:"name"`
 	ETag string `json:"etag"`
 }
 
 type ContainerBackup struct {
-	Name  string `json:"name"`
-	Blobs []Blob `json:"blobs"`
+	Name  string   `json:"name"`
+	Blobs []BlobId `json:"blobs"`
 }
 
 type Backuper struct {

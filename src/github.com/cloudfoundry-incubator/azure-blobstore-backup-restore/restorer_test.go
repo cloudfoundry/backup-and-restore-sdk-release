@@ -37,12 +37,12 @@ var _ = Describe("Restorer", func() {
 	Describe("Restore", func() {
 		Context("when the artifact is valid", func() {
 			It("rolls back each blob to the specified ETag", func() {
-				firstContainerBlobs := []azure.Blob{
+				firstContainerBlobs := []azure.BlobId{
 					{Name: "file_1_a", ETag: "1A"},
 					{Name: "file_1_b", ETag: "1B"},
 				}
 
-				secondContainerBlobs := []azure.Blob{
+				secondContainerBlobs := []azure.BlobId{
 					{Name: "file_2_a", ETag: "2A"},
 				}
 
@@ -80,13 +80,13 @@ var _ = Describe("Restorer", func() {
 				err := restorer.Restore(map[string]azure.ContainerBackup{
 					"first": {
 						Name: firstContainerName,
-						Blobs: []azure.Blob{
+						Blobs: []azure.BlobId{
 							{Name: "file_1_a", ETag: "1A"},
 						},
 					},
 					"second": {
 						Name: secondContainerName,
-						Blobs: []azure.Blob{
+						Blobs: []azure.BlobId{
 							{Name: "file_2_a", ETag: "2A"},
 						},
 					},
@@ -103,7 +103,7 @@ var _ = Describe("Restorer", func() {
 				err := restorer.Restore(map[string]azure.ContainerBackup{
 					"first": {
 						Name:  firstContainerName,
-						Blobs: []azure.Blob{},
+						Blobs: []azure.BlobId{},
 					}})
 
 				Expect(err).To(MatchError("soft delete is not enabled on the given storage account"))
@@ -118,11 +118,11 @@ var _ = Describe("Restorer", func() {
 				err := restorer.Restore(map[string]azure.ContainerBackup{
 					"first": {
 						Name:  firstContainerName,
-						Blobs: []azure.Blob{{Name: "file_1_a", ETag: "1A"}},
+						Blobs: []azure.BlobId{{Name: "file_1_a", ETag: "1A"}},
 					},
 					"second": {
 						Name:  secondContainerName,
-						Blobs: []azure.Blob{}}})
+						Blobs: []azure.BlobId{}}})
 
 				Expect(err).To(MatchError("soft delete is not enabled on the given storage account"))
 
@@ -137,7 +137,7 @@ var _ = Describe("Restorer", func() {
 				err := restorer.Restore(map[string]azure.ContainerBackup{
 					"second": {
 						Name:  secondContainerName,
-						Blobs: []azure.Blob{},
+						Blobs: []azure.BlobId{},
 					}})
 
 				Expect(err).To(MatchError("ooops"))

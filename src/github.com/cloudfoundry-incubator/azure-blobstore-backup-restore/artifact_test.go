@@ -27,7 +27,7 @@ var _ = Describe("Artifact", func() {
 				err := artifact.Write(map[string]azure.ContainerBackup{
 					"container_id": {
 						Name: "container_name",
-						Blobs: []azure.Blob{
+						Blobs: []azure.BlobId{
 							{Name: "a_blob", ETag: "abc123"},
 							{Name: "another_blob", ETag: "def456"},
 						},
@@ -86,7 +86,7 @@ var _ = Describe("Artifact", func() {
 				Expect(backups).To(Equal(map[string]azure.ContainerBackup{
 					"container_id": {
 						Name: "container_name",
-						Blobs: []azure.Blob{
+						Blobs: []azure.BlobId{
 							{Name: "a_blob", ETag: "abc123"},
 							{Name: "another_blob", ETag: "def456"},
 						},

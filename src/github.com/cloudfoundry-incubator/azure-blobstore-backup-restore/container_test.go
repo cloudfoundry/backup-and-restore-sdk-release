@@ -116,7 +116,7 @@ var _ = Describe("Container", func() {
 				blobs, err := container.ListBlobs()
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(blobs).To(Equal([]azure.Blob{
+				Expect(blobs).To(Equal([]azure.BlobId{
 					{Name: fileName1, ETag: eTag1},
 					{Name: fileName2, ETag: eTag2},
 					{Name: fileName3, ETag: eTag3},
@@ -171,7 +171,7 @@ var _ = Describe("Container", func() {
 				eTag1 = WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
 				WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_NEW")
 
-				err := container.CopyBlobsFrom(container.Name(), []azure.Blob{{Name: fileName1, ETag: eTag1}})
+				err := container.CopyBlobsFrom(container.Name(), []azure.BlobId{{Name: fileName1, ETag: eTag1}})
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(ReadFileFromContainer(container.Name(), fileName1)).To(Equal("TEST_BLOB_1"))
@@ -183,7 +183,7 @@ var _ = Describe("Container", func() {
 				eTag1 = WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
 				DeleteFileInContainer(container.Name(), fileName1)
 
-				err := container.CopyBlobsFrom(container.Name(), []azure.Blob{{Name: fileName1, ETag: eTag1}})
+				err := container.CopyBlobsFrom(container.Name(), []azure.BlobId{{Name: fileName1, ETag: eTag1}})
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(ReadFileFromContainer(container.Name(), fileName1)).To(Equal("TEST_BLOB_1"))
@@ -206,7 +206,7 @@ var _ = Describe("Container", func() {
 				eTag1 = WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
 				WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_NEW")
 
-				err := destinationContainer.CopyBlobsFrom(container.Name(), []azure.Blob{{Name: fileName1, ETag: eTag1}})
+				err := destinationContainer.CopyBlobsFrom(container.Name(), []azure.BlobId{{Name: fileName1, ETag: eTag1}})
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(ReadFileFromContainer(destinationContainer.Name(), fileName1)).To(Equal("TEST_BLOB_1"))
@@ -215,7 +215,7 @@ var _ = Describe("Container", func() {
 
 		Context("when there is no matching snapshot", func() {
 			It("returns an error", func() {
-				err := container.CopyBlobsFrom(container.Name(), []azure.Blob{{Name: fileName1, ETag: "wrong_eTag"}})
+				err := container.CopyBlobsFrom(container.Name(), []azure.BlobId{{Name: fileName1, ETag: "wrong_eTag"}})
 
 				Expect(err).To(MatchError("could not find blob with ETag 'wrong_eTag'"))
 			})
@@ -223,7 +223,7 @@ var _ = Describe("Container", func() {
 
 		Context("when the container is not reachable", func() {
 			It("returns an error", func() {
-				err := container.CopyBlobsFrom("wrong_container", []azure.Blob{{}})
+				err := container.CopyBlobsFrom("wrong_container", []azure.BlobId{{}})
 
 				Expect(err).To(HaveOccurred())
 			})

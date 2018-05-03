@@ -28,22 +28,22 @@ type FakeContainer struct {
 		result1 bool
 		result2 error
 	}
-	ListBlobsStub        func() ([]azure.Blob, error)
+	ListBlobsStub        func() ([]azure.BlobId, error)
 	listBlobsMutex       sync.RWMutex
 	listBlobsArgsForCall []struct{}
 	listBlobsReturns     struct {
-		result1 []azure.Blob
+		result1 []azure.BlobId
 		result2 error
 	}
 	listBlobsReturnsOnCall map[int]struct {
-		result1 []azure.Blob
+		result1 []azure.BlobId
 		result2 error
 	}
-	CopyBlobsFromStub        func(containerName string, blobsToCopy []azure.Blob) error
+	CopyBlobsFromStub        func(containerName string, blobsToCopy []azure.BlobId) error
 	copyBlobsFromMutex       sync.RWMutex
 	copyBlobsFromArgsForCall []struct {
 		containerName string
-		blobsToCopy   []azure.Blob
+		blobsToCopy   []azure.BlobId
 	}
 	copyBlobsFromReturns struct {
 		result1 error
@@ -138,7 +138,7 @@ func (fake *FakeContainer) SoftDeleteEnabledReturnsOnCall(i int, result1 bool, r
 	}{result1, result2}
 }
 
-func (fake *FakeContainer) ListBlobs() ([]azure.Blob, error) {
+func (fake *FakeContainer) ListBlobs() ([]azure.BlobId, error) {
 	fake.listBlobsMutex.Lock()
 	ret, specificReturn := fake.listBlobsReturnsOnCall[len(fake.listBlobsArgsForCall)]
 	fake.listBlobsArgsForCall = append(fake.listBlobsArgsForCall, struct{}{})
@@ -159,39 +159,39 @@ func (fake *FakeContainer) ListBlobsCallCount() int {
 	return len(fake.listBlobsArgsForCall)
 }
 
-func (fake *FakeContainer) ListBlobsReturns(result1 []azure.Blob, result2 error) {
+func (fake *FakeContainer) ListBlobsReturns(result1 []azure.BlobId, result2 error) {
 	fake.ListBlobsStub = nil
 	fake.listBlobsReturns = struct {
-		result1 []azure.Blob
+		result1 []azure.BlobId
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeContainer) ListBlobsReturnsOnCall(i int, result1 []azure.Blob, result2 error) {
+func (fake *FakeContainer) ListBlobsReturnsOnCall(i int, result1 []azure.BlobId, result2 error) {
 	fake.ListBlobsStub = nil
 	if fake.listBlobsReturnsOnCall == nil {
 		fake.listBlobsReturnsOnCall = make(map[int]struct {
-			result1 []azure.Blob
+			result1 []azure.BlobId
 			result2 error
 		})
 	}
 	fake.listBlobsReturnsOnCall[i] = struct {
-		result1 []azure.Blob
+		result1 []azure.BlobId
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeContainer) CopyBlobsFrom(containerName string, blobsToCopy []azure.Blob) error {
-	var blobsToCopyCopy []azure.Blob
+func (fake *FakeContainer) CopyBlobsFrom(containerName string, blobsToCopy []azure.BlobId) error {
+	var blobsToCopyCopy []azure.BlobId
 	if blobsToCopy != nil {
-		blobsToCopyCopy = make([]azure.Blob, len(blobsToCopy))
+		blobsToCopyCopy = make([]azure.BlobId, len(blobsToCopy))
 		copy(blobsToCopyCopy, blobsToCopy)
 	}
 	fake.copyBlobsFromMutex.Lock()
 	ret, specificReturn := fake.copyBlobsFromReturnsOnCall[len(fake.copyBlobsFromArgsForCall)]
 	fake.copyBlobsFromArgsForCall = append(fake.copyBlobsFromArgsForCall, struct {
 		containerName string
-		blobsToCopy   []azure.Blob
+		blobsToCopy   []azure.BlobId
 	}{containerName, blobsToCopyCopy})
 	fake.recordInvocation("CopyBlobsFrom", []interface{}{containerName, blobsToCopyCopy})
 	fake.copyBlobsFromMutex.Unlock()
@@ -210,7 +210,7 @@ func (fake *FakeContainer) CopyBlobsFromCallCount() int {
 	return len(fake.copyBlobsFromArgsForCall)
 }
 
-func (fake *FakeContainer) CopyBlobsFromArgsForCall(i int) (string, []azure.Blob) {
+func (fake *FakeContainer) CopyBlobsFromArgsForCall(i int) (string, []azure.BlobId) {
 	fake.copyBlobsFromMutex.RLock()
 	defer fake.copyBlobsFromMutex.RUnlock()
 	return fake.copyBlobsFromArgsForCall[i].containerName, fake.copyBlobsFromArgsForCall[i].blobsToCopy

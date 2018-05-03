@@ -43,12 +43,12 @@ var _ = Describe("Backuper", func() {
 	Describe("Backup", func() {
 		Context("when fetching the blobs succeeds", func() {
 			It("returns a map of all fetched blobs for each container", func() {
-				firstContainer.ListBlobsReturns([]azure.Blob{
+				firstContainer.ListBlobsReturns([]azure.BlobId{
 					{Name: "file_1_a", ETag: "1A"},
 					{Name: "file_1_b", ETag: "1B"},
 				}, nil)
-				secondContainer.ListBlobsReturns([]azure.Blob{}, nil)
-				thirdContainer.ListBlobsReturns([]azure.Blob{
+				secondContainer.ListBlobsReturns([]azure.BlobId{}, nil)
+				thirdContainer.ListBlobsReturns([]azure.BlobId{
 					{Name: "file_3_a", ETag: "3A"},
 				}, nil)
 
@@ -58,18 +58,18 @@ var _ = Describe("Backuper", func() {
 				Expect(backups).To(Equal(map[string]azure.ContainerBackup{
 					"first": {
 						Name: firstContainerName,
-						Blobs: []azure.Blob{
+						Blobs: []azure.BlobId{
 							{Name: "file_1_a", ETag: "1A"},
 							{Name: "file_1_b", ETag: "1B"},
 						},
 					},
 					"second": {
 						Name:  secondContainerName,
-						Blobs: []azure.Blob{},
+						Blobs: []azure.BlobId{},
 					},
 					"third": {
 						Name: thirdContainerName,
-						Blobs: []azure.Blob{
+						Blobs: []azure.BlobId{
 							{Name: "file_3_a", ETag: "3A"},
 						},
 					},

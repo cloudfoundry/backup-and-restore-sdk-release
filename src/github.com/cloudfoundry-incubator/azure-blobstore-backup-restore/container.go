@@ -17,8 +17,8 @@ import (
 type Container interface {
 	Name() string
 	SoftDeleteEnabled() (bool, error)
-	ListBlobs() ([]Blob, error)
-	CopyBlobsFrom(containerName string, blobsToCopy []Blob) error
+	ListBlobs() ([]BlobId, error)
+	CopyBlobsFrom(containerName string, blobIds []BlobId) error
 }
 
 type SDKContainer struct {
@@ -49,7 +49,7 @@ func (c SDKContainer) Name() string {
 	return c.name
 }
 
-func (c SDKContainer) CopyBlobsFrom(sourceContainerName string, blobsToCopy []Blob) error {
+func (c SDKContainer) CopyBlobsFrom(sourceContainerName string, blobIds []BlobId) error {
 	sourceContainerURL := c.service.NewContainerURL(sourceContainerName)
 
 	blobs, err := fetchBlobs(sourceContainerURL)
@@ -57,8 +57,8 @@ func (c SDKContainer) CopyBlobsFrom(sourceContainerName string, blobsToCopy []Bl
 		return err
 	}
 
-	for _, blobToCopy := range blobsToCopy {
-		sourceBlob, err := findBlob(blobs, blobToCopy.Name, blobToCopy.ETag)
+	for _, blobId := range blobIds {
+		sourceBlob, err := findBlob(blobs, blobId.Name, blobId.ETag)
 		if err != nil {
 			return err
 		}
@@ -160,8 +160,8 @@ func (c SDKContainer) SoftDeleteEnabled() (bool, error) {
 	return properties.DeleteRetentionPolicy.Enabled, nil
 }
 
-func (c SDKContainer) ListBlobs() ([]Blob, error) {
-	var blobs []Blob
+func (c SDKContainer) ListBlobs() ([]BlobId, error) {
+	var blobs []BlobId
 	client := c.service.NewContainerURL(c.name)
 
 	for marker := (azblob.Marker{}); marker.NotDone(); {
@@ -173,7 +173,7 @@ func (c SDKContainer) ListBlobs() ([]Blob, error) {
 		marker = page.NextMarker
 
 		for _, blobInfo := range page.Blobs.Blob {
-			blobs = append(blobs, Blob{Name: blobInfo.Name, ETag: string(blobInfo.Properties.Etag)})
+			blobs = append(blobs, BlobId{Name: blobInfo.Name, ETag: string(blobInfo.Properties.Etag)})
 		}
 	}
 
