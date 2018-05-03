@@ -39,17 +39,16 @@ type FakeContainer struct {
 		result1 []azure.Blob
 		result2 error
 	}
-	CopyFromStub        func(containerName, blobName, etag string) error
-	copyFromMutex       sync.RWMutex
-	copyFromArgsForCall []struct {
+	CopyBlobsFromStub        func(containerName string, blobsToCopy []azure.Blob) error
+	copyBlobsFromMutex       sync.RWMutex
+	copyBlobsFromArgsForCall []struct {
 		containerName string
-		blobName      string
-		etag          string
+		blobsToCopy   []azure.Blob
 	}
-	copyFromReturns struct {
+	copyBlobsFromReturns struct {
 		result1 error
 	}
-	copyFromReturnsOnCall map[int]struct {
+	copyBlobsFromReturnsOnCall map[int]struct {
 		result1 error
 	}
 	invocations      map[string][][]interface{}
@@ -182,52 +181,56 @@ func (fake *FakeContainer) ListBlobsReturnsOnCall(i int, result1 []azure.Blob, r
 	}{result1, result2}
 }
 
-func (fake *FakeContainer) CopyFrom(containerName string, blobName string, etag string) error {
-	fake.copyFromMutex.Lock()
-	ret, specificReturn := fake.copyFromReturnsOnCall[len(fake.copyFromArgsForCall)]
-	fake.copyFromArgsForCall = append(fake.copyFromArgsForCall, struct {
+func (fake *FakeContainer) CopyBlobsFrom(containerName string, blobsToCopy []azure.Blob) error {
+	var blobsToCopyCopy []azure.Blob
+	if blobsToCopy != nil {
+		blobsToCopyCopy = make([]azure.Blob, len(blobsToCopy))
+		copy(blobsToCopyCopy, blobsToCopy)
+	}
+	fake.copyBlobsFromMutex.Lock()
+	ret, specificReturn := fake.copyBlobsFromReturnsOnCall[len(fake.copyBlobsFromArgsForCall)]
+	fake.copyBlobsFromArgsForCall = append(fake.copyBlobsFromArgsForCall, struct {
 		containerName string
-		blobName      string
-		etag          string
-	}{containerName, blobName, etag})
-	fake.recordInvocation("CopyFrom", []interface{}{containerName, blobName, etag})
-	fake.copyFromMutex.Unlock()
-	if fake.CopyFromStub != nil {
-		return fake.CopyFromStub(containerName, blobName, etag)
+		blobsToCopy   []azure.Blob
+	}{containerName, blobsToCopyCopy})
+	fake.recordInvocation("CopyBlobsFrom", []interface{}{containerName, blobsToCopyCopy})
+	fake.copyBlobsFromMutex.Unlock()
+	if fake.CopyBlobsFromStub != nil {
+		return fake.CopyBlobsFromStub(containerName, blobsToCopy)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.copyFromReturns.result1
+	return fake.copyBlobsFromReturns.result1
 }
 
-func (fake *FakeContainer) CopyFromCallCount() int {
-	fake.copyFromMutex.RLock()
-	defer fake.copyFromMutex.RUnlock()
-	return len(fake.copyFromArgsForCall)
+func (fake *FakeContainer) CopyBlobsFromCallCount() int {
+	fake.copyBlobsFromMutex.RLock()
+	defer fake.copyBlobsFromMutex.RUnlock()
+	return len(fake.copyBlobsFromArgsForCall)
 }
 
-func (fake *FakeContainer) CopyFromArgsForCall(i int) (string, string, string) {
-	fake.copyFromMutex.RLock()
-	defer fake.copyFromMutex.RUnlock()
-	return fake.copyFromArgsForCall[i].containerName, fake.copyFromArgsForCall[i].blobName, fake.copyFromArgsForCall[i].etag
+func (fake *FakeContainer) CopyBlobsFromArgsForCall(i int) (string, []azure.Blob) {
+	fake.copyBlobsFromMutex.RLock()
+	defer fake.copyBlobsFromMutex.RUnlock()
+	return fake.copyBlobsFromArgsForCall[i].containerName, fake.copyBlobsFromArgsForCall[i].blobsToCopy
 }
 
-func (fake *FakeContainer) CopyFromReturns(result1 error) {
-	fake.CopyFromStub = nil
-	fake.copyFromReturns = struct {
+func (fake *FakeContainer) CopyBlobsFromReturns(result1 error) {
+	fake.CopyBlobsFromStub = nil
+	fake.copyBlobsFromReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeContainer) CopyFromReturnsOnCall(i int, result1 error) {
-	fake.CopyFromStub = nil
-	if fake.copyFromReturnsOnCall == nil {
-		fake.copyFromReturnsOnCall = make(map[int]struct {
+func (fake *FakeContainer) CopyBlobsFromReturnsOnCall(i int, result1 error) {
+	fake.CopyBlobsFromStub = nil
+	if fake.copyBlobsFromReturnsOnCall == nil {
+		fake.copyBlobsFromReturnsOnCall = make(map[int]struct {
 			result1 error
 		})
 	}
-	fake.copyFromReturnsOnCall[i] = struct {
+	fake.copyBlobsFromReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -241,8 +244,8 @@ func (fake *FakeContainer) Invocations() map[string][][]interface{} {
 	defer fake.softDeleteEnabledMutex.RUnlock()
 	fake.listBlobsMutex.RLock()
 	defer fake.listBlobsMutex.RUnlock()
-	fake.copyFromMutex.RLock()
-	defer fake.copyFromMutex.RUnlock()
+	fake.copyBlobsFromMutex.RLock()
+	defer fake.copyBlobsFromMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

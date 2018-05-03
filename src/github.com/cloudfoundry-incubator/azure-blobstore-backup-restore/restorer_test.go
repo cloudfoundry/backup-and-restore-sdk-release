@@ -37,48 +37,45 @@ var _ = Describe("Restorer", func() {
 	Describe("Restore", func() {
 		Context("when the artifact is valid", func() {
 			It("rolls back each blob to the specified ETag", func() {
+				firstContainerBlobs := []azure.Blob{
+					{Name: "file_1_a", ETag: "1A"},
+					{Name: "file_1_b", ETag: "1B"},
+				}
+
+				secondContainerBlobs := []azure.Blob{
+					{Name: "file_2_a", ETag: "2A"},
+				}
+
 				err := restorer.Restore(map[string]azure.ContainerBackup{
 					"first": {
-						Name: firstContainerName,
-						Blobs: []azure.Blob{
-							{Name: "file_1_a", ETag: "1A"},
-							{Name: "file_1_b", ETag: "1B"},
-						},
+						Name:  firstContainerName,
+						Blobs: firstContainerBlobs,
 					},
 					"second": {
-						Name: secondContainerName,
-						Blobs: []azure.Blob{
-							{Name: "file_2_a", ETag: "2A"},
-						},
+						Name:  secondContainerName,
+						Blobs: secondContainerBlobs,
 					},
 				})
 
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(firstContainer.CopyFromCallCount()).To(Equal(2))
+				Expect(firstContainer.CopyBlobsFromCallCount()).To(Equal(1))
 
-				containerName1a, blobName1a, etag1a := firstContainer.CopyFromArgsForCall(0)
-				Expect(blobName1a).To(Equal("file_1_a"))
-				Expect(etag1a).To(Equal("1A"))
-				Expect(containerName1a).To(Equal(firstContainerName))
+				actualContainerName, actualBlobsToCopy := firstContainer.CopyBlobsFromArgsForCall(0)
+				Expect(actualContainerName).To(Equal(firstContainerName))
+				Expect(actualBlobsToCopy).To(Equal(firstContainerBlobs))
 
-				containerName1b, blobName1b, etag1b := firstContainer.CopyFromArgsForCall(1)
-				Expect(blobName1b).To(Equal("file_1_b"))
-				Expect(etag1b).To(Equal("1B"))
-				Expect(containerName1b).To(Equal(firstContainerName))
+				Expect(secondContainer.CopyBlobsFromCallCount()).To(Equal(1))
 
-				Expect(secondContainer.CopyFromCallCount()).To(Equal(1))
-
-				containerName2a, blobName2a, etag2a := secondContainer.CopyFromArgsForCall(0)
-				Expect(blobName2a).To(Equal("file_2_a"))
-				Expect(etag2a).To(Equal("2A"))
-				Expect(containerName2a).To(Equal(secondContainerName))
+				actualContainerName, actualBlobsToCopy = secondContainer.CopyBlobsFromArgsForCall(0)
+				Expect(actualContainerName).To(Equal(secondContainerName))
+				Expect(actualBlobsToCopy).To(Equal(secondContainerBlobs))
 			})
 		})
 
-		Context("when copying one of the blobs fails", func() {
+		Context("when copying one of the containers fails", func() {
 			It("returns the error", func() {
-				secondContainer.CopyFromReturns(errors.New("ooops"))
+				secondContainer.CopyBlobsFromReturns(errors.New("ooops"))
 
 				err := restorer.Restore(map[string]azure.ContainerBackup{
 					"first": {
@@ -129,7 +126,7 @@ var _ = Describe("Restorer", func() {
 
 				Expect(err).To(MatchError("soft delete is not enabled on the given storage account"))
 
-				Expect(firstContainer.CopyFromCallCount()).To(BeZero())
+				Expect(firstContainer.CopyBlobsFromCallCount()).To(BeZero())
 			})
 		})
 
