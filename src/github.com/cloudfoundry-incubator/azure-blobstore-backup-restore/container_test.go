@@ -4,6 +4,8 @@ import (
 	"strconv"
 	"time"
 
+	"fmt"
+
 	"github.com/cloudfoundry-incubator/azure-blobstore-backup-restore"
 	. "github.com/cloudfoundry-incubator/azure-blobstore-backup-restore/system_tests/helpers"
 	. "github.com/onsi/ginkgo"
@@ -217,7 +219,7 @@ var _ = Describe("Container", func() {
 			It("returns an error", func() {
 				err := container.CopyBlobsFrom(container.Name(), []azure.BlobId{{Name: fileName1, ETag: "wrong_eTag"}})
 
-				Expect(err).To(MatchError("could not find blob with ETag 'wrong_eTag'"))
+				Expect(err).To(MatchError(fmt.Sprintf("no \"%s\" blob with \"%s\" ETag found in container \"%s\"", fileName1, "wrong_eTag", container.Name())))
 			})
 		})
 

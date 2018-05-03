@@ -58,9 +58,9 @@ func (c SDKContainer) CopyBlobsFrom(sourceContainerName string, blobIds []BlobId
 	}
 
 	for _, blobId := range blobIds {
-		sourceBlob, err := findBlob(blobs, blobId.Name, blobId.ETag)
-		if err != nil {
-			return err
+		sourceBlob, ok := blobs[blobId]
+		if !ok {
+			return fmt.Errorf("no \"%s\" blob with \"%s\" ETag found in container \"%s\"", blobId.Name, blobId.ETag, sourceContainerName)
 		}
 
 		err = c.copyBlob(sourceContainerURL, sourceBlob)
@@ -72,18 +72,8 @@ func (c SDKContainer) CopyBlobsFrom(sourceContainerName string, blobIds []BlobId
 	return nil
 }
 
-func findBlob(blobs []azblob.Blob, name, eTag string) (azblob.Blob, error) {
-	for _, blob := range blobs {
-		if blob.Name == name && string(blob.Properties.Etag) == eTag {
-			return blob, nil
-		}
-	}
-
-	return azblob.Blob{}, fmt.Errorf("could not find blob with ETag '%s'", eTag)
-}
-
-func fetchBlobs(sourceContainerURL azblob.ContainerURL) ([]azblob.Blob, error) {
-	var blobs []azblob.Blob
+func fetchBlobs(sourceContainerURL azblob.ContainerURL) (map[BlobId]azblob.Blob, error) {
+	var blobs = map[BlobId]azblob.Blob{}
 
 	for marker := (azblob.Marker{}); marker.NotDone(); {
 		page, err := sourceContainerURL.ListBlobs(
@@ -103,7 +93,8 @@ func fetchBlobs(sourceContainerURL azblob.ContainerURL) ([]azblob.Blob, error) {
 		marker = page.NextMarker
 
 		for _, blob := range page.Blobs.Blob {
-			blobs = append(blobs, blob)
+			blobId := BlobId{Name: blob.Name, ETag: string(blob.Properties.Etag)}
+			blobs[blobId] = blob
 		}
 	}
 
