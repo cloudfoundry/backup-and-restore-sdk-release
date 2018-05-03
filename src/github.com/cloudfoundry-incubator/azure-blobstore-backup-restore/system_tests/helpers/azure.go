@@ -84,14 +84,22 @@ func runAzureCommandSuccessfully(args ...string) *bytes.Buffer {
 	outputBuffer := new(bytes.Buffer)
 	errorBuffer := new(bytes.Buffer)
 
-	MustHaveEnv("AZURE_STORAGE_ACCOUNT")
-	MustHaveEnv("AZURE_STORAGE_KEY")
+	azureStorageAccount := MustHaveEnv("AZURE_STORAGE_ACCOUNT")
+	azureStorageKey := MustHaveEnv("AZURE_STORAGE_KEY")
+
+	azureConfigDir, err := ioutil.TempDir("", "azure_")
+	Expect(err).NotTo(HaveOccurred())
 
 	azCmd := exec.Command("az", args...)
 	azCmd.Stdout = outputBuffer
 	azCmd.Stderr = errorBuffer
+	azCmd.Env = append(azCmd.Env,
+		"AZURE_STORAGE_ACCOUNT="+azureStorageAccount,
+		"AZURE_STORAGE_KEY="+azureStorageKey,
+		"AZURE_CONFIG_DIR="+azureConfigDir,
+	)
 
-	err := azCmd.Run()
+	err = azCmd.Run()
 	Expect(err).ToNot(HaveOccurred(), errorBuffer.String())
 
 	return outputBuffer
