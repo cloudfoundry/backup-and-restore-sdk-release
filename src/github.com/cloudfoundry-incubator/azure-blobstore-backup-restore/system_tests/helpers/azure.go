@@ -9,8 +9,6 @@ import (
 
 	"strings"
 
-	"strconv"
-
 	. "github.com/onsi/gomega"
 )
 
@@ -79,23 +77,6 @@ func ReadFileFromContainer(container, blobName string) string {
 	Expect(err).NotTo(HaveOccurred())
 
 	return string(body)
-}
-
-func NumberOfUndeletedSnapshots(container string) int {
-	outputBuffer := runAzureCommandSuccessfully(
-		"storage",
-		"blob",
-		"list",
-		"--container-name", container,
-		"--include", "s",
-		"--query", "length(@)")
-
-	outputString := string(outputBuffer.Bytes())
-
-	outputNumber, err := strconv.Atoi(strings.TrimSpace(outputString))
-	Expect(err).NotTo(HaveOccurred())
-
-	return outputNumber
 }
 
 func runAzureCommandSuccessfully(args ...string) *bytes.Buffer {

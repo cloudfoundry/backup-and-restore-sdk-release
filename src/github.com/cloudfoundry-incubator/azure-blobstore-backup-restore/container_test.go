@@ -175,7 +175,6 @@ var _ = Describe("Container", func() {
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(ReadFileFromContainer(container.Name(), fileName1)).To(Equal("TEST_BLOB_1"))
-				Expect(NumberOfUndeletedSnapshots(container.Name())).To(Equal(1))
 			})
 		})
 

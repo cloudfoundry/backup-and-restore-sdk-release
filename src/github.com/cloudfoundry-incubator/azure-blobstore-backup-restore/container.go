@@ -142,8 +142,6 @@ func (c SDKContainer) copyBlob(sourceContainerURL azblob.ContainerURL, blob azbl
 		copyStatus = getMetadata.CopyStatus()
 	}
 
-	sourceBlobURL.Delete(ctx, azblob.DeleteSnapshotsOptionOnly, azblob.BlobAccessConditions{})
-
 	return nil
 }
 
