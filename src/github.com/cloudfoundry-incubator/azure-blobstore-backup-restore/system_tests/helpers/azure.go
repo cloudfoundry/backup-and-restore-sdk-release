@@ -28,7 +28,8 @@ func DeleteFileInContainer(container, blobName string) {
 		"blob",
 		"delete",
 		"--container-name", container,
-		"--name", blobName)
+		"--name", blobName,
+		"--delete-snapshots", "include")
 }
 
 func WriteFileInContainer(container, blobName, body string) string {
