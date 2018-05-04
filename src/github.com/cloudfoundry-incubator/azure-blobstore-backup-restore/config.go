@@ -24,5 +24,12 @@ func ParseConfig(configFilePath string) (map[string]ContainerConfig, error) {
 		return nil, err
 	}
 
+	for key, containerConfig := range config {
+		if config[key].Environment == "" {
+			containerConfig.Environment = "AzureCloud"
+			config[key] = containerConfig
+		}
+	}
+
 	return config, nil
 }

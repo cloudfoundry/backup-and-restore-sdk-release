@@ -37,3 +37,5 @@ properties:
         name: "the_droplets_container"
         azure_storage_account: "AZURE_STORAGE_ACCOUNT"
         azure_storage_key: "AZURE_STORAGE_KEY"
+        environment: "AZURE_CLOUD_ENVIRONMENT" # only configure for Azure sovereign clouds. Valid values include AzureChinaCloud, AzureUSGovernment, and AzureGermanCloud.
+

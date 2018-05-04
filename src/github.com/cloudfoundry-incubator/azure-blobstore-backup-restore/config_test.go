@@ -3,6 +3,8 @@ package azure_test
 import (
 	"io/ioutil"
 
+	"os"
+
 	"github.com/cloudfoundry-incubator/azure-blobstore-backup-restore"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -10,10 +12,16 @@ import (
 
 var _ = Describe("ParseConfig", func() {
 	Context("when the config file exists and is valid", func() {
-		It("parses it", func() {
-			configFile, err := ioutil.TempFile("", "azure_config")
-			Expect(err).NotTo(HaveOccurred())
+		var configFile *os.File
+		var err error
+		var config map[string]azure.ContainerConfig
 
+		BeforeEach(func() {
+			configFile, err = ioutil.TempFile("", "azure_config")
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("parses it", func() {
 			configJson := `{
 				"container_id": {
 					"name": "container_name",
@@ -23,13 +31,37 @@ var _ = Describe("ParseConfig", func() {
 			}`
 			ioutil.WriteFile(configFile.Name(), []byte(configJson), 0644)
 
-			config, err := azure.ParseConfig(configFile.Name())
+			config, err = azure.ParseConfig(configFile.Name())
 
 			Expect(config["container_id"]).To(Equal(azure.ContainerConfig{
 				Name:           "container_name",
 				StorageAccount: "my-storage-account",
 				StorageKey:     "my-storage-key",
+				Environment:    "AzureCloud",
 			}))
+		})
+
+		Context("when the config file specifies a sovereign cloud", func() {
+			It("parses the environment", func() {
+				configJson := `{
+					"container_id": {
+						"name": "container_name",
+						"azure_storage_account": "my-storage-account",
+						"azure_storage_key": "my-storage-key",
+						"environment": "my-sovereign-cloud"
+					}
+				}`
+				ioutil.WriteFile(configFile.Name(), []byte(configJson), 0644)
+
+				config, err = azure.ParseConfig(configFile.Name())
+
+				Expect(config["container_id"]).To(Equal(azure.ContainerConfig{
+					Name:           "container_name",
+					StorageAccount: "my-storage-account",
+					StorageKey:     "my-storage-key",
+					Environment:    "my-sovereign-cloud",
+				}))
+			})
 		})
 	})
 
