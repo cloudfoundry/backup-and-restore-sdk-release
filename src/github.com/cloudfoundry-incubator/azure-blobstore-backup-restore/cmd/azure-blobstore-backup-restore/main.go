@@ -64,6 +64,7 @@ func buildContainers(config map[string]azure.ContainerConfig) (map[string]azure.
 			containerConfig.Name,
 			containerConfig.StorageAccount,
 			containerConfig.StorageKey,
+			containerConfig.Environment,
 		)
 		if err != nil {
 			return nil, err

@@ -6,9 +6,10 @@ import (
 )
 
 type ContainerConfig struct {
-	Name           string `json:"name"`
-	StorageAccount string `json:"azure_storage_account"`
-	StorageKey     string `json:"azure_storage_key"`
+	Name           string      `json:"name"`
+	StorageAccount string      `json:"azure_storage_account"`
+	StorageKey     string      `json:"azure_storage_key"`
+	Environment    Environment `json:"environment"`
 }
 
 func ParseConfig(configFilePath string) (map[string]ContainerConfig, error) {

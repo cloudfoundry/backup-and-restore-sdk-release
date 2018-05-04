@@ -21,7 +21,7 @@ var _ = Describe("Container", func() {
 	Describe("NewSDKContainer", func() {
 		Context("when the account name is invalid", func() {
 			It("returns an error", func() {
-				container, err = azure.NewSDKContainer("", "\n", "")
+				container, err = azure.NewSDKContainer("", "\n", "", azure.DefaultEnvironment)
 
 				Expect(err).To(MatchError("invalid account name: '\n'"))
 				Expect(container).To(Equal(azure.SDKContainer{}))
@@ -30,9 +30,18 @@ var _ = Describe("Container", func() {
 
 		Context("when the account key is not valid base64", func() {
 			It("returns an error", func() {
-				container, err := azure.NewSDKContainer("", "", "#")
+				container, err := azure.NewSDKContainer("", "", "#", azure.DefaultEnvironment)
 
 				Expect(err).To(MatchError(ContainSubstring("invalid storage key: '")))
+				Expect(container).To(Equal(azure.SDKContainer{}))
+			})
+		})
+
+		Context("when the environment is not valid", func() {
+			It("returns an error", func() {
+				container, err := azure.NewSDKContainer("", "", "", "not-valid-environment")
+
+				Expect(err).To(MatchError(ContainSubstring("invalid environment: not-valid-environment")))
 				Expect(container).To(Equal(azure.SDKContainer{}))
 			})
 		})
@@ -42,7 +51,7 @@ var _ = Describe("Container", func() {
 		It("returns the container name", func() {
 			name := "container-name"
 
-			container, err = azure.NewSDKContainer(name, "", "")
+			container, err = azure.NewSDKContainer(name, "", "", azure.DefaultEnvironment)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(container.Name()).To(Equal(name))
@@ -73,6 +82,7 @@ var _ = Describe("Container", func() {
 					"",
 					MustHaveEnv("AZURE_STORAGE_ACCOUNT_NO_SOFT_DELETE"),
 					MustHaveEnv("AZURE_STORAGE_KEY_NO_SOFT_DELETE"),
+					azure.DefaultEnvironment,
 				)
 
 				enabled, err := container.SoftDeleteEnabled()
@@ -84,7 +94,7 @@ var _ = Describe("Container", func() {
 
 		Context("when retrieving the storage service properties fails", func() {
 			It("returns an error", func() {
-				container, err = azure.NewSDKContainer("", "", "")
+				container, err = azure.NewSDKContainer("", "", "", azure.DefaultEnvironment)
 
 				_, err = container.SoftDeleteEnabled()
 
@@ -132,6 +142,7 @@ var _ = Describe("Container", func() {
 					MustHaveEnv("AZURE_CONTAINER_NAME_MANY_FILES"),
 					MustHaveEnv("AZURE_STORAGE_ACCOUNT"),
 					MustHaveEnv("AZURE_STORAGE_KEY"),
+					azure.DefaultEnvironment,
 				)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -148,6 +159,7 @@ var _ = Describe("Container", func() {
 					"NON-EXISTENT-CONTAINER",
 					MustHaveEnv("AZURE_STORAGE_ACCOUNT"),
 					MustHaveEnv("AZURE_STORAGE_KEY"),
+					azure.DefaultEnvironment,
 				)
 
 				_, err = container.ListBlobs()
@@ -241,6 +253,7 @@ func newContainer() azure.Container {
 		containerName,
 		MustHaveEnv("AZURE_STORAGE_ACCOUNT"),
 		MustHaveEnv("AZURE_STORAGE_KEY"),
+		azure.DefaultEnvironment,
 	)
 	Expect(err).NotTo(HaveOccurred())
 	return container

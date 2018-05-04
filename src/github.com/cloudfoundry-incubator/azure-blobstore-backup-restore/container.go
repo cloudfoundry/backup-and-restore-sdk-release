@@ -28,14 +28,20 @@ type SDKContainer struct {
 	service azblob.ServiceURL
 }
 
-func NewSDKContainer(name, storageAccount, storageKey string) (container SDKContainer, err error) {
+func NewSDKContainer(name, storageAccount, storageKey string, environment Environment) (container SDKContainer, err error) {
 	credential, err := buildCredential(storageAccount, storageKey)
 	if err != nil {
 		return SDKContainer{}, err
 	}
 
 	pipeline := azblob.NewPipeline(credential, azblob.PipelineOptions{})
-	azureURL, err := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net", storageAccount))
+
+	suffix, err := environment.Suffix()
+	if err != nil {
+		return SDKContainer{}, err
+	}
+
+	azureURL, err := url.Parse(fmt.Sprintf("https://%s.blob.%s", storageAccount, suffix))
 	if err != nil {
 		return SDKContainer{}, fmt.Errorf("invalid account name: '%s'", storageAccount)
 	}
