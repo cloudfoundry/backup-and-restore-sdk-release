@@ -67,7 +67,7 @@ The SDK accepts a JSON document with the following fields:
 
 #### Deploying with `cf-deployment`
 
-Users of [cf-deployment](https://github.com/cloudfoundry/cf-deployment) can simply apply the [backup-restore opsfile](https://github.com/cloudfoundry/cf-deployment/blob/master/operations/experimental/enable-backup-restore.yml). This will deploy the `database-backup-restorer` job on a backup restore VM alongside Cloud Foundry.
+Users of [cf-deployment](https://github.com/cloudfoundry/cf-deployment) can simply apply the [backup-restore opsfiles](https://github.com/cloudfoundry/cf-deployment/blob/master/operations/backup-and-restore). This will deploy the `database-backup-restorer` job on a backup restore VM alongside Cloud Foundry.
 
 #### Deploying as an instance group
 
