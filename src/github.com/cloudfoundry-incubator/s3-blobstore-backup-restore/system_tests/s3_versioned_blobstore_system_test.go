@@ -47,24 +47,24 @@ var _ = Describe("S3 versioned backup and restore", func() {
 
 	BeforeEach(func() {
 		backuperInstance = JobInstance{
-			Deployment:    MustHaveEnv("BOSH_DEPLOYMENT"),
-			Instance:      "backuper",
-			InstanceIndex: "0",
+			Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+			Name:       "backuper",
+			Index:      "0",
 		}
 		backuperInstanceWithClonedBucket = JobInstance{
-			Deployment:    MustHaveEnv("BOSH_DEPLOYMENT"),
-			Instance:      "clone-backuper",
-			InstanceIndex: "0",
+			Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+			Name:       "clone-backuper",
+			Index:      "0",
 		}
 		backuperInstanceWithUnversionedBucket = JobInstance{
-			Deployment:    MustHaveEnv("BOSH_DEPLOYMENT"),
-			Instance:      "versioned-backuper-unversioned-bucket",
-			InstanceIndex: "0",
+			Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+			Name:       "versioned-backuper-unversioned-bucket",
+			Index:      "0",
 		}
 		backuperInstanceWithCustomCaCertBlobstore = JobInstance{
-			Deployment:    MustHaveEnv("BOSH_DEPLOYMENT"),
-			Instance:      "unversioned-custom-ca-cert-backuper",
-			InstanceIndex: "0",
+			Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+			Name:       "unversioned-custom-ca-cert-backuper",
+			Index:      "0",
 		}
 
 		region = MustHaveEnv("AWS_TEST_BUCKET_REGION")
@@ -79,32 +79,32 @@ var _ = Describe("S3 versioned backup and restore", func() {
 		DeleteAllVersionsFromBucket(unversionedRegion, unversionedBucket) // will it work?
 
 		artifactDirPath = "/tmp/s3-versioned-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
-		backuperInstance.RunOnVMAndSucceed("mkdir -p " + artifactDirPath)
-		backuperInstanceWithClonedBucket.RunOnVMAndSucceed("mkdir -p " + artifactDirPath)
-		backuperInstanceWithUnversionedBucket.RunOnVMAndSucceed("mkdir -p " + artifactDirPath)
+		backuperInstance.RunAndSucceed("mkdir -p " + artifactDirPath)
+		backuperInstanceWithClonedBucket.RunAndSucceed("mkdir -p " + artifactDirPath)
+		backuperInstanceWithUnversionedBucket.RunAndSucceed("mkdir -p " + artifactDirPath)
 	})
 
 	AfterEach(func() {
 		DeleteAllVersionsFromBucket(region, bucket)
 		DeleteAllVersionsFromBucket(cloneRegion, cloneBucket)
 		DeleteAllVersionsFromBucket(unversionedRegion, unversionedBucket)
-		backuperInstance.RunOnVMAndSucceed("rm -rf " + artifactDirPath)
-		backuperInstanceWithClonedBucket.RunOnVMAndSucceed("rm -rf " + artifactDirPath)
-		backuperInstanceWithUnversionedBucket.RunOnVMAndSucceed("rm -rf " + artifactDirPath)
+		backuperInstance.RunAndSucceed("rm -rf " + artifactDirPath)
+		backuperInstanceWithClonedBucket.RunAndSucceed("rm -rf " + artifactDirPath)
+		backuperInstanceWithUnversionedBucket.RunAndSucceed("rm -rf " + artifactDirPath)
 	})
 
 	It("backs up and restores in-place", func() {
 		fileName1 = UploadTimestampedFileToBucket(region, bucket, "file1", "FILE1")
 		fileName2 = UploadTimestampedFileToBucket(region, bucket, "file2", "FILE2")
 
-		backuperInstance.RunOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
+		backuperInstance.RunAndSucceed("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
 			" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
 
 		DeleteFileFromBucket(region, bucket, fileName1)
 		WriteFileInBucket(region, bucket, fileName2, "FILE2_NEW")
 		fileName3 = UploadTimestampedFileToBucket(region, bucket, "file3", "FILE3")
 
-		backuperInstance.RunOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
+		backuperInstance.RunAndSucceed("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
 			" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/restore")
 
 		filesList := ListFilesFromBucket(region, bucket)
@@ -119,13 +119,13 @@ var _ = Describe("S3 versioned backup and restore", func() {
 		fileName1 = UploadTimestampedFileToBucket(region, bucket, "file1", "FILE1")
 		fileName2 = UploadTimestampedFileToBucket(region, bucket, "file2", "FILE2")
 
-		backuperInstance.RunOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
+		backuperInstance.RunAndSucceed("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
 			" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
 
-		backuperInstance.DownloadFromInstance(artifactDirPath+"/blobstore.json", "/tmp/blobstore.json")
-		backuperInstanceWithClonedBucket.UploadToInstance("/tmp/blobstore.json", artifactDirPath+"/blobstore.json")
+		backuperInstance.Download(artifactDirPath+"/blobstore.json", "/tmp/blobstore.json")
+		backuperInstanceWithClonedBucket.Upload("/tmp/blobstore.json", artifactDirPath+"/blobstore.json")
 
-		backuperInstanceWithClonedBucket.RunOnVMAndSucceed("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
+		backuperInstanceWithClonedBucket.RunAndSucceed("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
 			" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/restore")
 
 		filesList := ListFilesFromBucket(cloneRegion, cloneBucket)
@@ -136,16 +136,16 @@ var _ = Describe("S3 versioned backup and restore", func() {
 	})
 
 	It("fails when the bucket is not versioned", func() {
-		session := backuperInstanceWithUnversionedBucket.RunOnInstance("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
+		session := backuperInstanceWithUnversionedBucket.Run("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
 			" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
 
 		Expect(session).To(gexec.Exit(1))
 		Expect(session.Out).To(gbytes.Say("is not versioned"))
-		Expect(backuperInstanceWithUnversionedBucket.RunOnInstance("stat " + artifactDirPath + "/blobstore.json")).To(gexec.Exit(1))
+		Expect(backuperInstanceWithUnversionedBucket.Run("stat " + artifactDirPath + "/blobstore.json")).To(gexec.Exit(1))
 	})
 
 	It("connects with a blobstore with custom CA cert", func() {
-		session := backuperInstanceWithCustomCaCertBlobstore.RunOnInstance("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
+		session := backuperInstanceWithCustomCaCertBlobstore.Run("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
 			" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
 
 		Expect(session).To(gexec.Exit(1))

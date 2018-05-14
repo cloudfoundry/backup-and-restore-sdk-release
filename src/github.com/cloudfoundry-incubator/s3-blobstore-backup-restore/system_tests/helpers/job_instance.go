@@ -17,103 +17,76 @@
 package helpers
 
 import (
-	"encoding/json"
-	"io"
 	"os/exec"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 
-	"strings"
+	"fmt"
 )
 
 type JobInstance struct {
-	Deployment    string
-	Instance      string
-	InstanceIndex string
+	Deployment string
+	Name       string
+	Index      string
 }
 
-type jsonOutputFromCli struct {
-	Tables []struct {
-		Rows []map[string]string
-	}
+func (i *JobInstance) Run(command string) *gexec.Session {
+	return i.runBosh(
+		"ssh",
+		"--gw-user="+MustHaveEnv("BOSH_GW_USER"),
+		"--gw-host="+MustHaveEnv("BOSH_GW_HOST"),
+		"--gw-private-key="+MustHaveEnv("BOSH_GW_PRIVATE_KEY"),
+		fmt.Sprintf("%s/%s", i.Name, i.Index),
+		command,
+	)
 }
 
-func RunCommand(cmd string, args ...string) *gexec.Session {
-	return runCommandWithStream(GinkgoWriter, GinkgoWriter, cmd, args...)
-}
-
-func runCommandWithStream(stdout, stderr io.Writer, cmd string, args ...string) *gexec.Session {
-	cmdParts := strings.Split(cmd, " ")
-	commandPath := cmdParts[0]
-	combinedArgs := append(cmdParts[1:], args...)
-	command := exec.Command(commandPath, combinedArgs...)
-
-	session, err := gexec.Start(command, stdout, stderr)
-
-	Expect(err).ToNot(HaveOccurred())
-	Eventually(session).Should(gexec.Exit())
-	return session
-}
-
-func (jobInstance *JobInstance) RunOnVMAndSucceed(command string) *gexec.Session {
-	session := jobInstance.RunOnInstance(command)
+func (i *JobInstance) RunAndSucceed(command string) *gexec.Session {
+	session := i.Run(command)
 	Expect(session).To(gexec.Exit(0), string(session.Err.Contents()))
 
 	return session
 }
 
-func (jobInstance *JobInstance) RunOnInstance(cmd ...string) *gexec.Session {
-	return RunCommand(
-		join(
-			BoshCommand(),
-			forDeployment(jobInstance.Deployment),
-			getSSHCommand(jobInstance.Instance, jobInstance.InstanceIndex),
-		),
-		join(cmd...),
+func (i *JobInstance) Download(remotePath, localPath string) *gexec.Session {
+	return i.runBosh(
+		"scp",
+		"--gw-user="+MustHaveEnv("BOSH_GW_USER"),
+		"--gw-host="+MustHaveEnv("BOSH_GW_HOST"),
+		"--gw-private-key="+MustHaveEnv("BOSH_GW_PRIVATE_KEY"),
+		fmt.Sprintf("%s/%s:%s", i.Name, i.Index, remotePath),
+		localPath,
 	)
 }
 
-func (jobInstance *JobInstance) getIPOfInstance() string {
-	session := RunCommand(
-		BoshCommand(),
-		forDeployment(jobInstance.Deployment),
-		"instances",
-		"--json",
-	)
-	outputFromCli := jsonOutputFromCli{}
-	contents := session.Out.Contents()
-	Expect(json.Unmarshal(contents, &outputFromCli)).To(Succeed())
-	for _, instanceData := range outputFromCli.Tables[0].Rows {
-		if strings.HasPrefix(instanceData["Instance"], jobInstance.Instance+"/") {
-			return instanceData["ips"]
-		}
-	}
-	Fail("Cant find instances with name '" + jobInstance.Instance + "' and Deployment name '" + jobInstance.Deployment + "'")
-	return ""
-}
-
-func (jobInstance *JobInstance) DownloadFromInstance(remotePath, localPath string) *gexec.Session {
-	return RunCommand(
-		join(
-			BoshCommand(),
-			forDeployment(jobInstance.Deployment),
-			getDownloadCommand(remotePath, localPath, jobInstance.Instance, jobInstance.InstanceIndex),
-		),
+func (i *JobInstance) Upload(localPath, remotePath string) *gexec.Session {
+	return i.runBosh(
+		"scp",
+		"--gw-user="+MustHaveEnv("BOSH_GW_USER"),
+		"--gw-host="+MustHaveEnv("BOSH_GW_HOST"),
+		"--gw-private-key="+MustHaveEnv("BOSH_GW_PRIVATE_KEY"),
+		localPath,
+		fmt.Sprintf("%s/%s:%s", i.Name, i.Index, remotePath),
 	)
 }
 
-func (jobInstance *JobInstance) UploadToInstance(localPath, remotePath string) *gexec.Session {
-	return RunCommand(
-		join(
-			BoshCommand(),
-			forDeployment(jobInstance.Deployment),
-			getUploadCommand(localPath, remotePath, jobInstance.Instance, jobInstance.InstanceIndex),
-		),
-	)
-}
+func (i *JobInstance) runBosh(args ...string) *gexec.Session {
+	combinedArgs := append([]string{
+		"--non-interactive",
+		"--environment=" + MustHaveEnv("BOSH_ENVIRONMENT"),
+		"--deployment=" + i.Deployment,
+		"--ca-cert=" + MustHaveEnv("BOSH_CA_CERT"),
+		"--client=" + MustHaveEnv("BOSH_CLIENT"),
+		"--client-secret=" + MustHaveEnv("BOSH_CLIENT_SECRET"),
+	}, args...)
+	command := exec.Command("bosh-cli", combinedArgs...)
 
-func join(args ...string) string {
-	return strings.Join(args, " ")
+	session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+	Expect(err).ToNot(HaveOccurred())
+
+	Eventually(session).Should(gexec.Exit())
+
+	return session
 }
