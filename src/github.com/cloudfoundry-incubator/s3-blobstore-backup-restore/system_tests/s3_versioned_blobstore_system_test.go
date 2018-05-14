@@ -47,24 +47,28 @@ var _ = Describe("S3 versioned backup and restore", func() {
 
 	BeforeEach(func() {
 		backuperInstance = JobInstance{
-			Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
-			Name:       "backuper",
-			Index:      "0",
+			Environment: MustHaveEnv("BOSH_ENVIRONMENT"),
+			Deployment:  MustHaveEnv("BOSH_DEPLOYMENT"),
+			Name:        "backuper",
+			Index:       "0",
 		}
 		backuperInstanceWithClonedBucket = JobInstance{
-			Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
-			Name:       "clone-backuper",
-			Index:      "0",
+			Environment: MustHaveEnv("BOSH_ENVIRONMENT"),
+			Deployment:  MustHaveEnv("BOSH_DEPLOYMENT"),
+			Name:        "clone-backuper",
+			Index:       "0",
 		}
 		backuperInstanceWithUnversionedBucket = JobInstance{
-			Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
-			Name:       "versioned-backuper-unversioned-bucket",
-			Index:      "0",
+			Environment: MustHaveEnv("BOSH_ENVIRONMENT"),
+			Deployment:  MustHaveEnv("BOSH_DEPLOYMENT"),
+			Name:        "versioned-backuper-unversioned-bucket",
+			Index:       "0",
 		}
 		backuperInstanceWithCustomCaCertBlobstore = JobInstance{
-			Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
-			Name:       "unversioned-custom-ca-cert-backuper",
-			Index:      "0",
+			Environment: MustHaveEnv("BOSH_ENVIRONMENT"),
+			Deployment:  MustHaveEnv("BOSH_DEPLOYMENT"),
+			Name:        "unversioned-custom-ca-cert-backuper",
+			Index:       "0",
 		}
 
 		region = MustHaveEnv("AWS_TEST_BUCKET_REGION")

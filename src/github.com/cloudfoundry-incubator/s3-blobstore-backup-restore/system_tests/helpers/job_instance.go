@@ -27,9 +27,10 @@ import (
 )
 
 type JobInstance struct {
-	Deployment string
-	Name       string
-	Index      string
+	Environment string
+	Deployment  string
+	Name        string
+	Index       string
 }
 
 func (i *JobInstance) Run(command string) *gexec.Session {
@@ -75,7 +76,7 @@ func (i *JobInstance) Upload(localPath, remotePath string) *gexec.Session {
 func (i *JobInstance) runBosh(args ...string) *gexec.Session {
 	combinedArgs := append([]string{
 		"--non-interactive",
-		"--environment=" + MustHaveEnv("BOSH_ENVIRONMENT"),
+		"--environment=" + i.Environment,
 		"--deployment=" + i.Deployment,
 		"--ca-cert=" + MustHaveEnv("BOSH_CA_CERT"),
 		"--client=" + MustHaveEnv("BOSH_CLIENT"),
