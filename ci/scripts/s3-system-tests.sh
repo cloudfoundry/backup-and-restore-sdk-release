@@ -20,7 +20,7 @@ export BOSH_GW_PRIVATE_KEY="${BOSH_GW_PRIVATE_KEY:="${PWD}/bosh-backup-and-resto
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/s3-blobstore-backup-restore
 
 if [[ ! -z "${SKIP_TESTS}" ]]; then
-   SKIP_PACKAGES="-skip ${SKIP_TESTS}"
+   SKIP_TESTS="-skip ${SKIP_TESTS}"
 fi
 
 ginkgo ${SKIP_TESTS} -v -r system_tests -trace
