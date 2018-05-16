@@ -18,4 +18,9 @@ export BOSH_GW_HOST=lite-bosh.backup-and-restore.cf-app.com
 export BOSH_GW_PRIVATE_KEY=`pwd`/bosh-backup-and-restore-meta/genesis-bosh/bosh.pem
 
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/s3-blobstore-backup-restore
-ginkgo -v -r system_tests -trace
+
+if [[ ! -z "${SKIP_PACKAGES}" ]]; then
+   SKIP_PACKAGES="-skipPackage ${SKIP_PACKAGES}"
+fi
+
+ginkgo -v -r system_tests -trace ${SKIP_PACKAGES}
