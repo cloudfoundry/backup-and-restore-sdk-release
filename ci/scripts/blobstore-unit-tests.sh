@@ -24,20 +24,8 @@ export TEST_AWS_SECRET_ACCESS_KEY
 export TEST_ECS_ACCESS_KEY_ID
 export TEST_ECS_SECRET_ACCESS_KEY
 
-export AZURE_STORAGE_ACCOUNT
-export AZURE_STORAGE_KEY
-export AZURE_CONTAINER_NAME_MANY_FILES
-
-export AZURE_STORAGE_ACCOUNT_NO_SOFT_DELETE
-export AZURE_STORAGE_KEY_NO_SOFT_DELETE
-
-
 export GOPATH=`pwd`/backup-and-restore-sdk-release:"$GOPATH"
 
 pushd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/s3-blobstore-backup-restore
   ginkgo -r -p -v -skipPackage=system_tests -keepGoing --flakeAttempts=2
-popd
-
-pushd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/azure-blobstore-backup-restore
-  ginkgo -r -p -v -skipPackage=system_tests -keepGoing
 popd
