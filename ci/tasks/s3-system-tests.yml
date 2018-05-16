@@ -29,7 +29,7 @@ run:
   path: backup-and-restore-sdk-release/ci/scripts/s3-system-tests.sh
 
 params:
-  SKIP_PACKAGES:
+  SKIP_TESTS:
   TEAM_GPG_KEY:
   BOSH_DEPLOYMENT:
   BOSH_CLIENT_SECRET:
