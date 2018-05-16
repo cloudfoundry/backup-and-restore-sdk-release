@@ -18,6 +18,6 @@
 
 cd $(dirname $0)/..
 
-lpass show private.yml --notes > config/private.yml
+lpass show 'Shared-PCF-Backup-and-Restore/private_yml' --notes > config/private.yml
 
-bosh-cli upload-blobs
+bosh upload-blobs
