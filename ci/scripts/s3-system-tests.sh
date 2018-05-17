@@ -28,7 +28,7 @@ fi
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/s3-blobstore-backup-restore
 
 if [[ ! -z "${FOCUS_SPEC}" ]]; then
-   FOCUS_SPEC="-focus ${FOCUS_SPEC}"
+   FOCUS_SPEC="-focus \"${FOCUS_SPEC}\""
 fi
 
 ginkgo ${FOCUS_SPEC} -v -r system_tests -trace
