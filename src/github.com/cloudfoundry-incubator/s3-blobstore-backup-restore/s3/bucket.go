@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
@@ -16,11 +17,12 @@ import (
 const partSize int64 = 100 * 1024 * 1024
 
 type Bucket struct {
-	name       string
-	regionName string
-	accessKey  AccessKey
-	endpoint   string
-	s3Client   *s3.S3
+	name          string
+	regionName    string
+	accessKey     AccessKey
+	endpoint      string
+	s3Client      *s3.S3
+	useIAMProfile bool
 }
 
 type AccessKey struct {
@@ -51,18 +53,19 @@ type VersionedBucket interface {
 	CheckIfVersioned() error
 }
 
-func NewBucket(bucketName, bucketRegion, endpoint string, accessKey AccessKey) (Bucket, error) {
-	s3Client, err := newS3Client(bucketRegion, endpoint, accessKey)
+func NewBucket(bucketName, bucketRegion, endpoint string, accessKey AccessKey, useIAMProfile bool) (Bucket, error) {
+	s3Client, err := newS3Client(bucketRegion, endpoint, accessKey, useIAMProfile)
 	if err != nil {
 		return Bucket{}, err
 	}
 
 	return Bucket{
-		name:       bucketName,
-		regionName: bucketRegion,
-		s3Client:   s3Client,
-		accessKey:  accessKey,
-		endpoint:   endpoint,
+		name:          bucketName,
+		regionName:    bucketRegion,
+		s3Client:      s3Client,
+		accessKey:     accessKey,
+		endpoint:      endpoint,
+		useIAMProfile: useIAMProfile,
 	}, nil
 }
 
@@ -184,7 +187,7 @@ func (bucket Bucket) copyVersion(blobKey, versionId, originPath, destinationPath
 }
 
 func (bucket Bucket) getBlobSize(bucketName, bucketRegion, originPath, blobKey, versionId string) (int64, error) {
-	s3Client, err := newS3Client(bucketRegion, bucket.endpoint, bucket.accessKey)
+	s3Client, err := newS3Client(bucketRegion, bucket.endpoint, bucket.accessKey, bucket.useIAMProfile)
 	if err != nil {
 		return 0, err
 	}
@@ -327,10 +330,21 @@ func formatErrors(contextString string, errors []error) error {
 	return fmt.Errorf("%s: %s", contextString, strings.Join(errorStrings, "\n"))
 }
 
-func newS3Client(regionName string, endpoint string, accessKey AccessKey) (*s3.S3, error) {
+func newS3Client(regionName string, endpoint string, accessKey AccessKey, useIAMProfile bool) (*s3.S3, error) {
+	var creds = credentials.NewStaticCredentials(accessKey.Id, accessKey.Secret, "")
+
+	if useIAMProfile {
+		s, err := session.NewSession(aws.NewConfig().WithRegion(regionName))
+		if err != nil {
+			return nil, err
+		}
+
+		creds = ec2rolecreds.NewCredentials(s)
+	}
+
 	awsSession, err := session.NewSession(&aws.Config{
 		Region:           &regionName,
-		Credentials:      credentials.NewStaticCredentials(accessKey.Id, accessKey.Secret, ""),
+		Credentials:      creds,
 		Endpoint:         aws.String(endpoint),
 		S3ForcePathStyle: aws.Bool(true),
 	})

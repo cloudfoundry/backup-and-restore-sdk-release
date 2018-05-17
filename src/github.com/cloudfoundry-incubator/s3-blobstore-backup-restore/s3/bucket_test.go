@@ -31,7 +31,7 @@ var _ = Describe("Bucket", func() {
 				unversionedBucketName = setUpUnversionedBucket(unversionedBucketRegion, endpoint, creds)
 				uploadFile(unversionedBucketName, endpoint, "unversioned-test", "UNVERSIONED-TEST", creds)
 
-				bucketObjectUnderTest, err = s3.NewBucket(unversionedBucketName, unversionedBucketRegion, endpoint, creds)
+				bucketObjectUnderTest, err = s3.NewBucket(unversionedBucketName, unversionedBucketRegion, endpoint, creds, false)
 				Expect(err).NotTo(HaveOccurred())
 			})
 

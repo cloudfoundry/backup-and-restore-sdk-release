@@ -48,7 +48,7 @@ var _ = Describe("UnversionedBucket", func() {
 			preExistingBigFileBucketName = "large-blob-test-bucket-unversioned"
 			destinationBucketName = setUpUnversionedBucket("eu-west-1", endpoint, creds)
 
-			bucketObjectUnderTest, err = s3.NewBucket(destinationBucketName, region, endpoint, creds)
+			bucketObjectUnderTest, err = s3.NewBucket(destinationBucketName, region, endpoint, creds, false)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -110,7 +110,7 @@ func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, se
 		var files []string
 
 		BeforeEach(func() {
-			bucketObjectUnderTest, err = s3.NewBucket(liveBucketName, liveRegion, endpoint, creds)
+			bucketObjectUnderTest, err = s3.NewBucket(liveBucketName, liveRegion, endpoint, creds, false)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -127,7 +127,7 @@ func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, se
 
 			Context("when s3 list-objects errors", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest, err = s3.NewBucket("does-not-exist", liveRegion, endpoint, creds)
+					bucketObjectUnderTest, err = s3.NewBucket("does-not-exist", liveRegion, endpoint, creds, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -139,7 +139,7 @@ func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, se
 
 			Context("when the bucket has a lot of files", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest, err = s3.NewBucket("sdk-unversioned-big-bucket-integration-test", liveRegion, endpoint, creds)
+					bucketObjectUnderTest, err = s3.NewBucket("sdk-unversioned-big-bucket-integration-test", liveRegion, endpoint, creds, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -172,7 +172,7 @@ func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, se
 		BeforeEach(func() {
 			backupBucketName = setUpUnversionedBucket(backupRegion, endpoint, creds)
 
-			bucketObjectUnderTest, err = s3.NewBucket(backupBucketName, backupRegion, endpoint, creds)
+			bucketObjectUnderTest, err = s3.NewBucket(backupBucketName, backupRegion, endpoint, creds, false)
 			Expect(err).NotTo(HaveOccurred())
 		})
 

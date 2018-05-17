@@ -105,6 +105,7 @@ func makeBuckets(config map[string]BucketConfig) (map[string]s3.VersionedBucket,
 				Id:     bucketConfig.AwsAccessKeyId,
 				Secret: bucketConfig.AwsSecretAccessKey,
 			},
+			bucketConfig.UseIAMProfile,
 		)
 		if err != nil {
 			return nil, err
@@ -128,6 +129,7 @@ func makeBucketPairs(config map[string]BucketConfigWithBackupBucket) (map[string
 				Id:     bucketConfig.AwsAccessKeyId,
 				Secret: bucketConfig.AwsSecretAccessKey,
 			},
+			bucketConfig.UseIAMProfile,
 		)
 		if err != nil {
 			return nil, err
@@ -141,6 +143,7 @@ func makeBucketPairs(config map[string]BucketConfigWithBackupBucket) (map[string
 				Id:     bucketConfig.AwsAccessKeyId,
 				Secret: bucketConfig.AwsSecretAccessKey,
 			},
+			bucketConfig.UseIAMProfile,
 		)
 		if err != nil {
 			return nil, err
@@ -162,6 +165,7 @@ type BucketConfig struct {
 	AwsAccessKeyId     string `json:"aws_access_key_id"`
 	AwsSecretAccessKey string `json:"aws_secret_access_key"`
 	Endpoint           string `json:"endpoint"`
+	UseIAMProfile      bool   `json:"use_iam_profile"`
 }
 
 type BackupBucket struct {

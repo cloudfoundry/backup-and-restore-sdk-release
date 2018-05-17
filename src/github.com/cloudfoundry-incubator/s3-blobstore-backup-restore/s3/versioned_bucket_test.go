@@ -35,7 +35,7 @@ var _ = Describe("VersionedBucket", func() {
 			firstVersionOfFile2 = uploadFile(bucketName, endpoint, "test-2", "2-A", creds)
 			deletedVersionOfFile2 = deleteFile(bucketName, endpoint, "test-2", creds)
 
-			bucketObjectUnderTest, err = s3.NewBucket(bucketName, mainRegion, endpoint, creds)
+			bucketObjectUnderTest, err = s3.NewBucket(bucketName, mainRegion, endpoint, creds, false)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -69,6 +69,7 @@ var _ = Describe("VersionedBucket", func() {
 						mainRegion,
 						endpoint,
 						s3.AccessKey{Id: "NOT RIGHT", Secret: "NOT RIGHT"},
+						false,
 					)
 					Expect(err).NotTo(HaveOccurred())
 				})
@@ -86,7 +87,7 @@ var _ = Describe("VersionedBucket", func() {
 					unversionedBucketName = setUpUnversionedBucket(mainRegion, endpoint, creds)
 					uploadFile(unversionedBucketName, endpoint, "unversioned-test", "UNVERSIONED-TEST", creds)
 
-					bucketObjectUnderTest, err = s3.NewBucket(unversionedBucketName, mainRegion, endpoint, creds)
+					bucketObjectUnderTest, err = s3.NewBucket(unversionedBucketName, mainRegion, endpoint, creds, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -102,7 +103,7 @@ var _ = Describe("VersionedBucket", func() {
 
 			Context("when the bucket has a lot of files", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest, err = s3.NewBucket("sdk-big-bucket-integration-test", mainRegion, endpoint, creds)
+					bucketObjectUnderTest, err = s3.NewBucket("sdk-big-bucket-integration-test", mainRegion, endpoint, creds, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -129,7 +130,7 @@ var _ = Describe("VersionedBucket", func() {
 
 			Context("when putting versions fails", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest, err = s3.NewBucket(bucketName, mainRegion, endpoint, s3.AccessKey{})
+					bucketObjectUnderTest, err = s3.NewBucket(bucketName, mainRegion, endpoint, s3.AccessKey{}, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -212,7 +213,7 @@ var _ = Describe("VersionedBucket", func() {
 			}
 
 			clearOutVersionedBucket(bucketName, endpoint, creds)
-			bucketObjectUnderTest, err = s3.NewBucket(bucketName, region, endpoint, creds)
+			bucketObjectUnderTest, err = s3.NewBucket(bucketName, region, endpoint, creds, false)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -241,7 +242,7 @@ var _ = Describe("VersionedBucket", func() {
 
 			destinationBucketName = setUpVersionedBucket(region, endpoint, creds)
 
-			bucketObjectUnderTest, err = s3.NewBucket(destinationBucketName, region, endpoint, creds)
+			bucketObjectUnderTest, err = s3.NewBucket(destinationBucketName, region, endpoint, creds, false)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
