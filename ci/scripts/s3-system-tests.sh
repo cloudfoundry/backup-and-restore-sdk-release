@@ -15,7 +15,6 @@ export BOSH_ENVIRONMENT="${BOSH_ENVIRONMENT:="https://lite-bosh.backup-and-resto
 export BOSH_CA_CERT="${BOSH_CA_CERT:="${PWD}/bosh-backup-and-restore-meta/certs/lite-bosh.backup-and-restore.cf-app.com.crt"}"
 export BOSH_GW_USER="${BOSH_GW_USER:="vcap"}"
 export BOSH_GW_HOST="${BOSH_GW_HOST:="lite-bosh.backup-and-restore.cf-app.com"}"
-export BOSH_GW_PRIVATE_KEY="${BOSH_GW_PRIVATE_KEY:="${PWD}/bosh-backup-and-restore-meta/genesis-bosh/bosh.pem"}"
 
 if [[ -z "${BOSH_GW_PRIVATE_KEY}" ]]; then
   BOSH_GW_PRIVATE_KEY="${PWD}/bosh-backup-and-restore-meta/genesis-bosh/bosh.pem"
