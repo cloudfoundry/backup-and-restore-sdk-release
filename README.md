@@ -199,6 +199,7 @@ The `s3-versioned-blobstore-backup-restorer` job can be configured using the fol
   * `aws_access_key_id` [String]: the AWS access key ID for the bucket
   * `aws_secret_access_key` [String]: the AWS secret access key for the bucket
   * `endpoint` [String]: the endpoint for your storage server, only needed if you are not using AWS S3
+  * `use_iam_profile` [Boolean]: enable using AWS IAM instance profile to connect to the AWS s3 bucket instead of AWS access keys; default to false
 
 Here are example job properties to configure two S3 buckets: `my_bucket` and `other_bucket`.
 
@@ -214,8 +215,7 @@ properties:
     other_bucket:
       name: "((other_bucket_package_directory_key))"
       region: "((aws_region))"
-      aws_access_key_id: "((other_bucket_access_key_id))"
-      aws_secret_access_key: "((other_bucket_secret_access_key))"
+      use_iam_profile: true
 ```
 
 ##### S3 Unversioned Properties
@@ -229,6 +229,7 @@ The `s3-unversioned-blobstore-backup-restorer` job can be configured using the f
   * `aws_access_key_id` [String]: the AWS access key ID for the bucket
   * `aws_secret_access_key` [String]: the AWS secret access key for the bucket
   * `endpoint` [String]: the endpoint for your storage server, only needed if you are not using AWS S3
+  * `use_iam_profile` [Boolean]: enable using AWS IAM instance profile to connect to the AWS s3 bucket; default to false
   * `backup` [Object]: the backup bucket configuration
     * `name` [String]: the backup bucket name
     * `region` [String]: the backup bucket region
