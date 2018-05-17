@@ -17,11 +17,11 @@ export BOSH_GW_USER="${BOSH_GW_USER:="vcap"}"
 export BOSH_GW_HOST="${BOSH_GW_HOST:="lite-bosh.backup-and-restore.cf-app.com"}"
 
 if [[ -z "${BOSH_GW_PRIVATE_KEY}" ]]; then
-  BOSH_GW_PRIVATE_KEY="${PWD}/bosh-backup-and-restore-meta/genesis-bosh/bosh.pem"
+  export BOSH_GW_PRIVATE_KEY="${PWD}/bosh-backup-and-restore-meta/genesis-bosh/bosh.pem"
 else
   echo -e "${BOSH_GW_PRIVATE_KEY}" > "${PWD}/ssh.key"
   chmod 0600 "${PWD}/ssh.key"
-  BOSH_GW_PRIVATE_KEY="${PWD}/ssh.key"
+  export BOSH_GW_PRIVATE_KEY="${PWD}/ssh.key"
 fi
 
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/s3-blobstore-backup-restore
