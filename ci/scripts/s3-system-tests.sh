@@ -27,8 +27,8 @@ fi
 
 cd backup-and-restore-sdk-release/src/github.com/cloudfoundry-incubator/s3-blobstore-backup-restore
 
-if [[ ! -z "${SKIP_TESTS}" ]]; then
-   SKIP_TESTS="-skip ${SKIP_TESTS}"
+if [[ ! -z "${FOCUS_SPEC}" ]]; then
+   FOCUS_SPEC="-focus ${FOCUS_SPEC}"
 fi
 
-ginkgo ${SKIP_TESTS} -v -r system_tests -trace
+ginkgo ${FOCUS_SPEC} -v -r system_tests -trace
