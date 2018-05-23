@@ -148,6 +148,8 @@ func (c SDKContainer) copyBlob(sourceContainerURL azblob.ContainerURL, blob azbl
 	}
 
 	copyStatus := response.CopyStatus()
+
+	// TODO: we should return an error when CopyStatus is "failed" or "aborted"
 	for copyStatus == azblob.CopyStatusPending {
 		time.Sleep(time.Second * 2)
 		getMetadata, err := destinationBlobURL.GetPropertiesAndMetadata(ctx, azblob.BlobAccessConditions{})
