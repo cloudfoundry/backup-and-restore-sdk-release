@@ -58,9 +58,7 @@ func (c SDKContainer) Name() string {
 }
 
 func (c SDKContainer) CopyBlobsFrom(sourceContainerName string, blobIds []BlobId) error {
-	sourceContainerURL := c.service.NewContainerURL(sourceContainerName)
-
-	blobs, err := fetchBlobs(sourceContainerURL)
+	blobs, err := c.fetchBlobs(sourceContainerName)
 	if err != nil {
 		return err
 	}
@@ -73,7 +71,7 @@ func (c SDKContainer) CopyBlobsFrom(sourceContainerName string, blobIds []BlobId
 		}
 
 		go func(blob azblob.Blob) {
-			errs <- c.copyBlob(sourceContainerURL, sourceBlob)
+			errs <- c.copyBlob(sourceContainerName, sourceBlob)
 		}(sourceBlob)
 	}
 
@@ -95,7 +93,8 @@ func (c SDKContainer) CopyBlobsFrom(sourceContainerName string, blobIds []BlobId
 	return nil
 }
 
-func fetchBlobs(sourceContainerURL azblob.ContainerURL) (map[BlobId]azblob.Blob, error) {
+func (c SDKContainer) fetchBlobs(sourceContainerName string) (map[BlobId]azblob.Blob, error) {
+	var sourceContainerURL = c.service.NewContainerURL(sourceContainerName)
 	var blobs = map[BlobId]azblob.Blob{}
 
 	for marker := (azblob.Marker{}); marker.NotDone(); {
@@ -124,7 +123,8 @@ func fetchBlobs(sourceContainerURL azblob.ContainerURL) (map[BlobId]azblob.Blob,
 	return blobs, nil
 }
 
-func (c SDKContainer) copyBlob(sourceContainerURL azblob.ContainerURL, blob azblob.Blob) error {
+func (c SDKContainer) copyBlob(sourceContainerName string, blob azblob.Blob) error {
+	sourceContainerURL := c.service.NewContainerURL(sourceContainerName)
 	ctx := context.Background()
 
 	sourceBlobURL := sourceContainerURL.NewBlobURL(blob.Name)
@@ -149,7 +149,6 @@ func (c SDKContainer) copyBlob(sourceContainerURL azblob.ContainerURL, blob azbl
 
 	copyStatus := response.CopyStatus()
 
-	// TODO: we should return an error when CopyStatus is "failed" or "aborted"
 	for copyStatus == azblob.CopyStatusPending {
 		time.Sleep(time.Second * 2)
 		getMetadata, err := destinationBlobURL.GetPropertiesAndMetadata(ctx, azblob.BlobAccessConditions{})
@@ -158,6 +157,10 @@ func (c SDKContainer) copyBlob(sourceContainerURL azblob.ContainerURL, blob azbl
 		}
 
 		copyStatus = getMetadata.CopyStatus()
+	}
+
+	if copyStatus != azblob.CopyStatusSuccess {
+		return fmt.Errorf("copy of blob '%s' from container '%s' to container '%s' failed with status '%s'", blob.Name, sourceContainerName, c.Name(), copyStatus)
 	}
 
 	return nil
