@@ -13,10 +13,15 @@ import (
 )
 
 var _ = Describe("Container", func() {
+	var azureClient AzureClient
 	var container azure.Container
 	var err error
 	var eTag1, eTag2, eTag3 string
 	var fileName1, fileName2, fileName3 string
+
+	BeforeEach(func() {
+		azureClient = NewAzureClient(MustHaveEnv("AZURE_STORAGE_ACCOUNT"), MustHaveEnv("AZURE_STORAGE_KEY"))
+	})
 
 	Describe("NewSDKContainer", func() {
 		Context("when the account name is invalid", func() {
@@ -61,11 +66,12 @@ var _ = Describe("Container", func() {
 	Describe("SoftDeleteEnabled", func() {
 		Context("when soft delete is enabled on the container's storage service", func() {
 			BeforeEach(func() {
-				container = newContainer()
+				containerName := azureClient.CreateContainerWithUniqueName("sdk-azure-test-")
+				container = newContainer(containerName)
 			})
 
 			AfterEach(func() {
-				DeleteContainer(container.Name())
+				azureClient.DeleteContainer(container.Name())
 			})
 
 			It("returns true", func() {
@@ -106,22 +112,23 @@ var _ = Describe("Container", func() {
 	Describe("ListBlobs", func() {
 		Context("when the container has a few files and snapshots", func() {
 			BeforeEach(func() {
-				container = newContainer()
+				containerName := azureClient.CreateContainerWithUniqueName("sdk-azure-test-")
+				container = newContainer(containerName)
 
 				fileName1 = "test_file_1_" + strconv.FormatInt(time.Now().Unix(), 10)
 				fileName2 = "test_file_2_" + strconv.FormatInt(time.Now().Unix(), 10)
 				fileName3 = "test_file_3_" + strconv.FormatInt(time.Now().Unix(), 10)
 
-				WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_OLD")
-				eTag1 = WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
-				WriteFileInContainer(container.Name(), fileName2, "TEST_BLOB_2_OLDEST")
-				WriteFileInContainer(container.Name(), fileName2, "TEST_BLOB_2_OLD")
-				eTag2 = WriteFileInContainer(container.Name(), fileName2, "TEST_BLOB_2")
-				eTag3 = WriteFileInContainer(container.Name(), fileName3, "TEST_BLOB_3")
+				azureClient.WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_OLD")
+				eTag1 = azureClient.WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
+				azureClient.WriteFileInContainer(container.Name(), fileName2, "TEST_BLOB_2_OLDEST")
+				azureClient.WriteFileInContainer(container.Name(), fileName2, "TEST_BLOB_2_OLD")
+				eTag2 = azureClient.WriteFileInContainer(container.Name(), fileName2, "TEST_BLOB_2")
+				eTag3 = azureClient.WriteFileInContainer(container.Name(), fileName3, "TEST_BLOB_3")
 			})
 
 			AfterEach(func() {
-				DeleteContainer(container.Name())
+				azureClient.DeleteContainer(container.Name())
 			})
 
 			It("returns a list of containers with files and their etags", func() {
@@ -171,59 +178,61 @@ var _ = Describe("Container", func() {
 
 	Describe("CopyBlobsFrom", func() {
 		BeforeEach(func() {
-			container = newContainer()
+			containerName := azureClient.CreateContainerWithUniqueName("sdk-azure-test-")
+			container = newContainer(containerName)
 			fileName1 = "test_file_1_" + strconv.FormatInt(time.Now().Unix(), 10)
 		})
 
 		AfterEach(func() {
-			DeleteContainer(container.Name())
+			azureClient.DeleteContainer(container.Name())
 		})
 
 		Context("when a file has some earlier versions", func() {
 			It("restores to an earlier version, leaving snapshots soft deleted", func() {
-				WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_OLD")
-				eTag1 = WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
-				WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_NEW")
+				azureClient.WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_OLD")
+				eTag1 = azureClient.WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
+				azureClient.WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_NEW")
 
 				err := container.CopyBlobsFrom(container.Name(), []azure.BlobId{{Name: fileName1, ETag: eTag1}})
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(ReadFileFromContainer(container.Name(), fileName1)).To(Equal("TEST_BLOB_1"))
+				Expect(azureClient.ReadFileFromContainer(container.Name(), fileName1)).To(Equal("TEST_BLOB_1"))
 			})
 		})
 
 		Context("when file is deleted", func() {
 			It("restores it successfully", func() {
-				eTag1 = WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
-				DeleteFileInContainer(container.Name(), fileName1)
+				eTag1 = azureClient.WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
+				azureClient.DeleteFileInContainer(container.Name(), fileName1)
 
 				err := container.CopyBlobsFrom(container.Name(), []azure.BlobId{{Name: fileName1, ETag: eTag1}})
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(ReadFileFromContainer(container.Name(), fileName1)).To(Equal("TEST_BLOB_1"))
+				Expect(azureClient.ReadFileFromContainer(container.Name(), fileName1)).To(Equal("TEST_BLOB_1"))
 			})
 		})
 
 		Context("when the source blob lives in a different container", func() {
-			var destinationContainer azure.Container
+			var differentContainer azure.Container
 
 			BeforeEach(func() {
-				destinationContainer = newContainer()
+				containerName := azureClient.CreateContainerWithUniqueName("sdk-azure-test-")
+				differentContainer = newContainer(containerName)
 			})
 
 			AfterEach(func() {
-				DeleteContainer(destinationContainer.Name())
+				azureClient.DeleteContainer(differentContainer.Name())
 			})
 
 			It("when is from another container", func() {
-				WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_OLD")
-				eTag1 = WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
-				WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_NEW")
+				azureClient.WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_OLD")
+				eTag1 = azureClient.WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
+				azureClient.WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_NEW")
 
-				err := destinationContainer.CopyBlobsFrom(container.Name(), []azure.BlobId{{Name: fileName1, ETag: eTag1}})
+				err := differentContainer.CopyBlobsFrom(container.Name(), []azure.BlobId{{Name: fileName1, ETag: eTag1}})
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(ReadFileFromContainer(destinationContainer.Name(), fileName1)).To(Equal("TEST_BLOB_1"))
+				Expect(azureClient.ReadFileFromContainer(differentContainer.Name(), fileName1)).To(Equal("TEST_BLOB_1"))
 			})
 		})
 
@@ -245,10 +254,7 @@ var _ = Describe("Container", func() {
 	})
 })
 
-func newContainer() azure.Container {
-	containerName := "sdk-azure-test-" + strconv.FormatInt(time.Now().UnixNano(), 10)
-	CreateContainer(containerName)
-
+func newContainer(containerName string) azure.Container {
 	container, err := azure.NewSDKContainer(
 		containerName,
 		MustHaveEnv("AZURE_STORAGE_ACCOUNT"),

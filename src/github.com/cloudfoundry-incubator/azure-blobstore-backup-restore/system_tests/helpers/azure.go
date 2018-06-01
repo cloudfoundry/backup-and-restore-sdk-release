@@ -9,6 +9,9 @@ import (
 
 	"strings"
 
+	"strconv"
+	"time"
+
 	. "github.com/onsi/gomega"
 )
 
@@ -58,6 +61,12 @@ func (c AzureClient) WriteFileInContainer(container, blobName, body string) stri
 	json.Unmarshal(outputBuffer.Bytes(), &output)
 
 	return strings.Trim(output["etag"], "\"")
+}
+
+func (c AzureClient) CreateContainerWithUniqueName(prefix string) string {
+	containerName := prefix + strconv.FormatInt(time.Now().UnixNano(), 10)
+	c.CreateContainer(containerName)
+	return containerName
 }
 
 func (c AzureClient) CreateContainer(name string) {
