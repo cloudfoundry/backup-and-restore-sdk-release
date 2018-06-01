@@ -12,8 +12,17 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func DeleteContainer(name string) {
-	runAzureCommandSuccessfully(
+type AzureClient struct {
+	storageAccount string
+	storageKey     string
+}
+
+func NewAzureClient(storageAccount, storageKey string) AzureClient {
+	return AzureClient{storageAccount: storageAccount, storageKey: storageKey}
+}
+
+func (c AzureClient) DeleteContainer(name string) {
+	c.runAzureCommandSuccessfully(
 		"storage",
 		"container",
 		"delete",
@@ -22,8 +31,8 @@ func DeleteContainer(name string) {
 	)
 }
 
-func DeleteFileInContainer(container, blobName string) {
-	runAzureCommandSuccessfully(
+func (c AzureClient) DeleteFileInContainer(container, blobName string) {
+	c.runAzureCommandSuccessfully(
 		"storage",
 		"blob",
 		"delete",
@@ -32,12 +41,12 @@ func DeleteFileInContainer(container, blobName string) {
 		"--delete-snapshots", "include")
 }
 
-func WriteFileInContainer(container, blobName, body string) string {
+func (c AzureClient) WriteFileInContainer(container, blobName, body string) string {
 	bodyFile, _ := ioutil.TempFile("", "write_file_in_container_")
 	bodyFile.WriteString(body)
 	bodyFile.Close()
 
-	outputBuffer := runAzureCommandSuccessfully(
+	outputBuffer := c.runAzureCommandSuccessfully(
 		"storage",
 		"blob",
 		"upload",
@@ -51,8 +60,8 @@ func WriteFileInContainer(container, blobName, body string) string {
 	return strings.Trim(output["etag"], "\"")
 }
 
-func CreateContainer(name string) {
-	runAzureCommandSuccessfully(
+func (c AzureClient) CreateContainer(name string) {
+	c.runAzureCommandSuccessfully(
 		"storage",
 		"container",
 		"create",
@@ -62,11 +71,11 @@ func CreateContainer(name string) {
 	)
 }
 
-func ReadFileFromContainer(container, blobName string) string {
+func (c AzureClient) ReadFileFromContainer(container, blobName string) string {
 	bodyFile, err := ioutil.TempFile("", "read_file_from_container_")
 	Expect(err).NotTo(HaveOccurred())
 
-	runAzureCommandSuccessfully(
+	c.runAzureCommandSuccessfully(
 		"storage",
 		"blob",
 		"download",
@@ -80,12 +89,9 @@ func ReadFileFromContainer(container, blobName string) string {
 	return string(body)
 }
 
-func runAzureCommandSuccessfully(args ...string) *bytes.Buffer {
+func (c AzureClient) runAzureCommandSuccessfully(args ...string) *bytes.Buffer {
 	outputBuffer := new(bytes.Buffer)
 	errorBuffer := new(bytes.Buffer)
-
-	azureStorageAccount := MustHaveEnv("AZURE_STORAGE_ACCOUNT")
-	azureStorageKey := MustHaveEnv("AZURE_STORAGE_KEY")
 
 	azureConfigDir, err := ioutil.TempDir("", "azure_")
 	Expect(err).NotTo(HaveOccurred())
@@ -94,8 +100,8 @@ func runAzureCommandSuccessfully(args ...string) *bytes.Buffer {
 	azCmd.Stdout = outputBuffer
 	azCmd.Stderr = errorBuffer
 	azCmd.Env = append(azCmd.Env,
-		"AZURE_STORAGE_ACCOUNT="+azureStorageAccount,
-		"AZURE_STORAGE_KEY="+azureStorageKey,
+		"AZURE_STORAGE_ACCOUNT="+c.storageAccount,
+		"AZURE_STORAGE_KEY="+c.storageKey,
 		"AZURE_CONFIG_DIR="+azureConfigDir,
 	)
 
