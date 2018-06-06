@@ -98,10 +98,10 @@ func (c SDKContainer) fetchBlobs(sourceContainerName string) (map[BlobId]azblob.
 	var blobs = map[BlobId]azblob.Blob{}
 
 	for marker := (azblob.Marker{}); marker.NotDone(); {
-		page, err := sourceContainerURL.ListBlobs(
+		page, err := sourceContainerURL.ListBlobsFlatSegment(
 			context.Background(),
 			marker,
-			azblob.ListBlobsOptions{
+			azblob.ListBlobsSegmentOptions{
 				Details: azblob.BlobListingDetails{
 					Snapshots: true,
 					Deleted:   true,
@@ -136,7 +136,7 @@ func (c SDKContainer) copyBlob(sourceContainerName string, blob azblob.Blob) err
 		return err
 	}
 
-	response, err := destinationBlobURL.StartCopy(
+	response, err := destinationBlobURL.StartCopyFromURL(
 		ctx,
 		sourceBlobURL.WithSnapshot(blob.Snapshot).URL(),
 		azblob.Metadata{},
@@ -151,7 +151,7 @@ func (c SDKContainer) copyBlob(sourceContainerName string, blob azblob.Blob) err
 
 	for copyStatus == azblob.CopyStatusPending {
 		time.Sleep(time.Second * 2)
-		getMetadata, err := destinationBlobURL.GetPropertiesAndMetadata(ctx, azblob.BlobAccessConditions{})
+		getMetadata, err := destinationBlobURL.GetProperties(ctx, azblob.BlobAccessConditions{})
 		if err != nil {
 			return err
 		}
@@ -184,7 +184,7 @@ func (c SDKContainer) ListBlobs() ([]BlobId, error) {
 	client := c.service.NewContainerURL(c.name)
 
 	for marker := (azblob.Marker{}); marker.NotDone(); {
-		page, err := client.ListBlobs(context.Background(), marker, azblob.ListBlobsOptions{})
+		page, err := client.ListBlobsFlatSegment(context.Background(), marker, azblob.ListBlobsSegmentOptions{})
 		if err != nil {
 			return nil, fmt.Errorf("failed listing blobs in container '%s': %s", c.name, err)
 		}

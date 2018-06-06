@@ -4,14 +4,14 @@
 [[projects]]
   name = "github.com/Azure/azure-pipeline-go"
   packages = ["pipeline"]
-  revision = "0f0dbf237bd47d5688310dbd3fac369353f280d0"
-  version = "0.1.5"
+  revision = "098e490af5dc2a905cdc5b64cafda6887b29164b"
+  version = "0.1.6"
 
 [[projects]]
-  branch = "master"
   name = "github.com/Azure/azure-storage-blob-go"
   packages = ["2017-07-29/azblob"]
-  revision = "70edea0000eaac722aa45821797ffdedba6b53b8"
+  revision = "66ba96e49ebbdc3cd26970c6c675c906d304b5e2"
+  version = "0.1.4"
 
 [[projects]]
   name = "github.com/onsi/ginkgo"
@@ -108,6 +108,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "99fa0ce422b9d9e177e5117f5e39da3410a8e057c3af742f54fb4859fddc5297"
+  inputs-digest = "b265ccf2d60ec8982beaa5d13d38209eccfd2bb53c3773d586327feb6dc5794f"
   solver-name = "gps-cdcl"
   solver-version = 1

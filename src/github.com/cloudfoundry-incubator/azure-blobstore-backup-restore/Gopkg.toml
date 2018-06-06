@@ -38,5 +38,5 @@
   unused-packages = true
 
 [[constraint]]
-  branch = "master"
   name = "github.com/Azure/azure-storage-blob-go"
+  version = "0.1.4"
