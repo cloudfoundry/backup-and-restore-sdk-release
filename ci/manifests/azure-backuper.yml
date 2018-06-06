@@ -87,6 +87,9 @@ instance_groups:
           name: ((azure-different-container-name))
           azure_storage_account: ((azure-different-storage-account))
           azure_storage_key: ((azure-different-storage-key))
+          restore_from:
+            azure_storage_account: ((azure-storage-account))
+            azure_storage_key: ((azure-storage-key))
   azs: [z1]
 
 update:

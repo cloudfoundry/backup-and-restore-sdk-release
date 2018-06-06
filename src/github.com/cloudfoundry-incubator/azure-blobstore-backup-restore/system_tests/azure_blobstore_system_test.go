@@ -42,31 +42,33 @@ var _ = Describe("Azure backup and restore", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	AfterEach(func() {
-		instance.RunOnInstanceAndSucceed("sudo rm -rf " + instanceArtifactDirPath)
-		err := os.RemoveAll(localArtifactDirectory)
-		Expect(err).NotTo(HaveOccurred())
+	Context("when the destination container is the same as the source container", func() {
+		AfterEach(func() {
+			instance.RunOnInstanceAndSucceed("sudo rm -rf " + instanceArtifactDirPath)
+			err := os.RemoveAll(localArtifactDirectory)
+			Expect(err).NotTo(HaveOccurred())
 
-		azureClient.DeleteFileInContainer(containerName, fileName1)
-		azureClient.DeleteFileInContainer(containerName, fileName2)
-		azureClient.DeleteFileInContainer(containerName, fileName3)
-	})
+			azureClient.DeleteFileInContainer(containerName, fileName1)
+			azureClient.DeleteFileInContainer(containerName, fileName2)
+			azureClient.DeleteFileInContainer(containerName, fileName3)
+		})
 
-	It("backs up and restores in-place successfully", func() {
-		azureClient.WriteFileInContainer(containerName, fileName1, "TEST_BLOB_1")
-		azureClient.WriteFileInContainer(containerName, fileName2, "TEST_BLOB_2")
-		azureClient.WriteFileInContainer(containerName, fileName3, "TEST_BLOB_3")
+		It("backs up and restores in-place successfully", func() {
+			azureClient.WriteFileInContainer(containerName, fileName1, "TEST_BLOB_1")
+			azureClient.WriteFileInContainer(containerName, fileName2, "TEST_BLOB_2")
+			azureClient.WriteFileInContainer(containerName, fileName3, "TEST_BLOB_3")
 
-		instance.RunOnInstanceAndSucceed("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/azure-blobstore-backup-restorer/bin/bbr/backup")
+			instance.RunOnInstanceAndSucceed("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/azure-blobstore-backup-restorer/bin/bbr/backup")
 
-		azureClient.WriteFileInContainer(containerName, fileName2, "TEST_BLOB_2_NEW")
-		azureClient.DeleteFileInContainer(containerName, fileName3)
+			azureClient.WriteFileInContainer(containerName, fileName2, "TEST_BLOB_2_NEW")
+			azureClient.DeleteFileInContainer(containerName, fileName3)
 
-		instance.RunOnInstanceAndSucceed("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/azure-blobstore-backup-restorer/bin/bbr/restore")
+			instance.RunOnInstanceAndSucceed("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/azure-blobstore-backup-restorer/bin/bbr/restore")
 
-		Expect(azureClient.ReadFileFromContainer(containerName, fileName1)).To(Equal("TEST_BLOB_1"))
-		Expect(azureClient.ReadFileFromContainer(containerName, fileName2)).To(Equal("TEST_BLOB_2"))
-		Expect(azureClient.ReadFileFromContainer(containerName, fileName3)).To(Equal("TEST_BLOB_3"))
+			Expect(azureClient.ReadFileFromContainer(containerName, fileName1)).To(Equal("TEST_BLOB_1"))
+			Expect(azureClient.ReadFileFromContainer(containerName, fileName2)).To(Equal("TEST_BLOB_2"))
+			Expect(azureClient.ReadFileFromContainer(containerName, fileName3)).To(Equal("TEST_BLOB_3"))
+		})
 	})
 
 	Context("when the destination container is different from the source container", func() {

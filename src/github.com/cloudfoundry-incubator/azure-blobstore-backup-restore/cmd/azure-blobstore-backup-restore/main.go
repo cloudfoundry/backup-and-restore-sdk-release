@@ -26,7 +26,8 @@ func main() {
 	config, err := azure.ParseConfig(*configFilePath)
 	exitOnError(err)
 
-	containers, err := buildContainers(config)
+	containerBuilder := azure.NewContainerBuilder(config)
+	containers, err := containerBuilder.Containers()
 	exitOnError(err)
 
 	artifact := azure.NewArtifact(*artifactFilePath)
@@ -40,7 +41,9 @@ func main() {
 		err = artifact.Write(backups)
 		exitOnError(err)
 	} else {
-		restorer := azure.NewRestorer(containers)
+		restoreFromStorageAccounts := containerBuilder.RestoreFromStorageAccounts()
+
+		restorer := azure.NewRestorer(containers, restoreFromStorageAccounts)
 
 		backups, err := artifact.Read()
 		exitOnError(err)
@@ -54,24 +57,4 @@ func exitOnError(err error) {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-}
-
-func buildContainers(config map[string]azure.ContainerConfig) (map[string]azure.Container, error) {
-	var containers = make(map[string]azure.Container)
-
-	for containerId, containerConfig := range config {
-		container, err := azure.NewSDKContainer(
-			containerConfig.Name,
-			containerConfig.StorageAccount,
-			containerConfig.StorageKey,
-			containerConfig.Environment,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		containers[containerId] = container
-	}
-
-	return containers, nil
 }

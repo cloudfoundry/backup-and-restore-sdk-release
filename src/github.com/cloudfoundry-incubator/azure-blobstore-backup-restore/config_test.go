@@ -21,7 +21,7 @@ var _ = Describe("ParseConfig", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("parses it", func() {
+		It("parses", func() {
 			configJson := `{
 				"container_id": {
 					"name": "container_name",
@@ -60,6 +60,37 @@ var _ = Describe("ParseConfig", func() {
 					StorageAccount: "my-storage-account",
 					StorageKey:     "my-storage-key",
 					Environment:    "my-sovereign-cloud",
+				}))
+			})
+		})
+
+		Context("when the config file specifies a container in a different storage account to restore from", func() {
+			It("parses the container to restore from", func() {
+				configJson := `{
+					"container_id": {
+						"name": "container_name",
+						"azure_storage_account": "my-storage-account",
+						"azure_storage_key": "my-storage-key",
+						"environment": "my-sovereign-cloud",
+						"restore_from": {
+							"azure_storage_account": "other-storage-account",
+							"azure_storage_key": "other-storage-key"
+						}
+					}
+				}`
+				ioutil.WriteFile(configFile.Name(), []byte(configJson), 0644)
+
+				config, err = azure.ParseConfig(configFile.Name())
+
+				Expect(config["container_id"]).To(Equal(azure.ContainerConfig{
+					Name:           "container_name",
+					StorageAccount: "my-storage-account",
+					StorageKey:     "my-storage-key",
+					Environment:    "my-sovereign-cloud",
+					RestoreFrom: azure.RestoreFromConfig{
+						StorageAccount: "other-storage-account",
+						StorageKey:     "other-storage-key",
+					},
 				}))
 			})
 		})

@@ -224,7 +224,7 @@ var _ = Describe("Container", func() {
 				azureClient.DeleteContainer(differentContainer.Name())
 			})
 
-			It("when is from another container", func() {
+			It("copies the blob to the destination container", func() {
 				azureClient.WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_OLD")
 				eTag1 = azureClient.WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
 				azureClient.WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_NEW")
@@ -250,6 +250,40 @@ var _ = Describe("Container", func() {
 
 				Expect(err).To(HaveOccurred())
 			})
+		})
+	})
+
+	Describe("CopyBlobsFromDifferentStorageAccount", func() {
+		var differentAzureClient AzureClient
+		var differentContainerName string
+		var differentStorageAccount azure.StorageAccount
+
+		BeforeEach(func() {
+			containerName := azureClient.CreateContainerWithUniqueName("sdk-azure-test-")
+			container = newContainer(containerName)
+
+			differentStorageAccount = azure.StorageAccount{
+				Name: MustHaveEnv("AZURE_DIFFERENT_STORAGE_ACCOUNT"),
+				Key:  MustHaveEnv("AZURE_DIFFERENT_STORAGE_KEY"),
+			}
+			differentAzureClient = NewAzureClient(MustHaveEnv("AZURE_DIFFERENT_STORAGE_ACCOUNT"), MustHaveEnv("AZURE_DIFFERENT_STORAGE_KEY"))
+			differentContainerName = differentAzureClient.CreateContainerWithUniqueName("sdk-azure-test-")
+		})
+
+		AfterEach(func() {
+			azureClient.DeleteContainer(container.Name())
+			differentAzureClient.DeleteContainer(differentContainerName)
+		})
+
+		It("copies the blob to the destination container", func() {
+			differentAzureClient.WriteFileInContainer(differentContainerName, "a_file", "TEST_BLOB_1_OLD")
+			eTag1 = differentAzureClient.WriteFileInContainer(differentContainerName, "a_file", "TEST_BLOB_1")
+			differentAzureClient.WriteFileInContainer(differentContainerName, "a_file", "TEST_BLOB_1_NEW")
+
+			err := container.CopyBlobsFromDifferentStorageAccount(differentStorageAccount, differentContainerName, []azure.BlobId{{Name: "a_file", ETag: eTag1}})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(azureClient.ReadFileFromContainer(container.Name(), "a_file")).To(Equal("TEST_BLOB_1"))
 		})
 	})
 })

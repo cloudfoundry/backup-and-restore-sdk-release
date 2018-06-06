@@ -31,7 +31,7 @@ var _ = Describe("Restorer", func() {
 		restorer = azure.NewRestorer(map[string]azure.Container{
 			"first":  firstContainer,
 			"second": secondContainer,
-		})
+		}, map[string]azure.StorageAccount{})
 	})
 
 	Describe("Restore", func() {
@@ -141,6 +141,42 @@ var _ = Describe("Restorer", func() {
 					}})
 
 				Expect(err).To(MatchError("ooops"))
+			})
+		})
+
+		Context("when the destination container belongs to a different storage account", func() {
+			It("performs the copy using the specified storage account", func() {
+				sourceStorageAccount := azure.StorageAccount{
+					Name: "source-storage-account",
+					Key:  "source-storage-key",
+				}
+
+				restorer = azure.NewRestorer(map[string]azure.Container{
+					"container": firstContainer,
+				}, map[string]azure.StorageAccount{
+					"container": sourceStorageAccount,
+				})
+
+				blobs := []azure.BlobId{
+					{Name: "file_1_a", ETag: "1A"},
+					{Name: "file_1_b", ETag: "1B"},
+				}
+
+				err := restorer.Restore(map[string]azure.ContainerBackup{
+					"container": {
+						Name:  "source-container-name",
+						Blobs: blobs,
+					},
+				})
+
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(firstContainer.CopyBlobsFromDifferentStorageAccountCallCount()).To(Equal(1))
+
+				actualStorageAccount, actualContainerName, actualBlobsToCopy := firstContainer.CopyBlobsFromDifferentStorageAccountArgsForCall(0)
+				Expect(actualStorageAccount).To(Equal(sourceStorageAccount))
+				Expect(actualContainerName).To(Equal("source-container-name"))
+				Expect(actualBlobsToCopy).To(Equal(blobs))
 			})
 		})
 	})
