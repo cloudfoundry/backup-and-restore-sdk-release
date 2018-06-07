@@ -14,8 +14,10 @@ func (c ContainerBuilder) Containers() (map[string]Container, error) {
 	for containerId, containerConfig := range c.config {
 		container, err := NewSDKContainer(
 			containerConfig.Name,
-			containerConfig.StorageAccount,
-			containerConfig.StorageKey,
+			StorageAccount{
+				Name: containerConfig.StorageAccount,
+				Key:  containerConfig.StorageKey,
+			},
 			containerConfig.Environment,
 		)
 		if err != nil {

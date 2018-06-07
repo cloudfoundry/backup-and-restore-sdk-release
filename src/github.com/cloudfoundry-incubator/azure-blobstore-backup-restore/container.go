@@ -30,8 +30,8 @@ type SDKContainer struct {
 	environment Environment
 }
 
-func NewSDKContainer(name, storageAccount, storageKey string, environment Environment) (container SDKContainer, err error) {
-	credential, err := buildCredential(storageAccount, storageKey)
+func NewSDKContainer(name string, storageAccount StorageAccount, environment Environment) (container SDKContainer, err error) {
+	credential, err := buildCredential(storageAccount)
 	if err != nil {
 		return SDKContainer{}, err
 	}
@@ -41,9 +41,9 @@ func NewSDKContainer(name, storageAccount, storageKey string, environment Enviro
 		return SDKContainer{}, err
 	}
 
-	azureURL, err := url.Parse(fmt.Sprintf("https://%s.blob.%s", storageAccount, suffix))
+	azureURL, err := url.Parse(fmt.Sprintf("https://%s.blob.%s", storageAccount.Name, suffix))
 	if err != nil {
-		return SDKContainer{}, fmt.Errorf("invalid account name: '%s'", storageAccount)
+		return SDKContainer{}, fmt.Errorf("invalid account name: '%s'", storageAccount.Name)
 	}
 
 	service := azblob.NewServiceURL(*azureURL, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
@@ -175,7 +175,7 @@ func (c SDKContainer) buildSASQueryString(containerName string, storageAccount S
 		ContainerName: containerName,
 	}
 
-	sourceCredential, err := buildCredential(storageAccount.Name, storageAccount.Key)
+	sourceCredential, err := buildCredential(storageAccount)
 	if err != nil {
 		return "", err
 	}
@@ -247,13 +247,13 @@ func (c SDKContainer) ListBlobs() ([]BlobId, error) {
 	return blobs, nil
 }
 
-func buildCredential(storageAccount, storageKey string) (*azblob.SharedKeyCredential, error) {
-	_, err := base64.StdEncoding.DecodeString(storageKey)
+func buildCredential(storageAccount StorageAccount) (*azblob.SharedKeyCredential, error) {
+	_, err := base64.StdEncoding.DecodeString(storageAccount.Key)
 	if err != nil {
 		return nil, fmt.Errorf("invalid storage key: '%s'", err)
 	}
 
-	return azblob.NewSharedKeyCredential(storageAccount, storageKey), nil
+	return azblob.NewSharedKeyCredential(storageAccount.Name, storageAccount.Key), nil
 }
 
 func formatErrors(contextString string, errors []error) error {
