@@ -8,6 +8,15 @@ import (
 )
 
 type FakeBucketPair struct {
+	CheckValidityStub        func() error
+	checkValidityMutex       sync.RWMutex
+	checkValidityArgsForCall []struct{}
+	checkValidityReturns     struct {
+		result1 error
+	}
+	checkValidityReturnsOnCall map[int]struct {
+		result1 error
+	}
 	BackupStub        func(backupLocation string) (unversioned.BackupBucketAddress, error)
 	backupMutex       sync.RWMutex
 	backupArgsForCall []struct {
@@ -34,6 +43,46 @@ type FakeBucketPair struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *FakeBucketPair) CheckValidity() error {
+	fake.checkValidityMutex.Lock()
+	ret, specificReturn := fake.checkValidityReturnsOnCall[len(fake.checkValidityArgsForCall)]
+	fake.checkValidityArgsForCall = append(fake.checkValidityArgsForCall, struct{}{})
+	fake.recordInvocation("CheckValidity", []interface{}{})
+	fake.checkValidityMutex.Unlock()
+	if fake.CheckValidityStub != nil {
+		return fake.CheckValidityStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.checkValidityReturns.result1
+}
+
+func (fake *FakeBucketPair) CheckValidityCallCount() int {
+	fake.checkValidityMutex.RLock()
+	defer fake.checkValidityMutex.RUnlock()
+	return len(fake.checkValidityArgsForCall)
+}
+
+func (fake *FakeBucketPair) CheckValidityReturns(result1 error) {
+	fake.CheckValidityStub = nil
+	fake.checkValidityReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBucketPair) CheckValidityReturnsOnCall(i int, result1 error) {
+	fake.CheckValidityStub = nil
+	if fake.checkValidityReturnsOnCall == nil {
+		fake.checkValidityReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.checkValidityReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeBucketPair) Backup(backupLocation string) (unversioned.BackupBucketAddress, error) {
@@ -138,6 +187,8 @@ func (fake *FakeBucketPair) RestoreReturnsOnCall(i int, result1 error) {
 func (fake *FakeBucketPair) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.checkValidityMutex.RLock()
+	defer fake.checkValidityMutex.RUnlock()
 	fake.backupMutex.RLock()
 	defer fake.backupMutex.RUnlock()
 	fake.restoreMutex.RLock()

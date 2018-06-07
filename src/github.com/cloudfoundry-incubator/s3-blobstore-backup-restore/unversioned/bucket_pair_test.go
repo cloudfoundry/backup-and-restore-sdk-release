@@ -204,4 +204,18 @@ var _ = Describe("BucketPair", func() {
 			})
 		})
 	})
+
+	Describe("CheckValidity", func() {
+		Context("when the live bucket and the backup bucket are not the same", func() {
+			It("returns nil", func() {
+				Expect(unversioned.NewS3BucketPair(liveBucket, backupBucket, nil).CheckValidity()).To(BeNil())
+			})
+		})
+
+		Context("when the live bucket and the backup bucket are the same", func() {
+			It("returns an error", func() {
+				Expect(unversioned.NewS3BucketPair(liveBucket, liveBucket, nil).CheckValidity()).To(MatchError("live bucket and backup bucket cannot be the same"))
+			})
+		})
+	})
 })

@@ -3,6 +3,8 @@ package unversioned_test
 import (
 	"fmt"
 
+	"errors"
+
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/unversioned"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/unversioned/fakes"
 	. "github.com/onsi/ginkgo"
@@ -71,13 +73,29 @@ var _ = Describe("Backuper", func() {
 		}))
 	})
 
+	Context("when any of the BucketPairs is not valid", func() {
+		BeforeEach(func() {
+			buildpacksBucketPair.CheckValidityReturns(errors.New("BUCKET PAIR ERROR"))
+		})
+
+		It("exits gracefully", func() {
+			By("returning an error", func() {
+				Expect(err).To(MatchError("failed to backup bucket 'buildpacks': BUCKET PAIR ERROR"))
+			})
+
+			By("not saving an artifact", func() {
+				Expect(artifact.SaveCallCount()).To(Equal(0))
+			})
+		})
+	})
+
 	Context("when any of the BucketPairs fails to backup", func() {
 		BeforeEach(func() {
 			buildpacksBucketPair.BackupReturns(unversioned.BackupBucketAddress{}, fmt.Errorf("BACKUP ERROR"))
 		})
 
 		It("exits gracefully", func() {
-			By("throwing an error", func() {
+			By("returning an error", func() {
 				Expect(err).To(MatchError("BACKUP ERROR"))
 			})
 

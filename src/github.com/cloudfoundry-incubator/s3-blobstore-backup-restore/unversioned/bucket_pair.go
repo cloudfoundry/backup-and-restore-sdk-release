@@ -5,12 +5,15 @@ import (
 
 	"strings"
 
+	"errors"
+
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/execution"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
 )
 
 //go:generate counterfeiter -o fakes/fake_bucket_pair.go . BucketPair
 type BucketPair interface {
+	CheckValidity() error
 	Backup(backupLocation string) (BackupBucketAddress, error)
 	Restore(backupLocation string) error
 }
@@ -73,6 +76,14 @@ func (p S3BucketPair) Restore(backupLocation string) error {
 			fmt.Sprintf("failed to backup bucket %s", p.liveBucket.Name()),
 			errs,
 		)
+	}
+
+	return nil
+}
+
+func (p S3BucketPair) CheckValidity() error {
+	if p.liveBucket.Name() == p.backupBucket.Name() {
+		return errors.New("live bucket and backup bucket cannot be the same")
 	}
 
 	return nil

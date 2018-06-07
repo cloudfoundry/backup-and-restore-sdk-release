@@ -1,5 +1,7 @@
 package unversioned
 
+import "fmt"
+
 //go:generate counterfeiter -o fakes/fake_clock.go . Clock
 type Clock interface {
 	Now() string
@@ -24,6 +26,11 @@ func NewBackuper(
 }
 
 func (b Backuper) Run() error {
+	err := b.checkPairsValidity()
+	if err != nil {
+		return err
+	}
+
 	timestamp := b.clock.Now()
 	addresses := map[string]BackupBucketAddress{}
 	for id, pair := range b.bucketPairs {
@@ -34,4 +41,14 @@ func (b Backuper) Run() error {
 		addresses[id] = address
 	}
 	return b.destinationArtifact.Save(addresses)
+}
+
+func (b Backuper) checkPairsValidity() error {
+	for bucketId, bucketPair := range b.bucketPairs {
+		err := bucketPair.CheckValidity()
+		if err != nil {
+			return fmt.Errorf("failed to backup bucket '%s': %s", bucketId, err.Error())
+		}
+	}
+	return nil
 }
