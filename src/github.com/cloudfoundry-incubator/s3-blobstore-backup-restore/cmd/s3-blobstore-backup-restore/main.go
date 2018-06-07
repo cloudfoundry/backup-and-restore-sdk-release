@@ -61,7 +61,7 @@ func main() {
 			exitWithError("Failed to parse config: %s", err.Error())
 		}
 
-		buckets, err := makeBucketPairs(bucketsConfig)
+		bucketPairs, err := makeBucketPairs(bucketsConfig)
 		if err != nil {
 			exitWithError("Failed to establish session: %s", err.Error())
 		}
@@ -69,9 +69,9 @@ func main() {
 		artifact := unversioned.NewFileArtifact(commandFlags.ArtifactFilePath)
 
 		if commandFlags.IsRestore {
-			runner = unversioned.NewRestorer(buckets, artifact)
+			runner = unversioned.NewRestorer(bucketPairs, artifact)
 		} else {
-			runner = unversioned.NewBackuper(buckets, artifact, clock{})
+			runner = unversioned.NewBackuper(bucketPairs, artifact, clock{})
 		}
 	}
 
