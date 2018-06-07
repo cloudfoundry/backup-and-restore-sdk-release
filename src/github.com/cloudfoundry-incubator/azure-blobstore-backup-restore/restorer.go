@@ -35,7 +35,7 @@ func (r Restorer) Restore(backups map[string]ContainerBackup) error {
 		if hasRestoreFromStorageAccount {
 			err = destinationContainer.CopyBlobsFromDifferentStorageAccount(restoreFromStorageAccount, sourceContainerBackup.Name, sourceContainerBackup.Blobs)
 		} else {
-			err = destinationContainer.CopyBlobsFrom(sourceContainerBackup.Name, sourceContainerBackup.Blobs)
+			err = destinationContainer.CopyBlobsFromSameStorageAccount(sourceContainerBackup.Name, sourceContainerBackup.Blobs)
 		}
 
 		if err != nil {

@@ -59,15 +59,15 @@ var _ = Describe("Restorer", func() {
 
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(firstContainer.CopyBlobsFromCallCount()).To(Equal(1))
+				Expect(firstContainer.CopyBlobsFromSameStorageAccountCallCount()).To(Equal(1))
 
-				actualContainerName, actualBlobsToCopy := firstContainer.CopyBlobsFromArgsForCall(0)
+				actualContainerName, actualBlobsToCopy := firstContainer.CopyBlobsFromSameStorageAccountArgsForCall(0)
 				Expect(actualContainerName).To(Equal(firstContainerName))
 				Expect(actualBlobsToCopy).To(Equal(firstContainerBlobs))
 
-				Expect(secondContainer.CopyBlobsFromCallCount()).To(Equal(1))
+				Expect(secondContainer.CopyBlobsFromSameStorageAccountCallCount()).To(Equal(1))
 
-				actualContainerName, actualBlobsToCopy = secondContainer.CopyBlobsFromArgsForCall(0)
+				actualContainerName, actualBlobsToCopy = secondContainer.CopyBlobsFromSameStorageAccountArgsForCall(0)
 				Expect(actualContainerName).To(Equal(secondContainerName))
 				Expect(actualBlobsToCopy).To(Equal(secondContainerBlobs))
 			})
@@ -75,7 +75,7 @@ var _ = Describe("Restorer", func() {
 
 		Context("when copying one of the containers fails", func() {
 			It("returns the error", func() {
-				secondContainer.CopyBlobsFromReturns(errors.New("ooops"))
+				secondContainer.CopyBlobsFromSameStorageAccountReturns(errors.New("ooops"))
 
 				err := restorer.Restore(map[string]azure.ContainerBackup{
 					"first": {
@@ -126,7 +126,7 @@ var _ = Describe("Restorer", func() {
 
 				Expect(err).To(MatchError("soft delete is not enabled on the given storage account"))
 
-				Expect(firstContainer.CopyBlobsFromCallCount()).To(BeZero())
+				Expect(firstContainer.CopyBlobsFromSameStorageAccountCallCount()).To(BeZero())
 			})
 		})
 

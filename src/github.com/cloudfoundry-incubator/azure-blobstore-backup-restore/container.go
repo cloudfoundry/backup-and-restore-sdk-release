@@ -20,7 +20,7 @@ type Container interface {
 	Name() string
 	SoftDeleteEnabled() (bool, error)
 	ListBlobs() ([]BlobId, error)
-	CopyBlobsFrom(containerName string, blobIds []BlobId) error
+	CopyBlobsFromSameStorageAccount(containerName string, blobIds []BlobId) error
 	CopyBlobsFromDifferentStorageAccount(storageAccount StorageAccount, containerName string, blobIds []BlobId) error
 }
 
@@ -58,7 +58,7 @@ func (c SDKContainer) Name() string {
 	return c.name
 }
 
-func (c SDKContainer) CopyBlobsFrom(sourceContainerName string, blobIds []BlobId) error {
+func (c SDKContainer) CopyBlobsFromSameStorageAccount(sourceContainerName string, blobIds []BlobId) error {
 	sourceContainerURL := c.service.NewContainerURL(sourceContainerName)
 
 	return c.copyBlobs(sourceContainerName, sourceContainerURL, blobIds)
@@ -121,6 +121,48 @@ func (c SDKContainer) copyBlobs(sourceContainerName string, sourceContainerURL a
 	return nil
 }
 
+func (c SDKContainer) copyBlob(sourceContainerName string, sourceContainerURL azblob.ContainerURL, blob azblob.Blob) error {
+	ctx := context.Background()
+
+	sourceBlobURL := sourceContainerURL.NewBlobURL(blob.Name)
+	destinationContainerURL := c.service.NewContainerURL(c.name)
+	destinationBlobURL := destinationContainerURL.NewBlobURL(blob.Name)
+
+	_, err := sourceBlobURL.Undelete(ctx)
+	if err != nil {
+		return err
+	}
+
+	response, err := destinationBlobURL.StartCopyFromURL(
+		ctx,
+		sourceBlobURL.WithSnapshot(blob.Snapshot).URL(),
+		azblob.Metadata{},
+		azblob.BlobAccessConditions{},
+		azblob.BlobAccessConditions{},
+	)
+	if err != nil {
+		return err
+	}
+
+	copyStatus := response.CopyStatus()
+
+	for copyStatus == azblob.CopyStatusPending {
+		time.Sleep(time.Second * 2)
+		getMetadata, err := destinationBlobURL.GetProperties(ctx, azblob.BlobAccessConditions{})
+		if err != nil {
+			return err
+		}
+
+		copyStatus = getMetadata.CopyStatus()
+	}
+
+	if copyStatus != azblob.CopyStatusSuccess {
+		return fmt.Errorf("copy of blob '%s' from container '%s' to container '%s' failed with status '%s'", blob.Name, sourceContainerName, c.Name(), copyStatus)
+	}
+
+	return nil
+}
+
 func (c SDKContainer) buildSASQueryString(containerName string, storageAccount StorageAccount) (string, error) {
 	sasSignatureValues := azblob.BlobSASSignatureValues{
 		Protocol:   azblob.SASProtocolHTTPS,
@@ -170,48 +212,6 @@ func (c SDKContainer) fetchBlobs(sourceContainerURL azblob.ContainerURL) (map[Bl
 	}
 
 	return blobs, nil
-}
-
-func (c SDKContainer) copyBlob(sourceContainerName string, sourceContainerURL azblob.ContainerURL, blob azblob.Blob) error {
-	ctx := context.Background()
-
-	sourceBlobURL := sourceContainerURL.NewBlobURL(blob.Name)
-	destinationContainerURL := c.service.NewContainerURL(c.name)
-	destinationBlobURL := destinationContainerURL.NewBlobURL(blob.Name)
-
-	_, err := sourceBlobURL.Undelete(ctx)
-	if err != nil {
-		return err
-	}
-
-	response, err := destinationBlobURL.StartCopyFromURL(
-		ctx,
-		sourceBlobURL.WithSnapshot(blob.Snapshot).URL(),
-		azblob.Metadata{},
-		azblob.BlobAccessConditions{},
-		azblob.BlobAccessConditions{},
-	)
-	if err != nil {
-		return err
-	}
-
-	copyStatus := response.CopyStatus()
-
-	for copyStatus == azblob.CopyStatusPending {
-		time.Sleep(time.Second * 2)
-		getMetadata, err := destinationBlobURL.GetProperties(ctx, azblob.BlobAccessConditions{})
-		if err != nil {
-			return err
-		}
-
-		copyStatus = getMetadata.CopyStatus()
-	}
-
-	if copyStatus != azblob.CopyStatusSuccess {
-		return fmt.Errorf("copy of blob '%s' from container '%s' to container '%s' failed with status '%s'", blob.Name, sourceContainerName, c.Name(), copyStatus)
-	}
-
-	return nil
 }
 
 func (c SDKContainer) SoftDeleteEnabled() (bool, error) {

@@ -176,7 +176,7 @@ var _ = Describe("Container", func() {
 		})
 	})
 
-	Describe("CopyBlobsFrom", func() {
+	Describe("CopyBlobsFromSameStorageAccount", func() {
 		BeforeEach(func() {
 			containerName := azureClient.CreateContainerWithUniqueName("sdk-azure-test-")
 			container = newContainer(containerName)
@@ -193,7 +193,7 @@ var _ = Describe("Container", func() {
 				eTag1 = azureClient.WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
 				azureClient.WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_NEW")
 
-				err := container.CopyBlobsFrom(container.Name(), []azure.BlobId{{Name: fileName1, ETag: eTag1}})
+				err := container.CopyBlobsFromSameStorageAccount(container.Name(), []azure.BlobId{{Name: fileName1, ETag: eTag1}})
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(azureClient.ReadFileFromContainer(container.Name(), fileName1)).To(Equal("TEST_BLOB_1"))
@@ -205,7 +205,7 @@ var _ = Describe("Container", func() {
 				eTag1 = azureClient.WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
 				azureClient.DeleteFileInContainer(container.Name(), fileName1)
 
-				err := container.CopyBlobsFrom(container.Name(), []azure.BlobId{{Name: fileName1, ETag: eTag1}})
+				err := container.CopyBlobsFromSameStorageAccount(container.Name(), []azure.BlobId{{Name: fileName1, ETag: eTag1}})
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(azureClient.ReadFileFromContainer(container.Name(), fileName1)).To(Equal("TEST_BLOB_1"))
@@ -229,7 +229,7 @@ var _ = Describe("Container", func() {
 				eTag1 = azureClient.WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1")
 				azureClient.WriteFileInContainer(container.Name(), fileName1, "TEST_BLOB_1_NEW")
 
-				err := differentContainer.CopyBlobsFrom(container.Name(), []azure.BlobId{{Name: fileName1, ETag: eTag1}})
+				err := differentContainer.CopyBlobsFromSameStorageAccount(container.Name(), []azure.BlobId{{Name: fileName1, ETag: eTag1}})
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(azureClient.ReadFileFromContainer(differentContainer.Name(), fileName1)).To(Equal("TEST_BLOB_1"))
@@ -238,7 +238,7 @@ var _ = Describe("Container", func() {
 
 		Context("when there is no matching snapshot", func() {
 			It("returns an error", func() {
-				err := container.CopyBlobsFrom(container.Name(), []azure.BlobId{{Name: fileName1, ETag: "wrong_eTag"}})
+				err := container.CopyBlobsFromSameStorageAccount(container.Name(), []azure.BlobId{{Name: fileName1, ETag: "wrong_eTag"}})
 
 				Expect(err).To(MatchError(fmt.Sprintf("no \"%s\" blob with \"%s\" ETag found in container \"%s\"", fileName1, "wrong_eTag", container.Name())))
 			})
@@ -246,7 +246,7 @@ var _ = Describe("Container", func() {
 
 		Context("when the container is not reachable", func() {
 			It("returns an error", func() {
-				err := container.CopyBlobsFrom("wrong_container", []azure.BlobId{{}})
+				err := container.CopyBlobsFromSameStorageAccount("wrong_container", []azure.BlobId{{}})
 
 				Expect(err).To(HaveOccurred())
 			})
