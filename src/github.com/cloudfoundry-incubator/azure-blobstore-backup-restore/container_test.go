@@ -291,6 +291,24 @@ var _ = Describe("Container", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(azureClient.ReadFileFromContainer(container.Name(), "a_file")).To(Equal("TEST_BLOB_1"))
 		})
+
+		Context("when the source account credentials are invalid", func() {
+			Context("when the account name is invalid", func() {
+				It("returns an error", func() {
+					err = container.CopyBlobsFromDifferentStorageAccount(azure.StorageAccount{Name: "\n"}, "", []azure.BlobId{})
+
+					Expect(err).To(MatchError("invalid account name: '\n'"))
+				})
+			})
+
+			Context("when the key is not valid base64", func() {
+				It("returns an error", func() {
+					err := container.CopyBlobsFromDifferentStorageAccount(azure.StorageAccount{Key: "#"}, "", []azure.BlobId{})
+
+					Expect(err).To(MatchError(ContainSubstring("invalid storage key: '")))
+				})
+			})
+		})
 	})
 })
 
