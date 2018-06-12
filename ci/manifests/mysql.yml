@@ -23,8 +23,8 @@ releases:
   url: https://bosh.io/d/github.com/cloudfoundry/cf-mysql-release
 
 stemcells:
-- alias: trusty
-  os: ubuntu-trusty
+- alias: xenial
+  os: ubuntu-xenial
   version: latest
 
 instance_groups:
@@ -32,7 +32,7 @@ instance_groups:
   instances: 1
   vm_type: small
   persistent_disk_type: fifty
-  stemcell: trusty
+  stemcell: xenial
   update:
     serial: true
   networks:

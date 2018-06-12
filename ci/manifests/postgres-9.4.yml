@@ -26,8 +26,8 @@ releases:
   url: ((backup-and-restore-sdk-release-url))
 
 stemcells:
-- alias: trusty
-  os: ubuntu-trusty
+- alias: xenial
+  os: ubuntu-xenial
   version: latest
 
 instance_groups:
@@ -35,7 +35,7 @@ instance_groups:
   instances: 1
   vm_type: small
   persistent_disk_type: fifty
-  stemcell: trusty
+  stemcell: xenial
   networks:
   - name: ((network_name))
     static_ips: [((db_host))]

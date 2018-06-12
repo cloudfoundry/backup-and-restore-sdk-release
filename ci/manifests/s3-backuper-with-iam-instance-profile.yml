@@ -22,8 +22,8 @@ releases:
   version: latest
 
 stemcells:
-- alias: trusty
-  os: ubuntu-trusty
+- alias: xenial
+  os: ubuntu-xenial
   version: latest
 
 instance_groups:
@@ -33,7 +33,7 @@ instance_groups:
   vm_extensions:
   - s3-backup-iam-instance-profile
   persistent_disk_type: 1GB
-  stemcell: trusty
+  stemcell: xenial
   update:
     serial: true
   networks:
