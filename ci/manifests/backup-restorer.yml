@@ -7,8 +7,8 @@ releases:
   url: ((backup-and-restore-sdk-release-url))
 
 stemcells:
-- alias: xenial
-  os: ubuntu-xenial
+- alias: trusty
+  os: ubuntu-trusty
   version: latest
 
 instance_groups:
@@ -16,7 +16,7 @@ instance_groups:
   instances: 1
   vm_type: small
   persistent_disk_type: fifty
-  stemcell: xenial
+  stemcell: trusty
   networks:
   - name: concourse
   jobs:
