@@ -15,12 +15,12 @@
 # limitations under the License.
 
 ---
-name: ((deployment-name))
+name: "((deployment-name))"
 
 releases:
 - name: backup-and-restore-sdk
-  version: ((backup-and-restore-sdk-release-version))
-  url: ((backup-and-restore-sdk-release-url))
+  version: "((backup-and-restore-sdk-release-version))"
+  url: "((backup-and-restore-sdk-release-url))"
 - name: minio
   version: latest
   url: https://bosh.io/d/github.com/minio/minio-boshrelease
@@ -47,10 +47,10 @@ instance_groups:
       enabled: true
       buckets:
         bucket_identifier:
-          name: ((s3-bucket-name))
-          region: ((s3-region))
-          aws_access_key_id: ((aws-access-key-id))
-          aws_secret_access_key: ((aws-secret-access-key))
+          name: "((s3-bucket-name))"
+          region: "((s3-region))"
+          aws_access_key_id: "((aws-access-key-id))"
+          aws_secret_access_key: "((aws-secret-access-key))"
   azs: [z1]
 - name: clone-backuper
   instances: 1
@@ -68,10 +68,10 @@ instance_groups:
       enabled: true
       buckets:
         bucket_identifier:
-          name: ((s3-cloned-bucket-name))
-          region: ((s3-cloned-bucket-region))
-          aws_access_key_id: ((aws-access-key-id))
-          aws_secret_access_key: ((aws-secret-access-key))
+          name: "((s3-cloned-bucket-name))"
+          region: "((s3-cloned-bucket-region))"
+          aws_access_key_id: "((aws-access-key-id))"
+          aws_secret_access_key: "((aws-secret-access-key))"
   azs: [z1]
 - name: versioned-backuper-unversioned-bucket
   instances: 1
@@ -89,10 +89,10 @@ instance_groups:
       enabled: true
       buckets:
         bucket_identifier:
-          name: ((s3-unversioned-bucket-name-for-versioned-backuper))
-          region: ((s3-unversioned-bucket-region-for-versioned-backuper))
-          aws_access_key_id: ((aws-access-key-id))
-          aws_secret_access_key: ((aws-secret-access-key))
+          name: "((s3-unversioned-bucket-name-for-versioned-backuper))"
+          region: "((s3-unversioned-bucket-region-for-versioned-backuper))"
+          aws_access_key_id: "((aws-access-key-id))"
+          aws_secret_access_key: "((aws-secret-access-key))"
   azs: [z1]
 - name: unversioned-custom-ca-cert-backuper
   instances: 1
@@ -113,8 +113,8 @@ instance_groups:
           endpoint: https://10.245.1.7:9000
           name: systest-bucket
           region: us-east-1
-          aws_access_key_id: ((minio-access-key))
-          aws_secret_access_key: ((minio-secret-key))
+          aws_access_key_id: "((minio-access-key))"
+          aws_secret_access_key: "((minio-secret-key))"
   azs: [z1]
 - name: minio
   azs: [z1]
@@ -129,12 +129,12 @@ instance_groups:
   - name: minio-server
     release: minio
     properties:
-      ca_cert: ((minio-server-cert))
-      server_cert: ((minio-server-cert))
-      server_key: ((minio-server-key))
+      ca_cert: "((minio_server_cert))"
+      server_cert: "((minio_server_cert))"
+      server_key: "((minio_server_key))"
       credential:
-        accesskey: ((minio-access-key))
-        secretkey: ((minio-secret-key))
+        accesskey: "((minio-access-key))"
+        secretkey: "((minio-secret-key))"
       port: 9000
 - name: s3-unversioned-backuper
   azs: [z1]
@@ -153,13 +153,13 @@ instance_groups:
       enabled: true
       buckets:
         my_bucket:
-          name: ((s3-unversioned-bucket-name))
-          region: ((s3-unversioned-bucket-region))
-          aws_access_key_id: ((aws-access-key-id))
-          aws_secret_access_key: ((aws-secret-access-key))
+          name: "((s3-unversioned-bucket-name))"
+          region: "((s3-unversioned-bucket-region))"
+          aws_access_key_id: "((aws-access-key-id))"
+          aws_secret_access_key: "((aws-secret-access-key))"
           backup:
-            name: ((s3-unversioned-backup-bucket-name))
-            region: ((s3-unversioned-backup-bucket-region))
+            name: "((s3-unversioned-backup-bucket-name))"
+            region: "((s3-unversioned-backup-bucket-region))"
 
 update:
   canaries: 1
