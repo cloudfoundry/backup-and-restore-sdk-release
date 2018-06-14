@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cloudfoundry-incubator/azure-blobstore-backup-restore"
 	. "github.com/cloudfoundry-incubator/azure-blobstore-backup-restore/system_tests/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -19,9 +20,18 @@ var _ = Describe("Azure backup and restore", func() {
 	var localArtifactDirectory string
 	var fileName1, fileName2, fileName3 string
 	var containerName string
+	var environment azure.Environment
+	var endpointSuffix string
 
 	BeforeEach(func() {
-		azureClient = NewAzureClient(MustHaveEnv("AZURE_STORAGE_ACCOUNT"), MustHaveEnv("AZURE_STORAGE_KEY"))
+		environment = azure.DefaultEnvironment
+		endpointSuffix, _ = environment.Suffix()
+
+		azureClient = NewAzureClient(
+			MustHaveEnv("AZURE_STORAGE_ACCOUNT"),
+			MustHaveEnv("AZURE_STORAGE_KEY"),
+			endpointSuffix,
+		)
 
 		instance = JobInstance{
 			Deployment:    MustHaveEnv("BOSH_DEPLOYMENT"),
@@ -124,7 +134,11 @@ var _ = Describe("Azure backup and restore", func() {
 		var differentContainerName string
 
 		BeforeEach(func() {
-			differentAzureClient = NewAzureClient(MustHaveEnv("AZURE_DIFFERENT_STORAGE_ACCOUNT"), MustHaveEnv("AZURE_DIFFERENT_STORAGE_KEY"))
+			differentAzureClient = NewAzureClient(
+				MustHaveEnv("AZURE_DIFFERENT_STORAGE_ACCOUNT"),
+				MustHaveEnv("AZURE_DIFFERENT_STORAGE_KEY"),
+				endpointSuffix,
+			)
 
 			restoreInstance = JobInstance{
 				Deployment:    MustHaveEnv("BOSH_DEPLOYMENT"),

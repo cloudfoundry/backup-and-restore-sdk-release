@@ -12,16 +12,23 @@ import (
 	"strconv"
 	"time"
 
+	"fmt"
+
 	. "github.com/onsi/gomega"
 )
 
 type AzureClient struct {
 	storageAccount string
 	storageKey     string
+	endpointSuffix string
 }
 
-func NewAzureClient(storageAccount, storageKey string) AzureClient {
-	return AzureClient{storageAccount: storageAccount, storageKey: storageKey}
+func NewAzureClient(storageAccount, storageKey, endpointSuffix string) AzureClient {
+	return AzureClient{
+		storageAccount: storageAccount,
+		storageKey:     storageKey,
+		endpointSuffix: endpointSuffix,
+	}
 }
 
 func (c AzureClient) DeleteContainer(name string) {
@@ -105,12 +112,18 @@ func (c AzureClient) runAzureCommandSuccessfully(args ...string) *bytes.Buffer {
 	azureConfigDir, err := ioutil.TempDir("", "azure_")
 	Expect(err).NotTo(HaveOccurred())
 
+	connectionString := fmt.Sprintf(
+		"DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%s;EndpointSuffix=%s;",
+		c.storageAccount,
+		c.storageKey,
+		c.endpointSuffix,
+	)
+
 	azCmd := exec.Command("az", args...)
 	azCmd.Stdout = outputBuffer
 	azCmd.Stderr = errorBuffer
 	azCmd.Env = append(azCmd.Env,
-		"AZURE_STORAGE_ACCOUNT="+c.storageAccount,
-		"AZURE_STORAGE_KEY="+c.storageKey,
+		"AZURE_STORAGE_CONNECTION_STRING="+connectionString,
 		"AZURE_CONFIG_DIR="+azureConfigDir,
 	)
 

@@ -18,15 +18,23 @@ var _ = Describe("Container", func() {
 	var err error
 	var eTag1, eTag2, eTag3 string
 	var fileName1, fileName2, fileName3 string
+	var environment azure.Environment
+	var endpointSuffix string
 
 	BeforeEach(func() {
-		azureClient = NewAzureClient(MustHaveEnv("AZURE_STORAGE_ACCOUNT"), MustHaveEnv("AZURE_STORAGE_KEY"))
+		environment = azure.DefaultEnvironment
+		endpointSuffix, _ = environment.Suffix()
+		azureClient = NewAzureClient(
+			MustHaveEnv("AZURE_STORAGE_ACCOUNT"),
+			MustHaveEnv("AZURE_STORAGE_KEY"),
+			endpointSuffix,
+		)
 	})
 
 	Describe("NewSDKContainer", func() {
 		Context("when the account name is invalid", func() {
 			It("returns an error", func() {
-				container, err = azure.NewSDKContainer("", azure.StorageAccount{Name: "\n"}, azure.DefaultEnvironment)
+				container, err = azure.NewSDKContainer("", azure.StorageAccount{Name: "\n"}, environment)
 
 				Expect(err).To(MatchError("invalid account name: '\n'"))
 				Expect(container).To(Equal(azure.SDKContainer{}))
@@ -35,7 +43,7 @@ var _ = Describe("Container", func() {
 
 		Context("when the account key is not valid base64", func() {
 			It("returns an error", func() {
-				container, err := azure.NewSDKContainer("", azure.StorageAccount{Key: "#"}, azure.DefaultEnvironment)
+				container, err := azure.NewSDKContainer("", azure.StorageAccount{Key: "#"}, environment)
 
 				Expect(err).To(MatchError(ContainSubstring("invalid storage key: '")))
 				Expect(container).To(Equal(azure.SDKContainer{}))
@@ -56,7 +64,7 @@ var _ = Describe("Container", func() {
 		It("returns the container name", func() {
 			name := "container-name"
 
-			container, err = azure.NewSDKContainer(name, azure.StorageAccount{}, azure.DefaultEnvironment)
+			container, err = azure.NewSDKContainer(name, azure.StorageAccount{}, environment)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(container.Name()).To(Equal(name))
@@ -67,7 +75,7 @@ var _ = Describe("Container", func() {
 		Context("when soft delete is enabled on the container's storage service", func() {
 			BeforeEach(func() {
 				containerName := azureClient.CreateContainerWithUniqueName("sdk-azure-test-")
-				container = newContainer(containerName)
+				container = newContainer(containerName, environment)
 			})
 
 			AfterEach(func() {
@@ -90,7 +98,7 @@ var _ = Describe("Container", func() {
 						Name: MustHaveEnv("AZURE_STORAGE_ACCOUNT_NO_SOFT_DELETE"),
 						Key:  MustHaveEnv("AZURE_STORAGE_KEY_NO_SOFT_DELETE"),
 					},
-					azure.DefaultEnvironment,
+					environment,
 				)
 
 				enabled, err := container.SoftDeleteEnabled()
@@ -102,7 +110,7 @@ var _ = Describe("Container", func() {
 
 		Context("when retrieving the storage service properties fails", func() {
 			It("returns an error", func() {
-				container, err = azure.NewSDKContainer("", azure.StorageAccount{}, azure.DefaultEnvironment)
+				container, err = azure.NewSDKContainer("", azure.StorageAccount{}, environment)
 
 				_, err = container.SoftDeleteEnabled()
 
@@ -115,7 +123,7 @@ var _ = Describe("Container", func() {
 		Context("when the container has a few files and snapshots", func() {
 			BeforeEach(func() {
 				containerName := azureClient.CreateContainerWithUniqueName("sdk-azure-test-")
-				container = newContainer(containerName)
+				container = newContainer(containerName, environment)
 
 				fileName1 = "test_file_1_" + strconv.FormatInt(time.Now().Unix(), 10)
 				fileName2 = "test_file_2_" + strconv.FormatInt(time.Now().Unix(), 10)
@@ -153,7 +161,7 @@ var _ = Describe("Container", func() {
 						Name: MustHaveEnv("AZURE_STORAGE_ACCOUNT"),
 						Key:  MustHaveEnv("AZURE_STORAGE_KEY"),
 					},
-					azure.DefaultEnvironment,
+					environment,
 				)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -172,7 +180,7 @@ var _ = Describe("Container", func() {
 						Name: MustHaveEnv("AZURE_STORAGE_ACCOUNT"),
 						Key:  MustHaveEnv("AZURE_STORAGE_KEY"),
 					},
-					azure.DefaultEnvironment,
+					environment,
 				)
 
 				_, err = container.ListBlobs()
@@ -185,7 +193,7 @@ var _ = Describe("Container", func() {
 	Describe("CopyBlobsFromSameStorageAccount", func() {
 		BeforeEach(func() {
 			containerName := azureClient.CreateContainerWithUniqueName("sdk-azure-test-")
-			container = newContainer(containerName)
+			container = newContainer(containerName, environment)
 			fileName1 = "test_file_1_" + strconv.FormatInt(time.Now().Unix(), 10)
 		})
 
@@ -223,7 +231,7 @@ var _ = Describe("Container", func() {
 
 			BeforeEach(func() {
 				containerName := azureClient.CreateContainerWithUniqueName("sdk-azure-test-")
-				differentContainer = newContainer(containerName)
+				differentContainer = newContainer(containerName, environment)
 			})
 
 			AfterEach(func() {
@@ -266,13 +274,17 @@ var _ = Describe("Container", func() {
 
 		BeforeEach(func() {
 			containerName := azureClient.CreateContainerWithUniqueName("sdk-azure-test-")
-			container = newContainer(containerName)
+			container = newContainer(containerName, environment)
 
 			differentStorageAccount = azure.StorageAccount{
 				Name: MustHaveEnv("AZURE_DIFFERENT_STORAGE_ACCOUNT"),
 				Key:  MustHaveEnv("AZURE_DIFFERENT_STORAGE_KEY"),
 			}
-			differentAzureClient = NewAzureClient(MustHaveEnv("AZURE_DIFFERENT_STORAGE_ACCOUNT"), MustHaveEnv("AZURE_DIFFERENT_STORAGE_KEY"))
+			differentAzureClient = NewAzureClient(
+				MustHaveEnv("AZURE_DIFFERENT_STORAGE_ACCOUNT"),
+				MustHaveEnv("AZURE_DIFFERENT_STORAGE_KEY"),
+				endpointSuffix,
+			)
 			differentContainerName = differentAzureClient.CreateContainerWithUniqueName("sdk-azure-test-")
 		})
 
@@ -312,14 +324,14 @@ var _ = Describe("Container", func() {
 	})
 })
 
-func newContainer(containerName string) azure.Container {
+func newContainer(containerName string, environment azure.Environment) azure.Container {
 	container, err := azure.NewSDKContainer(
 		containerName,
 		azure.StorageAccount{
 			Name: MustHaveEnv("AZURE_STORAGE_ACCOUNT"),
 			Key:  MustHaveEnv("AZURE_STORAGE_KEY"),
 		},
-		azure.DefaultEnvironment,
+		environment,
 	)
 	Expect(err).NotTo(HaveOccurred())
 	return container
