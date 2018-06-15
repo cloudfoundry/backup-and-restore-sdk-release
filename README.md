@@ -2,8 +2,8 @@
 
 The Backup and Restore SDK BOSH release is used for two distinct things:
 
-1. [enabling release authors to incorporate database backup & restore functionality in their releases](docs/database-backup-restore.md)
-1. [enabling operators to configure their deployments which use external blobstores to be backed up and restored by](docs/blobstore-backup-restore.md) [BBR](https://github.com/cloudfoundry-incubator/bosh-backup-and-restore)
+1. enabling release authors to incorporate database backup & restore functionality in their releases (See _[Database Backup and Restore](docs/database-backup-restore.md)_)
+1. enabling operators to configure their deployments which use external blobstores to be backed up and restored by [BBR](https://github.com/cloudfoundry-incubator/bosh-backup-and-restore) (See _[Blobstore Backup and Restore](docs/blobstore-backup-restore.md)_)
 
 **Slack**: #bbr on https://slack.cloudfoundry.org
 

@@ -1,10 +1,6 @@
 ## Database Backup and Restore
 
-### Why?
-
-Release authors wanting to write backup and restore scripts frequently need to back up and restore databases (or parts of databases).
-
-Rather than have every team figure out the vagaries of backing up all the different kinds of database supported by CF, we've done it for you. The **Backup and Restore SDK** abstracts away the differences between databases, offering a consistent interface for your backup and restore scripts to use.
+This release enables release authors to write backup and restore scripts that back up and restore databases (or parts of databases). The **Backup and Restore SDK** abstracts away the differences between different databases, offering a consistent interface for backup and restore scripts to use.
 
 Behind the scenes, the SDK parses a configuration file passed to it, which selects the appropriate database backup/restore strategy (e.g. `pg_dump` or `mysql` at the required version) and places the backup artifact in the specified location. For more details on how to implement backup and restore scripts, please refer to our [release author guide](http://docs.cloudfoundry.org/bbr/bbr-devguide.html).
 
