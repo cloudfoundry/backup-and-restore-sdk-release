@@ -59,7 +59,7 @@ properties:
 
 ### S3-Compatible Versioned Blobstores
 
-`s3-versioned-blobstore-backup-restorer` only supports S3-compatible buckets that are versioned and support AWS Signature Version 4. For more details about enabling versioning and retention policy on your blobstore, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html#enable-versioning).
+`s3-versioned-blobstore-backup-restorer` only supports S3-compatible buckets that are versioned and support AWS Signature Version 4. For more details about enabling versioning and retention policy on your blobstore, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html#enable-s3-versioning).
 
 `s3-versioned-blobstore-backup-restorer` backs up blobstores by storing the current version of each blob, not the actual files. Those versions will be set to be the current versions at restore time. This makes backups and restores faster, but also means that **restores only work if the original buckets still exist**. For more information, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html).
 
@@ -95,7 +95,46 @@ properties:
 
 ### Azure Blobstores
 
-The Azure backup-restorer only supports Azure storage containers that have soft delete enabled. To enable soft
+The Azure backup-restorer only supports Azure storage containers that have soft delete enabled.
 
-The Azure storage containers are backuped up by storing the `Etags` of each filename, not the actual files. This makes backups and restores faster, but also means that **restores only work if the original container still exists**. For more information, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html).
+The Azure storage containers are backed up by storing the `Etag`s of each blob, not the actual blobs. This makes backups and restores faster, but also means that **restores only work if the original containers still exist**.
+
+#### Azure storage properties
+
+The `azure-blobstore-backup-restorer` job can be configured using the following properties:
+
+* `enabled` [Boolean]: enables the backup and restore scripts. `false` by default.
+* `containers` [Hash]: a map from container identifiers to their configuration. For each container, you'll need to specify the following properties:
+  * `name` [String]: the container name
+  * `azure_storage_account` [String]: the Azure storage account name for the container
+  * `azure_storage_key` [String]: the Azure storage account key for the container
+  * `environment` [String]: the [sovereign cloud](https://www.microsoft.com/en-us/trustcenter/cloudservices/nationalcloud) environment for the container. Accepted values are:
+    - `AzureCloud` (the global Azure cloud, default)
+    - `AzureChinaCloud`
+    - `AzureUSGovernment`
+    - `AzureGermanCloud`
+  * `restore_from` [Hash]: Optional, only configure when restoring to a destination container that belongs a different azure storage account from the backed up source container.
+    - `azure_storage_account` [String]: the azure storage account name for the source container
+    - `azure_storage_key` [String]: the azure storage account key for the source container
+
+Here are example job properties to configure two Azure storage containers: `destination_container1` and `destination_container2`.
+
+```yaml
+properties:
+  enabled: true
+  containers:
+    destination_container1:
+      name: "((destination_container1_name))"
+      azure_storage_account: "((destination_container1_storage_account_name))"
+      azure_storage_key: "((destination_container1_storage_access_key))"
+      restore_from:
+        azure_storage_account: "((source_container1_storage_account_name))"
+        azure_storage_key: "((source_container1_storage_access_key))"
+    destination_container2:
+      name: "((destination_container2_name))"
+      azure_storage_account: "((destination_container2_storage_account_name))"
+      azure_storage_key: "((destination_container2_storage_access_key))"
+```
+
+
 
