@@ -4,7 +4,7 @@
 name: s3-blobstore-backup-restorer
 
 dependencies:
-- backup-and-restore-release-golang
+- golang-1-linux
 
 files:
 - github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/cmd/s3-blobstore-backup-restore/*.go

@@ -2,10 +2,6 @@ boost/boost_1_59_0.tar.gz:
   size: 83709983
   object_id: 2bb21a57-51e9-471f-660a-edc788238fee
   sha: 5123209db194d66d69a9cfa5af8ff473d5941d97
-go/go1.9.6.linux-amd64.tar.gz:
-  size: 118279574
-  object_id: 9af8bcb8-d3d5-42de-7cb4-79b2877f9a63
-  sha: 012c86a6b555272fe36fb9cdb45082ffc5ea5c7c
 mariadb/mariadb-10.1.30.tar.gz:
   size: 67930015
   object_id: a02b23a9-b5b1-4b84-6f5e-6c930102e6d2

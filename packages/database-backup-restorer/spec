@@ -4,7 +4,7 @@
 name: database-backup-restorer
 
 dependencies:
-- backup-and-restore-release-golang
+- golang-1-linux
 
 files:
 - github.com/cloudfoundry-incubator/database-backup-restore/cmd/database-backup-restore/*.go

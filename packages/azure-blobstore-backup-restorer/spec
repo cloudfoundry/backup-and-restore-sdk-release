@@ -4,7 +4,7 @@
 name: azure-blobstore-backup-restorer
 
 dependencies:
-- backup-and-restore-release-golang
+- golang-1-linux
 
 files:
 - github.com/cloudfoundry-incubator/azure-blobstore-backup-restore/cmd/azure-blobstore-backup-restore/*.go
