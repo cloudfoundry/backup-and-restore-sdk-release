@@ -15,12 +15,12 @@
 # limitations under the License.
 
 set -e
+source /var/vcap/packages/golang-1-linux/bosh/compile.env
 
 mkdir -p ${BOSH_INSTALL_TARGET}/src
 cp -a . ${BOSH_INSTALL_TARGET}/src
 
 export GOPATH=$BOSH_INSTALL_TARGET
-export GOROOT=$(readlink -nf /var/vcap/packages/backup-and-restore-release-golang)
 export PATH=$GOROOT/bin:$PATH
 
 go install github.com/cloudfoundry-incubator/azure-blobstore-backup-restore/cmd/azure-blobstore-backup-restore
