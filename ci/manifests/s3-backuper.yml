@@ -24,6 +24,9 @@ releases:
 - name: minio
   version: latest
   url: https://bosh.io/d/github.com/minio/minio-boshrelease
+- name: os-conf
+  version: latest
+  url: https://bosh.io/d/github.com/cloudfoundry/os-conf-release
 
 stemcells:
 - alias: xenial
@@ -104,6 +107,10 @@ instance_groups:
   networks:
   - name: concourse
   jobs:
+  - name: ca_certs
+    release: os-conf
+    properties:
+      certs: "((minio_server_cert))"
   - name: s3-versioned-blobstore-backup-restorer # temporarily using the versioned job until non-versioned is implemented
     release: backup-and-restore-sdk
     properties:
