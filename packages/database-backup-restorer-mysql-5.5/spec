@@ -20,4 +20,4 @@ name: database-backup-restorer-mysql-5.5
 dependencies: []
 
 files:
-- mysql/mysql-5.5.58.tar.gz
+- mysql/mysql-5.5.60.tar.gz

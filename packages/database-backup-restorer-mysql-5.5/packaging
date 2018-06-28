@@ -17,8 +17,8 @@
 # abort script on any command that exits with a non zero value
 set -e
 
-MYSQL_VERSION=5.5.58
-MY_DIR=$(pwd)
+MYSQL_VERSION=5.5.60
+export MY_DIR=$PWD
 
 tar xzf mysql/mysql-${MYSQL_VERSION}.tar.gz
 (
@@ -29,7 +29,7 @@ tar xzf mysql/mysql-${MYSQL_VERSION}.tar.gz
   cd bld
 
   cmake .. \
-      -DCMAKE_INSTALL_PREFIX=${BOSH_INSTALL_TARGET} \
+      -DCMAKE_INSTALL_PREFIX="${BOSH_INSTALL_TARGET}" \
       -DWITH_SSL=system
 
   set +e
@@ -53,7 +53,7 @@ tar xzf mysql/mysql-${MYSQL_VERSION}.tar.gz
   fi
   tail -n 1000 build.out
 
-  rm -rf ${BOSH_INSTALL_TARGET}/mysql-test/
+  rm -rf "${BOSH_INSTALL_TARGET}/mysql-test/"
 
-  echo -n "${MYSQL_VERSION}-MYSQL" > ${BOSH_INSTALL_TARGET}/VERSION
+  echo -n "${MYSQL_VERSION}-MYSQL" > "${BOSH_INSTALL_TARGET}/VERSION"
 )
