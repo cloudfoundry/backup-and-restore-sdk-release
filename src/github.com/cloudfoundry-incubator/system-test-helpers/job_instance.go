@@ -14,28 +14,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package helpers
+package system_test_helpers
 
 import (
 	"os/exec"
 
-	. "github.com/cloudfoundry-incubator/system-test-helpers"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
 	"github.com/onsi/gomega/gexec"
 
 	"fmt"
+	"io"
+	"time"
 )
 
 type JobInstance struct {
-	Environment string
-	Deployment  string
-	Name        string
-	Index       string
+	Deployment          string
+	Name                string
+	Index               string
+	CommandOutputWriter io.Writer
 }
 
-func (i *JobInstance) Run(command string) *gexec.Session {
+func (i *JobInstance) Run(command string) (*gexec.Session, error) {
 	return i.runBosh(
 		"ssh",
 		"--gw-user="+MustHaveEnv("BOSH_GW_USER"),
@@ -46,14 +44,19 @@ func (i *JobInstance) Run(command string) *gexec.Session {
 	)
 }
 
-func (i *JobInstance) RunAndSucceed(command string) *gexec.Session {
-	session := i.Run(command)
-	Expect(session).To(gexec.Exit(0), string(session.Err.Contents()))
+func (i *JobInstance) RunSuccessfully(command string) error {
+	session, err := i.Run(command)
+	if err != nil {
+		return err
+	}
+	if session.ExitCode() != 0 {
+		return fmt.Errorf("bosh command exited non-zero with code %q\n%s", session.ExitCode(), session.Err.Contents())
+	}
 
-	return session
+	return nil
 }
 
-func (i *JobInstance) Download(remotePath, localPath string) *gexec.Session {
+func (i *JobInstance) Download(remotePath, localPath string) (*gexec.Session, error) {
 	return i.runBosh(
 		"scp",
 		"--gw-user="+MustHaveEnv("BOSH_GW_USER"),
@@ -64,7 +67,7 @@ func (i *JobInstance) Download(remotePath, localPath string) *gexec.Session {
 	)
 }
 
-func (i *JobInstance) Upload(localPath, remotePath string) *gexec.Session {
+func (i *JobInstance) Upload(localPath, remotePath string) (*gexec.Session, error) {
 	return i.runBosh(
 		"scp",
 		"--gw-user="+MustHaveEnv("BOSH_GW_USER"),
@@ -75,10 +78,10 @@ func (i *JobInstance) Upload(localPath, remotePath string) *gexec.Session {
 	)
 }
 
-func (i *JobInstance) runBosh(args ...string) *gexec.Session {
+func (i *JobInstance) runBosh(args ...string) (*gexec.Session, error) {
 	combinedArgs := append([]string{
 		"--non-interactive",
-		"--environment=" + i.Environment,
+		"--environment=" + MustHaveEnv("BOSH_ENVIRONMENT"),
 		"--deployment=" + i.Deployment,
 		"--ca-cert=" + MustHaveEnv("BOSH_CA_CERT"),
 		"--client=" + MustHaveEnv("BOSH_CLIENT"),
@@ -86,10 +89,19 @@ func (i *JobInstance) runBosh(args ...string) *gexec.Session {
 	}, args...)
 	command := exec.Command("bosh-cli", combinedArgs...)
 
-	session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-	Expect(err).ToNot(HaveOccurred())
+	session, err := gexec.Start(command, i.CommandOutputWriter, i.CommandOutputWriter)
+	if err != nil {
+		return session, err
+	}
 
-	Eventually(session).Should(gexec.Exit())
+	return waitOnSessionOrError(session, 15*time.Minute)
+}
 
-	return session
+func waitOnSessionOrError(session *gexec.Session, duration time.Duration) (*gexec.Session, error) {
+	select {
+	case <-time.After(duration):
+		return session, fmt.Errorf("command '%s' with args '%s' did not exit after %s", session.Command.Path, session.Command.Args, duration)
+	case <-session.Exited:
+		return session, nil
+	}
 }
