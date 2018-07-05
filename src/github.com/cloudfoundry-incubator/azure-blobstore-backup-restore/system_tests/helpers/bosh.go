@@ -17,6 +17,7 @@
 package helpers
 
 import "fmt"
+import . "github.com/cloudfoundry-incubator/system-test-helpers"
 
 func BoshCommand() string {
 	return fmt.Sprintf("bosh-cli --non-interactive --environment=%s --ca-cert=%s --client=%s --client-secret=%s",

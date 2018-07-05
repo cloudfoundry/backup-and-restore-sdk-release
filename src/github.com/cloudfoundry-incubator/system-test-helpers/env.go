@@ -14,16 +14,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package helpers
+package system_test_helpers
 
 import (
 	"os"
-
-	. "github.com/onsi/gomega"
 )
 
 func MustHaveEnv(keyname string) string {
 	val := os.Getenv(keyname)
-	Expect(val).NotTo(BeEmpty(), "Need "+keyname+" for the test")
+	if val == "" {
+		panic("Need " + keyname + " for the test")
+	}
 	return val
 }

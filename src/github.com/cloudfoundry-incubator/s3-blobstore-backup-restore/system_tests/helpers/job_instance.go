@@ -19,8 +19,10 @@ package helpers
 import (
 	"os/exec"
 
+	. "github.com/cloudfoundry-incubator/system-test-helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
 	"github.com/onsi/gomega/gexec"
 
 	"fmt"
