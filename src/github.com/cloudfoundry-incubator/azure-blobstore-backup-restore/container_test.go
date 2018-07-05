@@ -8,6 +8,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/azure-blobstore-backup-restore"
 	. "github.com/cloudfoundry-incubator/azure-blobstore-backup-restore/system_tests/helpers"
+	. "github.com/cloudfoundry-incubator/system-test-helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
