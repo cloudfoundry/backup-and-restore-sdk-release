@@ -13,8 +13,6 @@ import (
 	"time"
 
 	"fmt"
-
-	. "github.com/onsi/gomega"
 )
 
 type AzureClient struct {
@@ -89,7 +87,9 @@ func (c AzureClient) CreateContainer(name string) {
 
 func (c AzureClient) ReadFileFromContainer(container, blobName string) string {
 	bodyFile, err := ioutil.TempFile("", "read_file_from_container_")
-	Expect(err).NotTo(HaveOccurred())
+	if err != nil {
+		panic(err)
+	}
 
 	c.runAzureCommandSuccessfully(
 		"storage",
@@ -100,7 +100,9 @@ func (c AzureClient) ReadFileFromContainer(container, blobName string) string {
 		"--file", bodyFile.Name())
 
 	body, err := ioutil.ReadFile(bodyFile.Name())
-	Expect(err).NotTo(HaveOccurred())
+	if err != nil {
+		panic(err)
+	}
 
 	return string(body)
 }
@@ -110,7 +112,9 @@ func (c AzureClient) runAzureCommandSuccessfully(args ...string) *bytes.Buffer {
 	errorBuffer := new(bytes.Buffer)
 
 	azureConfigDir, err := ioutil.TempDir("", "azure_")
-	Expect(err).NotTo(HaveOccurred())
+	if err != nil {
+		panic(err)
+	}
 
 	connectionString := fmt.Sprintf(
 		"DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%s;EndpointSuffix=%s;",
@@ -128,7 +132,9 @@ func (c AzureClient) runAzureCommandSuccessfully(args ...string) *bytes.Buffer {
 	)
 
 	err = azCmd.Run()
-	Expect(err).ToNot(HaveOccurred(), errorBuffer.String())
+	if err != nil {
+		panic(fmt.Errorf("azure command failed: %q, stderr: %q", err, errorBuffer.String()))
+	}
 
 	return outputBuffer
 }
