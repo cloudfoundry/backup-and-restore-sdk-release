@@ -1,4 +1,4 @@
-package azure_test
+package azure
 
 import (
 	"bytes"
