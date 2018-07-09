@@ -1,4 +1,4 @@
-package gcp_test
+package gcs_test
 
 import (
 	"testing"
@@ -14,15 +14,15 @@ import (
 	. "github.com/onsi/gomega/gexec"
 )
 
-func TestGcp(t *testing.T) {
+func TestGcs(t *testing.T) {
 	RegisterFailHandler(Fail)
 	SetDefaultEventuallyTimeout(15 * time.Minute)
-	RunSpecs(t, "GCP System Tests Suite")
+	RunSpecs(t, "GCS System Tests Suite")
 }
 
 var _ = BeforeSuite(func() {
 	MustRunSuccessfully("gcloud", "auth", "activate-service-account",
-		"--key-file", MustHaveEnv("GCP_SERVICE_KEY_PATH"))
+		"--key-file", MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY_PATH"))
 	MustRunSuccessfully("gcloud", "config", "set", "project", MustHaveEnv("GCP_PROJECT_NAME"))
 })
 
