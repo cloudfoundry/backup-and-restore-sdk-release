@@ -16,13 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-lpass show Shared-PCF-Backup-and-Restore/concourse-secrets --notes > \
+lpass show "Shared-PCF Backup and Restore/concourse-secrets" --notes > \
   secrets.yml
 
-export TEST_AWS_ACCESS_KEY_ID="$(bosh-cli int --path=/aws-access-key-id secrets.yml)"
-export TEST_AWS_SECRET_ACCESS_KEY="$(bosh-cli int --path=/aws-secret-access-key secrets.yml)"
-
-export TEST_ECS_ACCESS_KEY_ID="$(bosh-cli int --path=/ecs-access-key-id secrets.yml)"
-export TEST_ECS_SECRET_ACCESS_KEY="$(bosh-cli int --path=/ecs-secret-access-key secrets.yml)"
+TEST_AWS_ACCESS_KEY_ID="$(bosh-cli int --path=/aws-access-key-id secrets.yml)"
+TEST_AWS_SECRET_ACCESS_KEY="$(bosh-cli int --path=/aws-secret-access-key secrets.yml)"
+TEST_ECS_ACCESS_KEY_ID="$(bosh-cli int --path=/ecs-access-key-id secrets.yml)"
+TEST_ECS_SECRET_ACCESS_KEY="$(bosh-cli int --path=/ecs-secret-access-key secrets.yml)"
+export TEST_AWS_ACCESS_KEY_ID
+export TEST_AWS_SECRET_ACCESS_KEY
+export TEST_ECS_ACCESS_KEY_ID
+export TEST_ECS_SECRET_ACCESS_KEY
 
 ginkgo -trace -r -skipPackage=system_tests -keepGoing --flakeAttempts=2

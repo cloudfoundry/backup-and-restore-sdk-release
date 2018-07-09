@@ -16,8 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cd $(dirname $0)/..
+cd "$(dirname "$0")/.."
 
-lpass show 'Shared-PCF-Backup-and-Restore/private_yml' --notes > config/private.yml
+lpass show "Shared-PCF Backup and Restore/private_yml" --notes > config/private.yml
 
 bosh upload-blobs
