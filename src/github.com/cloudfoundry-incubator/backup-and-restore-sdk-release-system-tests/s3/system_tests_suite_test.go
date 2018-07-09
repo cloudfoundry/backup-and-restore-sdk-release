@@ -28,5 +28,5 @@ import (
 func TestSystemTests(t *testing.T) {
 	RegisterFailHandler(Fail)
 	SetDefaultEventuallyTimeout(15 * time.Minute)
-	RunSpecs(t, "System Blobstore Suite")
+	RunSpecs(t, "S3 System Tests Suite")
 }
