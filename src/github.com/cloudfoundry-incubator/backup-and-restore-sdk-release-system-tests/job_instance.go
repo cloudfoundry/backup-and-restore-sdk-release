@@ -20,10 +20,12 @@ import (
 	"os/exec"
 
 	"github.com/onsi/gomega/gexec"
+	. "github.com/onsi/gomega/gexec"
 
 	"fmt"
 	"io"
-	"time"
+
+	. "github.com/onsi/gomega"
 )
 
 type JobInstance struct {
@@ -33,7 +35,7 @@ type JobInstance struct {
 	CommandOutputWriter io.Writer
 }
 
-func (i *JobInstance) Run(command string) (*gexec.Session, error) {
+func (i *JobInstance) Run(command string) *gexec.Session {
 	return i.runBosh(
 		"ssh",
 		"--gw-user="+MustHaveEnv("BOSH_GW_USER"),
@@ -44,19 +46,12 @@ func (i *JobInstance) Run(command string) (*gexec.Session, error) {
 	)
 }
 
-func (i *JobInstance) RunSuccessfully(command string) error {
-	session, err := i.Run(command)
-	if err != nil {
-		return err
-	}
-	if session.ExitCode() != 0 {
-		return fmt.Errorf("bosh command exited non-zero with code %q\n%s", session.ExitCode(), session.Err.Contents())
-	}
-
-	return nil
+func (i *JobInstance) RunSuccessfully(command string) {
+	session := i.Run(command)
+	Expect(session).To(Exit(0), string(session.Err.Contents()))
 }
 
-func (i *JobInstance) Download(remotePath, localPath string) (*gexec.Session, error) {
+func (i *JobInstance) Download(remotePath, localPath string) *gexec.Session {
 	return i.runBosh(
 		"scp",
 		"--gw-user="+MustHaveEnv("BOSH_GW_USER"),
@@ -67,7 +62,7 @@ func (i *JobInstance) Download(remotePath, localPath string) (*gexec.Session, er
 	)
 }
 
-func (i *JobInstance) Upload(localPath, remotePath string) (*gexec.Session, error) {
+func (i *JobInstance) Upload(localPath, remotePath string) *gexec.Session {
 	return i.runBosh(
 		"scp",
 		"--gw-user="+MustHaveEnv("BOSH_GW_USER"),
@@ -78,7 +73,7 @@ func (i *JobInstance) Upload(localPath, remotePath string) (*gexec.Session, erro
 	)
 }
 
-func (i *JobInstance) runBosh(args ...string) (*gexec.Session, error) {
+func (i *JobInstance) runBosh(args ...string) *gexec.Session {
 	combinedArgs := append([]string{
 		"--non-interactive",
 		"--environment=" + MustHaveEnv("BOSH_ENVIRONMENT"),
@@ -90,18 +85,9 @@ func (i *JobInstance) runBosh(args ...string) (*gexec.Session, error) {
 	command := exec.Command("bosh-cli", combinedArgs...)
 
 	session, err := gexec.Start(command, i.CommandOutputWriter, i.CommandOutputWriter)
-	if err != nil {
-		return session, err
-	}
+	Expect(err).NotTo(HaveOccurred())
 
-	return waitOnSessionOrError(session, 15*time.Minute)
-}
+	Eventually(session).Should(Exit())
 
-func waitOnSessionOrError(session *gexec.Session, duration time.Duration) (*gexec.Session, error) {
-	select {
-	case <-time.After(duration):
-		return session, fmt.Errorf("command '%s' with args '%s' did not exit after %s", session.Command.Path, session.Command.Args, duration)
-	case <-session.Exited:
-		return session, nil
-	}
+	return session
 }
