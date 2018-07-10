@@ -14,24 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
----
-name: gcs-blobstore-backup-restorer
+set -e
+source /var/vcap/packages/golang-1-linux/bosh/compile.env
 
-templates:
-  backup.erb: bin/bbr/backup
-  buckets.json.erb: config/buckets.json
+mkdir -p ${BOSH_INSTALL_TARGET}/src
+cp -a . ${BOSH_INSTALL_TARGET}/src
 
-packages:
-- gcs-blobstore-backup-restorer
+export GOPATH=$BOSH_INSTALL_TARGET
 
-properties:
-  enabled:
-    default: false
-    description: "Enable backup and restore scripts in this job"
-  buckets:
-    default: {}
-    description: "Hash of buckets to backup/restore to"
-    example: |
-      droplets:
-        name: "the_droplets_bucket"
-        gcp_service_account_key: "gcp_service_account_json_key"
+go install github.com/cloudfoundry-incubator/gcs-blobstore-backup-restore/cmd/gcs-blobstore-backup-restore
+
+rm -rf ${BOSH_INSTALL_TARGET}/src ${BOSH_INSTALL_TARGET}/pkg

@@ -1,1 +1,10 @@
 #!/usr/bin/env bash
+
+set -e
+
+<% if p('enabled') %>
+/var/vcap/packages/gcs-blobstore-backup-restorer/bin/gcs-blobstore-backup-restore \
+    --backup \
+    --config /var/vcap/jobs/gcs-blobstore-backup-restorer/config/buckets.json \
+    --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
+<% end %>
