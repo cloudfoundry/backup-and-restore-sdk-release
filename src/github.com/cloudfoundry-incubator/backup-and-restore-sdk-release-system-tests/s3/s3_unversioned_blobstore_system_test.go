@@ -43,10 +43,9 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 
 	BeforeEach(func() {
 		backuperInstance = JobInstance{
-			Deployment:          MustHaveEnv("BOSH_DEPLOYMENT"),
-			Name:                "s3-unversioned-backuper",
-			Index:               "0",
-			CommandOutputWriter: GinkgoWriter,
+			Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+			Name:       "s3-unversioned-backuper",
+			Index:      "0",
 		}
 
 		region = MustHaveEnv("S3_UNVERSIONED_BUCKET_REGION")

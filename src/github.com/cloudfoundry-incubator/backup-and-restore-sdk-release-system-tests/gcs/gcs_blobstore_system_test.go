@@ -4,8 +4,13 @@ import (
 	"strconv"
 	"time"
 
+	"fmt"
+	"io/ioutil"
+
 	. "github.com/cloudfoundry-incubator/backup-and-restore-sdk-release-system-tests"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gexec"
 )
 
 var _ = Describe("GCS Blobstore System Tests", func() {
@@ -46,6 +51,20 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 		gcsClient.WriteBlobToBucket(bucket, blob3, "TEST_BLOB_3")
 
 		instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/backup")
+
+		metadataFile, err := ioutil.TempFile("", "bbr-gcs-system-test")
+		Expect(err).NotTo(HaveOccurred())
+		session := instance.Download(fmt.Sprintf("%s/blobstore.json", instanceArtifactDirPath), metadataFile.Name())
+		Expect(session).To(Exit(0))
+
+		metadata, err := ioutil.ReadFile(metadataFile.Name())
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(metadata).To(SatisfyAll(
+			ContainSubstring(blob1),
+			ContainSubstring(blob2),
+			ContainSubstring(blob3),
+		))
 	})
 })
 

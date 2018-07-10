@@ -46,10 +46,9 @@ var _ = Describe("S3 versioned backup and restore", func() {
 
 	BeforeEach(func() {
 		backuperInstance = JobInstance{
-			Deployment:          MustHaveEnv("BOSH_DEPLOYMENT"),
-			Name:                "backuper",
-			Index:               "0",
-			CommandOutputWriter: GinkgoWriter,
+			Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+			Name:       "backuper",
+			Index:      "0",
 		}
 
 		region = MustHaveEnv("AWS_TEST_BUCKET_REGION")
@@ -93,10 +92,9 @@ var _ = Describe("S3 versioned backup and restore", func() {
 	Context("backs up and restores to a different bucket", func() {
 		BeforeEach(func() {
 			backuperInstanceWithClonedBucket = JobInstance{
-				Deployment:          MustHaveEnv("BOSH_DEPLOYMENT"),
-				Name:                "clone-backuper",
-				Index:               "0",
-				CommandOutputWriter: GinkgoWriter,
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "clone-backuper",
+				Index:      "0",
 			}
 
 			cloneRegion = MustHaveEnv("AWS_TEST_CLONE_BUCKET_REGION")
@@ -135,10 +133,9 @@ var _ = Describe("S3 versioned backup and restore", func() {
 	Context("When the bucket is not versioned", func() {
 		BeforeEach(func() {
 			backuperInstanceWithUnversionedBucket = JobInstance{
-				Deployment:          MustHaveEnv("BOSH_DEPLOYMENT"),
-				Name:                "versioned-backuper-unversioned-bucket",
-				Index:               "0",
-				CommandOutputWriter: GinkgoWriter,
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "versioned-backuper-unversioned-bucket",
+				Index:      "0",
 			}
 
 			unversionedRegion = MustHaveEnv("AWS_TEST_UNVERSIONED_BUCKET_REGION")
@@ -166,10 +163,9 @@ var _ = Describe("S3 versioned backup and restore", func() {
 	Context("When it connects to a blobstore with custom CA cert", func() {
 		BeforeEach(func() {
 			backuperInstanceWithCustomCaCertBlobstore = JobInstance{
-				Deployment:          MustHaveEnv("BOSH_DEPLOYMENT"),
-				Name:                "unversioned-custom-ca-cert-backuper",
-				Index:               "0",
-				CommandOutputWriter: GinkgoWriter,
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "unversioned-custom-ca-cert-backuper",
+				Index:      "0",
 			}
 		})
 

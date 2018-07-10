@@ -23,16 +23,15 @@ import (
 	. "github.com/onsi/gomega/gexec"
 
 	"fmt"
-	"io"
 
+	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 type JobInstance struct {
-	Deployment          string
-	Name                string
-	Index               string
-	CommandOutputWriter io.Writer
+	Deployment string
+	Name       string
+	Index      string
 }
 
 func (i *JobInstance) Run(command string) *gexec.Session {
@@ -84,7 +83,7 @@ func (i *JobInstance) runBosh(args ...string) *gexec.Session {
 	}, args...)
 	command := exec.Command("bosh-cli", combinedArgs...)
 
-	session, err := gexec.Start(command, i.CommandOutputWriter, i.CommandOutputWriter)
+	session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 
 	Eventually(session).Should(Exit())
