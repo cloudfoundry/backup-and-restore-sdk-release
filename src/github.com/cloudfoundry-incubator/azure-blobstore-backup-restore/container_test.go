@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/cloudfoundry-incubator/azure-blobstore-backup-restore"
-	. "github.com/cloudfoundry-incubator/backup-and-restore-sdk-release-system-tests"
 	. "github.com/cloudfoundry-incubator/backup-and-restore-sdk-release-system-tests/azure"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
