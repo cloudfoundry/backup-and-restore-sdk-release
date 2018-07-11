@@ -102,7 +102,7 @@ func downloadFileToTmp(bucket, endpoint, key string, creds s3.AccessKey) string 
 		"--key", key,
 		bodyFile.Name())
 
-	runAwsCommandWithTimout(creds.Id, creds.Secret, baseCmd, 5*time.Minute)
+	runAwsCommandWithTimeout(creds.Id, creds.Secret, baseCmd, 5*time.Minute)
 
 	return bodyFile.Name()
 }
@@ -210,10 +210,10 @@ func newAwsCommand(accessKey string, secretKey string, baseCmd []string) *exec.C
 }
 
 func runAwsCommand(accessKey string, secretKey string, baseCmd []string) *bytes.Buffer {
-	return runAwsCommandWithTimout(accessKey, secretKey, baseCmd, 1*time.Minute)
+	return runAwsCommandWithTimeout(accessKey, secretKey, baseCmd, 1*time.Minute)
 }
 
-func runAwsCommandWithTimout(accessKey string, secretKey string, baseCmd []string, timeout time.Duration) *bytes.Buffer {
+func runAwsCommandWithTimeout(accessKey string, secretKey string, baseCmd []string, timeout time.Duration) *bytes.Buffer {
 	outputBuffer := new(bytes.Buffer)
 	awsCmd := newAwsCommand(accessKey, secretKey, baseCmd)
 
