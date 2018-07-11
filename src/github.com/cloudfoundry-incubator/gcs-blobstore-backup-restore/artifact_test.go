@@ -27,8 +27,8 @@ var _ = Describe("Artifact", func() {
 					"bucket_id": {
 						Name: "bucket_name",
 						Blobs: []gcs.Blob{
-							{Name: "a_blob"},
-							{Name: "another_blob"},
+							{Name: "a_blob", GenerationID: 123},
+							{Name: "another_blob", GenerationID: 321},
 						},
 					},
 				})
@@ -41,8 +41,8 @@ var _ = Describe("Artifact", func() {
 					"bucket_id": {
 						"name": "bucket_name",
 						"blobs": [
-							{"name": "a_blob"},
-							{"name": "another_blob"}
+							{"name": "a_blob", "generation_id": 123},
+							{"name": "another_blob", "generation_id": 321}
 						]
 					}
 				}`))

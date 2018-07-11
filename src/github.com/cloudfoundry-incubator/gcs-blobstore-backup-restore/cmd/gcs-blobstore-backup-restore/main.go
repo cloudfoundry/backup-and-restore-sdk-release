@@ -17,7 +17,8 @@ func main() {
 	config, err := gcs.ParseConfig(*configPath)
 	exitOnError(err)
 
-	buckets := gcs.BuildBuckets(config)
+	buckets, err := gcs.BuildBuckets(config)
+	exitOnError(err)
 
 	backuper := gcs.NewBackuper(buckets)
 
