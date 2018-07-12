@@ -19,7 +19,7 @@ pushd $(dirname $0)
 name: $BOSH_PACKAGE_NAME
 
 dependencies:
-- backup-and-restore-release-golang
+- golang-1-linux
 
 files:
 - github.com/cloudfoundry-incubator/$GOLANG_PACKAGE_NAME/cmd/$GOLANG_PACKAGE_NAME/*.go" > $SPEC_FILE
