@@ -9,15 +9,13 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var serviceAccountKeyJson string
-
 func TestGcsBlobstoreBackupRestore(t *testing.T) {
 	RegisterFailHandler(Fail)
 	SetDefaultEventuallyTimeout(15 * time.Minute)
 	RunSpecs(t, "GCS Suite")
 }
 
-var _ = BeforeSuite(func() {
-	serviceAccountKeyJson = MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY")
-	Authenticate(serviceAccountKeyJson)
-})
+var _ = SynchronizedBeforeSuite(func() []byte {
+	Authenticate(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"))
+	return nil
+}, func([]byte) {})

@@ -12,7 +12,7 @@ var _ = Describe("Bucket", func() {
 			config := map[string]gcs.Config{
 				"droplets": {
 					Name:              "droplets-bucket",
-					ServiceAccountKey: serviceAccountKeyJson,
+					ServiceAccountKey: MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"),
 				},
 			}
 
@@ -30,7 +30,7 @@ var _ = Describe("Bucket", func() {
 		var err error
 
 		JustBeforeEach(func() {
-			bucket, err = gcs.NewSDKBucket(serviceAccountKeyJson, bucketName)
+			bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -71,7 +71,7 @@ var _ = Describe("Bucket", func() {
 		var err error
 
 		JustBeforeEach(func() {
-			bucket, err = gcs.NewSDKBucket(serviceAccountKeyJson, bucketName)
+			bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
