@@ -97,6 +97,9 @@ var _ = Describe("Backuper", func() {
 			_, err := backuper.Backup()
 
 			Expect(secondBucket.VersioningEnabledCallCount()).To(Equal(1))
+			Expect(firstBucket.ListBlobsCallCount()).To(BeZero())
+			Expect(secondBucket.ListBlobsCallCount()).To(BeZero())
+			Expect(thirdBucket.ListBlobsCallCount()).To(BeZero())
 			Expect(err).To(MatchError(fmt.Sprintf("versioning is not enabled on bucket: %s", secondBucketName)))
 		})
 	})
