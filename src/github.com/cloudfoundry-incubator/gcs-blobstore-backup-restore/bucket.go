@@ -43,7 +43,7 @@ type BucketBackup struct {
 
 type SDKBucket struct {
 	name   string
-	client *storage.Client
+	handle *storage.BucketHandle
 	ctx    context.Context
 }
 
@@ -60,7 +60,9 @@ func NewSDKBucket(serviceAccountKeyJson string, name string) (SDKBucket, error) 
 		return SDKBucket{}, err
 	}
 
-	return SDKBucket{name: name, client: client, ctx: ctx}, nil
+	handle := client.Bucket(name)
+
+	return SDKBucket{name: name, handle: handle, ctx: ctx}, nil
 }
 
 func (b SDKBucket) Name() string {
@@ -68,7 +70,7 @@ func (b SDKBucket) Name() string {
 }
 
 func (b SDKBucket) VersioningEnabled() (bool, error) {
-	attrs, err := b.client.Bucket(b.name).Attrs(b.ctx)
+	attrs, err := b.handle.Attrs(b.ctx)
 	if err != nil {
 		return false, err
 	}
@@ -79,7 +81,7 @@ func (b SDKBucket) VersioningEnabled() (bool, error) {
 func (b SDKBucket) ListBlobs() ([]Blob, error) {
 	var blobs []Blob
 
-	objectsIterator := b.client.Bucket(b.name).Objects(b.ctx, nil)
+	objectsIterator := b.handle.Objects(b.ctx, nil)
 	for {
 		objectAttributes, err := objectsIterator.Next()
 		if err == iterator.Done {
