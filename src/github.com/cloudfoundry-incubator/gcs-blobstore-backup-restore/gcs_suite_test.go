@@ -5,8 +5,6 @@ import (
 
 	"time"
 
-	"io/ioutil"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -20,10 +18,6 @@ func TestGcsBlobstoreBackupRestore(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	Authenticate(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY_PATH"))
-
-	serviceAccountKeyPath := MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY_PATH")
-	serviceAccountKeyJsonBytes, err := ioutil.ReadFile(serviceAccountKeyPath)
-	Expect(err).NotTo(HaveOccurred())
-	serviceAccountKeyJson = string(serviceAccountKeyJsonBytes)
+	serviceAccountKeyJson = MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY")
+	Authenticate(serviceAccountKeyJson)
 })
