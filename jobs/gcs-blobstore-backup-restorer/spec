@@ -34,4 +34,8 @@ properties:
     example: |
       droplets:
         name: "the_droplets_bucket"
-        gcp_service_account_key: "gcp_service_account_json_key"
+        gcp_service_account_key: >
+          {
+            "type": "service_account",
+            ...
+          }
