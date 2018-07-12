@@ -46,7 +46,7 @@ instance_groups:
       buckets:
         droplets:
           name: ((gcs-bucket-name))
-          gcp_service_account_key: ((gcp-service-account-key))
+          gcp_service_account_key: "((gcp-service-account-key))"
 
 update:
   canaries: 1
