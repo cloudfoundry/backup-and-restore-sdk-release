@@ -31,7 +31,7 @@ instance_groups:
 - name: mysql
   instances: 1
   vm_type: small
-  persistent_disk_type: fifty
+  persistent_disk_type: 10GB
   stemcell: xenial
   update:
     serial: true
