@@ -1,0 +1,10 @@
+processes:
+  - name: backup
+    executable: /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/run_backup
+    env:
+      BBR_ARTIFACT_DIRECTORY: /var/vcap/store/bbr-backup/s3-versioned-blobstore-backup-restorer/
+    additional_volumes:
+    - path: /var/vcap/store
+      writable: true
+    unsafe:
+      privileged: true
