@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -eu
 
 <% if p('enabled') %>
 /var/vcap/packages/s3-blobstore-backup-restorer/bin/s3-blobstore-backup-restore \
