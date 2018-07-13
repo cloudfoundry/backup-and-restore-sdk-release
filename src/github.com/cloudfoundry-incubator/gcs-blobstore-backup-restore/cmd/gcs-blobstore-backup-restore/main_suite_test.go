@@ -12,7 +12,7 @@ var binaryPath string
 
 func TestGcsBlobstoreBackupRestore(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "GCS Integration Suite")
+	RunSpecs(t, "GCS Main Suite")
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {
