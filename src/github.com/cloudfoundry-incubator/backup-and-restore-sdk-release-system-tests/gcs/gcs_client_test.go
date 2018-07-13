@@ -20,6 +20,18 @@ func (c GCSClient) WriteBlobToBucket(bucket, blobName, body string) {
 	MustRunSuccessfully("gsutil", "cp", file.Name(), fmt.Sprintf("gs://%s/%s", bucket, blobName))
 }
 
+func (c GCSClient) ReadBlobFromBucket(bucket, blobName string) string {
+	file, err := ioutil.TempFile("", "bbr-sdk-gcs-system-tests")
+	Expect(err).NotTo(HaveOccurred())
+
+	MustRunSuccessfully("gsutil", "cp", fmt.Sprintf("gs://%s/%s", bucket, blobName), file.Name())
+
+	body, err := ioutil.ReadFile(file.Name())
+	Expect(err).NotTo(HaveOccurred())
+
+	return string(body)
+}
+
 func (c GCSClient) DeleteBlobInBucket(bucket, blobName string) {
 	MustRunSuccessfully("gsutil", "rm", fmt.Sprintf("gs://%s/%s", bucket, blobName))
 }

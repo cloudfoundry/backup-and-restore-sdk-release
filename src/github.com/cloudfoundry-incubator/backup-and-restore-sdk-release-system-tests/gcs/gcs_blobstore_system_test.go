@@ -4,13 +4,9 @@ import (
 	"strconv"
 	"time"
 
-	"fmt"
-	"io/ioutil"
-
 	. "github.com/cloudfoundry-incubator/backup-and-restore-sdk-release-system-tests"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gexec"
 )
 
 var _ = Describe("GCS Blobstore System Tests", func() {
@@ -45,26 +41,21 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 		gcsClient.DeleteBlobInBucket(bucket, blob3)
 	})
 
-	It("backs up a bucket", func() {
+	It("backs up and restores a bucket", func() {
 		gcsClient.WriteBlobToBucket(bucket, blob1, "TEST_BLOB_1")
 		gcsClient.WriteBlobToBucket(bucket, blob2, "TEST_BLOB_2")
 		gcsClient.WriteBlobToBucket(bucket, blob3, "TEST_BLOB_3")
 
 		instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/backup")
 
-		metadataFile, err := ioutil.TempFile("", "bbr-gcs-system-test")
-		Expect(err).NotTo(HaveOccurred())
-		session := instance.Download(fmt.Sprintf("%s/blobstore.json", instanceArtifactDirPath), metadataFile.Name())
-		Expect(session).To(Exit(0))
+		gcsClient.WriteBlobToBucket(bucket, blob1, "TEST_BLOB_1_NEW")
+		gcsClient.DeleteBlobInBucket(bucket, blob2)
 
-		metadata, err := ioutil.ReadFile(metadataFile.Name())
-		Expect(err).NotTo(HaveOccurred())
+		instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/restore")
 
-		Expect(metadata).To(SatisfyAll(
-			ContainSubstring(blob1),
-			ContainSubstring(blob2),
-			ContainSubstring(blob3),
-		))
+		Expect(gcsClient.ReadBlobFromBucket(bucket, blob1)).To(Equal("TEST_BLOB_1"))
+		Expect(gcsClient.ReadBlobFromBucket(bucket, blob2)).To(Equal("TEST_BLOB_2"))
+		Expect(gcsClient.ReadBlobFromBucket(bucket, blob3)).To(Equal("TEST_BLOB_3"))
 	})
 })
 
