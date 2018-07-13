@@ -15,6 +15,7 @@ type Bucket interface {
 	Name() string
 	VersioningEnabled() (bool, error)
 	ListBlobs() ([]Blob, error)
+	CopyVersion(blob Blob) error
 }
 
 func BuildBuckets(config map[string]Config) (map[string]Bucket, error) {
@@ -96,4 +97,8 @@ func (b SDKBucket) ListBlobs() ([]Blob, error) {
 	}
 
 	return blobs, nil
+}
+
+func (b SDKBucket) CopyVersion(blob Blob) error {
+	return nil
 }

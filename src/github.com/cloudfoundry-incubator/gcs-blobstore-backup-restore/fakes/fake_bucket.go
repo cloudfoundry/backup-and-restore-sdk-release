@@ -39,6 +39,17 @@ type FakeBucket struct {
 		result1 []gcs.Blob
 		result2 error
 	}
+	CopyVersionStub        func(blob gcs.Blob) error
+	copyVersionMutex       sync.RWMutex
+	copyVersionArgsForCall []struct {
+		blob gcs.Blob
+	}
+	copyVersionReturns struct {
+		result1 error
+	}
+	copyVersionReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -169,6 +180,54 @@ func (fake *FakeBucket) ListBlobsReturnsOnCall(i int, result1 []gcs.Blob, result
 	}{result1, result2}
 }
 
+func (fake *FakeBucket) CopyVersion(blob gcs.Blob) error {
+	fake.copyVersionMutex.Lock()
+	ret, specificReturn := fake.copyVersionReturnsOnCall[len(fake.copyVersionArgsForCall)]
+	fake.copyVersionArgsForCall = append(fake.copyVersionArgsForCall, struct {
+		blob gcs.Blob
+	}{blob})
+	fake.recordInvocation("CopyVersion", []interface{}{blob})
+	fake.copyVersionMutex.Unlock()
+	if fake.CopyVersionStub != nil {
+		return fake.CopyVersionStub(blob)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.copyVersionReturns.result1
+}
+
+func (fake *FakeBucket) CopyVersionCallCount() int {
+	fake.copyVersionMutex.RLock()
+	defer fake.copyVersionMutex.RUnlock()
+	return len(fake.copyVersionArgsForCall)
+}
+
+func (fake *FakeBucket) CopyVersionArgsForCall(i int) gcs.Blob {
+	fake.copyVersionMutex.RLock()
+	defer fake.copyVersionMutex.RUnlock()
+	return fake.copyVersionArgsForCall[i].blob
+}
+
+func (fake *FakeBucket) CopyVersionReturns(result1 error) {
+	fake.CopyVersionStub = nil
+	fake.copyVersionReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBucket) CopyVersionReturnsOnCall(i int, result1 error) {
+	fake.CopyVersionStub = nil
+	if fake.copyVersionReturnsOnCall == nil {
+		fake.copyVersionReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.copyVersionReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -178,6 +237,8 @@ func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	defer fake.versioningEnabledMutex.RUnlock()
 	fake.listBlobsMutex.RLock()
 	defer fake.listBlobsMutex.RUnlock()
+	fake.copyVersionMutex.RLock()
+	defer fake.copyVersionMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

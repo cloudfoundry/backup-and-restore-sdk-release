@@ -29,14 +29,25 @@ func main() {
 	buckets, err := gcs.BuildBuckets(config)
 	exitOnError(err)
 
-	backuper := gcs.NewBackuper(buckets)
-
-	backups, err := backuper.Backup()
-	exitOnError(err)
-
 	artifact := gcs.NewArtifact(*artifactPath)
-	err = artifact.Write(backups)
-	exitOnError(err)
+
+	if *backupAction {
+		backuper := gcs.NewBackuper(buckets)
+
+		backups, err := backuper.Backup()
+		exitOnError(err)
+
+		err = artifact.Write(backups)
+		exitOnError(err)
+	} else {
+		restorer := gcs.NewRestorer(buckets)
+
+		backups, err := artifact.Read()
+		exitOnError(err)
+
+		err = restorer.Restore(backups)
+		exitOnError(err)
+	}
 }
 
 func exitOnError(err error) {

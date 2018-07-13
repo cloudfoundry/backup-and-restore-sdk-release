@@ -21,3 +21,19 @@ func (a Artifact) Write(backups map[string]BucketBackup) error {
 
 	return ioutil.WriteFile(a.path, filesContents, 0644)
 }
+
+func (a Artifact) Read() (map[string]BucketBackup, error) {
+	fileContents, err := ioutil.ReadFile(a.path)
+	if err != nil {
+		return nil, err
+	}
+
+	var backupBuckets = map[string]BucketBackup{}
+
+	err = json.Unmarshal(fileContents, &backupBuckets)
+	if err != nil {
+		return nil, err
+	}
+
+	return backupBuckets, nil
+}
