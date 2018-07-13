@@ -11,6 +11,7 @@ func main() {
 	artifactPath := flag.String("artifact-file", "", "Path to the artifact file")
 	configPath := flag.String("config", "", "Path to JSON config file")
 	_ = flag.Bool("backup", false, "Run blobstore backup")
+	_ = flag.Bool("restore", false, "Run blobstore restore")
 
 	flag.Parse()
 
