@@ -10,10 +10,18 @@ import (
 func main() {
 	artifactPath := flag.String("artifact-file", "", "Path to the artifact file")
 	configPath := flag.String("config", "", "Path to JSON config file")
-	_ = flag.Bool("backup", false, "Run blobstore backup")
-	_ = flag.Bool("restore", false, "Run blobstore restore")
+	backupAction := flag.Bool("backup", false, "Run blobstore backup")
+	restoreAction := flag.Bool("restore", false, "Run blobstore restore")
 
 	flag.Parse()
+
+	if !*backupAction && !*restoreAction {
+		log.Fatal("missing --backup or --restore flag")
+	}
+
+	if *backupAction && *restoreAction {
+		log.Fatal("only one of: --backup or --restore can be provided")
+	}
 
 	config, err := gcs.ParseConfig(*configPath)
 	exitOnError(err)
