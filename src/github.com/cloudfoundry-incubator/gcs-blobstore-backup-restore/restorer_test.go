@@ -12,7 +12,7 @@ import (
 	"github.com/cloudfoundry-incubator/gcs-blobstore-backup-restore/fakes"
 )
 
-var _ = FDescribe("Restorer", func() {
+var _ = Describe("Restorer", func() {
 	var firstBucket *fakes.FakeBucket
 	var secondBucket *fakes.FakeBucket
 	var thirdBucket *fakes.FakeBucket
