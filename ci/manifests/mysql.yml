@@ -36,7 +36,7 @@ instance_groups:
   update:
     serial: true
   networks:
-  - name: mysql
+  - name: default
     static_ips: [((db_host))]
   jobs:
   - name: mysql
