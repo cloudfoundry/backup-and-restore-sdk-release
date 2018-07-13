@@ -27,6 +27,9 @@ releases:
 - name: os-conf
   version: latest
   url: https://bosh.io/d/github.com/cloudfoundry/os-conf-release
+- name: bpm
+  version: latest
+  url: https://bosh.io/d/github.com/cloudfoundry-incubator/bpm-release
 
 stemcells:
 - alias: xenial
@@ -54,6 +57,10 @@ instance_groups:
           region: "((s3-region))"
           aws_access_key_id: "((aws-access-key-id))"
           aws_secret_access_key: "((aws-secret-access-key))"
+      bpm:
+        enabled: true
+  - name: bpm
+    release: bpm
   azs: [z1]
 - name: clone-backuper
   instances: 1
