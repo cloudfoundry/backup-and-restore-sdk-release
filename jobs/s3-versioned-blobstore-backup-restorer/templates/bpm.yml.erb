@@ -4,7 +4,5 @@ processes:
     env:
       BBR_ARTIFACT_DIRECTORY: /var/vcap/store/bbr-backup/s3-versioned-blobstore-backup-restorer/
     additional_volumes:
-    - path: /var/vcap/store
+    - path: /var/vcap/store/bbr-backup/s3-versioned-blobstore-backup-restorer/
       writable: true
-    unsafe:
-      privileged: true
