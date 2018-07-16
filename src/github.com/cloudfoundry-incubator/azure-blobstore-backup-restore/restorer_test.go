@@ -100,6 +100,10 @@ var _ = Describe("Restorer", func() {
 			It("returns an error", func() {
 				firstContainer.SoftDeleteEnabledReturns(false, nil)
 
+				restorer = azure.NewRestorer(map[string]azure.Container{
+					"first": firstContainer,
+				}, map[string]azure.StorageAccount{})
+
 				err := restorer.Restore(map[string]azure.ContainerBackup{
 					"first": {
 						Name:  firstContainerName,
@@ -133,6 +137,10 @@ var _ = Describe("Restorer", func() {
 		Context("when checking soft delete fails", func() {
 			It("returns an error", func() {
 				secondContainer.SoftDeleteEnabledReturns(false, errors.New("ooops"))
+
+				restorer = azure.NewRestorer(map[string]azure.Container{
+					"second": secondContainer,
+				}, map[string]azure.StorageAccount{})
 
 				err := restorer.Restore(map[string]azure.ContainerBackup{
 					"second": {
@@ -177,6 +185,51 @@ var _ = Describe("Restorer", func() {
 				Expect(actualStorageAccount).To(Equal(sourceStorageAccount))
 				Expect(actualContainerName).To(Equal("source-container-name"))
 				Expect(actualBlobsToCopy).To(Equal(blobs))
+			})
+		})
+
+		Context("when there is a container referenced in the artifact that is not in the restore config", func() {
+			BeforeEach(func() {
+				restorer = azure.NewRestorer(map[string]azure.Container{
+					"container": firstContainer,
+				}, map[string]azure.StorageAccount{})
+			})
+
+			It("returns a useful error", func() {
+				err := restorer.Restore(map[string]azure.ContainerBackup{
+					"container": {
+						Name:  firstContainerName,
+						Blobs: []azure.BlobId{},
+					},
+					"not-in-restore-config": {
+						Name:  "not-there",
+						Blobs: []azure.BlobId{},
+					},
+				})
+
+				Expect(err).To(MatchError("container not-in-restore-config is not mentioned in the restore config" +
+					" but is present in the artifact"))
+			})
+		})
+
+		Context("when there is a container specified in restore config but not in the backup artifact", func() {
+			BeforeEach(func() {
+				restorer = azure.NewRestorer(map[string]azure.Container{
+					"container":  firstContainer,
+					"container2": secondContainer,
+				}, map[string]azure.StorageAccount{})
+			})
+
+			It("returns a useful error", func() {
+				err := restorer.Restore(map[string]azure.ContainerBackup{
+					"container": {
+						Name:  firstContainerName,
+						Blobs: []azure.BlobId{},
+					},
+				})
+
+				Expect(err).To(MatchError("container container2 is mentioned in the restore config" +
+					" but is not recorded in the artifact"))
 			})
 		})
 	})

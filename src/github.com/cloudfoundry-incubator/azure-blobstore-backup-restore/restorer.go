@@ -15,8 +15,18 @@ func NewRestorer(containers map[string]Container, restoreFromStorageAccounts map
 }
 
 func (r Restorer) Restore(backups map[string]ContainerBackup) error {
+	for containerId := range r.containers {
+		_, ok := backups[containerId]
+		if !ok {
+			return fmt.Errorf("container %s is mentioned in the restore config but is not recorded in the artifact", containerId)
+		}
+	}
+
 	for containerId := range backups {
-		destinationContainer := r.containers[containerId]
+		destinationContainer, ok := r.containers[containerId]
+		if !ok {
+			return fmt.Errorf("container %s is not mentioned in the restore config but is present in the artifact", containerId)
+		}
 		enabled, err := destinationContainer.SoftDeleteEnabled()
 		if err != nil {
 			return err
