@@ -57,8 +57,6 @@ instance_groups:
           region: "((s3-region))"
           aws_access_key_id: "((aws-access-key-id))"
           aws_secret_access_key: "((aws-secret-access-key))"
-      bpm:
-        enabled: true
   - name: bpm
     release: bpm
   azs: [z1]
