@@ -1,6 +1,8 @@
 package gcs
 
 import (
+	"fmt"
+
 	"cloud.google.com/go/storage"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
@@ -8,7 +10,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-const readOnlyScope = "https://www.googleapis.com/auth/devstorage.read_only"
+const readWriteScope = "https://www.googleapis.com/auth/devstorage.read_write"
 
 //go:generate counterfeiter -o fakes/fake_bucket.go . Bucket
 type Bucket interface {
@@ -51,7 +53,7 @@ type SDKBucket struct {
 func NewSDKBucket(serviceAccountKeyJson string, name string) (SDKBucket, error) {
 	ctx := context.Background()
 
-	creds, err := google.CredentialsFromJSON(ctx, []byte(serviceAccountKeyJson), readOnlyScope)
+	creds, err := google.CredentialsFromJSON(ctx, []byte(serviceAccountKeyJson), readWriteScope)
 	if err != nil {
 		return SDKBucket{}, err
 	}
@@ -100,5 +102,23 @@ func (b SDKBucket) ListBlobs() ([]Blob, error) {
 }
 
 func (b SDKBucket) CopyVersion(blob Blob) error {
+	ctx := context.Background()
+
+	attrs, err := b.handle.Object(blob.Name).Attrs(ctx)
+	if err != nil {
+		return fmt.Errorf("error getting blob attributes 'gs://%s/%s#%d': %s", b.name, blob.Name, blob.GenerationID, err)
+	}
+
+	if attrs.Generation == blob.GenerationID {
+		return nil
+	}
+
+	source := b.handle.Object(blob.Name).Generation(blob.GenerationID)
+	copier := b.handle.Object(blob.Name).CopierFrom(source)
+	_, err = copier.Run(ctx)
+	if err != nil {
+		return fmt.Errorf("error copying blob 'gs://%s/%s#%d': %s", b.name, blob.Name, blob.GenerationID, err)
+	}
+
 	return nil
 }

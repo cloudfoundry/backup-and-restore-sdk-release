@@ -1,6 +1,9 @@
 package gcs_test
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/cloudfoundry-incubator/gcs-blobstore-backup-restore"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -79,7 +82,7 @@ var _ = Describe("Bucket", func() {
 			DeleteBucket(bucketName)
 		})
 
-		Context("when the bucket have a few files", func() {
+		Context("when the bucket has a few files", func() {
 			var file1GenerationID, file2GenerationID, file3GenerationID int64
 
 			BeforeEach(func() {
@@ -99,6 +102,93 @@ var _ = Describe("Bucket", func() {
 				))
 			})
 		})
+	})
 
+	Describe("CopyVersion", func() {
+		var (
+			bucketName       string
+			bucket           gcs.Bucket
+			err              error
+			blobName         string
+			blobGenerationID int64
+		)
+
+		BeforeEach(func() {
+			bucketName = CreateBucketWithTimestampedName("copy_version", true)
+			blobName = fmt.Sprintf("blob_%d", time.Now().UnixNano())
+			blobGenerationID = UploadFile(bucketName, blobName, "file-content")
+			bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			DeleteBucket(bucketName)
+		})
+
+		Context("when the version is the current version of the blob", func() {
+			It("is a noop", func() {
+				blob := gcs.Blob{
+					Name:         blobName,
+					GenerationID: blobGenerationID,
+				}
+
+				err = bucket.CopyVersion(blob)
+
+				Expect(err).NotTo(HaveOccurred())
+				versions := ListBlobVersions(bucketName, blobName)
+				Expect(versions).To(ConsistOf(blobGenerationID))
+			})
+		})
+
+		Context("when the version is not the current version of the blob", func() {
+			BeforeEach(func() {
+				UploadFile(bucketName, blobName, "new-file-content")
+			})
+
+			It("copies the blob version to be the latest", func() {
+				blob := gcs.Blob{
+					Name:         blobName,
+					GenerationID: blobGenerationID,
+				}
+
+				err = bucket.CopyVersion(blob)
+
+				Expect(err).NotTo(HaveOccurred())
+				content := GetBlobContents(bucketName, blobName)
+				Expect(content).To(Equal("file-content"))
+			})
+		})
+
+		Context("when the blob version is not found", func() {
+			It("returns an error", func() {
+				blobGenerationID = blobGenerationID + 1
+				blob := gcs.Blob{
+					Name:         blobName,
+					GenerationID: blobGenerationID,
+				}
+
+				err = bucket.CopyVersion(blob)
+
+				Expect(err).To(MatchError(ContainSubstring(
+					fmt.Sprintf("error copying blob 'gs://%s/%s#%d'", bucketName, blobName, blobGenerationID),
+				)))
+			})
+		})
+
+		Context("when the blob does not exist", func() {
+			It("returns an error", func() {
+				blobName = "not-a-blob"
+				blob := gcs.Blob{
+					Name:         blobName,
+					GenerationID: blobGenerationID,
+				}
+
+				err = bucket.CopyVersion(blob)
+
+				Expect(err).To(MatchError(ContainSubstring(
+					fmt.Sprintf("error getting blob attributes 'gs://%s/%s#%d'", bucketName, blobName, blobGenerationID),
+				)))
+			})
+		})
 	})
 })

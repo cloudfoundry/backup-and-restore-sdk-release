@@ -55,15 +55,37 @@ func setVersioning(bucketName string, versioned bool) {
 	runSuccessfully("gsutil", "versioning", "set", versioning, "gs://"+bucketName)
 }
 
-func UploadFile(bucketName, fileName, fileContents string) int64 {
-	file := createTmpFile(fileName, fileContents)
+func UploadFile(bucketName, blobName, fileContents string) int64 {
+	file := createTmpFile(blobName, fileContents)
 
-	_, stdErr := runSuccessfully("gsutil", "cp", "-v", file.Name(), "gs://"+bucketName+"/"+fileName)
-	generationIdString := strings.TrimSpace(strings.Split(strings.Split(stdErr, "\n")[1], "#")[1])
-	generationId, err := strconv.ParseInt(generationIdString, 10, 64)
+	_, stdErr := runSuccessfully("gsutil", "cp", "-v", file.Name(), "gs://"+bucketName+"/"+blobName)
+	generationIDString := strings.TrimSpace(strings.Split(strings.Split(stdErr, "\n")[1], "#")[1])
+	generationID, err := strconv.ParseInt(generationIDString, 10, 64)
 	Expect(err).NotTo(HaveOccurred())
 
-	return generationId
+	return generationID
+}
+
+func ListBlobVersions(bucketName, blobName string) []int64 {
+	stdOut, _ := runSuccessfully("gsutil", "ls", "-a", "gs://"+bucketName+"/"+blobName)
+	lines := strings.Split(stdOut, "\n")
+	var versions []int64
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+
+		generationID, err := strconv.ParseInt(strings.Split(line, "#")[1], 10, 64)
+		Expect(err).NotTo(HaveOccurred())
+
+		versions = append(versions, generationID)
+	}
+	return versions
+}
+
+func GetBlobContents(bucketName, blobName string) string {
+	stdOut, _ := runSuccessfully("gsutil", "cat", "gs://"+bucketName+"/"+blobName)
+	return strings.TrimSpace(stdOut)
 }
 
 func createTmpFile(fileName, fileContents string) *os.File {
