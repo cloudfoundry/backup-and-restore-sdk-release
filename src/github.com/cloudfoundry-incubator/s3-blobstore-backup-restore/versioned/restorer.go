@@ -21,6 +21,14 @@ func (r Restorer) Run() error {
 		return err
 	}
 
+	for identifier := range bucketSnapshots {
+		_, exists := r.destinationBuckets[identifier]
+
+		if !exists {
+			return fmt.Errorf("no entry found in restore config for bucket: %s", identifier)
+		}
+	}
+
 	for identifier, destinationBucket := range r.destinationBuckets {
 		bucketSnapshot, exists := bucketSnapshots[identifier]
 

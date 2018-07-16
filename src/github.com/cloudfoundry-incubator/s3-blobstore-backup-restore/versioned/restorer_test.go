@@ -204,4 +204,35 @@ var _ = Describe("Restorer", func() {
 			Expect(err).To(MatchError("no entry found in backup artifact for bucket: packages"))
 		})
 	})
+
+	Context("when there is a bucket recorded in backup artifact but not in the restore config", func() {
+		BeforeEach(func() {
+			artifact.LoadReturns(map[string]versioned.BucketSnapshot{
+				"droplets": {
+					BucketName: "my_droplets_bucket",
+					RegionName: "my_droplets_region",
+					Versions: []versioned.BlobVersion{
+						{BlobKey: "one", Id: "13"},
+						{BlobKey: "two", Id: "22"},
+					},
+				},
+				"buildpacks": {
+					BucketName: "my_buildpacks_bucket",
+					RegionName: "my_buildpacks_region",
+					Versions: []versioned.BlobVersion{
+						{BlobKey: "three", Id: "32"},
+					},
+				},
+			}, nil)
+
+			restorer = versioned.NewRestorer(map[string]s3.VersionedBucket{
+				"droplets": dropletsBucket,
+			}, artifact)
+		})
+
+		It("fails and returns a useful error", func() {
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError("no entry found in restore config for bucket: buildpacks"))
+		})
+	})
 })
