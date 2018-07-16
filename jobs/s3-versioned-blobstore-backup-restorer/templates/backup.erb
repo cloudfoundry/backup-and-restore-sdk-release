@@ -2,8 +2,9 @@
 
 set -eu
 
-<% if p("bpm.enabled") %>
-/var/vcap/jobs/bpm/bin/bpm run s3-versioned-blobstore-backup-restorer -p backup
-<% else %>
-/var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/run_backup
+<% if p('enabled') %>
+/var/vcap/packages/s3-blobstore-backup-restorer/bin/s3-blobstore-backup-restore \
+    --backup \
+    --config /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/config/buckets.json \
+    --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
 <% end %>

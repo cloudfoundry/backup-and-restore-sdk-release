@@ -19,11 +19,8 @@ name: s3-versioned-blobstore-backup-restorer
 
 templates:
   backup.erb: bin/bbr/backup
-  run_backup.erb: bin/bbr/run_backup
   restore.erb: bin/bbr/restore
-  run_restore.erb: bin/bbr/run_restore
   buckets.json.erb: config/buckets.json
-  bpm.yml.erb: config/bpm.yml
 
 packages:
 - s3-blobstore-backup-restorer
@@ -43,7 +40,4 @@ properties:
         aws_secret_access_key: "AWS_SECRET_ACCESS_KEY"
         endpoint: "endpoint_to_s3_compatible_blobstore" # only configure if connecting to non-aws s3-compatible blobstore. e.g. ecs
         use_iam_profile: false # only set to true if using AWS IAM instance profile to connect to the bucket instead of AWS access keys
-  bpm.enabled:
-    description: "Enable Bosh Process Manager"
-    default: false
 
