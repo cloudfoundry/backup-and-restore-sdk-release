@@ -104,12 +104,14 @@ func (b SDKBucket) ListBlobs() ([]Blob, error) {
 func (b SDKBucket) CopyVersion(blob Blob) error {
 	ctx := context.Background()
 
-	attrs, err := b.handle.Object(blob.Name).Attrs(ctx)
+	attrs, err := b.handle.Object(blob.Name).Generation(blob.GenerationID).Attrs(ctx)
 	if err != nil {
-		return fmt.Errorf("error getting blob attributes 'gs://%s/%s#%d': %s", b.name, blob.Name, blob.GenerationID, err)
+		return fmt.Errorf("error getting blob version attributes 'gs://%s/%s#%d': %s", b.name, blob.Name, blob.GenerationID, err)
 	}
 
-	if attrs.Generation == blob.GenerationID {
+	attrs, err = b.handle.Object(blob.Name).Attrs(ctx)
+
+	if err == nil && attrs.Generation == blob.GenerationID {
 		return nil
 	}
 

@@ -160,24 +160,50 @@ var _ = Describe("Bucket", func() {
 		})
 
 		Context("when the blob version is not found", func() {
-			It("returns an error", func() {
-				blobGenerationID = blobGenerationID + 1
-				blob := gcs.Blob{
-					Name:         blobName,
-					GenerationID: blobGenerationID,
-				}
+			Context("and the blob exists", func() {
+				It("returns an error", func() {
+					blobGenerationID = blobGenerationID + 1
+					blob := gcs.Blob{
+						Name:         blobName,
+						GenerationID: blobGenerationID,
+					}
 
-				err = bucket.CopyVersion(blob)
+					err = bucket.CopyVersion(blob)
 
-				Expect(err).To(MatchError(ContainSubstring(
-					fmt.Sprintf("error copying blob 'gs://%s/%s#%d'", bucketName, blobName, blobGenerationID),
-				)))
+					Expect(err).To(MatchError(ContainSubstring(
+						fmt.Sprintf("error getting blob version attributes 'gs://%s/%s#%d'", bucketName, blobName, blobGenerationID),
+					)))
+				})
 			})
+
+			Context("and the blob is deleted", func() {
+				BeforeEach(func() {
+					DeleteFile(bucketName, blobName)
+				})
+				It("returns an error", func() {
+					blobGenerationID = blobGenerationID + 1
+					blob := gcs.Blob{
+						Name:         blobName,
+						GenerationID: blobGenerationID,
+					}
+
+					err = bucket.CopyVersion(blob)
+
+					Expect(err).To(MatchError(ContainSubstring(
+						fmt.Sprintf("error getting blob version attributes 'gs://%s/%s#%d'", bucketName, blobName, blobGenerationID),
+					)))
+				})
+			})
+
 		})
 
-		Context("when the blob does not exist", func() {
-			It("returns an error", func() {
-				blobName = "not-a-blob"
+		Context("when the blob has been deleted", func() {
+			BeforeEach(func() {
+				UploadFile(bucketName, blobName, "new-file-content")
+				DeleteFile(bucketName, blobName)
+			})
+
+			It("copies the blob version to be the latest", func() {
 				blob := gcs.Blob{
 					Name:         blobName,
 					GenerationID: blobGenerationID,
@@ -185,9 +211,9 @@ var _ = Describe("Bucket", func() {
 
 				err = bucket.CopyVersion(blob)
 
-				Expect(err).To(MatchError(ContainSubstring(
-					fmt.Sprintf("error getting blob attributes 'gs://%s/%s#%d'", bucketName, blobName, blobGenerationID),
-				)))
+				Expect(err).NotTo(HaveOccurred())
+				content := GetBlobContents(bucketName, blobName)
+				Expect(content).To(Equal("file-content"))
 			})
 		})
 	})

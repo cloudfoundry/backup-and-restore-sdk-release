@@ -45,6 +45,10 @@ func DeleteBucket(bucketName string) {
 	runSuccessfully("gsutil", "rm", "-r", "gs://"+bucketName)
 }
 
+func DeleteFile(bucketName, blobName string) {
+	runSuccessfully("gsutil", "rm", "gs://"+bucketName+"/"+blobName)
+}
+
 func setVersioning(bucketName string, versioned bool) {
 	var versioning string
 	if versioned {
