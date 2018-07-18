@@ -51,12 +51,12 @@ func RunCommandWithStream(stdout, stderr io.Writer, cmd string, args ...string) 
 }
 
 func BoshCommand() string {
-	return fmt.Sprintf("bosh-cli --non-interactive --environment=%s --ca-cert=%s --client=%s --client-secret=%s",
-		MustHaveEnv("BOSH_ENVIRONMENT"),
-		MustHaveEnv("BOSH_CA_CERT"),
-		MustHaveEnv("BOSH_CLIENT"),
-		MustHaveEnv("BOSH_CLIENT_SECRET"),
-	)
+	MustHaveEnv("BOSH_ENVIRONMENT")
+	MustHaveEnv("BOSH_CA_CERT")
+	MustHaveEnv("BOSH_CLIENT")
+	MustHaveEnv("BOSH_CLIENT_SECRET")
+
+	return fmt.Sprintf("bosh-cli --non-interactive")
 }
 
 func forDeployment(deploymentName string) string {
@@ -67,21 +67,20 @@ func forDeployment(deploymentName string) string {
 }
 
 func getSSHCommand(instanceName, instanceIndex string) string {
-	return fmt.Sprintf(
-		"ssh --gw-user=%s --gw-host=%s --gw-private-key=%s %s",
-		MustHaveEnv("BOSH_GW_USER"),
-		MustHaveEnv("BOSH_GW_HOST"),
-		MustHaveEnv("BOSH_GW_PRIVATE_KEY"),
-		instanceName,
-	)
+	MustHaveEnv("BOSH_GW_USER")
+	MustHaveEnv("BOSH_GW_HOST")
+	MustHaveEnv("BOSH_GW_PRIVATE_KEY")
+
+	return fmt.Sprintf("ssh %s", instanceName)
 }
 
 func getUploadCommand(localPath, remotePath, instanceName, instanceIndex string) string {
+	MustHaveEnv("BOSH_GW_USER")
+	MustHaveEnv("BOSH_GW_HOST")
+	MustHaveEnv("BOSH_GW_PRIVATE_KEY")
+
 	return fmt.Sprintf(
-		"scp --gw-user=%s --gw-host=%s --gw-private-key=%s %s %s/%s:%s",
-		MustHaveEnv("BOSH_GW_USER"),
-		MustHaveEnv("BOSH_GW_HOST"),
-		MustHaveEnv("BOSH_GW_PRIVATE_KEY"),
+		"scp %s %s/%s:%s",
 		localPath,
 		instanceName,
 		instanceIndex,
@@ -90,11 +89,12 @@ func getUploadCommand(localPath, remotePath, instanceName, instanceIndex string)
 }
 
 func getDownloadCommand(remotePath, localPath, instanceName, instanceIndex string) string {
+	MustHaveEnv("BOSH_GW_USER")
+	MustHaveEnv("BOSH_GW_HOST")
+	MustHaveEnv("BOSH_GW_PRIVATE_KEY")
+
 	return fmt.Sprintf(
-		"scp --gw-user=%s --gw-host=%s --gw-private-key=%s %s/%s:%s %s",
-		MustHaveEnv("BOSH_GW_USER"),
-		MustHaveEnv("BOSH_GW_HOST"),
-		MustHaveEnv("BOSH_GW_PRIVATE_KEY"),
+		"scp %s/%s:%s %s",
 		instanceName,
 		instanceIndex,
 		remotePath,
