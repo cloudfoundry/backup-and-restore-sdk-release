@@ -41,22 +41,57 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 		gcsClient.DeleteBlobInBucket(bucket, blob3)
 	})
 
-	It("backs up and restores a bucket", func() {
-		gcsClient.WriteBlobToBucket(bucket, blob1, "TEST_BLOB_1")
-		gcsClient.WriteBlobToBucket(bucket, blob2, "TEST_BLOB_2")
-		gcsClient.WriteBlobToBucket(bucket, blob3, "TEST_BLOB_3")
+	Context("when restoring to the same bucket", func() {
+		It("backs up and restores a bucket", func() {
+			gcsClient.WriteBlobToBucket(bucket, blob1, "TEST_BLOB_1")
+			gcsClient.WriteBlobToBucket(bucket, blob2, "TEST_BLOB_2")
+			gcsClient.WriteBlobToBucket(bucket, blob3, "TEST_BLOB_3")
 
-		instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/backup")
+			instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/backup")
 
-		gcsClient.WriteBlobToBucket(bucket, blob1, "TEST_BLOB_1_NEW")
-		gcsClient.DeleteBlobInBucket(bucket, blob2)
+			gcsClient.WriteBlobToBucket(bucket, blob1, "TEST_BLOB_1_NEW")
+			gcsClient.DeleteBlobInBucket(bucket, blob2)
 
-		instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/restore")
+			instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/restore")
 
-		Expect(gcsClient.ReadBlobFromBucket(bucket, blob1)).To(Equal("TEST_BLOB_1"))
-		Expect(gcsClient.ReadBlobFromBucket(bucket, blob2)).To(Equal("TEST_BLOB_2"))
-		Expect(gcsClient.ReadBlobFromBucket(bucket, blob3)).To(Equal("TEST_BLOB_3"))
+			Expect(gcsClient.ReadBlobFromBucket(bucket, blob1)).To(Equal("TEST_BLOB_1"))
+			Expect(gcsClient.ReadBlobFromBucket(bucket, blob2)).To(Equal("TEST_BLOB_2"))
+			Expect(gcsClient.ReadBlobFromBucket(bucket, blob3)).To(Equal("TEST_BLOB_3"))
+		})
 	})
+
+	Context("when restoring to a clone bucket", func() {
+		var cloneInstance JobInstance
+		var cloneBucket string
+
+		BeforeEach(func() {
+			cloneInstance = JobInstance{
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "gcs-restore-to-clone-bucket",
+				Index:      "0",
+			}
+			cloneInstance.RunSuccessfully("mkdir -p " + instanceArtifactDirPath)
+
+			cloneBucket = MustHaveEnv("GCS_CLONE_BUCKET_NAME")
+		})
+		It("backs up and restores successfully", func() {
+			gcsClient.WriteBlobToBucket(bucket, blob1, "TEST_BLOB_1")
+			gcsClient.WriteBlobToBucket(bucket, blob2, "TEST_BLOB_2")
+			gcsClient.WriteBlobToBucket(bucket, blob3, "TEST_BLOB_3")
+
+			instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/backup")
+
+			instance.Download(instanceArtifactDirPath+"/blobstore.json", "/tmp/blobstore.json")
+			cloneInstance.Upload("/tmp/blobstore.json", instanceArtifactDirPath+"/blobstore.json")
+
+			cloneInstance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/restore")
+
+			Expect(gcsClient.ReadBlobFromBucket(cloneBucket, blob1)).To(Equal("TEST_BLOB_1"))
+			Expect(gcsClient.ReadBlobFromBucket(cloneBucket, blob2)).To(Equal("TEST_BLOB_2"))
+			Expect(gcsClient.ReadBlobFromBucket(cloneBucket, blob3)).To(Equal("TEST_BLOB_3"))
+		})
+	})
+
 })
 
 func timestampedName(prefix string) string {
