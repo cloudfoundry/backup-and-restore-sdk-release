@@ -39,10 +39,11 @@ type FakeBucket struct {
 		result1 []gcs.Blob
 		result2 error
 	}
-	CopyVersionStub        func(blob gcs.Blob) error
+	CopyVersionStub        func(blob gcs.Blob, sourceBucketName string) error
 	copyVersionMutex       sync.RWMutex
 	copyVersionArgsForCall []struct {
-		blob gcs.Blob
+		blob             gcs.Blob
+		sourceBucketName string
 	}
 	copyVersionReturns struct {
 		result1 error
@@ -180,16 +181,17 @@ func (fake *FakeBucket) ListBlobsReturnsOnCall(i int, result1 []gcs.Blob, result
 	}{result1, result2}
 }
 
-func (fake *FakeBucket) CopyVersion(blob gcs.Blob) error {
+func (fake *FakeBucket) CopyVersion(blob gcs.Blob, sourceBucketName string) error {
 	fake.copyVersionMutex.Lock()
 	ret, specificReturn := fake.copyVersionReturnsOnCall[len(fake.copyVersionArgsForCall)]
 	fake.copyVersionArgsForCall = append(fake.copyVersionArgsForCall, struct {
-		blob gcs.Blob
-	}{blob})
-	fake.recordInvocation("CopyVersion", []interface{}{blob})
+		blob             gcs.Blob
+		sourceBucketName string
+	}{blob, sourceBucketName})
+	fake.recordInvocation("CopyVersion", []interface{}{blob, sourceBucketName})
 	fake.copyVersionMutex.Unlock()
 	if fake.CopyVersionStub != nil {
-		return fake.CopyVersionStub(blob)
+		return fake.CopyVersionStub(blob, sourceBucketName)
 	}
 	if specificReturn {
 		return ret.result1
@@ -203,10 +205,10 @@ func (fake *FakeBucket) CopyVersionCallCount() int {
 	return len(fake.copyVersionArgsForCall)
 }
 
-func (fake *FakeBucket) CopyVersionArgsForCall(i int) gcs.Blob {
+func (fake *FakeBucket) CopyVersionArgsForCall(i int) (gcs.Blob, string) {
 	fake.copyVersionMutex.RLock()
 	defer fake.copyVersionMutex.RUnlock()
-	return fake.copyVersionArgsForCall[i].blob
+	return fake.copyVersionArgsForCall[i].blob, fake.copyVersionArgsForCall[i].sourceBucketName
 }
 
 func (fake *FakeBucket) CopyVersionReturns(result1 error) {

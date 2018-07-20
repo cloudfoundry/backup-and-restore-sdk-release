@@ -132,7 +132,7 @@ var _ = Describe("Bucket", func() {
 					GenerationID: blobGenerationID,
 				}
 
-				err = bucket.CopyVersion(blob)
+				err = bucket.CopyVersion(blob, bucketName)
 
 				Expect(err).NotTo(HaveOccurred())
 				versions := ListBlobVersions(bucketName, blobName)
@@ -151,7 +151,7 @@ var _ = Describe("Bucket", func() {
 					GenerationID: blobGenerationID,
 				}
 
-				err = bucket.CopyVersion(blob)
+				err = bucket.CopyVersion(blob, bucketName)
 
 				Expect(err).NotTo(HaveOccurred())
 				content := GetBlobContents(bucketName, blobName)
@@ -168,7 +168,7 @@ var _ = Describe("Bucket", func() {
 						GenerationID: blobGenerationID,
 					}
 
-					err = bucket.CopyVersion(blob)
+					err = bucket.CopyVersion(blob, bucketName)
 
 					Expect(err).To(MatchError(ContainSubstring(
 						fmt.Sprintf("error getting blob version attributes 'gs://%s/%s#%d'", bucketName, blobName, blobGenerationID),
@@ -187,7 +187,7 @@ var _ = Describe("Bucket", func() {
 						GenerationID: blobGenerationID,
 					}
 
-					err = bucket.CopyVersion(blob)
+					err = bucket.CopyVersion(blob, bucketName)
 
 					Expect(err).To(MatchError(ContainSubstring(
 						fmt.Sprintf("error getting blob version attributes 'gs://%s/%s#%d'", bucketName, blobName, blobGenerationID),
@@ -209,11 +209,38 @@ var _ = Describe("Bucket", func() {
 					GenerationID: blobGenerationID,
 				}
 
-				err = bucket.CopyVersion(blob)
+				err = bucket.CopyVersion(blob, bucketName)
 
 				Expect(err).NotTo(HaveOccurred())
 				content := GetBlobContents(bucketName, blobName)
 				Expect(content).To(Equal("file-content"))
+			})
+		})
+
+		Context("when the source bucket of the blob is different from destination bucket", func() {
+			var sourceBucketName string
+
+			BeforeEach(func() {
+				sourceBucketName = CreateBucketWithTimestampedName("source_bucket", true)
+				UploadFile(sourceBucketName, blobName, "new-file-content")
+			})
+
+			AfterEach(func() {
+				DeleteBucket(sourceBucketName)
+			})
+
+			It("copies the version successfully", func() {
+				blob := gcs.Blob{
+					Name:         blobName,
+					GenerationID: blobGenerationID,
+				}
+
+				err = bucket.CopyVersion(blob, sourceBucketName)
+
+				Expect(err).NotTo(HaveOccurred())
+				content := GetBlobContents(bucketName, blobName)
+				Expect(content).To(Equal("file-content"))
+
 			})
 		})
 	})

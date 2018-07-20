@@ -64,12 +64,67 @@ var _ = Describe("Restorer", func() {
 
 		Expect(firstBucket.VersioningEnabledCallCount()).To(Equal(1))
 		Expect(firstBucket.CopyVersionCallCount()).To(Equal(2))
-		Expect(firstBucket.CopyVersionArgsForCall(0)).To(Equal(gcs.Blob{Name: "blob1", GenerationID: 123}))
-		Expect(firstBucket.CopyVersionArgsForCall(1)).To(Equal(gcs.Blob{Name: "blob2", GenerationID: 234}))
+
+		expectedBlob, expectedRestoreBucket := firstBucket.CopyVersionArgsForCall(0)
+		Expect(expectedBlob).To(Equal(gcs.Blob{Name: "blob1", GenerationID: 123}))
+		Expect(expectedRestoreBucket).To(Equal(firstBucketName))
+
+		expectedBlob, expectedRestoreBucket = firstBucket.CopyVersionArgsForCall(1)
+		Expect(expectedBlob).To(Equal(gcs.Blob{Name: "blob2", GenerationID: 234}))
+		Expect(expectedRestoreBucket).To(Equal(firstBucketName))
 
 		Expect(secondBucket.VersioningEnabledCallCount()).To(Equal(1))
 		Expect(secondBucket.CopyVersionCallCount()).To(Equal(1))
-		Expect(secondBucket.CopyVersionArgsForCall(0)).To(Equal(gcs.Blob{Name: "blob3", GenerationID: 345}))
+
+		expectedBlob, expectedRestoreBucket = secondBucket.CopyVersionArgsForCall(0)
+		Expect(expectedBlob).To(Equal(gcs.Blob{Name: "blob3", GenerationID: 345}))
+		Expect(expectedRestoreBucket).To(Equal(secondBucketName))
+	})
+
+	Context("when restoring to a different bucket", func() {
+		var firstRestoreBucketName string
+		var secondRestoreBucketName string
+		It("restores successfully", func() {
+			firstRestoreBucketName = "restoreBucket1"
+			secondRestoreBucketName = "restoreBucket2"
+
+			backups := map[string]gcs.BucketBackup{
+				"first": {
+					Name: firstRestoreBucketName,
+					Blobs: []gcs.Blob{
+						{Name: "blob1", GenerationID: 123},
+						{Name: "blob2", GenerationID: 234},
+					},
+				},
+				"second": {
+					Name: secondRestoreBucketName,
+					Blobs: []gcs.Blob{
+						{Name: "blob3", GenerationID: 345},
+					},
+				},
+			}
+
+			restorer.Restore(backups)
+
+			Expect(firstBucket.VersioningEnabledCallCount()).To(Equal(1))
+			Expect(firstBucket.CopyVersionCallCount()).To(Equal(2))
+
+			expectedBlob, expectedRestoreBucket := firstBucket.CopyVersionArgsForCall(0)
+			Expect(expectedBlob).To(Equal(gcs.Blob{Name: "blob1", GenerationID: 123}))
+			Expect(expectedRestoreBucket).To(Equal(firstRestoreBucketName))
+
+			expectedBlob, expectedRestoreBucket = firstBucket.CopyVersionArgsForCall(1)
+			Expect(expectedBlob).To(Equal(gcs.Blob{Name: "blob2", GenerationID: 234}))
+			Expect(expectedRestoreBucket).To(Equal(firstRestoreBucketName))
+
+			Expect(secondBucket.VersioningEnabledCallCount()).To(Equal(1))
+			Expect(secondBucket.CopyVersionCallCount()).To(Equal(1))
+
+			expectedBlob, expectedRestoreBucket = secondBucket.CopyVersionArgsForCall(0)
+			Expect(expectedBlob).To(Equal(gcs.Blob{Name: "blob3", GenerationID: 345}))
+			Expect(expectedRestoreBucket).To(Equal(secondRestoreBucketName))
+
+		})
 	})
 
 	Context("when versioning is turned off on a bucket", func() {

@@ -35,7 +35,7 @@ func (r Restorer) Restore(backups map[string]BucketBackup) error {
 		bucket := r.buckets[bucketIdentifier]
 
 		for _, blob := range backup.Blobs {
-			err := bucket.CopyVersion(blob)
+			err := bucket.CopyVersion(blob, backup.Name)
 			if err != nil {
 				return fmt.Errorf("failed to copy blob '%s': %s", blob.Name, err)
 			}

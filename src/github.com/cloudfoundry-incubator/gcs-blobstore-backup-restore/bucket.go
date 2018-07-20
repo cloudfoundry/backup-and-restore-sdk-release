@@ -17,7 +17,7 @@ type Bucket interface {
 	Name() string
 	VersioningEnabled() (bool, error)
 	ListBlobs() ([]Blob, error)
-	CopyVersion(blob Blob) error
+	CopyVersion(blob Blob, sourceBucketName string) error
 }
 
 func BuildBuckets(config map[string]Config) (map[string]Bucket, error) {
@@ -48,6 +48,7 @@ type SDKBucket struct {
 	name   string
 	handle *storage.BucketHandle
 	ctx    context.Context
+	client *storage.Client
 }
 
 func NewSDKBucket(serviceAccountKeyJson string, name string) (SDKBucket, error) {
@@ -65,7 +66,7 @@ func NewSDKBucket(serviceAccountKeyJson string, name string) (SDKBucket, error) 
 
 	handle := client.Bucket(name)
 
-	return SDKBucket{name: name, handle: handle, ctx: ctx}, nil
+	return SDKBucket{name: name, handle: handle, ctx: ctx, client: client}, nil
 }
 
 func (b SDKBucket) Name() string {
@@ -101,7 +102,7 @@ func (b SDKBucket) ListBlobs() ([]Blob, error) {
 	return blobs, nil
 }
 
-func (b SDKBucket) CopyVersion(blob Blob) error {
+func (b SDKBucket) CopyVersion(blob Blob, sourceBucketName string) error {
 	ctx := context.Background()
 
 	attrs, err := b.handle.Object(blob.Name).Generation(blob.GenerationID).Attrs(ctx)
@@ -115,7 +116,7 @@ func (b SDKBucket) CopyVersion(blob Blob) error {
 		return nil
 	}
 
-	source := b.handle.Object(blob.Name).Generation(blob.GenerationID)
+	source := b.client.Bucket(sourceBucketName).Object(blob.Name).Generation(blob.GenerationID)
 	copier := b.handle.Object(blob.Name).CopierFrom(source)
 	_, err = copier.Run(ctx)
 	if err != nil {
