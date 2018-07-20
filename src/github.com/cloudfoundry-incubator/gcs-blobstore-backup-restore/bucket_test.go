@@ -125,7 +125,7 @@ var _ = Describe("Bucket", func() {
 			DeleteBucket(bucketName)
 		})
 
-		Context("when the version is the current version of the blob", func() {
+		Context("when copy in-place and the version is the current version of the blob", func() {
 			It("is a noop", func() {
 				blob := gcs.Blob{
 					Name:         blobName,
