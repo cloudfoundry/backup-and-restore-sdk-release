@@ -218,27 +218,30 @@ var _ = Describe("Bucket", func() {
 		})
 
 		Context("when the source bucket of the blob is different from destination bucket", func() {
-			var sourceBucketName string
+			var destinationBucketName string
+			var destinationBucket gcs.SDKBucket
 
 			BeforeEach(func() {
-				sourceBucketName = CreateBucketWithTimestampedName("source_bucket", true)
-				UploadFile(sourceBucketName, blobName, "new-file-content")
+				destinationBucketName = CreateBucketWithTimestampedName("destination_bucket", true)
 			})
 
 			AfterEach(func() {
-				DeleteBucket(sourceBucketName)
+				DeleteBucket(destinationBucketName)
 			})
 
 			It("copies the version successfully", func() {
+				destinationBucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), destinationBucketName)
+				Expect(err).NotTo(HaveOccurred())
+
 				blob := gcs.Blob{
 					Name:         blobName,
 					GenerationID: blobGenerationID,
 				}
 
-				err = bucket.CopyVersion(blob, sourceBucketName)
+				err = destinationBucket.CopyVersion(blob, bucketName)
 
 				Expect(err).NotTo(HaveOccurred())
-				content := GetBlobContents(bucketName, blobName)
+				content := GetBlobContents(destinationBucketName, blobName)
 				Expect(content).To(Equal("file-content"))
 
 			})

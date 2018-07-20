@@ -105,22 +105,25 @@ func (b SDKBucket) ListBlobs() ([]Blob, error) {
 func (b SDKBucket) CopyVersion(blob Blob, sourceBucketName string) error {
 	ctx := context.Background()
 
-	attrs, err := b.handle.Object(blob.Name).Generation(blob.GenerationID).Attrs(ctx)
+	sourceObjectHandle := b.client.Bucket(sourceBucketName).Object(blob.Name)
+	_, err := sourceObjectHandle.Generation(blob.GenerationID).Attrs(ctx)
 	if err != nil {
-		return fmt.Errorf("error getting blob version attributes 'gs://%s/%s#%d': %s", b.name, blob.Name, blob.GenerationID, err)
+		return fmt.Errorf("error getting blob version attributes 'gs://%s/%s#%d': %s", sourceBucketName, blob.Name, blob.GenerationID, err)
 	}
 
-	attrs, err = b.handle.Object(blob.Name).Attrs(ctx)
+	if b.name == sourceBucketName {
+		attrs, err := b.handle.Object(blob.Name).Attrs(ctx)
 
-	if err == nil && attrs.Generation == blob.GenerationID {
-		return nil
+		if err == nil && attrs.Generation == blob.GenerationID {
+			return nil
+		}
 	}
 
-	source := b.client.Bucket(sourceBucketName).Object(blob.Name).Generation(blob.GenerationID)
+	source := sourceObjectHandle.Generation(blob.GenerationID)
 	copier := b.handle.Object(blob.Name).CopierFrom(source)
 	_, err = copier.Run(ctx)
 	if err != nil {
-		return fmt.Errorf("error copying blob 'gs://%s/%s#%d': %s", b.name, blob.Name, blob.GenerationID, err)
+		return fmt.Errorf("error copying blob 'gs://%s/%s#%d': %s", sourceBucketName, blob.Name, blob.GenerationID, err)
 	}
 
 	return nil
