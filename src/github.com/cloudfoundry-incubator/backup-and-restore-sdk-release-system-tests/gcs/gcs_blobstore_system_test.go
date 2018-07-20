@@ -90,6 +90,12 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 			Expect(gcsClient.ReadBlobFromBucket(cloneBucket, blob2)).To(Equal("TEST_BLOB_2"))
 			Expect(gcsClient.ReadBlobFromBucket(cloneBucket, blob3)).To(Equal("TEST_BLOB_3"))
 		})
+
+		AfterEach(func() {
+			gcsClient.DeleteBlobInBucket(cloneBucket, blob1)
+			gcsClient.DeleteBlobInBucket(cloneBucket, blob2)
+			gcsClient.DeleteBlobInBucket(cloneBucket, blob3)
+		})
 	})
 
 })
