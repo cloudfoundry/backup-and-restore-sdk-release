@@ -73,7 +73,7 @@ func (p S3BucketPair) Restore(backupLocation string) error {
 
 	if len(errs) != 0 {
 		return formatErrors(
-			fmt.Sprintf("failed to backup bucket %s", p.liveBucket.Name()),
+			fmt.Sprintf("failed to restore bucket %s", p.liveBucket.Name()),
 			errs,
 		)
 	}
