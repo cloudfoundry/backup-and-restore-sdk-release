@@ -2,14 +2,19 @@ package gcs
 
 import (
 	"fmt"
+	"strings"
 )
 
 type Restorer struct {
-	buckets map[string]Bucket
+	buckets           map[string]Bucket
+	executionStrategy Strategy
 }
 
-func NewRestorer(buckets map[string]Bucket) Restorer {
-	return Restorer{buckets: buckets}
+func NewRestorer(buckets map[string]Bucket, executionStrategy Strategy) Restorer {
+	return Restorer{
+		buckets:           buckets,
+		executionStrategy: executionStrategy,
+	}
 }
 
 func (r Restorer) Restore(backups map[string]BucketBackup) error {
@@ -34,13 +39,22 @@ func (r Restorer) Restore(backups map[string]BucketBackup) error {
 	for bucketIdentifier, backup := range backups {
 		bucket := r.buckets[bucketIdentifier]
 
-		for _, blob := range backup.Blobs {
-			err := bucket.CopyVersion(blob, backup.Name)
-			if err != nil {
-				return fmt.Errorf("failed to copy blob '%s': %s", blob.Name, err)
-			}
+		errs := r.executionStrategy.Run(backup.Blobs, func(blob Blob) error {
+			return bucket.CopyVersion(blob, backup.Name)
+		})
+
+		if len(errs) != 0 {
+			return formatErrors(fmt.Sprintf("failed to restore bucket '%s'", bucket.Name()), errs)
 		}
 	}
 
 	return nil
+}
+
+func formatErrors(contextString string, errors []error) error {
+	errorStrings := make([]string, len(errors))
+	for i, err := range errors {
+		errorStrings[i] = err.Error()
+	}
+	return fmt.Errorf("%s: %s", contextString, strings.Join(errorStrings, "\n"))
 }

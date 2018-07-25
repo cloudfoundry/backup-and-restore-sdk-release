@@ -31,6 +31,8 @@ func main() {
 
 	artifact := gcs.NewArtifact(*artifactPath)
 
+	executionStrategy := gcs.NewParallelStrategy()
+
 	if *backupAction {
 		backuper := gcs.NewBackuper(buckets)
 
@@ -40,7 +42,7 @@ func main() {
 		err = artifact.Write(backups)
 		exitOnError(err)
 	} else {
-		restorer := gcs.NewRestorer(buckets)
+		restorer := gcs.NewRestorer(buckets, executionStrategy)
 
 		backups, err := artifact.Read()
 		exitOnError(err)

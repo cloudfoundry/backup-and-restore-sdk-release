@@ -23,6 +23,8 @@ var _ = Describe("Restorer", func() {
 	const secondBucketName = "second-bucket-name"
 	const thirdBucketName = "third-bucket-name"
 
+	var executionStrategy = gcs.NewParallelStrategy()
+
 	BeforeEach(func() {
 		firstBucket = new(fakes.FakeBucket)
 		secondBucket = new(fakes.FakeBucket)
@@ -40,7 +42,8 @@ var _ = Describe("Restorer", func() {
 			"first":  firstBucket,
 			"second": secondBucket,
 			"third":  thirdBucket,
-		})
+		},
+			executionStrategy)
 	})
 
 	It("restores the version of every blob", func() {
@@ -59,19 +62,24 @@ var _ = Describe("Restorer", func() {
 				},
 			},
 		}
-
+		var expectedBlobs []gcs.Blob
 		restorer.Restore(backups)
 
 		Expect(firstBucket.VersioningEnabledCallCount()).To(Equal(1))
 		Expect(firstBucket.CopyVersionCallCount()).To(Equal(2))
 
 		expectedBlob, expectedRestoreBucket := firstBucket.CopyVersionArgsForCall(0)
-		Expect(expectedBlob).To(Equal(gcs.Blob{Name: "blob1", GenerationID: 123}))
+		expectedBlobs = append(expectedBlobs, expectedBlob)
 		Expect(expectedRestoreBucket).To(Equal(firstBucketName))
 
 		expectedBlob, expectedRestoreBucket = firstBucket.CopyVersionArgsForCall(1)
-		Expect(expectedBlob).To(Equal(gcs.Blob{Name: "blob2", GenerationID: 234}))
+		expectedBlobs = append(expectedBlobs, expectedBlob)
 		Expect(expectedRestoreBucket).To(Equal(firstBucketName))
+
+		Expect(expectedBlobs).To(ConsistOf(
+			gcs.Blob{Name: "blob2", GenerationID: 234},
+			gcs.Blob{Name: "blob1", GenerationID: 123},
+		))
 
 		Expect(secondBucket.VersioningEnabledCallCount()).To(Equal(1))
 		Expect(secondBucket.CopyVersionCallCount()).To(Equal(1))
@@ -105,17 +113,23 @@ var _ = Describe("Restorer", func() {
 			}
 
 			restorer.Restore(backups)
+			var expectedBlobs []gcs.Blob
 
 			Expect(firstBucket.VersioningEnabledCallCount()).To(Equal(1))
 			Expect(firstBucket.CopyVersionCallCount()).To(Equal(2))
 
 			expectedBlob, expectedRestoreBucket := firstBucket.CopyVersionArgsForCall(0)
-			Expect(expectedBlob).To(Equal(gcs.Blob{Name: "blob1", GenerationID: 123}))
+			expectedBlobs = append(expectedBlobs, expectedBlob)
 			Expect(expectedRestoreBucket).To(Equal(firstRestoreBucketName))
 
 			expectedBlob, expectedRestoreBucket = firstBucket.CopyVersionArgsForCall(1)
-			Expect(expectedBlob).To(Equal(gcs.Blob{Name: "blob2", GenerationID: 234}))
+			expectedBlobs = append(expectedBlobs, expectedBlob)
 			Expect(expectedRestoreBucket).To(Equal(firstRestoreBucketName))
+
+			Expect(expectedBlobs).To(ConsistOf(
+				gcs.Blob{Name: "blob2", GenerationID: 234},
+				gcs.Blob{Name: "blob1", GenerationID: 123},
+			))
 
 			Expect(secondBucket.VersioningEnabledCallCount()).To(Equal(1))
 			Expect(secondBucket.CopyVersionCallCount()).To(Equal(1))
@@ -213,7 +227,7 @@ var _ = Describe("Restorer", func() {
 			err := restorer.Restore(backups)
 
 			Expect(err).To(MatchError(SatisfyAll(
-				ContainSubstring(fmt.Sprintf("failed to copy blob '%s'", blobName)),
+				ContainSubstring(fmt.Sprintf("failed to restore bucket '%s'", firstBucketName)),
 				ContainSubstring("ooops!"),
 			)))
 		})
