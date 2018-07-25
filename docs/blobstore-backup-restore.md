@@ -49,7 +49,7 @@ properties:
         name: "((my_bucket_backup_key))"
         region: "((aws_backup_region))"
     other_bucket:
-      name: "((other_bucket_package_directory_key))"
+      name: "((other_bucket_key))"
       region: "((aws_region))"
       aws_access_key_id: "((other_bucket_access_key_id))"
       aws_secret_access_key: "((other_bucket_secret_access_key))"
@@ -89,7 +89,7 @@ properties:
       aws_access_key_id: "((my_bucket_access_key_id))"
       aws_secret_access_key: "((my_bucket_secret_access_key))"
     other_bucket:
-      name: "((other_bucket_package_directory_key))"
+      name: "((other_bucket_key))"
       region: "((aws_region))"
       use_iam_profile: true
 ```
