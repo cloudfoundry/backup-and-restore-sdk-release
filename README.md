@@ -29,10 +29,11 @@ Backup and Restore SDK Release status [![Build SDK Release Badge](https://backup
 
 ### Supported Blobstores
 
-| Name          | Status                                                                                                                                                                                                                                                                                                            |
-|:--------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| S3-Compatible | [![S3 Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests)            |
-| Azure         | [![Azure Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/azure-blobstore-backuper-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/azure-blobstore-backuper-system-tests) | |
+| Name                 | Status                                                                                                                                                                                                                                                                                                          |
+|:---------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| S3-Compatible        | [![S3 Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests)          |
+| Azure                | [![Azure Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/azure-blobstore-backuper-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/azure-blobstore-backuper-system-tests) |
+| Google Cloud Storage | [![GCS Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/gcs-blobstore-backuper-system-tests)        |
 
 ## Developing
 

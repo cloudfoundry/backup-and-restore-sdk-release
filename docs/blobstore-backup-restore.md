@@ -4,10 +4,11 @@ Operators can deploy these jobs with their deployments to back up and restore ex
 
 ### Usage
 
-Three external blobstore types are supported:
-- [S3-Compatible Unversioned Blobstores](#S3-Compatible-Unversioned-Blobstores)
-- [S3-Compatible Versioned Blobstores](#S3-Compatible-Versioned-Blobstores)
-- [Azure Blobstores](#Azure-Blobstores)
+The following external blobstore types are supported:
+- [S3-Compatible Unversioned](#S3-Compatible-Unversioned-Blobstores)
+- [S3-Compatible Versioned](#S3-Compatible-Versioned-Blobstores)
+- [Azure](#Azure-Blobstores)
+- [Google Cloud Storage](#Google-Cloud-Storage-Blobstores)
 
 Locate one of the jobs on any instance group in your deployment that has a persistent disk (i.e. the `/var/vcap/store` folder should exist). When deploying with `cf-deployment`, refer to ops files for enabling the backup and restore of external blobstores. See the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html#enable-backup-and-restore) for more details.
 
@@ -136,5 +137,31 @@ properties:
       azure_storage_key: "((destination_container2_storage_access_key))"
 ```
 
+### Google Cloud Storage Blobstores
 
+`gcs-blobstore-backup-restorer` only supports Google Cloud Storage (GCS) buckets that have versioning enabled. For more details about enabling versioning and retention policy on your blobstore, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html#gcs).
 
+`gcs-blobstore-backup-restorer` backs up blobstores by storing the generation number of each live blob, not the actual files. At restore time, those versions will be restored. This makes backups and restores faster, but also means that **restores only work if the original buckets still exist**. For more information, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html#gcs).
+
+##### Google Cloud Storage Properties
+
+The `gcs-blobstore-backup-restorer` job can be configured using the following properties:
+
+* `enabled` [Boolean]: enables the backup and restore scripts. `false` by default.
+* `buckets` [Hash]: a map from bucket identifiers to their configuration. For each bucket, you'll need to specify the following properties:
+  * `name` [String]: the bucket name
+  * `gcp_service_account_key` [String]: JSON service account key
+
+Here are example job properties to configure two GCS buckets: `my_bucket` and `other_bucket`.
+
+```yaml
+properties:
+  enabled: true
+  buckets:
+    my_bucket:
+      name: "((my_bucket_key))"
+      gcp_service_account_key: "((my_bucket_gcp_service_account_key))"
+    other_bucket:
+      name: "((other_bucket_key))"
+      gcp_service_account_key: "((other_bucket_gcp_service_account_key))"
+```
