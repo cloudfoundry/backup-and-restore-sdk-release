@@ -5,10 +5,10 @@ Operators can deploy these jobs with their deployments to back up and restore ex
 ### Usage
 
 The following external blobstore types are supported:
-- [S3-Compatible Unversioned](#S3-Compatible-Unversioned-Blobstores)
-- [S3-Compatible Versioned](#S3-Compatible-Versioned-Blobstores)
-- [Azure](#Azure-Blobstores)
-- [Google Cloud Storage](#Google-Cloud-Storage-Blobstores)
+- [S3-Compatible Unversioned](#s3-compatible-unversioned-blobstores)
+- [S3-Compatible Versioned](#s3-compatible-versioned-blobstores)
+- [Azure](#azure-blobstores)
+- [Google Cloud Storage](#google-cloud-storage-blobstores)
 
 Locate one of the jobs on any instance group in your deployment that has a persistent disk (i.e. the `/var/vcap/store` folder should exist). When deploying with `cf-deployment`, refer to ops files for enabling the backup and restore of external blobstores. See the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html#enable-backup-and-restore) for more details.
 
