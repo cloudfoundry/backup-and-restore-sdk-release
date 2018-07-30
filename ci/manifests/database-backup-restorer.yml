@@ -3,12 +3,12 @@ name: ((deployment-name))
 
 releases:
 - name: backup-and-restore-sdk
-  version: latest
+  version: set-in-ci
 
 stemcells:
 - alias: xenial
   os: ubuntu-xenial
-  version: latest
+  version: set-in-ci
 
 instance_groups:
 - name: database-backup-restorer

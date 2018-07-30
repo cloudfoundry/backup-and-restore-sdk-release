@@ -28,7 +28,7 @@ releases:
 stemcells:
 - alias: xenial
   os: ubuntu-xenial
-  version: latest
+  version: set-in-ci
 
 instance_groups:
 - name: postgres
