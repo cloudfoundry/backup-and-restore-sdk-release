@@ -21,9 +21,6 @@ releases:
 - name: bosh
   version: 260.3
   url: https://bosh.io/d/github.com/cloudfoundry/bosh?v=260.3
-- name: backup-and-restore-sdk
-  version: ((backup-and-restore-sdk-release-version))
-  url: ((backup-and-restore-sdk-release-url))
 
 stemcells:
 - alias: xenial
@@ -34,10 +31,10 @@ instance_groups:
 - name: postgres
   instances: 1
   vm_type: small
-  persistent_disk_type: fifty
+  persistent_disk_type: 10GB
   stemcell: xenial
   networks:
-  - name: ((network_name))
+  - name: default
     static_ips: [((db_host))]
   jobs:
   - name: postgres-9.4
@@ -45,7 +42,7 @@ instance_groups:
   azs: [((availability_zone))]
   properties:
     postgres:
-      user: test_user
+      user: ((db_username))
       password: ((db_password))
       listen_address: 0.0.0.0
 
