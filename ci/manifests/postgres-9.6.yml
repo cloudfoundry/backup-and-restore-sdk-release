@@ -34,7 +34,7 @@ instance_groups:
   persistent_disk_type: 10GB
   stemcell: xenial
   networks:
-  - name: ((network_name))
+  - name: default
     static_ips: [((db_host))]
   jobs:
   - name: postgres
