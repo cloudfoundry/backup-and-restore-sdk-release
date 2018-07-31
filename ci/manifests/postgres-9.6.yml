@@ -33,6 +33,8 @@ instance_groups:
   vm_type: small
   persistent_disk_type: 10GB
   stemcell: xenial
+  update:
+    serial: true
   networks:
   - name: default
     static_ips: [((db_host))]
