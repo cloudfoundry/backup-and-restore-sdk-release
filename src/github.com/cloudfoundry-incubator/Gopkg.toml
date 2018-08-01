@@ -45,8 +45,8 @@
   version = "1.3.0"
 
 [[constraint]]
-  branch = "master"
   name = "github.com/lib/pq"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/aws/aws-sdk-go"
