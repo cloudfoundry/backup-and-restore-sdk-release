@@ -139,6 +139,8 @@ properties:
 
 ### Google Cloud Storage Blobstores
 
+**:warning: Warning**: Support for Google Cloud Storage is incomplete and should not be used. :warning:
+
 `gcs-blobstore-backup-restorer` only supports Google Cloud Storage (GCS) buckets that have versioning enabled. For more details about enabling versioning and retention policy on your blobstore, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html#gcs).
 
 `gcs-blobstore-backup-restorer` backs up blobstores by storing the generation number of each live blob, not the actual files. At restore time, those versions will be restored. This makes backups and restores faster, but also means that **restores only work if the original buckets still exist**. For more information, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html#gcs).
