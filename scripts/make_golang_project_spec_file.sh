@@ -28,7 +28,7 @@ files:
 
 
   go list -f {{.Deps}} | tr -d '[]' | tr -s ' ' "\n" | \
-    grep "github.com/cloudfoundry-incubator/$GOLANG_PACKAGE_NAME" | \
+    grep "github.com/cloudfoundry-incubator" | \
     xargs -IN echo - N/*.go >> $SPEC_FILE
   popd
 popd
