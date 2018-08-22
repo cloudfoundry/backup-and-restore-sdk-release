@@ -29,43 +29,39 @@ import (
 
 var _ = Describe("S3 versioned backup and restore", func() {
 	var region string
-	var cloneRegion string
-	var unversionedRegion string
 	var bucket string
-	var cloneBucket string
-	var unversionedBucket string
 	var fileName1 string
 	var fileName2 string
 	var fileName3 string
 	var artifactDirPath string
 
-	var backuperInstance JobInstance
-	var backuperInstanceWithClonedBucket JobInstance
-	var backuperInstanceWithUnversionedBucket JobInstance
-	var backuperInstanceWithCustomCaCertBlobstore JobInstance
-
 	BeforeEach(func() {
-		backuperInstance = JobInstance{
-			Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
-			Name:       "backuper",
-			Index:      "0",
-		}
-
 		region = MustHaveEnv("AWS_TEST_BUCKET_REGION")
 		bucket = MustHaveEnv("AWS_TEST_BUCKET_NAME")
 
 		DeleteAllVersionsFromBucket(region, bucket)
 
 		artifactDirPath = "/tmp/s3-versioned-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
-		backuperInstance.RunSuccessfully("mkdir -p " + artifactDirPath)
-	})
-
-	AfterEach(func() {
-		DeleteAllVersionsFromBucket(region, bucket)
-		backuperInstance.RunSuccessfully("rm -rf " + artifactDirPath)
 	})
 
 	Context("backs up and restores in-place", func() {
+		var backuperInstance JobInstance
+
+		BeforeEach(func() {
+			backuperInstance = JobInstance{
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "backuper",
+				Index:      "0",
+			}
+
+			backuperInstance.RunSuccessfully("mkdir -p " + artifactDirPath)
+		})
+
+		AfterEach(func() {
+			DeleteAllVersionsFromBucket(region, bucket)
+			backuperInstance.RunSuccessfully("rm -rf " + artifactDirPath)
+		})
+
 		It("succeeds", func() {
 			fileName1 = UploadTimestampedFileToBucket(region, bucket, "file1", "FILE1")
 			fileName2 = UploadTimestampedFileToBucket(region, bucket, "file2", "FILE2")
@@ -90,7 +86,17 @@ var _ = Describe("S3 versioned backup and restore", func() {
 	})
 
 	Context("backs up and restores to a different bucket", func() {
+		var backuperInstance JobInstance
+		var backuperInstanceWithClonedBucket JobInstance
+		var cloneRegion string
+		var cloneBucket string
+
 		BeforeEach(func() {
+			backuperInstance = JobInstance{
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "backuper",
+				Index:      "0",
+			}
 			backuperInstanceWithClonedBucket = JobInstance{
 				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
 				Name:       "clone-backuper",
@@ -101,11 +107,13 @@ var _ = Describe("S3 versioned backup and restore", func() {
 			cloneBucket = MustHaveEnv("AWS_TEST_CLONE_BUCKET_NAME")
 
 			DeleteAllVersionsFromBucket(cloneRegion, cloneBucket)
+			backuperInstance.RunSuccessfully("mkdir -p " + artifactDirPath)
 			backuperInstanceWithClonedBucket.RunSuccessfully("mkdir -p " + artifactDirPath)
 		})
 
 		AfterEach(func() {
 			DeleteAllVersionsFromBucket(cloneRegion, cloneBucket)
+			backuperInstance.RunSuccessfully("rm -rf " + artifactDirPath)
 			backuperInstanceWithClonedBucket.RunSuccessfully("rm -rf " + artifactDirPath)
 		})
 
@@ -131,6 +139,10 @@ var _ = Describe("S3 versioned backup and restore", func() {
 	})
 
 	Context("When the bucket is not versioned", func() {
+		var backuperInstanceWithUnversionedBucket JobInstance
+		var unversionedRegion string
+		var unversionedBucket string
+
 		BeforeEach(func() {
 			backuperInstanceWithUnversionedBucket = JobInstance{
 				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
@@ -161,6 +173,8 @@ var _ = Describe("S3 versioned backup and restore", func() {
 	})
 
 	Context("When it connects to a blobstore with custom CA cert", func() {
+		var backuperInstanceWithCustomCaCertBlobstore JobInstance
+
 		BeforeEach(func() {
 			backuperInstanceWithCustomCaCertBlobstore = JobInstance{
 				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
