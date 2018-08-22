@@ -1,0 +1,5 @@
+processes:
+- name: backup
+  executable: /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/run_backup
+- name: restore
+  executable: /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/run_restore

@@ -179,4 +179,45 @@ var _ = Describe("S3 versioned backup and restore", func() {
 			Expect(session.Out.Contents()).To(ContainSubstring("A header you provided implies functionality that is not implemented"))
 		})
 	})
+
+	Context("When bpm is configured it backs up and restores in place", func() {
+		var backuperInstance JobInstance
+
+		BeforeEach(func() {
+			backuperInstance = JobInstance{
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "backuper-with-bpm",
+				Index:      "0",
+			}
+
+			backuperInstance.RunSuccessfully("mkdir -p " + artifactDirPath)
+		})
+
+		AfterEach(func() {
+			DeleteAllVersionsFromBucket(region, bucket)
+			backuperInstance.RunSuccessfully("rm -rf " + artifactDirPath)
+		})
+
+		It("succeeds", func() {
+			fileName1 = UploadTimestampedFileToBucket(region, bucket, "file1", "FILE1")
+			fileName2 = UploadTimestampedFileToBucket(region, bucket, "file2", "FILE2")
+
+			backuperInstance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
+				" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
+
+			DeleteFileFromBucket(region, bucket, fileName1)
+			WriteFileInBucket(region, bucket, fileName2, "FILE2_NEW")
+			fileName3 = UploadTimestampedFileToBucket(region, bucket, "file3", "FILE3")
+
+			backuperInstance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
+				" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/restore")
+
+			filesList := ListFilesFromBucket(region, bucket)
+			Expect(filesList).To(ConsistOf(fileName1, fileName2, fileName3))
+
+			Expect(GetFileContentsFromBucket(region, bucket, fileName1)).To(Equal("FILE1"))
+			Expect(GetFileContentsFromBucket(region, bucket, fileName2)).To(Equal("FILE2"))
+			Expect(GetFileContentsFromBucket(region, bucket, fileName3)).To(Equal("FILE3"))
+		})
+	})
 })
