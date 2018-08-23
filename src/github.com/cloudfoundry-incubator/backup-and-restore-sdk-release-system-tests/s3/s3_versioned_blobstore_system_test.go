@@ -204,26 +204,27 @@ var _ = Describe("S3 versioned backup and restore", func() {
 				Index:      "0",
 			}
 
-			backuperInstance.RunSuccessfully("mkdir -p " + artifactDirPath)
+			artifactDirPath = "/var/vcap/store/s3-versioned-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
+			backuperInstance.RunSuccessfully("sudo mkdir -p " + artifactDirPath)
 		})
 
 		AfterEach(func() {
 			DeleteAllVersionsFromBucket(region, bucket)
-			backuperInstance.RunSuccessfully("rm -rf " + artifactDirPath)
+			backuperInstance.RunSuccessfully("sudo rm -rf " + artifactDirPath)
 		})
 
 		It("succeeds", func() {
 			fileName1 = UploadTimestampedFileToBucket(region, bucket, "file1", "FILE1")
 			fileName2 = UploadTimestampedFileToBucket(region, bucket, "file2", "FILE2")
 
-			backuperInstance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
+			backuperInstance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
 				" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
 
 			DeleteFileFromBucket(region, bucket, fileName1)
 			WriteFileInBucket(region, bucket, fileName2, "FILE2_NEW")
 			fileName3 = UploadTimestampedFileToBucket(region, bucket, "file3", "FILE3")
 
-			backuperInstance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
+			backuperInstance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + artifactDirPath +
 				" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/restore")
 
 			filesList := ListFilesFromBucket(region, bucket)
