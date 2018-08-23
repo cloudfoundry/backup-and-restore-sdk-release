@@ -57,6 +57,29 @@ instance_groups:
           region: "((s3-region))"
           aws_access_key_id: "((aws-access-key-id))"
           aws_secret_access_key: "((aws-secret-access-key))"
+  azs: [z1]
+- name: backuper-bpm
+  instances: 1
+  vm_type: small
+  persistent_disk_type: fifty
+  stemcell: xenial
+  update:
+    serial: true
+  networks:
+  - name: concourse
+  jobs:
+  - name: s3-versioned-blobstore-backup-restorer
+    release: backup-and-restore-sdk
+    properties:
+      enabled: true
+      buckets:
+        bucket_identifier:
+          name: "((s3-bucket-name))"
+          region: "((s3-region))"
+          aws_access_key_id: "((aws-access-key-id))"
+          aws_secret_access_key: "((aws-secret-access-key))"
+      bpm:
+        enabled: true
   - name: bpm
     release: bpm
   azs: [z1]

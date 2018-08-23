@@ -200,7 +200,7 @@ var _ = Describe("S3 versioned backup and restore", func() {
 		BeforeEach(func() {
 			backuperInstance = JobInstance{
 				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
-				Name:       "backuper-with-bpm",
+				Name:       "backuper-bpm",
 				Index:      "0",
 			}
 
