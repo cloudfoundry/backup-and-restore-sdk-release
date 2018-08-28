@@ -4,19 +4,23 @@ set -eu
 
 <% if p('enabled') %>
 case $1 in
+
   run)
-    backup()
+    backup
     ;;
+
   *)
+
     <% if p("bpm.enabled") %>
       /var/vcap/jobs/bpm/bin/bpm run azure-blobstore-backup-restorer \
         -p backup \
         -v "${BBR_ARTIFACT_DIRECTORY%/}:writable" \
         -e BBR_ARTIFACT_DIRECTORY="$BBR_ARTIFACT_DIRECTORY"
     <% else %>
-      backup()
+      backup
     <% end %>
     ;;
+
 esac
 
 backup() {
