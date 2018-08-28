@@ -3,8 +3,26 @@
 set -eu
 
 <% if p('enabled') %>
-/var/vcap/packages/azure-blobstore-backup-restorer/bin/azure-blobstore-backup-restore \
-    --backup \
-    --config /var/vcap/jobs/azure-blobstore-backup-restorer/config/containers.json \
-    --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
+case $1 in
+  run)
+    backup()
+    ;;
+  *)
+    <% if p("bpm.enabled") %>
+      /var/vcap/jobs/bpm/bin/bpm run azure-blobstore-backup-restorer \
+        -p backup \
+        -v "${BBR_ARTIFACT_DIRECTORY%/}:writable" \
+        -e BBR_ARTIFACT_DIRECTORY="$BBR_ARTIFACT_DIRECTORY"
+    <% else %>
+      backup()
+    <% end %>
+    ;;
+esac
+
+backup() {
+  /var/vcap/packages/azure-blobstore-backup-restorer/bin/azure-blobstore-backup-restore \
+      --backup \
+      --config /var/vcap/jobs/azure-blobstore-backup-restorer/config/containers.json \
+      --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
+}
 <% end %>

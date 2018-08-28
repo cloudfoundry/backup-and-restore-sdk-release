@@ -21,6 +21,9 @@ releases:
 - name: backup-and-restore-sdk
   version: ((backup-and-restore-sdk-release-version))
   url: ((backup-and-restore-sdk-release-url))
+- name: bpm
+  version: latest
+  url: https://bosh.io/d/github.com/cloudfoundry-incubator/bpm-release
 
 stemcells:
 - alias: xenial
@@ -47,6 +50,30 @@ instance_groups:
           name: ((azure-container-name))
           azure_storage_account: ((azure-storage-account))
           azure_storage_key: ((azure-storage-key))
+  azs: [z1]
+- name: azure-backuper-bpm
+  instances: 1
+  vm_type: small
+  persistent_disk_type: fifty
+  stemcell: xenial
+  update:
+    serial: true
+  networks:
+  - name: concourse
+  jobs:
+  - name: azure-blobstore-backup-restorer
+    release: backup-and-restore-sdk
+    properties:
+      enabled: true
+      containers:
+        droplets:
+          name: ((azure-container-name))
+          azure_storage_account: ((azure-storage-account))
+          azure_storage_key: ((azure-storage-key))
+      bpm:
+        enabled: true
+  - name: bpm
+    release: bpm
   azs: [z1]
 - name: azure-restore-to-different-container
   instances: 1

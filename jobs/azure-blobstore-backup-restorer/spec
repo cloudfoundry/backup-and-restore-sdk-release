@@ -21,6 +21,7 @@ templates:
   backup.erb: bin/bbr/backup
   restore.erb: bin/bbr/restore
   containers.json.erb: config/containers.json
+  bpm.yml.erb: config/bpm.yml
 
 packages:
 - azure-blobstore-backup-restorer
@@ -41,3 +42,7 @@ properties:
         restore_from:  # optional, configure when restoring from a different storage account
           azure_storage_account:  # storage account to restore from
           azure_storage_key:  # storage key for the account
+  bpm:
+    enabled:
+      description: "Enable Bosh Process Manager"
+      default: false

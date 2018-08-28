@@ -22,8 +22,9 @@ var _ = Describe("Azure backup and restore", func() {
 	var localArtifactDirectory string
 	var fileName1, fileName2, fileName3 string
 	var containerName string
+	var jobName = "azure-backuper"
 
-	BeforeEach(func() {
+	JustBeforeEach(func() {
 		azureClient = NewAzureClient(
 			MustHaveEnv("AZURE_STORAGE_ACCOUNT"),
 			MustHaveEnv("AZURE_STORAGE_KEY"),
@@ -32,7 +33,7 @@ var _ = Describe("Azure backup and restore", func() {
 
 		instance = JobInstance{
 			Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
-			Name:       "azure-backuper",
+			Name:       jobName,
 			Index:      "0",
 		}
 
@@ -49,6 +50,38 @@ var _ = Describe("Azure backup and restore", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
+	Context("When BPM is enabled", func() {
+		BeforeEach(func() {
+			jobName = "azure-backuper-bpm"
+		})
+
+		AfterEach(func() {
+			instance.RunSuccessfully("sudo rm -rf " + instanceArtifactDirPath)
+			err := os.RemoveAll(localArtifactDirectory)
+			Expect(err).NotTo(HaveOccurred())
+
+			azureClient.DeleteFileInContainer(containerName, fileName1)
+			azureClient.DeleteFileInContainer(containerName, fileName2)
+			azureClient.DeleteFileInContainer(containerName, fileName3)
+		})
+
+		It("backs up and restores successfully", func() {
+			azureClient.WriteFileInContainer(containerName, fileName1, "TEST_BLOB_1")
+			azureClient.WriteFileInContainer(containerName, fileName2, "TEST_BLOB_2")
+			azureClient.WriteFileInContainer(containerName, fileName3, "TEST_BLOB_3")
+
+			instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/azure-blobstore-backup-restorer/bin/bbr/backup")
+
+			azureClient.WriteFileInContainer(containerName, fileName2, "TEST_BLOB_2_NEW")
+			azureClient.DeleteFileInContainer(containerName, fileName3)
+
+			instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/azure-blobstore-backup-restorer/bin/bbr/restore")
+
+			Expect(azureClient.ReadFileFromContainer(containerName, fileName1)).To(Equal("TEST_BLOB_1"))
+			Expect(azureClient.ReadFileFromContainer(containerName, fileName2)).To(Equal("TEST_BLOB_2"))
+			Expect(azureClient.ReadFileFromContainer(containerName, fileName3)).To(Equal("TEST_BLOB_3"))
+		})
+	})
 	Context("when the destination container is the same as the source container", func() {
 		AfterEach(func() {
 			instance.RunSuccessfully("sudo rm -rf " + instanceArtifactDirPath)
@@ -82,7 +115,7 @@ var _ = Describe("Azure backup and restore", func() {
 		var restoreInstance JobInstance
 		var differentContainerName string
 
-		BeforeEach(func() {
+		JustBeforeEach(func() {
 			restoreInstance = JobInstance{
 				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
 				Name:       "azure-restore-to-different-container",
@@ -130,7 +163,7 @@ var _ = Describe("Azure backup and restore", func() {
 		var restoreInstance JobInstance
 		var differentContainerName string
 
-		BeforeEach(func() {
+		JustBeforeEach(func() {
 			differentAzureClient = NewAzureClient(
 				MustHaveEnv("AZURE_DIFFERENT_STORAGE_ACCOUNT"),
 				MustHaveEnv("AZURE_DIFFERENT_STORAGE_KEY"),
