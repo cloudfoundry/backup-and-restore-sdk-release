@@ -70,12 +70,12 @@ var _ = Describe("Azure backup and restore", func() {
 			azureClient.WriteFileInContainer(containerName, fileName2, "TEST_BLOB_2")
 			azureClient.WriteFileInContainer(containerName, fileName3, "TEST_BLOB_3")
 
-			instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/azure-blobstore-backup-restorer/bin/bbr/backup")
+			instance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/azure-blobstore-backup-restorer/bin/bbr/backup")
 
 			azureClient.WriteFileInContainer(containerName, fileName2, "TEST_BLOB_2_NEW")
 			azureClient.DeleteFileInContainer(containerName, fileName3)
 
-			instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/azure-blobstore-backup-restorer/bin/bbr/restore")
+			instance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/azure-blobstore-backup-restorer/bin/bbr/restore")
 
 			Expect(azureClient.ReadFileFromContainer(containerName, fileName1)).To(Equal("TEST_BLOB_1"))
 			Expect(azureClient.ReadFileFromContainer(containerName, fileName2)).To(Equal("TEST_BLOB_2"))
