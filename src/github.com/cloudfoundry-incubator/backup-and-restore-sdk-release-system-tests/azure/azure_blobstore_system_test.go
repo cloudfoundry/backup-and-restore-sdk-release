@@ -22,20 +22,13 @@ var _ = Describe("Azure backup and restore", func() {
 	var localArtifactDirectory string
 	var fileName1, fileName2, fileName3 string
 	var containerName string
-	var jobName = "azure-backuper"
 
-	JustBeforeEach(func() {
+	BeforeEach(func() {
 		azureClient = NewAzureClient(
 			MustHaveEnv("AZURE_STORAGE_ACCOUNT"),
 			MustHaveEnv("AZURE_STORAGE_KEY"),
 			endpointSuffix,
 		)
-
-		instance = JobInstance{
-			Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
-			Name:       jobName,
-			Index:      "0",
-		}
 
 		containerName = MustHaveEnv("AZURE_CONTAINER_NAME")
 
@@ -43,16 +36,23 @@ var _ = Describe("Azure backup and restore", func() {
 		fileName2 = "test_file_2_" + strconv.FormatInt(time.Now().Unix(), 10)
 		fileName3 = "test_file_3_" + strconv.FormatInt(time.Now().Unix(), 10)
 
-		instanceArtifactDirPath = "/tmp/azure-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
-		instance.RunSuccessfully("mkdir -p " + instanceArtifactDirPath)
 		var err error
 		localArtifactDirectory, err = ioutil.TempDir("", "azure-blobstore-")
 		Expect(err).NotTo(HaveOccurred())
+
+		instanceArtifactDirPath = "/tmp/azure-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
 	})
 
 	Context("When BPM is enabled", func() {
 		BeforeEach(func() {
-			jobName = "azure-backuper-bpm"
+			instance = JobInstance{
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "azure-backuper-bpm",
+				Index:      "0",
+			}
+
+			instance.RunSuccessfully("mkdir -p " + instanceArtifactDirPath)
+
 		})
 
 		AfterEach(func() {
@@ -83,6 +83,16 @@ var _ = Describe("Azure backup and restore", func() {
 		})
 	})
 	Context("when the destination container is the same as the source container", func() {
+		BeforeEach(func() {
+			instance = JobInstance{
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "azure-backuper",
+				Index:      "0",
+			}
+
+			instance.RunSuccessfully("mkdir -p " + instanceArtifactDirPath)
+		})
+
 		AfterEach(func() {
 			instance.RunSuccessfully("sudo rm -rf " + instanceArtifactDirPath)
 			err := os.RemoveAll(localArtifactDirectory)
@@ -115,7 +125,15 @@ var _ = Describe("Azure backup and restore", func() {
 		var restoreInstance JobInstance
 		var differentContainerName string
 
-		JustBeforeEach(func() {
+		BeforeEach(func() {
+			instance = JobInstance{
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "azure-backuper",
+				Index:      "0",
+			}
+
+			instance.RunSuccessfully("mkdir -p " + instanceArtifactDirPath)
+
 			restoreInstance = JobInstance{
 				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
 				Name:       "azure-restore-to-different-container",
@@ -163,7 +181,15 @@ var _ = Describe("Azure backup and restore", func() {
 		var restoreInstance JobInstance
 		var differentContainerName string
 
-		JustBeforeEach(func() {
+		BeforeEach(func() {
+			instance = JobInstance{
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "azure-backuper",
+				Index:      "0",
+			}
+
+			instance.RunSuccessfully("mkdir -p " + instanceArtifactDirPath)
+
 			differentAzureClient = NewAzureClient(
 				MustHaveEnv("AZURE_DIFFERENT_STORAGE_ACCOUNT"),
 				MustHaveEnv("AZURE_DIFFERENT_STORAGE_KEY"),
