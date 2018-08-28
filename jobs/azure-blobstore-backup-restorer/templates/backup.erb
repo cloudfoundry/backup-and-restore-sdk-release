@@ -3,6 +3,13 @@
 set -eu
 
 <% if p('enabled') %>
+backup() {
+  /var/vcap/packages/azure-blobstore-backup-restorer/bin/azure-blobstore-backup-restore \
+      --backup \
+      --config /var/vcap/jobs/azure-blobstore-backup-restorer/config/containers.json \
+      --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
+}
+
 case ${1:-} in
   run)
     backup
@@ -22,10 +29,4 @@ case ${1:-} in
 
 esac
 
-backup() {
-  /var/vcap/packages/azure-blobstore-backup-restorer/bin/azure-blobstore-backup-restore \
-      --backup \
-      --config /var/vcap/jobs/azure-blobstore-backup-restorer/config/containers.json \
-      --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
-}
 <% end %>
