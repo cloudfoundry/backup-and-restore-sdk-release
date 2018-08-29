@@ -48,7 +48,7 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 	})
 
 	AfterEach(func() {
-		backuperInstance.RunSuccessfully("rm -rf " + instanceArtifactDirPath)
+		backuperInstance.RunSuccessfully("sudo rm -rf " + instanceArtifactDirPath)
 		err := os.Remove(localArtifact.Name())
 		Expect(err).NotTo(HaveOccurred())
 		DeleteAllFilesFromBucket(region, bucket)
@@ -146,20 +146,20 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 			}
 
 			instanceArtifactDirPath = "/var/vcap/store/s3-unversioned-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
-			backuperInstance.RunSuccessfully("mkdir -p " + instanceArtifactDirPath)
+			backuperInstance.RunSuccessfully("sudo mkdir -p " + instanceArtifactDirPath)
 		})
 
 		It("backs up and restores an unversioned bucket", func() {
 
 			WriteFileInBucket(region, bucket, "original/path/to/file", "FILE1")
 
-			backuperInstance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
+			backuperInstance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
 				" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/backup")
 
 			DeleteAllFilesFromBucket(region, bucket)
 			Expect(ListFilesFromBucket(region, bucket)).To(HaveLen(0))
 
-			backuperInstance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
+			backuperInstance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
 				" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/restore")
 
 			Expect(GetFileContentsFromBucket(region, bucket, "original/path/to/file")).To(Equal("FILE1"))
