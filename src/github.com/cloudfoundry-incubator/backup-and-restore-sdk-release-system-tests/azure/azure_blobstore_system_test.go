@@ -51,7 +51,8 @@ var _ = Describe("Azure backup and restore", func() {
 				Index:      "0",
 			}
 
-			instance.RunSuccessfully("mkdir -p " + instanceArtifactDirPath)
+			instanceArtifactDirPath = "/var/vcap/store/azure-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
+			instance.RunSuccessfully("sudo mkdir -p " + instanceArtifactDirPath)
 
 		})
 

@@ -1,5 +1,7 @@
 processes:
 - name: backup
-  executable: /var/vcap/jobs/azure-blobstore-backup-restorer/bin/bbr/backup run
+  executable: /var/vcap/jobs/azure-blobstore-backup-restorer/bin/bbr/backup
+  args:
+  - run
 # - name: restore
 #   executable: /var/vcap/jobs/azure-blobstore-backup-restorer/bin/bbr/restore run
