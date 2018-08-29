@@ -12,7 +12,7 @@ describe 'azure-blobstore-backup-restorer job' do
     context 'when backup is not enabled' do
       it 'the templated script is empty' do
         config = backup_template.render({})
-        expect(config).to eq("#!/usr/bin/env bash\n\nset -eu\n\n\n")
+        expect(config.strip).to eq("#!/usr/bin/env bash\n\nset -eu")
       end
     end
 
@@ -38,7 +38,7 @@ describe 'azure-blobstore-backup-restorer job' do
     context 'when restore is not enabled' do
       it 'the templated script is empty' do
         config = restore_template.render({})
-        expect(config).to eq("#!/usr/bin/env bash\n\nset -eu\n\n\n")
+        expect(config.strip).to eq("#!/usr/bin/env bash\n\nset -eu")
       end
     end
 

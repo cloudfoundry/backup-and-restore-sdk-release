@@ -19,9 +19,7 @@ name: s3-versioned-blobstore-backup-restorer
 
 templates:
   backup.erb: bin/bbr/backup
-  run_backup.erb: bin/bbr/run_backup
   restore.erb: bin/bbr/restore
-  run_restore.erb: bin/bbr/run_restore
   buckets.json.erb: config/buckets.json
   bpm.yml.erb: config/bpm.yml
 

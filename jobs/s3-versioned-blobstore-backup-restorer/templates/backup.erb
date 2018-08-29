@@ -3,12 +3,31 @@
 set -eu
 
 <% if p('enabled') %>
-  <% if p("bpm.enabled") %>
-/var/vcap/jobs/bpm/bin/bpm run s3-versioned-blobstore-backup-restorer \
-  -p backup \
-  -v "${BBR_ARTIFACT_DIRECTORY%/}:writable" \
-  -e BBR_ARTIFACT_DIRECTORY="$BBR_ARTIFACT_DIRECTORY"
-  <% else %>
-/var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/run_backup
-  <% end %>
+backup() {
+  /var/vcap/packages/s3-blobstore-backup-restorer/bin/s3-blobstore-backup-restore \
+    --backup \
+    --config /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/config/buckets.json \
+    --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
+}
+
+case ${1:-} in
+  run)
+    backup
+    ;;
+
+  *)
+
+    <% if p("bpm.enabled") %>
+      /var/vcap/jobs/bpm/bin/bpm run s3-versioned-blobstore-backup-restorer \
+        -p backup \
+        -v "${BBR_ARTIFACT_DIRECTORY%/}:writable" \
+        -e BBR_ARTIFACT_DIRECTORY="$BBR_ARTIFACT_DIRECTORY"
+    <% else %>
+      backup
+    <% end %>
+    ;;
+
+esac
+
 <% end %>
+
