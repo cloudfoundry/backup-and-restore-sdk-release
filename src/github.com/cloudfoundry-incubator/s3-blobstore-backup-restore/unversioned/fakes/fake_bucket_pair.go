@@ -41,6 +41,24 @@ type FakeBucketPair struct {
 	restoreReturnsOnCall map[int]struct {
 		result1 error
 	}
+	LiveBucketNameStub        func() string
+	liveBucketNameMutex       sync.RWMutex
+	liveBucketNameArgsForCall []struct{}
+	liveBucketNameReturns     struct {
+		result1 string
+	}
+	liveBucketNameReturnsOnCall map[int]struct {
+		result1 string
+	}
+	BackupBucketNameStub        func() string
+	backupBucketNameMutex       sync.RWMutex
+	backupBucketNameArgsForCall []struct{}
+	backupBucketNameReturns     struct {
+		result1 string
+	}
+	backupBucketNameReturnsOnCall map[int]struct {
+		result1 string
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -184,6 +202,86 @@ func (fake *FakeBucketPair) RestoreReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeBucketPair) LiveBucketName() string {
+	fake.liveBucketNameMutex.Lock()
+	ret, specificReturn := fake.liveBucketNameReturnsOnCall[len(fake.liveBucketNameArgsForCall)]
+	fake.liveBucketNameArgsForCall = append(fake.liveBucketNameArgsForCall, struct{}{})
+	fake.recordInvocation("LiveBucketName", []interface{}{})
+	fake.liveBucketNameMutex.Unlock()
+	if fake.LiveBucketNameStub != nil {
+		return fake.LiveBucketNameStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.liveBucketNameReturns.result1
+}
+
+func (fake *FakeBucketPair) LiveBucketNameCallCount() int {
+	fake.liveBucketNameMutex.RLock()
+	defer fake.liveBucketNameMutex.RUnlock()
+	return len(fake.liveBucketNameArgsForCall)
+}
+
+func (fake *FakeBucketPair) LiveBucketNameReturns(result1 string) {
+	fake.LiveBucketNameStub = nil
+	fake.liveBucketNameReturns = struct {
+		result1 string
+	}{result1}
+}
+
+func (fake *FakeBucketPair) LiveBucketNameReturnsOnCall(i int, result1 string) {
+	fake.LiveBucketNameStub = nil
+	if fake.liveBucketNameReturnsOnCall == nil {
+		fake.liveBucketNameReturnsOnCall = make(map[int]struct {
+			result1 string
+		})
+	}
+	fake.liveBucketNameReturnsOnCall[i] = struct {
+		result1 string
+	}{result1}
+}
+
+func (fake *FakeBucketPair) BackupBucketName() string {
+	fake.backupBucketNameMutex.Lock()
+	ret, specificReturn := fake.backupBucketNameReturnsOnCall[len(fake.backupBucketNameArgsForCall)]
+	fake.backupBucketNameArgsForCall = append(fake.backupBucketNameArgsForCall, struct{}{})
+	fake.recordInvocation("BackupBucketName", []interface{}{})
+	fake.backupBucketNameMutex.Unlock()
+	if fake.BackupBucketNameStub != nil {
+		return fake.BackupBucketNameStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.backupBucketNameReturns.result1
+}
+
+func (fake *FakeBucketPair) BackupBucketNameCallCount() int {
+	fake.backupBucketNameMutex.RLock()
+	defer fake.backupBucketNameMutex.RUnlock()
+	return len(fake.backupBucketNameArgsForCall)
+}
+
+func (fake *FakeBucketPair) BackupBucketNameReturns(result1 string) {
+	fake.BackupBucketNameStub = nil
+	fake.backupBucketNameReturns = struct {
+		result1 string
+	}{result1}
+}
+
+func (fake *FakeBucketPair) BackupBucketNameReturnsOnCall(i int, result1 string) {
+	fake.BackupBucketNameStub = nil
+	if fake.backupBucketNameReturnsOnCall == nil {
+		fake.backupBucketNameReturnsOnCall = make(map[int]struct {
+			result1 string
+		})
+	}
+	fake.backupBucketNameReturnsOnCall[i] = struct {
+		result1 string
+	}{result1}
+}
+
 func (fake *FakeBucketPair) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -193,6 +291,10 @@ func (fake *FakeBucketPair) Invocations() map[string][][]interface{} {
 	defer fake.backupMutex.RUnlock()
 	fake.restoreMutex.RLock()
 	defer fake.restoreMutex.RUnlock()
+	fake.liveBucketNameMutex.RLock()
+	defer fake.liveBucketNameMutex.RUnlock()
+	fake.backupBucketNameMutex.RLock()
+	defer fake.backupBucketNameMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
