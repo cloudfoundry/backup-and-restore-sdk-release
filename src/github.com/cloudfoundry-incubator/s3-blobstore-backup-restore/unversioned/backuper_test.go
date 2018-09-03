@@ -26,6 +26,9 @@ var _ = Describe("Backuper", func() {
 
 	BeforeEach(func() {
 		dropletsBucketPair = new(fakes.FakeBucketPair)
+		dropletsBucketPair.LiveBucketNameReturns("droplets_live_bucket")
+		dropletsBucketPair.BackupBucketNameReturns("droplets_backup_bucket")
+
 		dropletsBackupBucketAddress = unversioned.BackupBucketAddress{
 			BucketName:   "the-droplets-backup-bucket",
 			BucketRegion: "the-droplets-backup-region",
@@ -34,6 +37,9 @@ var _ = Describe("Backuper", func() {
 		dropletsBucketPair.BackupReturns(dropletsBackupBucketAddress, nil)
 
 		buildpacksBucketPair = new(fakes.FakeBucketPair)
+		buildpacksBucketPair.LiveBucketNameReturns("buildpacks_live_bucket")
+		buildpacksBucketPair.BackupBucketNameReturns("buildpacks_backup_bucket")
+
 		buildpacksBackupBucketAddress = unversioned.BackupBucketAddress{
 			BucketName:   "the-buildpacks-backup-bucket",
 			BucketRegion: "the-buildpacks-backup-region",
@@ -112,6 +118,17 @@ var _ = Describe("Backuper", func() {
 
 		It("throws an error", func() {
 			Expect(err).To(MatchError("SAVE ERROR"))
+		})
+	})
+
+	Context("when any of the BucketPairs is configured to backup on top a live bucket", func() {
+		BeforeEach(func() {
+			buildpacksBucketPair.BackupBucketNameReturns("droplets_live_bucket")
+		})
+		It("exits gracefully", func() {
+			By("returning a useful error", func() {
+				Expect(err).To(MatchError("'buildpacks' backup bucket can not be the same as 'droplets' live bucket"))
+			})
 		})
 	})
 })

@@ -16,6 +16,8 @@ type BucketPair interface {
 	CheckValidity() error
 	Backup(backupLocation string) (BackupBucketAddress, error)
 	Restore(backupLocation string) error
+	LiveBucketName() string
+	BackupBucketName() string
 }
 
 type S3BucketPair struct {
@@ -73,7 +75,7 @@ func (p S3BucketPair) Restore(backupLocation string) error {
 
 	if len(errs) != 0 {
 		return formatErrors(
-			fmt.Sprintf("failed to backup bucket %s", p.liveBucket.Name()),
+			fmt.Sprintf("failed to restore bucket %s", p.liveBucket.Name()),
 			errs,
 		)
 	}
@@ -95,4 +97,12 @@ func formatErrors(contextString string, errors []error) error {
 		errorStrings[i] = err.Error()
 	}
 	return fmt.Errorf("%s: %s", contextString, strings.Join(errorStrings, "\n"))
+}
+
+func (p S3BucketPair) LiveBucketName() string {
+	return p.liveBucket.Name()
+}
+
+func (p S3BucketPair) BackupBucketName() string {
+	return p.backupBucket.Name()
 }

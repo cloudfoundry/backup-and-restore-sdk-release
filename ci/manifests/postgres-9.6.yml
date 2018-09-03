@@ -21,9 +21,6 @@ releases:
 - name: postgres
   version: 18
   url: http://bosh.io/d/github.com/cloudfoundry/postgres-release?v=18
-- name: backup-and-restore-sdk
-  version: ((backup-and-restore-sdk-release-version))
-  url: ((backup-and-restore-sdk-release-url))
 
 stemcells:
 - alias: xenial
@@ -34,10 +31,12 @@ instance_groups:
 - name: postgres
   instances: 1
   vm_type: small
-  persistent_disk_type: fifty
+  persistent_disk_type: 10GB
   stemcell: xenial
+  update:
+    serial: true
   networks:
-  - name: ((network_name))
+  - name: default
     static_ips: [((db_host))]
   jobs:
   - name: postgres
@@ -46,19 +45,19 @@ instance_groups:
   properties:
     databases:
       roles:
-      - name: test_user
+      - name: ((db_username))
         password: ((db_password))
         permissions:
         - "SUPERUSER"
-      - name: ssl_user
-        password: ((db_password))
+      - name: ((ssl_username))
+        password: ((ssl_password))
         permissions:
         - "SUPERUSER"
-      - name: mutual_tls_user
-        common_name: postgres96
+      - name: ((tls_username))
+        common_name: ((tls_common_name))
         permissions:
         - "SUPERUSER"
-      port: 5432
+      port: ((db_port))
       tls:
         ca: "((databases.ca))"
         certificate: "((databases.certificate))"

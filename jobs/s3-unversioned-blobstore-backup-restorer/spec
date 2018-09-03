@@ -21,6 +21,7 @@ templates:
   backup.erb: bin/bbr/backup
   restore.erb: bin/bbr/restore
   buckets.json.erb: config/buckets.json
+  bpm.yml.erb: config/bpm.yml
 
 packages:
 - s3-blobstore-backup-restorer
@@ -43,3 +44,6 @@ properties:
         backup:
           name: "the_backup_droplets_bucket"
           region: "eu-west-2"
+  bpm.enabled:
+    description: "Enable Bosh Process Manager"
+    default: false

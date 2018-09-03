@@ -3,12 +3,12 @@ name: ((deployment-name))
 
 releases:
 - name: backup-and-restore-sdk
-  version: latest
+  version: latest  # replaced by exact version by bosh-deployment-resource in CI
 
 stemcells:
 - alias: xenial
   os: ubuntu-xenial
-  version: latest
+  version: latest  # replaced by exact version by bosh-deployment-resource in CI
 
 instance_groups:
 - name: database-backup-restorer

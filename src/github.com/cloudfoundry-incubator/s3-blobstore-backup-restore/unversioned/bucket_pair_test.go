@@ -218,4 +218,16 @@ var _ = Describe("BucketPair", func() {
 			})
 		})
 	})
+
+	Describe("LiveBucketName", func() {
+		It("returns the name of the live bucket", func() {
+			Expect(bucketPair.LiveBucketName()).To(Equal(liveBucket.Name()))
+		})
+	})
+
+	Describe("BackupBucketName", func() {
+		It("returns the name of the backup bucket", func() {
+			Expect(bucketPair.BackupBucketName()).To(Equal(backupBucket.Name()))
+		})
+	})
 })

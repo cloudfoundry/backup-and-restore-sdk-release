@@ -57,6 +57,29 @@ instance_groups:
           region: "((s3-region))"
           aws_access_key_id: "((aws-access-key-id))"
           aws_secret_access_key: "((aws-secret-access-key))"
+  azs: [z1]
+- name: backuper-bpm
+  instances: 1
+  vm_type: small
+  persistent_disk_type: fifty
+  stemcell: xenial
+  update:
+    serial: true
+  networks:
+  - name: concourse
+  jobs:
+  - name: s3-versioned-blobstore-backup-restorer
+    release: backup-and-restore-sdk
+    properties:
+      enabled: true
+      buckets:
+        bucket_identifier:
+          name: "((s3-bucket-name))"
+          region: "((s3-region))"
+          aws_access_key_id: "((aws-access-key-id))"
+          aws_secret_access_key: "((aws-secret-access-key))"
+      bpm:
+        enabled: true
   - name: bpm
     release: bpm
   azs: [z1]
@@ -172,7 +195,34 @@ instance_groups:
           backup:
             name: "((s3-unversioned-backup-bucket-name))"
             region: "((s3-unversioned-backup-bucket-region))"
-
+- name: s3-unversioned-backuper-bpm
+  azs: [z1]
+  instances: 1
+  vm_type: small
+  persistent_disk_type: fifty
+  stemcell: xenial
+  update:
+    serial: true
+  networks:
+  - name: concourse
+  jobs:
+  - name: bpm
+    release: bpm
+  - name: s3-unversioned-blobstore-backup-restorer
+    release: backup-and-restore-sdk
+    properties:
+      enabled: true
+      bpm:
+        enabled: true
+      buckets:
+        my_bucket:
+          name: "((s3-unversioned-bpm-bucket-name))"
+          region: "((s3-unversioned-bpm-bucket-region))"
+          aws_access_key_id: "((aws-access-key-id))"
+          aws_secret_access_key: "((aws-secret-access-key))"
+          backup:
+            name: "((s3-unversioned-bpm-backup-bucket-name))"
+            region: "((s3-unversioned-bpm-backup-bucket-region))"
 update:
   canaries: 1
   max_in_flight: 1

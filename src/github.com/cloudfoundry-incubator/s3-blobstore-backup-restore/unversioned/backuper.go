@@ -31,6 +31,11 @@ func (b Backuper) Run() error {
 		return err
 	}
 
+	err = b.checkCrossPairValidity()
+	if err != nil {
+		return err
+	}
+
 	timestamp := b.clock.Now()
 	addresses := map[string]BackupBucketAddress{}
 	for id, pair := range b.bucketPairs {
@@ -50,5 +55,18 @@ func (b Backuper) checkPairsValidity() error {
 			return fmt.Errorf("failed to backup bucket '%s': %s", bucketId, err.Error())
 		}
 	}
+	return nil
+}
+
+func (b Backuper) checkCrossPairValidity() error {
+	for bucketID, bucketPair := range b.bucketPairs {
+		liveBucketName := bucketPair.LiveBucketName()
+		for compareBucketID, compareBucketPair := range b.bucketPairs {
+			if liveBucketName == compareBucketPair.BackupBucketName() {
+				return fmt.Errorf("'%s' backup bucket can not be the same as '%s' live bucket", compareBucketID, bucketID)
+			}
+		}
+	}
+
 	return nil
 }

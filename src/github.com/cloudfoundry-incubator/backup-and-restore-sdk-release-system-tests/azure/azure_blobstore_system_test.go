@@ -30,26 +30,70 @@ var _ = Describe("Azure backup and restore", func() {
 			endpointSuffix,
 		)
 
-		instance = JobInstance{
-			Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
-			Name:       "azure-backuper",
-			Index:      "0",
-		}
-
 		containerName = MustHaveEnv("AZURE_CONTAINER_NAME")
 
 		fileName1 = "test_file_1_" + strconv.FormatInt(time.Now().Unix(), 10)
 		fileName2 = "test_file_2_" + strconv.FormatInt(time.Now().Unix(), 10)
 		fileName3 = "test_file_3_" + strconv.FormatInt(time.Now().Unix(), 10)
 
-		instanceArtifactDirPath = "/tmp/azure-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
-		instance.RunSuccessfully("mkdir -p " + instanceArtifactDirPath)
 		var err error
 		localArtifactDirectory, err = ioutil.TempDir("", "azure-blobstore-")
 		Expect(err).NotTo(HaveOccurred())
+
+		instanceArtifactDirPath = "/tmp/azure-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
 	})
 
+	Context("When BPM is enabled", func() {
+		BeforeEach(func() {
+			instance = JobInstance{
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "azure-backuper-bpm",
+				Index:      "0",
+			}
+
+			instanceArtifactDirPath = "/var/vcap/store/azure-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
+			instance.RunSuccessfully("sudo mkdir -p " + instanceArtifactDirPath)
+
+		})
+
+		AfterEach(func() {
+			instance.RunSuccessfully("sudo rm -rf " + instanceArtifactDirPath)
+			err := os.RemoveAll(localArtifactDirectory)
+			Expect(err).NotTo(HaveOccurred())
+
+			azureClient.DeleteFileInContainer(containerName, fileName1)
+			azureClient.DeleteFileInContainer(containerName, fileName2)
+			azureClient.DeleteFileInContainer(containerName, fileName3)
+		})
+
+		It("backs up and restores successfully", func() {
+			azureClient.WriteFileInContainer(containerName, fileName1, "TEST_BLOB_1")
+			azureClient.WriteFileInContainer(containerName, fileName2, "TEST_BLOB_2")
+			azureClient.WriteFileInContainer(containerName, fileName3, "TEST_BLOB_3")
+
+			instance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/azure-blobstore-backup-restorer/bin/bbr/backup")
+
+			azureClient.WriteFileInContainer(containerName, fileName2, "TEST_BLOB_2_NEW")
+			azureClient.DeleteFileInContainer(containerName, fileName3)
+
+			instance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/azure-blobstore-backup-restorer/bin/bbr/restore")
+
+			Expect(azureClient.ReadFileFromContainer(containerName, fileName1)).To(Equal("TEST_BLOB_1"))
+			Expect(azureClient.ReadFileFromContainer(containerName, fileName2)).To(Equal("TEST_BLOB_2"))
+			Expect(azureClient.ReadFileFromContainer(containerName, fileName3)).To(Equal("TEST_BLOB_3"))
+		})
+	})
 	Context("when the destination container is the same as the source container", func() {
+		BeforeEach(func() {
+			instance = JobInstance{
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "azure-backuper",
+				Index:      "0",
+			}
+
+			instance.RunSuccessfully("mkdir -p " + instanceArtifactDirPath)
+		})
+
 		AfterEach(func() {
 			instance.RunSuccessfully("sudo rm -rf " + instanceArtifactDirPath)
 			err := os.RemoveAll(localArtifactDirectory)
@@ -83,6 +127,14 @@ var _ = Describe("Azure backup and restore", func() {
 		var differentContainerName string
 
 		BeforeEach(func() {
+			instance = JobInstance{
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "azure-backuper",
+				Index:      "0",
+			}
+
+			instance.RunSuccessfully("mkdir -p " + instanceArtifactDirPath)
+
 			restoreInstance = JobInstance{
 				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
 				Name:       "azure-restore-to-different-container",
@@ -131,6 +183,14 @@ var _ = Describe("Azure backup and restore", func() {
 		var differentContainerName string
 
 		BeforeEach(func() {
+			instance = JobInstance{
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "azure-backuper",
+				Index:      "0",
+			}
+
+			instance.RunSuccessfully("mkdir -p " + instanceArtifactDirPath)
+
 			differentAzureClient = NewAzureClient(
 				MustHaveEnv("AZURE_DIFFERENT_STORAGE_ACCOUNT"),
 				MustHaveEnv("AZURE_DIFFERENT_STORAGE_KEY"),

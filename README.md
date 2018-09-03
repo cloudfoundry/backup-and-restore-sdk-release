@@ -35,6 +35,8 @@ Backup and Restore SDK Release status [![Build SDK Release Badge](https://backup
 | Azure                | [![Azure Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/azure-blobstore-backuper-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/azure-blobstore-backuper-system-tests) |
 | Google Cloud Storage | [![GCS Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release/jobs/gcs-blobstore-backuper-system-tests)        |
 
+**:warning: Warning**: Support for Google Cloud Storage is incomplete and should not be used. :warning:
+
 ## Developing
 
 This repository using develop as the main branch, tested releases are tagged with their versions, and master branch represents the latest release.
