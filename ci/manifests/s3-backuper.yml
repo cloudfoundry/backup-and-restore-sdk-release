@@ -19,8 +19,7 @@ name: "((deployment-name))"
 
 releases:
 - name: backup-and-restore-sdk
-  version: "((backup-and-restore-sdk-release-version))"
-  url: "((backup-and-restore-sdk-release-url))"
+  version: latest
 - name: minio
   version: latest
   url: https://bosh.io/d/github.com/minio/minio-boshrelease
