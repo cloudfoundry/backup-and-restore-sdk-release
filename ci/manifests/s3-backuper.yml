@@ -39,7 +39,7 @@ instance_groups:
 - name: backuper
   instances: 1
   vm_type: small
-  persistent_disk_type: fifty
+  persistent_disk_type: 10GB
   stemcell: xenial
   update:
     serial: true
@@ -60,7 +60,7 @@ instance_groups:
 - name: backuper-bpm
   instances: 1
   vm_type: small
-  persistent_disk_type: fifty
+  persistent_disk_type: 10GB
   stemcell: xenial
   update:
     serial: true
@@ -85,7 +85,7 @@ instance_groups:
 - name: clone-backuper
   instances: 1
   vm_type: small
-  persistent_disk_type: fifty
+  persistent_disk_type: 10GB
   stemcell: xenial
   update:
     serial: true
@@ -106,7 +106,7 @@ instance_groups:
 - name: versioned-backuper-unversioned-bucket
   instances: 1
   vm_type: small
-  persistent_disk_type: fifty
+  persistent_disk_type: 10GB
   stemcell: xenial
   update:
     serial: true
@@ -127,7 +127,7 @@ instance_groups:
 - name: unversioned-custom-ca-cert-backuper
   instances: 1
   vm_type: small
-  persistent_disk_type: fifty
+  persistent_disk_type: 10GB
   stemcell: xenial
   update:
     serial: true
@@ -154,7 +154,7 @@ instance_groups:
   azs: [z1]
   instances: 1
   vm_type: small
-  persistent_disk_type: fifty
+  persistent_disk_type: 10GB
   stemcell: xenial
   networks:
   - name: concourse
@@ -174,7 +174,7 @@ instance_groups:
   azs: [z1]
   instances: 1
   vm_type: small
-  persistent_disk_type: fifty
+  persistent_disk_type: 10GB
   stemcell: xenial
   update:
     serial: true
@@ -198,7 +198,7 @@ instance_groups:
   azs: [z1]
   instances: 1
   vm_type: small
-  persistent_disk_type: fifty
+  persistent_disk_type: 10GB
   stemcell: xenial
   update:
     serial: true
