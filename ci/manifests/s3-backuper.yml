@@ -44,7 +44,7 @@ instance_groups:
   update:
     serial: true
   networks:
-  - name: concourse
+  - name: default
   jobs:
   - name: s3-versioned-blobstore-backup-restorer
     release: backup-and-restore-sdk
@@ -65,7 +65,7 @@ instance_groups:
   update:
     serial: true
   networks:
-  - name: concourse
+  - name: default
   jobs:
   - name: s3-versioned-blobstore-backup-restorer
     release: backup-and-restore-sdk
@@ -90,7 +90,7 @@ instance_groups:
   update:
     serial: true
   networks:
-  - name: concourse
+  - name: default
   jobs:
   - name: s3-versioned-blobstore-backup-restorer
     release: backup-and-restore-sdk
@@ -111,7 +111,7 @@ instance_groups:
   update:
     serial: true
   networks:
-  - name: concourse
+  - name: default
   jobs:
   - name: s3-versioned-blobstore-backup-restorer
     release: backup-and-restore-sdk
@@ -132,7 +132,7 @@ instance_groups:
   update:
     serial: true
   networks:
-  - name: concourse
+  - name: default
   jobs:
   - name: ca_certs
     release: os-conf
@@ -157,7 +157,7 @@ instance_groups:
   persistent_disk_type: 10GB
   stemcell: xenial
   networks:
-  - name: concourse
+  - name: default
     static_ips: [10.245.1.7]
   jobs:
   - name: minio-server
@@ -179,7 +179,7 @@ instance_groups:
   update:
     serial: true
   networks:
-  - name: concourse
+  - name: default
   jobs:
   - name: s3-unversioned-blobstore-backup-restorer
     release: backup-and-restore-sdk
@@ -203,7 +203,7 @@ instance_groups:
   update:
     serial: true
   networks:
-  - name: concourse
+  - name: default
   jobs:
   - name: bpm
     release: bpm
