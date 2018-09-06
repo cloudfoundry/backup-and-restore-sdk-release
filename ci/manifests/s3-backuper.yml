@@ -35,6 +35,15 @@ stemcells:
   os: ubuntu-xenial
   version: latest
 
+variables:
+- name: minio_ca
+  type: certificate
+  options:
+    is_ca: true
+    common_name: 10.244.1.7
+    alternative_names:
+    - 10.244.1.7
+
 instance_groups:
 - name: backuper
   instances: 1
@@ -137,7 +146,7 @@ instance_groups:
   - name: ca_certs
     release: os-conf
     properties:
-      certs: "((minio_server_cert))"
+      certs: "((minio_ca.certificate))"
   - name: s3-versioned-blobstore-backup-restorer # temporarily using the versioned job until non-versioned is implemented
     release: backup-and-restore-sdk
     properties:
@@ -163,9 +172,9 @@ instance_groups:
   - name: minio-server
     release: minio
     properties:
-      ca_cert: "((minio_server_cert))"
-      server_cert: "((minio_server_cert))"
-      server_key: "((minio_server_key))"
+      ca_cert: "((minio_ca.certificate))"
+      server_cert: "((minio_ca.certificate))"
+      server_key: "((minio_ca.private_key))"
       credential:
         accesskey: "((minio-access-key))"
         secretkey: "((minio-secret-key))"
