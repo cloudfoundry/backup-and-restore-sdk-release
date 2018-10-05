@@ -19,8 +19,7 @@ name: ((deployment-name))
 
 releases:
 - name: backup-and-restore-sdk
-  version: ((backup-and-restore-sdk-release-version))
-  url: ((backup-and-restore-sdk-release-url))
+  version: latest
 
 stemcells:
 - alias: xenial
@@ -31,12 +30,12 @@ instance_groups:
 - name: gcs-backuper
   instances: 1
   vm_type: small
-  persistent_disk_type: fifty
+  persistent_disk_type: 10GB
   stemcell: xenial
   update:
     serial: true
   networks:
-  - name: concourse
+  - name: default
   azs: [z1]
   jobs:
   - name: gcs-blobstore-backup-restorer
@@ -50,12 +49,12 @@ instance_groups:
 - name: gcs-restore-to-clone-bucket
   instances: 1
   vm_type: small
-  persistent_disk_type: fifty
+  persistent_disk_type: 10GB
   stemcell: xenial
   update:
     serial: true
   networks:
-  - name: concourse
+  - name: default
   azs: [z1]
   jobs:
   - name: gcs-blobstore-backup-restorer
