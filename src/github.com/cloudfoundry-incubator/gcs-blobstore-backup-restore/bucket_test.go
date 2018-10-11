@@ -59,7 +59,7 @@ var _ = Describe("Bucket", func() {
 			var file1GenerationID, file2GenerationID, file3GenerationID int64
 
 			BeforeEach(func() {
-				bucketName = CreateBucketWithTimestampedName("list_blobs", true)
+				bucketName = CreateBucketWithTimestampedName("list_blobs")
 				file1GenerationID = UploadFile(bucketName, "file1", "file-content")
 				file2GenerationID = UploadFile(bucketName, "file2", "file-content")
 				file3GenerationID = UploadFile(bucketName, "file3", "file-content")
@@ -90,7 +90,7 @@ var _ = Describe("Bucket", func() {
 			var file1GenerationID int64
 
 			BeforeEach(func() {
-				bucketName = CreateBucketWithTimestampedName("list_blobs", true)
+				bucketName = CreateBucketWithTimestampedName("list_blobs")
 				file1GenerationID = UploadFile(bucketName, "file1", "file-content")
 
 				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
@@ -115,7 +115,7 @@ var _ = Describe("Bucket", func() {
 		Context("copying a file that doesn't exist", func() {
 
 			BeforeEach(func() {
-				bucketName = CreateBucketWithTimestampedName("list_blobs", true)
+				bucketName = CreateBucketWithTimestampedName("list_blobs")
 
 				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
 				Expect(err).NotTo(HaveOccurred())

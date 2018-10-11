@@ -34,29 +34,14 @@ func Authenticate(serviceAccountKey string) {
 	runSuccessfully("gcloud", "auth", "activate-service-account", "--key-file", tmpFile.Name())
 }
 
-func CreateBucketWithTimestampedName(prefix string, versioned bool) string {
+func CreateBucketWithTimestampedName(prefix string) string {
 	bucketName := fmt.Sprintf("%s_%d", prefix, time.Now().UnixNano())
 	runSuccessfully("gsutil", "mb", "-c", "regional", "-l", "europe-west2", "gs://"+bucketName)
-	setVersioning(bucketName, versioned)
 	return bucketName
 }
 
 func DeleteBucket(bucketName string) {
 	runSuccessfully("gsutil", "rm", "-r", "gs://"+bucketName)
-}
-
-func DeleteFile(bucketName, blobName string) {
-	runSuccessfully("gsutil", "rm", "gs://"+bucketName+"/"+blobName)
-}
-
-func setVersioning(bucketName string, versioned bool) {
-	var versioning string
-	if versioned {
-		versioning = "on"
-	} else {
-		versioning = "off"
-	}
-	runSuccessfully("gsutil", "versioning", "set", versioning, "gs://"+bucketName)
 }
 
 func UploadFile(bucketName, blobName, fileContents string) int64 {
@@ -68,28 +53,6 @@ func UploadFile(bucketName, blobName, fileContents string) int64 {
 	Expect(err).NotTo(HaveOccurred())
 
 	return generationID
-}
-
-func ListBlobVersions(bucketName, blobName string) []int64 {
-	stdOut, _ := runSuccessfully("gsutil", "ls", "-a", "gs://"+bucketName+"/"+blobName)
-	lines := strings.Split(stdOut, "\n")
-	var versions []int64
-	for _, line := range lines {
-		if line == "" {
-			continue
-		}
-
-		generationID, err := strconv.ParseInt(strings.Split(line, "#")[1], 10, 64)
-		Expect(err).NotTo(HaveOccurred())
-
-		versions = append(versions, generationID)
-	}
-	return versions
-}
-
-func GetBlobContents(bucketName, blobName string) string {
-	stdOut, _ := runSuccessfully("gsutil", "cat", "gs://"+bucketName+"/"+blobName)
-	return strings.TrimSpace(stdOut)
 }
 
 func createTmpFile(fileName, fileContents string) *os.File {
