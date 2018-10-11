@@ -38,6 +38,11 @@ func (c GCSClient) DeleteBlobInBucket(bucket, blobName string) {
 	MustRunSuccessfully("gsutil", "rm", fmt.Sprintf("gs://%s/%s", bucket, blobName))
 }
 
+func (c GCSClient) DeleteAllBlobInBucket(bucket string) {
+	session := Run("gsutil", "rm", "-rf", fmt.Sprintf("gs://%s", bucket))
+	Eventually(session).Should(gexec.Exit())
+}
+
 func (c GCSClient) ListDirsFromBucket(bucket string) string {
 	session := Run("gsutil", "ls", fmt.Sprintf("gs://%s/", bucket))
 	Eventually(session).Should(gexec.Exit(0))

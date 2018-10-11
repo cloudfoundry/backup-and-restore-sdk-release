@@ -1,6 +1,7 @@
 package gcs_test
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -40,6 +41,8 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 		gcsClient.DeleteBlobInBucket(bucket, blob1)
 		gcsClient.DeleteBlobInBucket(bucket, blob2)
 		gcsClient.DeleteBlobInBucket(bucket, blob3)
+
+		gcsClient.DeleteAllBlobInBucket(fmt.Sprintf(bucket + "/temporary-backup-artifact"))
 
 		gcsClient.DeleteBlobInBucket(backupBucket, blob1)
 		gcsClient.DeleteBlobInBucket(backupBucket, blob2)
