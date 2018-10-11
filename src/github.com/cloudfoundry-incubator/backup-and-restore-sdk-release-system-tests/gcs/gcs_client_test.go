@@ -3,6 +3,8 @@ package gcs_test
 import (
 	"io/ioutil"
 
+	"github.com/onsi/gomega/gexec"
+
 	"fmt"
 
 	. "github.com/onsi/gomega"
@@ -34,4 +36,10 @@ func (c GCSClient) ReadBlobFromBucket(bucket, blobName string) string {
 
 func (c GCSClient) DeleteBlobInBucket(bucket, blobName string) {
 	MustRunSuccessfully("gsutil", "rm", fmt.Sprintf("gs://%s/%s", bucket, blobName))
+}
+
+func (c GCSClient) ListDirsFromBucket(bucket string) string {
+	session := Run("gsutil", "ls", fmt.Sprintf("gs://%s/", bucket))
+	Eventually(session).Should(gexec.Exit(0))
+	return string(session.Out.Contents())
 }

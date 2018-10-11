@@ -33,3 +33,11 @@ func MustRunSuccessfully(command string, args ...string) {
 	Expect(err).NotTo(HaveOccurred())
 	Eventually(session).Should(Exit(0))
 }
+
+func Run(command string, args ...string) *gexec.Session {
+	cmd := exec.Command(command, args...)
+
+	session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+	Expect(err).NotTo(HaveOccurred())
+	return session
+}
