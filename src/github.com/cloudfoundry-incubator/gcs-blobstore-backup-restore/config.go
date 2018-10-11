@@ -6,7 +6,8 @@ import (
 )
 
 type Config struct {
-	Name              string `json:"name"`
+	BucketName        string `json:"bucket_name"`
+	BackupBucketName  string `json:"backup_bucket_name"`
 	ServiceAccountKey string `json:"gcp_service_account_key"`
 }
 

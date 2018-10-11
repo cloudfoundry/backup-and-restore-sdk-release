@@ -1,9 +1,6 @@
 package gcs_test
 
 import (
-	"fmt"
-	"time"
-
 	"github.com/cloudfoundry-incubator/gcs-blobstore-backup-restore"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -14,7 +11,8 @@ var _ = Describe("Bucket", func() {
 		It("builds buckets", func() {
 			config := map[string]gcs.Config{
 				"droplets": {
-					Name:              "droplets-bucket",
+					BucketName:        "droplets-bucket",
+					BackupBucketName:  "backup-droplets-bucket",
 					ServiceAccountKey: MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"),
 				},
 			}
@@ -23,47 +21,22 @@ var _ = Describe("Bucket", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(buckets).To(HaveLen(1))
-			Expect(buckets["droplets"].Name()).To(Equal("droplets-bucket"))
-		})
-	})
-
-	Describe("VersioningEnabled", func() {
-		var bucketName string
-		var bucket gcs.Bucket
-		var err error
-
-		JustBeforeEach(func() {
-			bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
-			Expect(err).NotTo(HaveOccurred())
+			Expect(buckets["droplets"].Bucket.Name()).To(Equal("droplets-bucket"))
+			Expect(buckets["droplets"].BackupBucket.Name()).To(Equal("backup-droplets-bucket"))
 		})
 
-		AfterEach(func() {
-			DeleteBucket(bucketName)
-		})
+		Context("when providing invalid service account key", func() {
+			It("returns an error", func() {
+				config := map[string]gcs.Config{
+					"droplets": {
+						BucketName:        "droplets-bucket",
+						BackupBucketName:  "backup-droplets-bucket",
+						ServiceAccountKey: "this is not valid json",
+					},
+				}
 
-		Context("when versioning is enabled on the given bucket", func() {
-			BeforeEach(func() {
-				bucketName = CreateBucketWithTimestampedName("versioning_on", true)
-			})
-
-			It("returns true", func() {
-				versioningEnabled, err := bucket.VersioningEnabled()
-
-				Expect(err).NotTo(HaveOccurred())
-				Expect(versioningEnabled).To(BeTrue())
-			})
-		})
-
-		Context("when versioning is not enabled on the given bucket", func() {
-			BeforeEach(func() {
-				bucketName = CreateBucketWithTimestampedName("versioning_off", false)
-			})
-
-			It("returns false", func() {
-				versioningEnabled, err := bucket.VersioningEnabled()
-
-				Expect(err).NotTo(HaveOccurred())
-				Expect(versioningEnabled).To(BeFalse())
+				_, err := gcs.BuildBuckets(config)
+				Expect(err).To(HaveOccurred())
 			})
 		})
 	})
@@ -104,146 +77,54 @@ var _ = Describe("Bucket", func() {
 		})
 	})
 
-	Describe("CopyVersion", func() {
-		var (
-			bucketName       string
-			bucket           gcs.Bucket
-			err              error
-			blobName         string
-			blobGenerationID int64
-		)
-
-		BeforeEach(func() {
-			bucketName = CreateBucketWithTimestampedName("copy_version", true)
-			blobName = fmt.Sprintf("blob_%d", time.Now().UnixNano())
-			blobGenerationID = UploadFile(bucketName, blobName, "file-content")
-			bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
-			Expect(err).NotTo(HaveOccurred())
-		})
+	Describe("CopyBlob", func() {
+		var bucketName string
+		var bucket gcs.Bucket
+		var err error
 
 		AfterEach(func() {
 			DeleteBucket(bucketName)
 		})
 
-		Context("when copy in-place and the version is the current version of the blob", func() {
-			It("is a noop", func() {
-				blob := gcs.Blob{
-					Name:         blobName,
-					GenerationID: blobGenerationID,
-				}
-
-				err = bucket.CopyVersion(blob, bucketName)
-
-				Expect(err).NotTo(HaveOccurred())
-				versions := ListBlobVersions(bucketName, blobName)
-				Expect(versions).To(ConsistOf(blobGenerationID))
-			})
-		})
-
-		Context("when the version is not the current version of the blob", func() {
-			BeforeEach(func() {
-				UploadFile(bucketName, blobName, "new-file-content")
-			})
-
-			It("copies the blob version to be the latest", func() {
-				blob := gcs.Blob{
-					Name:         blobName,
-					GenerationID: blobGenerationID,
-				}
-
-				err = bucket.CopyVersion(blob, bucketName)
-
-				Expect(err).NotTo(HaveOccurred())
-				content := GetBlobContents(bucketName, blobName)
-				Expect(content).To(Equal("file-content"))
-			})
-		})
-
-		Context("when the blob version is not found", func() {
-			Context("and the blob exists", func() {
-				It("returns an error", func() {
-					blobGenerationID = blobGenerationID + 1
-					blob := gcs.Blob{
-						Name:         blobName,
-						GenerationID: blobGenerationID,
-					}
-
-					err = bucket.CopyVersion(blob, bucketName)
-
-					Expect(err).To(MatchError(ContainSubstring(
-						fmt.Sprintf("error getting blob version attributes 'gs://%s/%s#%d'", bucketName, blobName, blobGenerationID),
-					)))
-				})
-			})
-
-			Context("and the blob is deleted", func() {
-				BeforeEach(func() {
-					DeleteFile(bucketName, blobName)
-				})
-				It("returns an error", func() {
-					blobGenerationID = blobGenerationID + 1
-					blob := gcs.Blob{
-						Name:         blobName,
-						GenerationID: blobGenerationID,
-					}
-
-					err = bucket.CopyVersion(blob, bucketName)
-
-					Expect(err).To(MatchError(ContainSubstring(
-						fmt.Sprintf("error getting blob version attributes 'gs://%s/%s#%d'", bucketName, blobName, blobGenerationID),
-					)))
-				})
-			})
-
-		})
-
-		Context("when the blob has been deleted", func() {
-			BeforeEach(func() {
-				UploadFile(bucketName, blobName, "new-file-content")
-				DeleteFile(bucketName, blobName)
-			})
-
-			It("copies the blob version to be the latest", func() {
-				blob := gcs.Blob{
-					Name:         blobName,
-					GenerationID: blobGenerationID,
-				}
-
-				err = bucket.CopyVersion(blob, bucketName)
-
-				Expect(err).NotTo(HaveOccurred())
-				content := GetBlobContents(bucketName, blobName)
-				Expect(content).To(Equal("file-content"))
-			})
-		})
-
-		Context("when the source bucket of the blob is different from destination bucket", func() {
-			var destinationBucketName string
-			var destinationBucket gcs.SDKBucket
+		Context("copying an existing file", func() {
+			var file1GenerationID int64
 
 			BeforeEach(func() {
-				destinationBucketName = CreateBucketWithTimestampedName("destination_bucket", true)
+				bucketName = CreateBucketWithTimestampedName("list_blobs", true)
+				file1GenerationID = UploadFile(bucketName, "file1", "file-content")
+
+				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
+				Expect(err).NotTo(HaveOccurred())
 			})
 
-			AfterEach(func() {
-				DeleteBucket(destinationBucketName)
+			It("copies the blob to the specified location", func() {
+				blob := gcs.Blob{Name: "file1", GenerationID: file1GenerationID}
+
+				generatedID, err := bucket.CopyBlob(blob.Name, "copydir/file1")
+				Expect(err).NotTo(HaveOccurred())
+
+				blobs, err := bucket.ListBlobs()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(blobs).To(ConsistOf(
+					blob,
+					gcs.Blob{Name: "copydir/file1", GenerationID: generatedID},
+				))
+			})
+		})
+
+		Context("copying a file that doesn't exist", func() {
+
+			BeforeEach(func() {
+				bucketName = CreateBucketWithTimestampedName("list_blobs", true)
+
+				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
+				Expect(err).NotTo(HaveOccurred())
 			})
 
-			It("copies the version successfully", func() {
-				destinationBucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), destinationBucketName)
-				Expect(err).NotTo(HaveOccurred())
+			It("errors", func() {
 
-				blob := gcs.Blob{
-					Name:         blobName,
-					GenerationID: blobGenerationID,
-				}
-
-				err = destinationBucket.CopyVersion(blob, bucketName)
-
-				Expect(err).NotTo(HaveOccurred())
-				content := GetBlobContents(destinationBucketName, blobName)
-				Expect(content).To(Equal("file-content"))
-
+				_, err := bucket.CopyBlob("foobar", "copydir/file1")
+				Expect(err).To(HaveOccurred())
 			})
 		})
 	})

@@ -24,7 +24,8 @@ var _ = Describe("ParseConfig", func() {
 		It("parses", func() {
 			configJson := `{
 				"bucket_id": {
-					"name": "bucket_name",
+					"bucket_name": "bucket",
+					"backup_bucket_name": "backup_bucket",
 					"gcp_service_account_key": "my-service-account-key"
 				}
 			}`
@@ -33,7 +34,8 @@ var _ = Describe("ParseConfig", func() {
 			config, err = gcs.ParseConfig(configFile.Name())
 
 			Expect(config["bucket_id"]).To(Equal(gcs.Config{
-				Name:              "bucket_name",
+				BucketName:        "bucket",
+				BackupBucketName:  "backup_bucket",
 				ServiceAccountKey: "my-service-account-key",
 			}))
 		})

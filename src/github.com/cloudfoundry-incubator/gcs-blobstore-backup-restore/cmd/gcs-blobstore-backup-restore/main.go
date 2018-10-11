@@ -36,11 +36,11 @@ func main() {
 	if *backupAction {
 		backuper := gcs.NewBackuper(buckets)
 
-		backups, err := backuper.Backup()
+		err := backuper.CreateLiveBucketSnapshot()
 		exitOnError(err)
 
-		err = artifact.Write(backups)
-		exitOnError(err)
+		//err = artifact.Write(buckets)
+		//exitOnError(err)
 	} else {
 		restorer := gcs.NewRestorer(buckets, executionStrategy)
 

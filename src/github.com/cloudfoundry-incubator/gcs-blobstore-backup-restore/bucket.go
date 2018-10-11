@@ -1,8 +1,6 @@
 package gcs
 
 import (
-	"fmt"
-
 	"cloud.google.com/go/storage"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
@@ -15,19 +13,32 @@ const readWriteScope = "https://www.googleapis.com/auth/devstorage.read_write"
 //go:generate counterfeiter -o fakes/fake_bucket.go . Bucket
 type Bucket interface {
 	Name() string
-	VersioningEnabled() (bool, error)
 	ListBlobs() ([]Blob, error)
-	CopyVersion(blob Blob, sourceBucketName string) error
+	CopyBlob(string, string) (int64, error)
 }
 
-func BuildBuckets(config map[string]Config) (map[string]Bucket, error) {
-	buckets := map[string]Bucket{}
+type BucketPair struct {
+	Bucket       Bucket
+	BackupBucket Bucket
+}
 
-	var err error
+func BuildBuckets(config map[string]Config) (map[string]BucketPair, error) {
+	buckets := map[string]BucketPair{}
+
 	for bucketId, bucketConfig := range config {
-		buckets[bucketId], err = NewSDKBucket(bucketConfig.ServiceAccountKey, bucketConfig.Name)
+		bucket, err := NewSDKBucket(bucketConfig.ServiceAccountKey, bucketConfig.BucketName)
 		if err != nil {
 			return nil, err
+		}
+
+		backupBucket, err := NewSDKBucket(bucketConfig.ServiceAccountKey, bucketConfig.BackupBucketName)
+		if err != nil {
+			return nil, err
+		}
+
+		buckets[bucketId] = BucketPair{
+			Bucket:       bucket,
+			BackupBucket: backupBucket,
 		}
 	}
 
@@ -73,15 +84,6 @@ func (b SDKBucket) Name() string {
 	return b.name
 }
 
-func (b SDKBucket) VersioningEnabled() (bool, error) {
-	attrs, err := b.handle.Attrs(b.ctx)
-	if err != nil {
-		return false, err
-	}
-
-	return attrs.VersioningEnabled, nil
-}
-
 func (b SDKBucket) ListBlobs() ([]Blob, error) {
 	var blobs []Blob
 
@@ -102,29 +104,16 @@ func (b SDKBucket) ListBlobs() ([]Blob, error) {
 	return blobs, nil
 }
 
-func (b SDKBucket) CopyVersion(blob Blob, sourceBucketName string) error {
-	ctx := context.Background()
+func (b SDKBucket) CopyBlob(sourceBlob string, newBlob string) (int64, error) {
 
-	sourceObjectHandle := b.client.Bucket(sourceBucketName).Object(blob.Name)
-	_, err := sourceObjectHandle.Generation(blob.GenerationID).Attrs(ctx)
+	src := b.client.Bucket(b.name).Object(sourceBlob)
+	dst := b.client.Bucket(b.name).Object(newBlob)
+
+	attr, err := dst.CopierFrom(src).Run(b.ctx)
+
 	if err != nil {
-		return fmt.Errorf("error getting blob version attributes 'gs://%s/%s#%d': %s", sourceBucketName, blob.Name, blob.GenerationID, err)
+		return 0, err
 	}
 
-	if b.name == sourceBucketName {
-		attrs, err := b.handle.Object(blob.Name).Attrs(ctx)
-
-		if err == nil && attrs.Generation == blob.GenerationID {
-			return nil
-		}
-	}
-
-	source := sourceObjectHandle.Generation(blob.GenerationID)
-	copier := b.handle.Object(blob.Name).CopierFrom(source)
-	_, err = copier.Run(ctx)
-	if err != nil {
-		return fmt.Errorf("error copying blob 'gs://%s/%s#%d': %s", sourceBucketName, blob.Name, blob.GenerationID, err)
-	}
-
-	return nil
+	return attr.Generation, nil
 }
