@@ -47,26 +47,6 @@ instance_groups:
           bucket_name: ((gcs-bucket-name))
           backup_bucket_name: ((gcs-backup-bucket-name))
           gcp_service_account_key: ((gcp-service-account-key))
-- name: gcs-restore-to-clone-bucket
-  instances: 1
-  vm_type: small
-  persistent_disk_type: 10GB
-  stemcell: xenial
-  update:
-    serial: true
-  networks:
-  - name: default
-  azs: [z1]
-  jobs:
-  - name: gcs-blobstore-backup-restorer
-    release: backup-and-restore-sdk
-    properties:
-      enabled: true
-      buckets:
-        droplets:
-          name: ((gcs-clone-bucket-name))
-          gcp_service_account_key: ((gcp-service-account-key))
-
 update:
   canaries: 1
   max_in_flight: 1
