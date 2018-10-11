@@ -34,7 +34,8 @@ properties:
     description: "Hash of buckets to backup/restore to"
     example: |
       droplets:
-        name: "the_droplets_bucket"
+        bucket_name: "the_droplets_bucket"
+        backup_bucket_name: "the_droplets_backup_bucket"
         gcp_service_account_key: >
           {
             "type": "service_account",
