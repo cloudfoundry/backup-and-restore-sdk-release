@@ -44,7 +44,8 @@ instance_groups:
       enabled: true
       buckets:
         droplets:
-          name: ((gcs-bucket-name))
+          bucket_name: ((gcs-bucket-name))
+          backup_bucket_name: ((gcs-backup-bucket-name))
           gcp_service_account_key: ((gcp-service-account-key))
 - name: gcs-restore-to-clone-bucket
   instances: 1
