@@ -260,7 +260,7 @@ var _ = Describe("Bucket", func() {
 
 			It("deletes the blob", func() {
 
-				err := bucket.Delete(fileName)
+				err := bucket.DeleteBlob(fileName)
 				Expect(err).NotTo(HaveOccurred())
 
 				blobs, err := bucket.ListBlobs()
@@ -286,7 +286,7 @@ var _ = Describe("Bucket", func() {
 
 			It("errors", func() {
 
-				err := bucket.Delete(fileName + "idontexist")
+				err := bucket.DeleteBlob(fileName + "idontexist")
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -311,10 +311,10 @@ var _ = Describe("Bucket", func() {
 
 			It("deletes all files and the folder", func() {
 
-				err := bucket.Delete(fmt.Sprintf("%s/%s", dirName, fileName1))
+				err := bucket.DeleteBlob(fmt.Sprintf("%s/%s", dirName, fileName1))
 				Expect(err).NotTo(HaveOccurred())
 
-				err = bucket.Delete(fmt.Sprintf("%s/%s", dirName, fileName2))
+				err = bucket.DeleteBlob(fmt.Sprintf("%s/%s", dirName, fileName2))
 				Expect(err).NotTo(HaveOccurred())
 
 				blobs, err := bucket.ListBlobs()

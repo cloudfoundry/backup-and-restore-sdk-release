@@ -59,7 +59,7 @@ func (b *Backuper) TransferBlobsToBackupBucket() error {
 		}
 
 		for _, blob := range blobsToBeCleanedUp {
-			err = bucket.Delete(blob.Name)
+			err = bucket.DeleteBlob(blob.Name)
 			if err != nil {
 				return err
 			}

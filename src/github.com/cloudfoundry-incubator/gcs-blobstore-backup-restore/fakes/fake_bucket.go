@@ -57,15 +57,15 @@ type FakeBucket struct {
 		result1 int64
 		result2 error
 	}
-	DeleteStub        func(string) error
-	deleteMutex       sync.RWMutex
-	deleteArgsForCall []struct {
+	DeleteBlobStub        func(string) error
+	deleteBlobMutex       sync.RWMutex
+	deleteBlobArgsForCall []struct {
 		arg1 string
 	}
-	deleteReturns struct {
+	deleteBlobReturns struct {
 		result1 error
 	}
-	deleteReturnsOnCall map[int]struct {
+	deleteBlobReturnsOnCall map[int]struct {
 		result1 error
 	}
 	invocations      map[string][][]interface{}
@@ -260,50 +260,50 @@ func (fake *FakeBucket) CopyBlobBetweenBucketsReturnsOnCall(i int, result1 int64
 	}{result1, result2}
 }
 
-func (fake *FakeBucket) Delete(arg1 string) error {
-	fake.deleteMutex.Lock()
-	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
-	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
+func (fake *FakeBucket) DeleteBlob(arg1 string) error {
+	fake.deleteBlobMutex.Lock()
+	ret, specificReturn := fake.deleteBlobReturnsOnCall[len(fake.deleteBlobArgsForCall)]
+	fake.deleteBlobArgsForCall = append(fake.deleteBlobArgsForCall, struct {
 		arg1 string
 	}{arg1})
-	fake.recordInvocation("Delete", []interface{}{arg1})
-	fake.deleteMutex.Unlock()
-	if fake.DeleteStub != nil {
-		return fake.DeleteStub(arg1)
+	fake.recordInvocation("DeleteBlob", []interface{}{arg1})
+	fake.deleteBlobMutex.Unlock()
+	if fake.DeleteBlobStub != nil {
+		return fake.DeleteBlobStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.deleteReturns.result1
+	return fake.deleteBlobReturns.result1
 }
 
-func (fake *FakeBucket) DeleteCallCount() int {
-	fake.deleteMutex.RLock()
-	defer fake.deleteMutex.RUnlock()
-	return len(fake.deleteArgsForCall)
+func (fake *FakeBucket) DeleteBlobCallCount() int {
+	fake.deleteBlobMutex.RLock()
+	defer fake.deleteBlobMutex.RUnlock()
+	return len(fake.deleteBlobArgsForCall)
 }
 
-func (fake *FakeBucket) DeleteArgsForCall(i int) string {
-	fake.deleteMutex.RLock()
-	defer fake.deleteMutex.RUnlock()
-	return fake.deleteArgsForCall[i].arg1
+func (fake *FakeBucket) DeleteBlobArgsForCall(i int) string {
+	fake.deleteBlobMutex.RLock()
+	defer fake.deleteBlobMutex.RUnlock()
+	return fake.deleteBlobArgsForCall[i].arg1
 }
 
-func (fake *FakeBucket) DeleteReturns(result1 error) {
-	fake.DeleteStub = nil
-	fake.deleteReturns = struct {
+func (fake *FakeBucket) DeleteBlobReturns(result1 error) {
+	fake.DeleteBlobStub = nil
+	fake.deleteBlobReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeBucket) DeleteReturnsOnCall(i int, result1 error) {
-	fake.DeleteStub = nil
-	if fake.deleteReturnsOnCall == nil {
-		fake.deleteReturnsOnCall = make(map[int]struct {
+func (fake *FakeBucket) DeleteBlobReturnsOnCall(i int, result1 error) {
+	fake.DeleteBlobStub = nil
+	if fake.deleteBlobReturnsOnCall == nil {
+		fake.deleteBlobReturnsOnCall = make(map[int]struct {
 			result1 error
 		})
 	}
-	fake.deleteReturnsOnCall[i] = struct {
+	fake.deleteBlobReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -319,8 +319,8 @@ func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	defer fake.copyBlobWithinBucketMutex.RUnlock()
 	fake.copyBlobBetweenBucketsMutex.RLock()
 	defer fake.copyBlobBetweenBucketsMutex.RUnlock()
-	fake.deleteMutex.RLock()
-	defer fake.deleteMutex.RUnlock()
+	fake.deleteBlobMutex.RLock()
+	defer fake.deleteBlobMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

@@ -18,7 +18,7 @@ type Bucket interface {
 	ListBlobs() ([]Blob, error)
 	CopyBlobWithinBucket(string, string) (int64, error)
 	CopyBlobBetweenBuckets(Bucket, string, string) (int64, error)
-	Delete(string) error
+	DeleteBlob(string) error
 }
 
 type BucketPair struct {
@@ -127,6 +127,6 @@ func (b SDKBucket) CopyBlobBetweenBuckets(dstBucket Bucket, srcBlob, dstBlob str
 	return attr.Generation, nil
 }
 
-func (b SDKBucket) Delete(blob string) error {
+func (b SDKBucket) DeleteBlob(blob string) error {
 	return b.client.Bucket(b.name).Object(blob).Delete(b.ctx)
 }

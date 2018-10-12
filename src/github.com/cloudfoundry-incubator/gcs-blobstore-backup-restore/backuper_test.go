@@ -132,8 +132,8 @@ var _ = Describe("Backuper", func() {
 					Expect(blob).To(Equal(blob2))
 					Expect(path).To(Equal(fmt.Sprintf("%s", blob2))) //timestamped dir?
 
-					Expect(bucket.DeleteCallCount()).To(Equal(1))
-					Expect(bucket.DeleteArgsForCall(0)).To(Equal(blob2))
+					Expect(bucket.DeleteBlobCallCount()).To(Equal(1))
+					Expect(bucket.DeleteBlobArgsForCall(0)).To(Equal(blob2))
 				})
 			})
 		})
@@ -172,7 +172,7 @@ var _ = Describe("Backuper", func() {
 				}, nil)
 
 				bucket.CopyBlobBetweenBucketsReturns(0, nil)
-				bucket.DeleteReturns(errors.New("ifailed"))
+				bucket.DeleteBlobReturns(errors.New("ifailed"))
 
 				err := backuper.TransferBlobsToBackupBucket()
 				Expect(err).To(HaveOccurred())
