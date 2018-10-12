@@ -1,6 +1,8 @@
 package gcs
 
 import (
+	"errors"
+
 	"cloud.google.com/go/storage"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
@@ -14,7 +16,9 @@ const readWriteScope = "https://www.googleapis.com/auth/devstorage.read_write"
 type Bucket interface {
 	Name() string
 	ListBlobs() ([]Blob, error)
-	CopyBlob(string, string) (int64, error)
+	CopyBlobWithinBucket(string, string) (int64, error)
+	CopyBlobBetweenBuckets(Bucket, string, string) (int64, error)
+	Delete(string) error
 }
 
 type BucketPair struct {
@@ -104,16 +108,25 @@ func (b SDKBucket) ListBlobs() ([]Blob, error) {
 	return blobs, nil
 }
 
-func (b SDKBucket) CopyBlob(sourceBlob string, newBlob string) (int64, error) {
+func (b SDKBucket) CopyBlobWithinBucket(srcBlob, dstBlob string) (int64, error) {
+	return b.CopyBlobBetweenBuckets(b, srcBlob, dstBlob)
+}
 
-	src := b.client.Bucket(b.name).Object(sourceBlob)
-	dst := b.client.Bucket(b.name).Object(newBlob)
+func (b SDKBucket) CopyBlobBetweenBuckets(dstBucket Bucket, srcBlob, dstBlob string) (int64, error) {
+	if dstBucket == nil {
+		return 0, errors.New("destination bucket does not exist")
+	}
 
+	src := b.client.Bucket(b.name).Object(srcBlob)
+	dst := b.client.Bucket(dstBucket.Name()).Object(dstBlob)
 	attr, err := dst.CopierFrom(src).Run(b.ctx)
-
 	if err != nil {
 		return 0, err
 	}
 
 	return attr.Generation, nil
+}
+
+func (b SDKBucket) Delete(blob string) error {
+	return b.client.Bucket(b.name).Object(blob).Delete(b.ctx)
 }

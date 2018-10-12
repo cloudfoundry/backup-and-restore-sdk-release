@@ -39,7 +39,7 @@ func (c GCSClient) DeleteBlobInBucket(bucket, blobName string) {
 }
 
 func (c GCSClient) DeleteAllBlobInBucket(bucket string) {
-	session := Run("gsutil", "rm", "-rf", fmt.Sprintf("gs://%s", bucket))
+	session := Run("gsutil", "rm", "-r", fmt.Sprintf("gs://%s", bucket))
 	Eventually(session).Should(gexec.Exit())
 }
 

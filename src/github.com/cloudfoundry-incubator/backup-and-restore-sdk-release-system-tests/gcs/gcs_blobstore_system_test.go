@@ -42,16 +42,13 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 		gcsClient.DeleteBlobInBucket(bucket, blob2)
 		gcsClient.DeleteBlobInBucket(bucket, blob3)
 
-		gcsClient.DeleteAllBlobInBucket(fmt.Sprintf(bucket + "/temporary-backup-artifact"))
+		gcsClient.DeleteAllBlobInBucket(fmt.Sprintf(backupBucket + "/temporary-backup-artifact/"))
 
-		gcsClient.DeleteBlobInBucket(backupBucket, blob1)
-		gcsClient.DeleteBlobInBucket(backupBucket, blob2)
-		gcsClient.DeleteBlobInBucket(backupBucket, blob3)
 	})
 
-	Context("when restoring to the same bucket", func() {
-		Context("and no previous backup has been taken", func() {
-			It("backs up and restores a bucket", func() {
+	Context("Backup", func() {
+		Context("When no previous backup has been taken", func() {
+			It("creates a backup", func() {
 				By("Creating blobs")
 				gcsClient.WriteBlobToBucket(bucket, blob1, "TEST_BLOB_1")
 				gcsClient.WriteBlobToBucket(bucket, blob2, "TEST_BLOB_2")
@@ -68,24 +65,15 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 				instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/post-backup-unlock")
 
 				By("Having a complete backup")
-				liveBucketContent = gcsClient.ListDirsFromBucket(bucket)
-				backupBucketContent := gcsClient.ListDirsFromBucket(backupBucket)
-				Expect(backupBucketContent).To(Equal(liveBucketContent))
+				backupBucketContent := gcsClient.ListDirsFromBucket(fmt.Sprintf("%s/temporary-backup-artifact/", backupBucket))
+				Expect(backupBucketContent).To(ContainSubstring(blob1))
+				Expect(backupBucketContent).To(ContainSubstring(blob2))
+				Expect(backupBucketContent).To(ContainSubstring(blob3))
+				//make this be an exact match? Rather than substring, don't want unexpected blobs.
 
 				By("Having cleaned up the live bucket")
+				liveBucketContent = gcsClient.ListDirsFromBucket(bucket)
 				Expect(liveBucketContent).NotTo(ContainSubstring("temporary-backup-artifact"))
-
-				By("Modifying the live bucket")
-				gcsClient.WriteBlobToBucket(bucket, blob1, "TEST_BLOB_1_NEW")
-				gcsClient.DeleteBlobInBucket(bucket, blob2)
-
-				By("Running a restore")
-				instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/restore")
-
-				By("Seeing the blobs restored")
-				Expect(gcsClient.ReadBlobFromBucket(bucket, blob1)).To(Equal("TEST_BLOB_1"))
-				Expect(gcsClient.ReadBlobFromBucket(bucket, blob2)).To(Equal("TEST_BLOB_2"))
-				Expect(gcsClient.ReadBlobFromBucket(bucket, blob3)).To(Equal("TEST_BLOB_3"))
 			})
 		})
 

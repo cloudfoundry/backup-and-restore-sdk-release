@@ -1,10 +1,15 @@
 package gcs
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Backuper struct {
 	buckets map[string]BucketPair
 }
+
+const liveBucketBackupArtifactName = "temporary-backup-artifact"
 
 func NewBackuper(buckets map[string]BucketPair) Backuper {
 	return Backuper{
@@ -22,7 +27,7 @@ func (b *Backuper) CreateLiveBucketSnapshot() error {
 		}
 
 		for _, blob := range blobs {
-			_, err := bucket.CopyBlob(blob.Name, fmt.Sprintf("temporary-backup-artifact/%s", blob.Name))
+			_, err := bucket.CopyBlobWithinBucket(blob.Name, fmt.Sprintf("%s/%s", liveBucketBackupArtifactName, blob.Name))
 			if err != nil {
 				return err
 			}
@@ -31,31 +36,36 @@ func (b *Backuper) CreateLiveBucketSnapshot() error {
 	return nil
 }
 
-func (b *Backuper) Backup() (map[string]BucketBackup, error) {
-	bucketBackups := map[string]BucketBackup{}
+func (b *Backuper) TransferBlobsToBackupBucket() error {
+	for _, bucketPair := range b.buckets {
+		bucket := bucketPair.Bucket
+		backupBucket := bucketPair.BackupBucket
 
-	//for _, bucket := range b.buckets {
-	//	enabled, err := bucket.VersioningEnabled()
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//
-	//	if !enabled {
-	//		return nil, fmt.Errorf("versioning is not enabled on bucket: %s", bucket.Name())
-	//	}
-	//}
-	//
-	//for bucketIdentifier, bucket := range b.buckets {
-	//	blobs, err := bucket.ListBlobs()
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//
-	//	bucketBackups[bucketIdentifier] = BucketBackup{
-	//		Name:  bucket.Name(),
-	//		Blobs: blobs,
-	//	}
-	//}
+		backupBlobs, err := bucket.ListBlobs()
 
-	return bucketBackups, nil
+		if err != nil {
+			return err
+		}
+
+		var blobsToBeCleanedUp []Blob
+		for _, blob := range backupBlobs {
+			if strings.HasPrefix(blob.Name, fmt.Sprintf("%s/", liveBucketBackupArtifactName)) {
+				blobsToBeCleanedUp = append(blobsToBeCleanedUp, blob)
+				_, err := bucket.CopyBlobBetweenBuckets(backupBucket, blob.Name, blob.Name)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		for _, blob := range blobsToBeCleanedUp {
+			err = bucket.Delete(blob.Name)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+
+	return nil
 }

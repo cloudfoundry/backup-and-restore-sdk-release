@@ -12,7 +12,7 @@ import (
 )
 
 var _ = Describe("Backuper", func() {
-	Context("CreateLiveBucketSnapshot", func() {
+	Describe("CreateLiveBucketSnapshot", func() {
 		var bucket *fakes.FakeBucket
 		var backupBucket *fakes.FakeBucket
 
@@ -42,17 +42,17 @@ var _ = Describe("Backuper", func() {
 						{Name: blob2},
 					}, nil)
 
-					bucket.CopyBlobReturns(0, nil)
+					bucket.CopyBlobWithinBucketReturns(0, nil)
 
 					err := backuper.CreateLiveBucketSnapshot()
 
-					Expect(bucket.CopyBlobCallCount()).To(Equal(2))
+					Expect(bucket.CopyBlobWithinBucketCallCount()).To(Equal(2))
 					Expect(err).NotTo(HaveOccurred())
-					blob, path := bucket.CopyBlobArgsForCall(0)
+					blob, path := bucket.CopyBlobWithinBucketArgsForCall(0)
 					Expect(blob).To(Equal(blob1))
 					Expect(path).To(Equal(fmt.Sprintf("temporary-backup-artifact/%s", blob1)))
 
-					blob, path = bucket.CopyBlobArgsForCall(1)
+					blob, path = bucket.CopyBlobWithinBucketArgsForCall(1)
 					Expect(blob).To(Equal(blob2))
 					Expect(path).To(Equal(fmt.Sprintf("temporary-backup-artifact/%s", blob2)))
 				})
@@ -79,10 +79,104 @@ var _ = Describe("Backuper", func() {
 					{Name: blob1},
 				}, nil)
 
-				bucket.CopyBlobReturns(0, errors.New("oopsifailed"))
+				bucket.CopyBlobWithinBucketReturns(0, errors.New("oopsifailed"))
 				err := backuper.CreateLiveBucketSnapshot()
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError("oopsifailed"))
+			})
+		})
+	})
+
+	Describe("TransferBlobsToBackupBucket", func() {
+		var bucket *fakes.FakeBucket
+		var backupBucket *fakes.FakeBucket
+
+		var backuper gcs.Backuper
+
+		const firstBucketName = "first-bucket-name"
+
+		BeforeEach(func() {
+			bucket = new(fakes.FakeBucket)
+			bucket.NameReturns(firstBucketName)
+
+			backupBucket = new(fakes.FakeBucket)
+			backupBucket.NameReturns(firstBucketName)
+
+			backuper = gcs.NewBackuper(map[string]gcs.BucketPair{
+				"first": {
+					Bucket:       bucket,
+					BackupBucket: backupBucket,
+				},
+			})
+		})
+
+		Context("when there is no previous backup artifact", func() {
+			Context("and there is a single bucket to be backed up", func() {
+
+				It("transfers the blobs from the live bucket to the backup bucket and deletes the blobs from live", func() {
+					blob1 := "file_1_a"
+					blob2 := "temporary-backup-artifact/file_1_b"
+					bucket.ListBlobsReturns([]gcs.Blob{
+						{Name: blob1},
+						{Name: blob2},
+					}, nil)
+
+					bucket.CopyBlobBetweenBucketsReturns(0, nil)
+
+					err := backuper.TransferBlobsToBackupBucket()
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(bucket.CopyBlobBetweenBucketsCallCount()).To(Equal(1))
+					dstBucket, blob, path := bucket.CopyBlobBetweenBucketsArgsForCall(0)
+					Expect(dstBucket.Name()).To(Equal(backupBucket.Name()))
+					Expect(blob).To(Equal(blob2))
+					Expect(path).To(Equal(fmt.Sprintf("%s", blob2))) //timestamped dir?
+
+					Expect(bucket.DeleteCallCount()).To(Equal(1))
+					Expect(bucket.DeleteArgsForCall(0)).To(Equal(blob2))
+				})
+			})
+		})
+
+		Context("when list blobs fails", func() {
+			It("returns an error", func() {
+				bucket.ListBlobsReturns(nil, errors.New("ifailed"))
+				err := backuper.TransferBlobsToBackupBucket()
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError("ifailed"))
+			})
+		})
+
+		Context("when copy blob fails", func() {
+			It("returns an error", func() {
+				blob1 := "temporary-backup-artifact/file_1_a"
+				bucket.ListBlobsReturns([]gcs.Blob{
+					{Name: blob1},
+				}, nil)
+
+				bucket.CopyBlobBetweenBucketsReturns(0, errors.New("oopsifailed"))
+				err := backuper.TransferBlobsToBackupBucket()
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError("oopsifailed"))
+			})
+		})
+
+		Context("when delete blob fails", func() {
+
+			It("errors", func() {
+				blob1 := "file_1_a"
+				blob2 := "temporary-backup-artifact/file_1_b"
+				bucket.ListBlobsReturns([]gcs.Blob{
+					{Name: blob1},
+					{Name: blob2},
+				}, nil)
+
+				bucket.CopyBlobBetweenBucketsReturns(0, nil)
+				bucket.DeleteReturns(errors.New("ifailed"))
+
+				err := backuper.TransferBlobsToBackupBucket()
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError("ifailed"))
 			})
 		})
 	})

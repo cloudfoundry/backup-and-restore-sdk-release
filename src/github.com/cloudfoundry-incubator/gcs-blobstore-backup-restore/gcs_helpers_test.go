@@ -45,7 +45,7 @@ func DeleteBucket(bucketName string) {
 }
 
 func UploadFile(bucketName, blobName, fileContents string) int64 {
-	file := createTmpFile(blobName, fileContents)
+	file := createTmpFile("", blobName, fileContents)
 
 	_, stdErr := runSuccessfully("gsutil", "cp", "-v", file.Name(), "gs://"+bucketName+"/"+blobName)
 	generationIDString := strings.TrimSpace(strings.Split(strings.Split(stdErr, "\n")[1], "#")[1])
@@ -55,8 +55,21 @@ func UploadFile(bucketName, blobName, fileContents string) int64 {
 	return generationID
 }
 
-func createTmpFile(fileName, fileContents string) *os.File {
-	file, err := ioutil.TempFile("", fileName)
+func UploadFileWithDir(bucketName, dir, blobName, fileContents string) int64 {
+	file := createTmpFile(dir, blobName, fileContents)
+
+	_, stdErr := runSuccessfully("gsutil", "cp", "-v", file.Name(), "gs://"+bucketName+"/"+dir+"/"+blobName)
+	generationIDString := strings.TrimSpace(strings.Split(strings.Split(stdErr, "\n")[1], "#")[1])
+	generationID, err := strconv.ParseInt(generationIDString, 10, 64)
+	Expect(err).NotTo(HaveOccurred())
+
+	return generationID
+}
+
+func createTmpFile(dirName, fileName, fileContents string) *os.File {
+	dir, err := ioutil.TempDir("", dirName)
+	Expect(err).NotTo(HaveOccurred())
+	file, err := ioutil.TempFile(dir, fileName)
 	Expect(err).NotTo(HaveOccurred())
 	err = ioutil.WriteFile(file.Name(), []byte(fileContents), 0644)
 	Expect(err).NotTo(HaveOccurred())
