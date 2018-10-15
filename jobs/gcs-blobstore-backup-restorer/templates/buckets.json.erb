@@ -1,1 +1,27 @@
+<%=
+  def validate_buckets()
+    buckets = p('buckets')
+
+    bucket_names = []
+    backup_bucket_names = []
+
+    buckets.each do |name, bucket|
+      bucket_names << bucket['bucket_name']
+      backup_bucket_names << bucket['backup_bucket_name']
+
+      if bucket['bucket_name'].eql? bucket['backup_bucket_name']
+        raise "Invalid bucket configuration for "+name+", bucket_name and backup_bucket_name must be distinct"
+      end
+    end
+
+    backup_bucket_names.each do |name|
+      if bucket_names.include? name
+        raise "Invalid bucket configuration, "+name+" is used as a source bucket and a backup bucket"
+      end
+    end
+  end
+
+  validate_buckets
+%>
+
 <%= p('buckets').to_json %>
