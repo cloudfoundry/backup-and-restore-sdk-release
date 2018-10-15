@@ -3,6 +3,7 @@ package gcs
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 type Backuper struct {
@@ -36,24 +37,36 @@ func (b *Backuper) CreateLiveBucketSnapshot() error {
 	return nil
 }
 
-func (b *Backuper) TransferBlobsToBackupBucket() error {
-	for _, bucketPair := range b.buckets {
+func (b *Backuper) TransferBlobsToBackupBucket() (map[string]BackupBucketAddress, error) {
+	timestamp := time.Now().Format("2006_01_02_15_04_05")
+
+	backupBuckets := make(map[string]BackupBucketAddress)
+
+	for id, bucketPair := range b.buckets {
 		bucket := bucketPair.Bucket
 		backupBucket := bucketPair.BackupBucket
+
+		backupBuckets[id] = BackupBucketAddress{
+			BucketName: backupBucket.Name(),
+			Path:       fmt.Sprintf("%s/%s/%s", backupBucket.Name(), timestamp, id),
+		}
 
 		backupBlobs, err := bucket.ListBlobs()
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		var blobsToBeCleanedUp []Blob
 		for _, blob := range backupBlobs {
 			if strings.HasPrefix(blob.Name, fmt.Sprintf("%s/", liveBucketBackupArtifactName)) {
 				blobsToBeCleanedUp = append(blobsToBeCleanedUp, blob)
-				_, err := bucket.CopyBlobBetweenBuckets(backupBucket, blob.Name, blob.Name)
+
+				blobName := strings.Replace(blob.Name, liveBucketBackupArtifactName, fmt.Sprintf("%s/%s", timestamp, id), 1)
+
+				_, err := bucket.CopyBlobBetweenBuckets(backupBucket, blob.Name, blobName)
 				if err != nil {
-					return err
+					return nil, err
 				}
 			}
 		}
@@ -61,11 +74,11 @@ func (b *Backuper) TransferBlobsToBackupBucket() error {
 		for _, blob := range blobsToBeCleanedUp {
 			err = bucket.DeleteBlob(blob.Name)
 			if err != nil {
-				return err
+				return nil, err
 			}
 		}
 
 	}
 
-	return nil
+	return backupBuckets, nil
 }

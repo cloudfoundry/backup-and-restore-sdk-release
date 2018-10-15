@@ -3,7 +3,10 @@ package gcs_test
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/onsi/gomega/gexec"
 
 	. "github.com/cloudfoundry-incubator/backup-and-restore-sdk-release-system-tests"
 	. "github.com/onsi/ginkgo"
@@ -42,11 +45,11 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 		gcsClient.DeleteBlobInBucket(bucket, blob2)
 		gcsClient.DeleteBlobInBucket(bucket, blob3)
 
-		gcsClient.DeleteAllBlobInBucket(fmt.Sprintf(backupBucket + "/temporary-backup-artifact/"))
+		gcsClient.DeleteAllBlobInBucket(fmt.Sprintf(backupBucket + "/*"))
 
 	})
 
-	Context("Backup", func() {
+	Describe("Backup", func() {
 		Context("When no previous backup has been taken", func() {
 			It("creates a backup", func() {
 				By("Creating blobs")
@@ -60,16 +63,36 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 				By("Seeing the live blob snapshot inside the live bucket")
 				liveBucketContent := gcsClient.ListDirsFromBucket(bucket)
 				Expect(liveBucketContent).To(ContainSubstring("temporary-backup-artifact"))
+				liveBucketContent = gcsClient.ListDirsFromBucket(bucket + "/temporary-backup-artifact")
+				Expect(liveBucketContent).To(ContainSubstring("temporary-backup-artifact/" + blob1))
+				Expect(liveBucketContent).To(ContainSubstring("temporary-backup-artifact/" + blob2))
+				Expect(liveBucketContent).To(ContainSubstring("temporary-backup-artifact/" + blob3))
 
 				By("Running unlock")
 				instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/post-backup-unlock")
 
-				By("Having a complete backup")
-				backupBucketContent := gcsClient.ListDirsFromBucket(fmt.Sprintf("%s/temporary-backup-artifact/", backupBucket))
+				By("Having a complete remote backup")
+				backupBucketFolders := gcsClient.ListDirsFromBucket(backupBucket)
+				Expect(backupBucketFolders).To(MatchRegexp(
+					".*\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/"))
+
+				backupFolder := strings.TrimPrefix(backupBucketFolders, "gs://")
+				backupFolder = strings.TrimSuffix(backupFolder, "\n")
+				backupFolder = backupFolder + "droplets"
+				backupBucketContent := gcsClient.ListDirsFromBucket(backupFolder)
 				Expect(backupBucketContent).To(ContainSubstring(blob1))
 				Expect(backupBucketContent).To(ContainSubstring(blob2))
 				Expect(backupBucketContent).To(ContainSubstring(blob3))
-				//make this be an exact match? Rather than substring, don't want unexpected blobs.
+
+				By("Having a complete backup artifact")
+				session := instance.Run(fmt.Sprintf("cat %s/%s", instanceArtifactDirPath, "blobstore.json"))
+				Expect(session).Should(gexec.Exit(0))
+				fileContents := string(session.Out.Contents())
+
+				Expect(fileContents).To(ContainSubstring("\"droplets\":{"))
+				Expect(fileContents).To(ContainSubstring("\"bucket_name\":\"" + backupBucket + "\""))
+				Expect(fileContents).To(MatchRegexp(
+					"\"path\":\"%s/\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}\\/droplets\"", backupBucket))
 
 				By("Having cleaned up the live bucket")
 				liveBucketContent = gcsClient.ListDirsFromBucket(bucket)
