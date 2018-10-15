@@ -1,6 +1,5 @@
 <%=
-  def validate_buckets()
-    buckets = p('buckets')
+  def validate_buckets(buckets)
 
     bucket_names = []
     backup_bucket_names = []
@@ -21,7 +20,9 @@
     end
   end
 
-  validate_buckets
-%>
+  buckets = p('buckets')
 
-<%= p('buckets').to_json %>
+  validate_buckets(buckets)
+
+  buckets.to_json
+%>
