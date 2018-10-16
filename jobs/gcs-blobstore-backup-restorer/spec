@@ -22,6 +22,8 @@ templates:
   restore.erb: bin/bbr/restore
   post-backup-unlock.erb: bin/bbr/post-backup-unlock
   buckets.json.erb: config/buckets.json
+  gcp-service-account-key.json.erb: config/gcp-service-account-key.json
+
 
 packages:
 - gcs-blobstore-backup-restorer
@@ -30,6 +32,8 @@ properties:
   enabled:
     default: false
     description: "Enable backup and restore scripts in this job"
+  gcp_service_account_key:
+    description: "GCP service account key JSON"
   buckets:
     default: {}
     description: "Hash of buckets to backup/restore to"
@@ -37,8 +41,3 @@ properties:
       droplets:
         bucket_name: "the_droplets_bucket"
         backup_bucket_name: "the_droplets_backup_bucket"
-        gcp_service_account_key: >
-          {
-            "type": "service_account",
-            ...
-          }

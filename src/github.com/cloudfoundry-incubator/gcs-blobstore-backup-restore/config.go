@@ -6,9 +6,8 @@ import (
 )
 
 type Config struct {
-	BucketName        string `json:"bucket_name"`
-	BackupBucketName  string `json:"backup_bucket_name"`
-	ServiceAccountKey string `json:"gcp_service_account_key"`
+	BucketName       string `json:"bucket_name"`
+	BackupBucketName string `json:"backup_bucket_name"`
 }
 
 func ParseConfig(configFilePath string) (map[string]Config, error) {
@@ -24,4 +23,13 @@ func ParseConfig(configFilePath string) (map[string]Config, error) {
 	}
 
 	return config, nil
+}
+
+func ReadGCPServiceAccountKey(gcpConfigFilePath string) (string, error) {
+	gcpConfigContents, err := ioutil.ReadFile(gcpConfigFilePath)
+	if err != nil {
+		return "", err
+	}
+
+	return string(gcpConfigContents), nil
 }

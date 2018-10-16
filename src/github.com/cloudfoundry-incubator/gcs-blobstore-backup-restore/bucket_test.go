@@ -13,13 +13,12 @@ var _ = Describe("Bucket", func() {
 		It("builds buckets", func() {
 			config := map[string]gcs.Config{
 				"droplets": {
-					BucketName:        "droplets-bucket",
-					BackupBucketName:  "backup-droplets-bucket",
-					ServiceAccountKey: MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"),
+					BucketName:       "droplets-bucket",
+					BackupBucketName: "backup-droplets-bucket",
 				},
 			}
 
-			buckets, err := gcs.BuildBuckets(config)
+			buckets, err := gcs.BuildBuckets(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(buckets).To(HaveLen(1))
@@ -31,13 +30,12 @@ var _ = Describe("Bucket", func() {
 			It("returns an error", func() {
 				config := map[string]gcs.Config{
 					"droplets": {
-						BucketName:        "droplets-bucket",
-						BackupBucketName:  "backup-droplets-bucket",
-						ServiceAccountKey: "this is not valid json",
+						BucketName:       "droplets-bucket",
+						BackupBucketName: "backup-droplets-bucket",
 					},
 				}
 
-				_, err := gcs.BuildBuckets(config)
+				_, err := gcs.BuildBuckets("not-valid-json", config)
 				Expect(err).To(HaveOccurred())
 			})
 		})

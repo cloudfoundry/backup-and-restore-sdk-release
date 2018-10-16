@@ -26,16 +26,16 @@ type BucketPair struct {
 	BackupBucket Bucket
 }
 
-func BuildBuckets(config map[string]Config) (map[string]BucketPair, error) {
+func BuildBuckets(gcpServiceAccountKey string, config map[string]Config) (map[string]BucketPair, error) {
 	buckets := map[string]BucketPair{}
 
 	for bucketId, bucketConfig := range config {
-		bucket, err := NewSDKBucket(bucketConfig.ServiceAccountKey, bucketConfig.BucketName)
+		bucket, err := NewSDKBucket(gcpServiceAccountKey, bucketConfig.BucketName)
 		if err != nil {
 			return nil, err
 		}
 
-		backupBucket, err := NewSDKBucket(bucketConfig.ServiceAccountKey, bucketConfig.BackupBucketName)
+		backupBucket, err := NewSDKBucket(gcpServiceAccountKey, bucketConfig.BackupBucketName)
 		if err != nil {
 			return nil, err
 		}

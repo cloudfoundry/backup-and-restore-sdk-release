@@ -10,6 +10,7 @@ import (
 func main() {
 	artifactPath := flag.String("artifact-file", "", "Path to the artifact file")
 	configPath := flag.String("config", "", "Path to JSON config file")
+	gcpServiceAccountKeyPath := flag.String("gcp-service-account-key", "", "Path to GCP service account key")
 	backupAction := flag.Bool("backup", false, "Run blobstore backup")
 	restoreAction := flag.Bool("restore", false, "Run blobstore restore")
 	unlockAction := flag.Bool("unlock", false, "Run blobstore unlock")
@@ -27,7 +28,10 @@ func main() {
 	config, err := gcs.ParseConfig(*configPath)
 	exitOnError(err)
 
-	buckets, err := gcs.BuildBuckets(config)
+	gcpServiceAccountKey, err := gcs.ReadGCPServiceAccountKey(*gcpServiceAccountKeyPath)
+	exitOnError(err)
+
+	buckets, err := gcs.BuildBuckets(gcpServiceAccountKey, config)
 	exitOnError(err)
 
 	artifact := gcs.NewArtifact(*artifactPath)

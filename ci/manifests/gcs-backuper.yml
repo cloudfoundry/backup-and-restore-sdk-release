@@ -42,11 +42,11 @@ instance_groups:
     release: backup-and-restore-sdk
     properties:
       enabled: true
+      gcp_service_account_key: ((gcp-service-account-key))
       buckets:
         droplets:
           bucket_name: ((gcs-bucket-name))
           backup_bucket_name: ((gcs-backup-bucket-name))
-          gcp_service_account_key: ((gcp-service-account-key))
 update:
   canaries: 1
   max_in_flight: 1

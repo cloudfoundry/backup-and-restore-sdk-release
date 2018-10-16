@@ -6,5 +6,6 @@ set -eu
 /var/vcap/packages/gcs-blobstore-backup-restorer/bin/gcs-blobstore-backup-restore \
     --unlock \
     --config /var/vcap/jobs/gcs-blobstore-backup-restorer/config/buckets.json \
+    --gcp-service-account-key /var/vcap/jobs/gcs-blobstore-backup-restorer/config/gcp-service-account-key.json \
     --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
 <% end %>
