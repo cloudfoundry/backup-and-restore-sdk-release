@@ -52,6 +52,9 @@ func main() {
 		backupBuckets, err := backuper.TransferBlobsToBackupBucket()
 		exitOnError(err)
 
+		err = backuper.CopyBlobsWithinBackupBucket()
+		exitOnError(err)
+
 		err = artifact.Write(backupBuckets)
 		exitOnError(err)
 	} else {

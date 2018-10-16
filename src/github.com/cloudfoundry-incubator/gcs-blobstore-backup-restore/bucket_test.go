@@ -98,6 +98,75 @@ var _ = Describe("Bucket", func() {
 		})
 	})
 
+	Describe("ListLastBackupBlobs", func() {
+		var backupBucketName string
+		var backupBucket gcs.Bucket
+		var err error
+
+		JustBeforeEach(func() {
+			backupBucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), backupBucketName)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		Context("when the bucket exists", func() {
+			BeforeEach(func() {
+				backupBucketName = CreateBucketWithTimestampedName("list_last_backup_blobs")
+			})
+
+			AfterEach(func() {
+				DeleteBucket(backupBucketName)
+			})
+
+			Context("when there are no previous backups", func() {
+				It("returns an empty slice", func() {
+					blobs, err := backupBucket.ListLastBackupBlobs()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(blobs).To(HaveLen(0))
+				})
+			})
+
+			Context("when there is one previous backup", func() {
+				var file1GenerationID int64
+
+				BeforeEach(func() {
+					file1GenerationID = UploadFileWithDir(backupBucketName, "1970_01_01_00_00_00", "file1", "file-content")
+				})
+
+				It("returns all the blobs from the previous backup", func() {
+					blobs, err := backupBucket.ListLastBackupBlobs()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(blobs).To(ConsistOf(gcs.Blob{Name: "1970_01_01_00_00_00/file1", GenerationID: file1GenerationID}))
+				})
+			})
+
+			Context("when there is more than one previous backup", func() {
+				var file1GenerationID, file2GenerationID int64
+
+				BeforeEach(func() {
+					file1GenerationID = UploadFileWithDir(backupBucketName, "1970_01_01_00_00_00", "file1", "file-content1")
+					file2GenerationID = UploadFileWithDir(backupBucketName, "1970_01_02_00_00_00", "file2", "file-content2")
+				})
+
+				It("returns only the blobs from the most recent previous backup", func() {
+					blobs, err := backupBucket.ListLastBackupBlobs()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(blobs).To(ConsistOf(gcs.Blob{Name: "1970_01_02_00_00_00/file2", GenerationID: file2GenerationID}))
+				})
+			})
+		})
+
+		Context("when the bucket does not exist", func() {
+			BeforeEach(func() {
+				backupBucketName = "not-a-bucket"
+			})
+
+			It("returns an error", func() {
+				_, err = backupBucket.ListLastBackupBlobs()
+				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
+
 	Describe("CopyBlobWithinBucket", func() {
 		var bucketName string
 		var bucket gcs.Bucket
@@ -319,6 +388,42 @@ var _ = Describe("Bucket", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(BeNil())
 			})
+		})
+	})
+
+	Describe("CreateFile", func() {
+		var (
+			bucketName   string
+			bucket       gcs.Bucket
+			err          error
+			generationID int64
+			fileName     string
+			fileContent  []byte
+		)
+
+		BeforeEach(func() {
+			bucketName = CreateBucketWithTimestampedName("create_file")
+			bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
+			Expect(err).NotTo(HaveOccurred())
+
+			fileName = "file1"
+			fileContent = []byte("file_content")
+		})
+
+		AfterEach(func() {
+			DeleteBucket(bucketName)
+		})
+
+		It("creates the file", func() {
+			generationID, err = bucket.CreateFile(fileName, fileContent)
+			Expect(err).NotTo(HaveOccurred())
+
+			blobs, err := bucket.ListBlobs()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(blobs).To(ConsistOf(
+				gcs.Blob{Name: fileName, GenerationID: generationID},
+			))
+			Expect(ReadFile(bucketName, fileName)).To(Equal(string(fileContent)))
 		})
 	})
 })

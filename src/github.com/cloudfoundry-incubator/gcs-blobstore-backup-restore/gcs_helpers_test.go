@@ -55,6 +55,11 @@ func UploadFile(bucketName, blobName, fileContents string) int64 {
 	return generationID
 }
 
+func ReadFile(bucketName, blobName string) string {
+	output, _ := runSuccessfully("gsutil", "cat", "gs://"+bucketName+"/"+blobName)
+	return output
+}
+
 func UploadFileWithDir(bucketName, dir, blobName, fileContents string) int64 {
 	file := createTmpFile(dir, blobName, fileContents)
 

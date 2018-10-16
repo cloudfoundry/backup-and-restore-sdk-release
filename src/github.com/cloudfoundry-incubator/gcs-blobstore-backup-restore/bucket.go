@@ -2,6 +2,7 @@ package gcs
 
 import (
 	"errors"
+	"strings"
 
 	"cloud.google.com/go/storage"
 	"golang.org/x/net/context"
@@ -16,9 +17,11 @@ const readWriteScope = "https://www.googleapis.com/auth/devstorage.read_write"
 type Bucket interface {
 	Name() string
 	ListBlobs() ([]Blob, error)
+	ListLastBackupBlobs() ([]Blob, error)
 	CopyBlobWithinBucket(string, string) (int64, error)
 	CopyBlobBetweenBuckets(Bucket, string, string) (int64, error)
 	DeleteBlob(string) error
+	CreateFile(name string, content []byte) (int64, error)
 }
 
 type BucketPair struct {
@@ -108,6 +111,28 @@ func (b SDKBucket) ListBlobs() ([]Blob, error) {
 	return blobs, nil
 }
 
+func (b SDKBucket) ListLastBackupBlobs() ([]Blob, error) {
+	var lastBackupBlobs []Blob
+	allBackupBlobs, err := b.ListBlobs()
+	if err != nil {
+		return lastBackupBlobs, err
+	}
+
+	if len(allBackupBlobs) == 0 {
+		return lastBackupBlobs, nil
+	}
+
+	lastBackupTimestamp := strings.Split(allBackupBlobs[len(allBackupBlobs)-1].Name, "/")[0]
+
+	for _, blob := range allBackupBlobs {
+		if strings.HasPrefix(blob.Name, lastBackupTimestamp) {
+			lastBackupBlobs = append(lastBackupBlobs, blob)
+		}
+	}
+
+	return lastBackupBlobs, nil
+}
+
 func (b SDKBucket) CopyBlobWithinBucket(srcBlob, dstBlob string) (int64, error) {
 	return b.CopyBlobBetweenBuckets(b, srcBlob, dstBlob)
 }
@@ -129,4 +154,14 @@ func (b SDKBucket) CopyBlobBetweenBuckets(dstBucket Bucket, srcBlob, dstBlob str
 
 func (b SDKBucket) DeleteBlob(blob string) error {
 	return b.client.Bucket(b.name).Object(blob).Delete(b.ctx)
+}
+
+func (b SDKBucket) CreateFile(name string, content []byte) (int64, error) {
+	writer := b.client.Bucket(b.name).Object(name).NewWriter(b.ctx)
+	writer.Write(content)
+	err := writer.Close()
+	if err != nil {
+		return -1, err
+	}
+	return writer.Attrs().Generation, nil
 }
