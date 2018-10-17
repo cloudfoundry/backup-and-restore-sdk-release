@@ -275,9 +275,10 @@ var _ = Describe("Bucket", func() {
 				DeleteBucket(dstBucketName)
 			})
 
-			It("errors", func() {
+			It("errors with a useful message", func() {
 				err := srcBucket.CopyBlobBetweenBuckets(dstBucket, "foobar", "copydir/file1")
 				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError(ContainSubstring("failed to copy object: ")))
 			})
 		})
 
@@ -421,6 +422,48 @@ var _ = Describe("Bucket", func() {
 				gcs.Blob{Name: fileName},
 			))
 			Expect(ReadFile(bucketName, fileName)).To(Equal(string(fileContent)))
+		})
+	})
+
+	Describe("GetBlob", func() {
+		var (
+			bucketName string
+			bucket     gcs.Bucket
+			err        error
+			blobName   string
+			content    string
+		)
+
+		BeforeEach(func() {
+			bucketName = CreateBucketWithTimestampedName("get_blob")
+			bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
+			Expect(err).NotTo(HaveOccurred())
+
+			blobName = "myBlob"
+			content = "blobContent"
+		})
+
+		AfterEach(func() {
+			DeleteBucket(bucketName)
+		})
+
+		Context("when the blob exists", func() {
+			BeforeEach(func() {
+				UploadFile(bucketName, blobName, content)
+			})
+
+			It("gets the blob content", func() {
+				c, err := bucket.GetBlob(blobName)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(c)).To(Equal(content))
+			})
+		})
+
+		Context("when the blob does not exist", func() {
+			It("returns an error", func() {
+				_, err := bucket.GetBlob(blobName)
+				Expect(err).To(HaveOccurred())
+			})
 		})
 	})
 })

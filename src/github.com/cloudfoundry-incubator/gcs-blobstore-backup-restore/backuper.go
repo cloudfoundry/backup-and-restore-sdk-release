@@ -35,15 +35,15 @@ func (b *Backuper) CreateLiveBucketSnapshot() error {
 			return err
 		}
 
-		inLastBackup := make(map[string]bool)
+		inLastBackup := make(map[string]Blob)
 		for _, blob := range lastBackupBlobs {
 			nameParts := strings.Split(blob.Name, "/")
-			inLastBackup[nameParts[len(nameParts)-1]] = true
+			inLastBackup[nameParts[len(nameParts)-1]] = blob
 		}
 
 		for _, blob := range blobs {
-			if inLastBackup[blob.Name] {
-				commonBlobs = append(commonBlobs, blob)
+			if blobFromBackup, ok := inLastBackup[blob.Name]; ok {
+				commonBlobs = append(commonBlobs, blobFromBackup)
 			} else {
 				err := bucket.CopyBlobWithinBucket(blob.Name, fmt.Sprintf("%s/%s", liveBucketBackupArtifactName, blob.Name))
 				if err != nil {
@@ -76,7 +76,7 @@ func (b *Backuper) TransferBlobsToBackupBucket() (map[string]BackupBucketAddress
 
 		backupBuckets[id] = BackupBucketAddress{
 			BucketName: backupBucket.Name(),
-			Path:       fmt.Sprintf("%s/%s/%s", backupBucket.Name(), timestamp, id),
+			Path:       fmt.Sprintf("%s/%s", timestamp, id),
 		}
 
 		backupBlobs, err := bucket.ListBlobs()
@@ -111,6 +111,34 @@ func (b *Backuper) TransferBlobsToBackupBucket() (map[string]BackupBucketAddress
 	return backupBuckets, nil
 }
 
-func (b *Backuper) CopyBlobsWithinBackupBucket() error {
+func (b *Backuper) CopyBlobsWithinBackupBucket(backupBucketAddresses map[string]BackupBucketAddress) error {
+	for bucketId, backupBucketAddress := range backupBucketAddresses {
+		commonBlobBytes, err := b.buckets[bucketId].BackupBucket.GetBlob(backupBucketAddress.Path + "/common_blobs.json")
+		if err != nil {
+			return fmt.Errorf("failed to get %s/common_blobs.json: %v", backupBucketAddress.Path, err)
+		}
+
+		var commonBlobs []Blob
+		err = json.Unmarshal(commonBlobBytes, &commonBlobs)
+		if err != nil {
+			return err
+		}
+
+		err = b.buckets[bucketId].BackupBucket.DeleteBlob(backupBucketAddress.Path + "/common_blobs.json")
+
+		if err != nil {
+			return err
+		}
+
+		for _, blob := range commonBlobs {
+			nameParts := strings.Split(blob.Name, "/")
+			destinationBlobName := fmt.Sprintf("%s/%s", backupBucketAddress.Path, nameParts[len(nameParts)-1])
+			err = b.buckets[bucketId].BackupBucket.CopyBlobWithinBucket(blob.Name, destinationBlobName)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
 	return nil
 }

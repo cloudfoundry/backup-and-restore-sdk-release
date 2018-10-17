@@ -2,6 +2,8 @@ package gcs
 
 import (
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"strings"
 
 	"cloud.google.com/go/storage"
@@ -22,6 +24,7 @@ type Bucket interface {
 	CopyBlobBetweenBuckets(Bucket, string, string) error
 	DeleteBlob(string) error
 	CreateFile(name string, content []byte) error
+	GetBlob(string) ([]byte, error)
 }
 
 type BucketPair struct {
@@ -145,7 +148,7 @@ func (b SDKBucket) CopyBlobBetweenBuckets(dstBucket Bucket, srcBlob, dstBlob str
 	dst := b.client.Bucket(dstBucket.Name()).Object(dstBlob)
 	_, err := dst.CopierFrom(src).Run(b.ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to copy object: %v", err)
 	}
 
 	return nil
@@ -163,4 +166,18 @@ func (b SDKBucket) CreateFile(name string, content []byte) error {
 		return err
 	}
 	return nil
+}
+
+func (b SDKBucket) GetBlob(blob string) ([]byte, error) {
+	reader, err := b.client.Bucket(b.name).Object(blob).NewReader(b.ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
+
+	content, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+	return content, nil
 }

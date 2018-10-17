@@ -89,7 +89,7 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 					Expect(fileContents).To(ContainSubstring("\"droplets\":{"))
 					Expect(fileContents).To(ContainSubstring("\"bucket_name\":\"" + backupBucket + "\""))
 					Expect(fileContents).To(MatchRegexp(
-						"\"path\":\"%s/\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}\\/droplets\"", backupBucket))
+						"\"path\":\"\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}\\/droplets\""))
 				})
 
 				By("Having cleaned up the live bucket", func() {
@@ -99,7 +99,7 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 			})
 		})
 
-		FContext("and a previous backup has been taken", func() {
+		Context("and a previous backup has been taken", func() {
 			var previousBackupTimestamp = "1970_01_01_00_00_00"
 			BeforeEach(func() {
 				gcsClient.WriteBlobToBucket(bucket, blob1, "TEST_BLOB_1")
@@ -155,45 +155,6 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 
 		})
 	})
-	//
-	//Context("when restoring to a clone bucket", func() {
-	//	var cloneInstance JobInstance
-	//	var cloneBucket string
-	//
-	//	BeforeEach(func() {
-	//		cloneInstance = JobInstance{
-	//			Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
-	//			Name:       "gcs-restore-to-clone-bucket",
-	//			Index:      "0",
-	//		}
-	//		cloneInstance.RunSuccessfully("mkdir -p " + instanceArtifactDirPath)
-	//
-	//		cloneBucket = MustHaveEnv("GCS_CLONE_BUCKET_NAME")
-	//	})
-	//	It("backs up and restores successfully", func() {
-	//		gcsClient.WriteBlobToBucket(bucket, blob1, "TEST_BLOB_1")
-	//		gcsClient.WriteBlobToBucket(bucket, blob2, "TEST_BLOB_2")
-	//		gcsClient.WriteBlobToBucket(bucket, blob3, "TEST_BLOB_3")
-	//
-	//		instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/backup")
-	//
-	//		instance.Download(instanceArtifactDirPath+"/blobstore.json", "/tmp/blobstore.json")
-	//		cloneInstance.Upload("/tmp/blobstore.json", instanceArtifactDirPath+"/blobstore.json")
-	//
-	//		cloneInstance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/restore")
-	//
-	//		Expect(gcsClient.ReadBlobFromBucket(cloneBucket, blob1)).To(Equal("TEST_BLOB_1"))
-	//		Expect(gcsClient.ReadBlobFromBucket(cloneBucket, blob2)).To(Equal("TEST_BLOB_2"))
-	//		Expect(gcsClient.ReadBlobFromBucket(cloneBucket, blob3)).To(Equal("TEST_BLOB_3"))
-	//	})
-	//
-	//	AfterEach(func() {
-	//		gcsClient.DeleteBlobInBucket(cloneBucket, blob1)
-	//		gcsClient.DeleteBlobInBucket(cloneBucket, blob2)
-	//		gcsClient.DeleteBlobInBucket(cloneBucket, blob3)
-	//	})
-	//})
-
 })
 
 func removePreviousBackup(backupBucketFolders, backupBucket, timestamp string) string {
