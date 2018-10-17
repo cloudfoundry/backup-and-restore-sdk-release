@@ -45,7 +45,7 @@ func (b *Backuper) CreateLiveBucketSnapshot() error {
 			if inLastBackup[blob.Name] {
 				commonBlobs = append(commonBlobs, blob)
 			} else {
-				_, err := bucket.CopyBlobWithinBucket(blob.Name, fmt.Sprintf("%s/%s", liveBucketBackupArtifactName, blob.Name))
+				err := bucket.CopyBlobWithinBucket(blob.Name, fmt.Sprintf("%s/%s", liveBucketBackupArtifactName, blob.Name))
 				if err != nil {
 					return err
 				}
@@ -57,7 +57,7 @@ func (b *Backuper) CreateLiveBucketSnapshot() error {
 			return err
 		}
 
-		_, err = bucket.CreateFile(liveBucketBackupArtifactName+"/"+commonBlobsName, j)
+		err = bucket.CreateFile(liveBucketBackupArtifactName+"/"+commonBlobsName, j)
 		if err != nil {
 			return err
 		}
@@ -92,7 +92,7 @@ func (b *Backuper) TransferBlobsToBackupBucket() (map[string]BackupBucketAddress
 
 				blobName := strings.Replace(blob.Name, liveBucketBackupArtifactName, fmt.Sprintf("%s/%s", timestamp, id), 1)
 
-				_, err := bucket.CopyBlobBetweenBuckets(backupBucket, blob.Name, blobName)
+				err := bucket.CopyBlobBetweenBuckets(backupBucket, blob.Name, blobName)
 				if err != nil {
 					return nil, err
 				}

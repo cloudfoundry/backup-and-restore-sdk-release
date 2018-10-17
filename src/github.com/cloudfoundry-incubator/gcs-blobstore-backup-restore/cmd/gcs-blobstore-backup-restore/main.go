@@ -36,16 +36,12 @@ func main() {
 
 	artifact := gcs.NewArtifact(*artifactPath)
 
-	//executionStrategy := gcs.NewParallelStrategy()
-
 	if *backupAction {
 		backuper := gcs.NewBackuper(buckets)
 
 		err := backuper.CreateLiveBucketSnapshot()
 		exitOnError(err)
 
-		//err = artifact.Write(buckets)
-		//exitOnError(err)
 	} else if *unlockAction {
 		backuper := gcs.NewBackuper(buckets)
 
@@ -59,13 +55,6 @@ func main() {
 		exitOnError(err)
 	} else {
 		panic("restore not implemented")
-		//restorer := gcs.NewRestorer(buckets, executionStrategy)
-		//
-		//backups, err := artifact.Read()
-		//exitOnError(err)
-		//
-		//err = restorer.Restore(backups)
-		//exitOnError(err)
 	}
 }
 

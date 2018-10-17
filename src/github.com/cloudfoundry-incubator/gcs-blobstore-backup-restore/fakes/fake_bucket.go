@@ -39,21 +39,19 @@ type FakeBucket struct {
 		result1 []gcs.Blob
 		result2 error
 	}
-	CopyBlobWithinBucketStub        func(string, string) (int64, error)
+	CopyBlobWithinBucketStub        func(string, string) error
 	copyBlobWithinBucketMutex       sync.RWMutex
 	copyBlobWithinBucketArgsForCall []struct {
 		arg1 string
 		arg2 string
 	}
 	copyBlobWithinBucketReturns struct {
-		result1 int64
-		result2 error
+		result1 error
 	}
 	copyBlobWithinBucketReturnsOnCall map[int]struct {
-		result1 int64
-		result2 error
+		result1 error
 	}
-	CopyBlobBetweenBucketsStub        func(gcs.Bucket, string, string) (int64, error)
+	CopyBlobBetweenBucketsStub        func(gcs.Bucket, string, string) error
 	copyBlobBetweenBucketsMutex       sync.RWMutex
 	copyBlobBetweenBucketsArgsForCall []struct {
 		arg1 gcs.Bucket
@@ -61,12 +59,10 @@ type FakeBucket struct {
 		arg3 string
 	}
 	copyBlobBetweenBucketsReturns struct {
-		result1 int64
-		result2 error
+		result1 error
 	}
 	copyBlobBetweenBucketsReturnsOnCall map[int]struct {
-		result1 int64
-		result2 error
+		result1 error
 	}
 	DeleteBlobStub        func(string) error
 	deleteBlobMutex       sync.RWMutex
@@ -79,19 +75,17 @@ type FakeBucket struct {
 	deleteBlobReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CreateFileStub        func(name string, content []byte) (int64, error)
+	CreateFileStub        func(name string, content []byte) error
 	createFileMutex       sync.RWMutex
 	createFileArgsForCall []struct {
 		name    string
 		content []byte
 	}
 	createFileReturns struct {
-		result1 int64
-		result2 error
+		result1 error
 	}
 	createFileReturnsOnCall map[int]struct {
-		result1 int64
-		result2 error
+		result1 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -223,7 +217,7 @@ func (fake *FakeBucket) ListLastBackupBlobsReturnsOnCall(i int, result1 []gcs.Bl
 	}{result1, result2}
 }
 
-func (fake *FakeBucket) CopyBlobWithinBucket(arg1 string, arg2 string) (int64, error) {
+func (fake *FakeBucket) CopyBlobWithinBucket(arg1 string, arg2 string) error {
 	fake.copyBlobWithinBucketMutex.Lock()
 	ret, specificReturn := fake.copyBlobWithinBucketReturnsOnCall[len(fake.copyBlobWithinBucketArgsForCall)]
 	fake.copyBlobWithinBucketArgsForCall = append(fake.copyBlobWithinBucketArgsForCall, struct {
@@ -236,9 +230,9 @@ func (fake *FakeBucket) CopyBlobWithinBucket(arg1 string, arg2 string) (int64, e
 		return fake.CopyBlobWithinBucketStub(arg1, arg2)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1
 	}
-	return fake.copyBlobWithinBucketReturns.result1, fake.copyBlobWithinBucketReturns.result2
+	return fake.copyBlobWithinBucketReturns.result1
 }
 
 func (fake *FakeBucket) CopyBlobWithinBucketCallCount() int {
@@ -253,29 +247,26 @@ func (fake *FakeBucket) CopyBlobWithinBucketArgsForCall(i int) (string, string) 
 	return fake.copyBlobWithinBucketArgsForCall[i].arg1, fake.copyBlobWithinBucketArgsForCall[i].arg2
 }
 
-func (fake *FakeBucket) CopyBlobWithinBucketReturns(result1 int64, result2 error) {
+func (fake *FakeBucket) CopyBlobWithinBucketReturns(result1 error) {
 	fake.CopyBlobWithinBucketStub = nil
 	fake.copyBlobWithinBucketReturns = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
-func (fake *FakeBucket) CopyBlobWithinBucketReturnsOnCall(i int, result1 int64, result2 error) {
+func (fake *FakeBucket) CopyBlobWithinBucketReturnsOnCall(i int, result1 error) {
 	fake.CopyBlobWithinBucketStub = nil
 	if fake.copyBlobWithinBucketReturnsOnCall == nil {
 		fake.copyBlobWithinBucketReturnsOnCall = make(map[int]struct {
-			result1 int64
-			result2 error
+			result1 error
 		})
 	}
 	fake.copyBlobWithinBucketReturnsOnCall[i] = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
-func (fake *FakeBucket) CopyBlobBetweenBuckets(arg1 gcs.Bucket, arg2 string, arg3 string) (int64, error) {
+func (fake *FakeBucket) CopyBlobBetweenBuckets(arg1 gcs.Bucket, arg2 string, arg3 string) error {
 	fake.copyBlobBetweenBucketsMutex.Lock()
 	ret, specificReturn := fake.copyBlobBetweenBucketsReturnsOnCall[len(fake.copyBlobBetweenBucketsArgsForCall)]
 	fake.copyBlobBetweenBucketsArgsForCall = append(fake.copyBlobBetweenBucketsArgsForCall, struct {
@@ -289,9 +280,9 @@ func (fake *FakeBucket) CopyBlobBetweenBuckets(arg1 gcs.Bucket, arg2 string, arg
 		return fake.CopyBlobBetweenBucketsStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1
 	}
-	return fake.copyBlobBetweenBucketsReturns.result1, fake.copyBlobBetweenBucketsReturns.result2
+	return fake.copyBlobBetweenBucketsReturns.result1
 }
 
 func (fake *FakeBucket) CopyBlobBetweenBucketsCallCount() int {
@@ -306,26 +297,23 @@ func (fake *FakeBucket) CopyBlobBetweenBucketsArgsForCall(i int) (gcs.Bucket, st
 	return fake.copyBlobBetweenBucketsArgsForCall[i].arg1, fake.copyBlobBetweenBucketsArgsForCall[i].arg2, fake.copyBlobBetweenBucketsArgsForCall[i].arg3
 }
 
-func (fake *FakeBucket) CopyBlobBetweenBucketsReturns(result1 int64, result2 error) {
+func (fake *FakeBucket) CopyBlobBetweenBucketsReturns(result1 error) {
 	fake.CopyBlobBetweenBucketsStub = nil
 	fake.copyBlobBetweenBucketsReturns = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
-func (fake *FakeBucket) CopyBlobBetweenBucketsReturnsOnCall(i int, result1 int64, result2 error) {
+func (fake *FakeBucket) CopyBlobBetweenBucketsReturnsOnCall(i int, result1 error) {
 	fake.CopyBlobBetweenBucketsStub = nil
 	if fake.copyBlobBetweenBucketsReturnsOnCall == nil {
 		fake.copyBlobBetweenBucketsReturnsOnCall = make(map[int]struct {
-			result1 int64
-			result2 error
+			result1 error
 		})
 	}
 	fake.copyBlobBetweenBucketsReturnsOnCall[i] = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeBucket) DeleteBlob(arg1 string) error {
@@ -376,7 +364,7 @@ func (fake *FakeBucket) DeleteBlobReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeBucket) CreateFile(name string, content []byte) (int64, error) {
+func (fake *FakeBucket) CreateFile(name string, content []byte) error {
 	var contentCopy []byte
 	if content != nil {
 		contentCopy = make([]byte, len(content))
@@ -394,9 +382,9 @@ func (fake *FakeBucket) CreateFile(name string, content []byte) (int64, error) {
 		return fake.CreateFileStub(name, content)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1
 	}
-	return fake.createFileReturns.result1, fake.createFileReturns.result2
+	return fake.createFileReturns.result1
 }
 
 func (fake *FakeBucket) CreateFileCallCount() int {
@@ -411,26 +399,23 @@ func (fake *FakeBucket) CreateFileArgsForCall(i int) (string, []byte) {
 	return fake.createFileArgsForCall[i].name, fake.createFileArgsForCall[i].content
 }
 
-func (fake *FakeBucket) CreateFileReturns(result1 int64, result2 error) {
+func (fake *FakeBucket) CreateFileReturns(result1 error) {
 	fake.CreateFileStub = nil
 	fake.createFileReturns = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
-func (fake *FakeBucket) CreateFileReturnsOnCall(i int, result1 int64, result2 error) {
+func (fake *FakeBucket) CreateFileReturnsOnCall(i int, result1 error) {
 	fake.CreateFileStub = nil
 	if fake.createFileReturnsOnCall == nil {
 		fake.createFileReturnsOnCall = make(map[int]struct {
-			result1 int64
-			result2 error
+			result1 error
 		})
 	}
 	fake.createFileReturnsOnCall[i] = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeBucket) Invocations() map[string][][]interface{} {

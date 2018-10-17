@@ -56,22 +56,21 @@ var _ = Describe("Bucket", func() {
 		})
 
 		Context("when the bucket has a few files", func() {
-			var file1GenerationID, file2GenerationID, file3GenerationID int64
 
 			BeforeEach(func() {
 				bucketName = CreateBucketWithTimestampedName("list_blobs")
-				file1GenerationID = UploadFile(bucketName, "file1", "file-content")
-				file2GenerationID = UploadFile(bucketName, "file2", "file-content")
-				file3GenerationID = UploadFile(bucketName, "file3", "file-content")
+				UploadFile(bucketName, "file1", "file-content")
+				UploadFile(bucketName, "file2", "file-content")
+				UploadFile(bucketName, "file3", "file-content")
 			})
 
-			It("lists all files and its generation_ids", func() {
+			It("lists all files", func() {
 				blobs, err := bucket.ListBlobs()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(ConsistOf(
-					gcs.Blob{Name: "file1", GenerationID: file1GenerationID},
-					gcs.Blob{Name: "file2", GenerationID: file2GenerationID},
-					gcs.Blob{Name: "file3", GenerationID: file3GenerationID},
+					gcs.Blob{Name: "file1"},
+					gcs.Blob{Name: "file2"},
+					gcs.Blob{Name: "file3"},
 				))
 			})
 		})
@@ -90,9 +89,9 @@ var _ = Describe("Bucket", func() {
 				blobs, err := bucket.ListBlobs()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(ConsistOf(
-					gcs.Blob{Name: "dir1/file1", GenerationID: file1GenerationID},
-					gcs.Blob{Name: "dir2/file2", GenerationID: file2GenerationID},
-					gcs.Blob{Name: "file3", GenerationID: file3GenerationID},
+					gcs.Blob{Name: "dir1/file1"},
+					gcs.Blob{Name: "dir2/file2"},
+					gcs.Blob{Name: "file3"},
 				))
 			})
 		})
@@ -135,7 +134,7 @@ var _ = Describe("Bucket", func() {
 				It("returns all the blobs from the previous backup", func() {
 					blobs, err := backupBucket.ListLastBackupBlobs()
 					Expect(err).NotTo(HaveOccurred())
-					Expect(blobs).To(ConsistOf(gcs.Blob{Name: "1970_01_01_00_00_00/file1", GenerationID: file1GenerationID}))
+					Expect(blobs).To(ConsistOf(gcs.Blob{Name: "1970_01_01_00_00_00/file1"}))
 				})
 			})
 
@@ -150,7 +149,7 @@ var _ = Describe("Bucket", func() {
 				It("returns only the blobs from the most recent previous backup", func() {
 					blobs, err := backupBucket.ListLastBackupBlobs()
 					Expect(err).NotTo(HaveOccurred())
-					Expect(blobs).To(ConsistOf(gcs.Blob{Name: "1970_01_02_00_00_00/file2", GenerationID: file2GenerationID}))
+					Expect(blobs).To(ConsistOf(gcs.Blob{Name: "1970_01_02_00_00_00/file2"}))
 				})
 			})
 		})
@@ -188,16 +187,16 @@ var _ = Describe("Bucket", func() {
 			})
 
 			It("copies the blob to the specified location", func() {
-				blob := gcs.Blob{Name: "file1", GenerationID: file1GenerationID}
+				blob := gcs.Blob{Name: "file1"}
 
-				generatedID, err := bucket.CopyBlobWithinBucket(blob.Name, "copydir/file1")
+				err := bucket.CopyBlobWithinBucket(blob.Name, "copydir/file1")
 				Expect(err).NotTo(HaveOccurred())
 
 				blobs, err := bucket.ListBlobs()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(ConsistOf(
 					blob,
-					gcs.Blob{Name: "copydir/file1", GenerationID: generatedID},
+					gcs.Blob{Name: "copydir/file1"},
 				))
 			})
 		})
@@ -212,8 +211,7 @@ var _ = Describe("Bucket", func() {
 			})
 
 			It("errors", func() {
-
-				_, err := bucket.CopyBlobWithinBucket("foobar", "copydir/file1")
+				err := bucket.CopyBlobWithinBucket("foobar", "copydir/file1")
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -247,15 +245,15 @@ var _ = Describe("Bucket", func() {
 			})
 
 			It("copies the blob to the specified location", func() {
-				blob := gcs.Blob{Name: "file1", GenerationID: file1GenerationID}
+				blob := gcs.Blob{Name: "file1"}
 
-				generatedID, err := srcBucket.CopyBlobBetweenBuckets(dstBucket, blob.Name, "copydir/file1")
+				err := srcBucket.CopyBlobBetweenBuckets(dstBucket, blob.Name, "copydir/file1")
 				Expect(err).NotTo(HaveOccurred())
 
 				blobs, err := dstBucket.ListBlobs()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(ConsistOf(
-					gcs.Blob{Name: "copydir/file1", GenerationID: generatedID},
+					gcs.Blob{Name: "copydir/file1"},
 				))
 			})
 		})
@@ -278,7 +276,7 @@ var _ = Describe("Bucket", func() {
 			})
 
 			It("errors", func() {
-				_, err := srcBucket.CopyBlobBetweenBuckets(dstBucket, "foobar", "copydir/file1")
+				err := srcBucket.CopyBlobBetweenBuckets(dstBucket, "foobar", "copydir/file1")
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -297,7 +295,7 @@ var _ = Describe("Bucket", func() {
 			})
 
 			It("errors", func() {
-				_, err := srcBucket.CopyBlobBetweenBuckets(nil, "file1", "copydir/file1")
+				err := srcBucket.CopyBlobBetweenBuckets(nil, "file1", "copydir/file1")
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError("destination bucket does not exist"))
 			})
@@ -393,12 +391,11 @@ var _ = Describe("Bucket", func() {
 
 	Describe("CreateFile", func() {
 		var (
-			bucketName   string
-			bucket       gcs.Bucket
-			err          error
-			generationID int64
-			fileName     string
-			fileContent  []byte
+			bucketName  string
+			bucket      gcs.Bucket
+			err         error
+			fileName    string
+			fileContent []byte
 		)
 
 		BeforeEach(func() {
@@ -415,13 +412,13 @@ var _ = Describe("Bucket", func() {
 		})
 
 		It("creates the file", func() {
-			generationID, err = bucket.CreateFile(fileName, fileContent)
+			err = bucket.CreateFile(fileName, fileContent)
 			Expect(err).NotTo(HaveOccurred())
 
 			blobs, err := bucket.ListBlobs()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(blobs).To(ConsistOf(
-				gcs.Blob{Name: fileName, GenerationID: generationID},
+				gcs.Blob{Name: fileName},
 			))
 			Expect(ReadFile(bucketName, fileName)).To(Equal(string(fileContent)))
 		})

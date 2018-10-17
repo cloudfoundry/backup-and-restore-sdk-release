@@ -51,8 +51,8 @@ var _ = Describe("Backuper", func() {
 						{Name: blob2},
 					}, nil)
 
-					bucket.CopyBlobWithinBucketReturns(0, nil)
-					bucket.CreateFileReturns(0, nil)
+					bucket.CopyBlobWithinBucketReturns(nil)
+					bucket.CreateFileReturns(nil)
 				})
 
 				It("creates a snapshot directory with a copy of the live bucket and an empty common blobs file", func() {
@@ -96,7 +96,7 @@ var _ = Describe("Backuper", func() {
 				err := backuper.CreateLiveBucketSnapshot()
 				Expect(err).NotTo(HaveOccurred())
 
-				bucket.CopyBlobWithinBucketReturns(0, nil)
+				bucket.CopyBlobWithinBucketReturns(nil)
 				Expect(bucket.CopyBlobWithinBucketCallCount()).To(Equal(1))
 				blob, path := bucket.CopyBlobWithinBucketArgsForCall(0)
 				Expect(blob).To(Equal(blob2))
@@ -149,7 +149,7 @@ var _ = Describe("Backuper", func() {
 					{Name: blob1},
 				}, nil)
 
-				bucket.CopyBlobWithinBucketReturns(0, errors.New("oopsifailed"))
+				bucket.CopyBlobWithinBucketReturns(errors.New("oopsifailed"))
 				err := backuper.CreateLiveBucketSnapshot()
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError("oopsifailed"))
@@ -195,7 +195,7 @@ var _ = Describe("Backuper", func() {
 						{Name: blob2},
 					}, nil)
 
-					bucket.CopyBlobBetweenBucketsReturns(0, nil)
+					bucket.CopyBlobBetweenBucketsReturns(nil)
 				})
 				It("transfers the blobs from the live bucket to the backup bucket and deletes the blobs from live", func() {
 					_, err := backuper.TransferBlobsToBackupBucket()
@@ -238,7 +238,7 @@ var _ = Describe("Backuper", func() {
 					{Name: blob1},
 				}, nil)
 
-				bucket.CopyBlobBetweenBucketsReturns(0, errors.New("oopsifailed"))
+				bucket.CopyBlobBetweenBucketsReturns(errors.New("oopsifailed"))
 				_, err := backuper.TransferBlobsToBackupBucket()
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError("oopsifailed"))
@@ -255,7 +255,7 @@ var _ = Describe("Backuper", func() {
 					{Name: blob2},
 				}, nil)
 
-				bucket.CopyBlobBetweenBucketsReturns(0, nil)
+				bucket.CopyBlobBetweenBucketsReturns(nil)
 				bucket.DeleteBlobReturns(errors.New("ifailed"))
 
 				_, err := backuper.TransferBlobsToBackupBucket()
@@ -301,7 +301,7 @@ var _ = Describe("Backuper", func() {
 				backupBucket.ListLastBackupBlobsReturns([]gcs.Blob{
 					{Name: "1970_01_01_00_00_00/droplets/" + blob1},
 				}, nil)
-				backupBucket.CopyBlobBetweenBucketsReturns(0, nil)
+				backupBucket.CopyBlobBetweenBucketsReturns(nil)
 			})
 
 			It("copies over all the common blobs from the previous backup", func() {

@@ -18,10 +18,10 @@ type Bucket interface {
 	Name() string
 	ListBlobs() ([]Blob, error)
 	ListLastBackupBlobs() ([]Blob, error)
-	CopyBlobWithinBucket(string, string) (int64, error)
-	CopyBlobBetweenBuckets(Bucket, string, string) (int64, error)
+	CopyBlobWithinBucket(string, string) error
+	CopyBlobBetweenBuckets(Bucket, string, string) error
 	DeleteBlob(string) error
-	CreateFile(name string, content []byte) (int64, error)
+	CreateFile(name string, content []byte) error
 }
 
 type BucketPair struct {
@@ -53,8 +53,7 @@ func BuildBuckets(gcpServiceAccountKey string, config map[string]Config) (map[st
 }
 
 type Blob struct {
-	Name         string `json:"name"`
-	GenerationID int64  `json:"generation_id"`
+	Name string `json:"name"`
 }
 
 type BucketBackup struct {
@@ -105,7 +104,7 @@ func (b SDKBucket) ListBlobs() ([]Blob, error) {
 			return nil, err
 		}
 
-		blobs = append(blobs, Blob{Name: objectAttributes.Name, GenerationID: objectAttributes.Generation})
+		blobs = append(blobs, Blob{Name: objectAttributes.Name})
 	}
 
 	return blobs, nil
@@ -133,35 +132,35 @@ func (b SDKBucket) ListLastBackupBlobs() ([]Blob, error) {
 	return lastBackupBlobs, nil
 }
 
-func (b SDKBucket) CopyBlobWithinBucket(srcBlob, dstBlob string) (int64, error) {
+func (b SDKBucket) CopyBlobWithinBucket(srcBlob, dstBlob string) error {
 	return b.CopyBlobBetweenBuckets(b, srcBlob, dstBlob)
 }
 
-func (b SDKBucket) CopyBlobBetweenBuckets(dstBucket Bucket, srcBlob, dstBlob string) (int64, error) {
+func (b SDKBucket) CopyBlobBetweenBuckets(dstBucket Bucket, srcBlob, dstBlob string) error {
 	if dstBucket == nil {
-		return 0, errors.New("destination bucket does not exist")
+		return errors.New("destination bucket does not exist")
 	}
 
 	src := b.client.Bucket(b.name).Object(srcBlob)
 	dst := b.client.Bucket(dstBucket.Name()).Object(dstBlob)
-	attr, err := dst.CopierFrom(src).Run(b.ctx)
+	_, err := dst.CopierFrom(src).Run(b.ctx)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	return attr.Generation, nil
+	return nil
 }
 
 func (b SDKBucket) DeleteBlob(blob string) error {
 	return b.client.Bucket(b.name).Object(blob).Delete(b.ctx)
 }
 
-func (b SDKBucket) CreateFile(name string, content []byte) (int64, error) {
+func (b SDKBucket) CreateFile(name string, content []byte) error {
 	writer := b.client.Bucket(b.name).Object(name).NewWriter(b.ctx)
 	writer.Write(content)
 	err := writer.Close()
 	if err != nil {
-		return -1, err
+		return err
 	}
-	return writer.Attrs().Generation, nil
+	return nil
 }
