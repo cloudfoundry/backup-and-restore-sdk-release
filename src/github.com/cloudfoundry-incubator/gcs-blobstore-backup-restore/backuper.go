@@ -20,6 +20,15 @@ func NewBackuper(buckets map[string]BucketPair) Backuper {
 	}
 }
 
+func (b *Backuper) Unlock() (map[string]BackupBucketAddress, error) {
+
+	backupBuckets, err := b.TransferBlobsToBackupBucket()
+
+	err = b.CopyBlobsWithinBackupBucket(backupBuckets)
+
+	return backupBuckets, err
+}
+
 func (b *Backuper) CreateLiveBucketSnapshot() error {
 	for _, bucketPair := range b.buckets {
 		var commonBlobs []Blob
@@ -65,6 +74,25 @@ func (b *Backuper) CreateLiveBucketSnapshot() error {
 	return nil
 }
 
+func (b *Backuper) CleanupLiveBuckets() error {
+	for _, bucketPair := range b.buckets {
+		blobs, err := bucketPair.Bucket.ListBlobs()
+		if err != nil {
+			return err
+		}
+
+		for _, blob := range blobs {
+			if strings.HasPrefix(blob.Name, fmt.Sprintf("%s/", liveBucketBackupArtifactName)) {
+				err = bucketPair.Bucket.DeleteBlob(blob.Name)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func (b *Backuper) TransferBlobsToBackupBucket() (map[string]BackupBucketAddress, error) {
 	timestamp := time.Now().Format("2006_01_02_15_04_05")
 
@@ -98,25 +126,6 @@ func (b *Backuper) TransferBlobsToBackupBucket() (map[string]BackupBucketAddress
 	}
 
 	return backupBuckets, nil
-}
-
-func (b *Backuper) CleanupLiveBuckets() error {
-	for _, bucketPair := range b.buckets {
-		blobs, err := bucketPair.Bucket.ListBlobs()
-		if err != nil {
-			return err
-		}
-
-		for _, blob := range blobs {
-			if strings.HasPrefix(blob.Name, fmt.Sprintf("%s/", liveBucketBackupArtifactName)) {
-				err = bucketPair.Bucket.DeleteBlob(blob.Name)
-				if err != nil {
-					return err
-				}
-			}
-		}
-	}
-	return nil
 }
 
 func (b *Backuper) CopyBlobsWithinBackupBucket(backupBucketAddresses map[string]BackupBucketAddress) error {

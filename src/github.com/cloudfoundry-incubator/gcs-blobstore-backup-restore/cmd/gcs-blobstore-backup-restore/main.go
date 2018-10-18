@@ -40,7 +40,6 @@ func main() {
 		backuper := gcs.NewBackuper(buckets)
 
 		err := backuper.CreateLiveBucketSnapshot()
-
 		if err != nil {
 			backuper.CleanupLiveBuckets()
 		}
@@ -51,10 +50,7 @@ func main() {
 
 		defer backuper.CleanupLiveBuckets()
 
-		backupBuckets, err := backuper.TransferBlobsToBackupBucket()
-		exitOnError(err)
-
-		err = backuper.CopyBlobsWithinBackupBucket(backupBuckets)
+		backupBuckets, err := backuper.Unlock()
 		exitOnError(err)
 
 		err = artifact.Write(backupBuckets)
