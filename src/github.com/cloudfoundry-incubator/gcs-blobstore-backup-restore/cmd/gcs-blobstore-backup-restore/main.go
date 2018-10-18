@@ -40,10 +40,16 @@ func main() {
 		backuper := gcs.NewBackuper(buckets)
 
 		err := backuper.CreateLiveBucketSnapshot()
-		exitOnError(err)
 
+		if err != nil {
+			backuper.CleanupLiveBuckets()
+		}
+
+		exitOnError(err)
 	} else if *unlockAction {
 		backuper := gcs.NewBackuper(buckets)
+
+		defer backuper.CleanupLiveBuckets()
 
 		backupBuckets, err := backuper.TransferBlobsToBackupBucket()
 		exitOnError(err)

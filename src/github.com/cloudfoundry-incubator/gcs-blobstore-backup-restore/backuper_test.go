@@ -197,7 +197,7 @@ var _ = Describe("Backuper", func() {
 
 					bucket.CopyBlobBetweenBucketsReturns(nil)
 				})
-				It("transfers the blobs from the live bucket to the backup bucket and deletes the blobs from live", func() {
+				It("transfers the blobs from the live bucket to the backup bucket", func() {
 					_, err := backuper.TransferBlobsToBackupBucket()
 					Expect(err).NotTo(HaveOccurred())
 
@@ -206,9 +206,6 @@ var _ = Describe("Backuper", func() {
 					Expect(dstBucket.Name()).To(Equal(backupBucket.Name()))
 					Expect(blob).To(Equal(blob2))
 					Expect(path).To(MatchRegexp("\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/%s/file_1_b", bucketPairID))
-
-					Expect(bucket.DeleteBlobCallCount()).To(Equal(1))
-					Expect(bucket.DeleteBlobArgsForCall(0)).To(Equal(blob2))
 				})
 
 				It("returns a map of the backup buckets and paths", func() {
@@ -219,6 +216,18 @@ var _ = Describe("Backuper", func() {
 					Expect(backupBuckets[bucketPairID].BucketName).To(Equal(bucket.Name()))
 					Expect(backupBuckets[bucketPairID].Path).To(MatchRegexp("\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/%s", bucketPairID))
 				})
+			})
+		})
+
+		Context("when there is no temporary-backup-artifact", func() {
+			BeforeEach(func() {
+				bucket.ListBlobsReturns(nil, nil)
+				bucket.GetBlobReturns(nil, fmt.Errorf("object common_blobs.json does not exist"))
+			})
+
+			It("succeeds", func() {
+				_, err := backuper.TransferBlobsToBackupBucket()
+				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 
@@ -244,24 +253,33 @@ var _ = Describe("Backuper", func() {
 				Expect(err).To(MatchError("oopsifailed"))
 			})
 		})
+	})
 
-		Context("when delete blob fails", func() {
+	Describe("CleanupLiveBuckets", func() {
+		var bucket *fakes.FakeBucket
+		var bucketPairID = "droplets"
 
-			It("errors", func() {
-				blob1 := "file_1_a"
-				blob2 := "temporary-backup-artifact/file_1_b"
-				bucket.ListBlobsReturns([]gcs.Blob{
-					{Name: blob1},
-					{Name: blob2},
-				}, nil)
+		var backuper gcs.Backuper
 
-				bucket.CopyBlobBetweenBucketsReturns(nil)
-				bucket.DeleteBlobReturns(errors.New("ifailed"))
+		const firstBucketName = "first-bucket-name"
 
-				_, err := backuper.TransferBlobsToBackupBucket()
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError("ifailed"))
+		BeforeEach(func() {
+			bucket = new(fakes.FakeBucket)
+			bucket.NameReturns(firstBucketName)
+			bucket.ListBlobsReturns([]gcs.Blob{{Name: "temporary-backup-artifact/common_blobs.json"}}, nil)
+
+			backuper = gcs.NewBackuper(map[string]gcs.BucketPair{
+				bucketPairID: {
+					Bucket: bucket,
+				},
 			})
+		})
+
+		It("Deletes live bucket backup artifact", func() {
+			err := backuper.CleanupLiveBuckets()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(bucket.DeleteBlobCallCount()).To(Equal(1))
+			Expect(bucket.DeleteBlobArgsForCall(0)).To(Equal("temporary-backup-artifact/common_blobs.json"))
 		})
 	})
 
