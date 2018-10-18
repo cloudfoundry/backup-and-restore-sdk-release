@@ -12,12 +12,12 @@ import (
 	"github.com/cloudfoundry-incubator/gcs-blobstore-backup-restore/fakes"
 )
 
-var _ = Describe("Backuper", func() {
+var _ = Describe("GCSBackuper", func() {
 	Describe("CreateLiveBucketSnapshot", func() {
 		var bucket *fakes.FakeBucket
 		var backupBucket *fakes.FakeBucket
 
-		var backuper gcs.Backuper
+		var backuper gcs.GCSBackuper
 
 		const firstBucketName = "first-bucket-name"
 		const secondBucketName = "second-bucket-name"
@@ -162,7 +162,7 @@ var _ = Describe("Backuper", func() {
 		var backupBucket *fakes.FakeBucket
 		var bucketPairID = "droplets"
 
-		var backuper gcs.Backuper
+		var backuper gcs.GCSBackuper
 
 		const firstBucketName = "first-bucket-name"
 
@@ -219,18 +219,6 @@ var _ = Describe("Backuper", func() {
 			})
 		})
 
-		Context("when there is no temporary-backup-artifact", func() {
-			BeforeEach(func() {
-				bucket.ListBlobsReturns(nil, nil)
-				bucket.GetBlobReturns(nil, fmt.Errorf("object common_blobs.json does not exist"))
-			})
-
-			It("succeeds", func() {
-				_, err := backuper.TransferBlobsToBackupBucket()
-				Expect(err).NotTo(HaveOccurred())
-			})
-		})
-
 		Context("when list blobs fails", func() {
 			It("returns an error", func() {
 				bucket.ListBlobsReturns(nil, errors.New("ifailed"))
@@ -259,7 +247,7 @@ var _ = Describe("Backuper", func() {
 		var bucket *fakes.FakeBucket
 		var bucketPairID = "droplets"
 
-		var backuper gcs.Backuper
+		var backuper gcs.GCSBackuper
 
 		const firstBucketName = "first-bucket-name"
 
@@ -281,6 +269,28 @@ var _ = Describe("Backuper", func() {
 			Expect(bucket.DeleteBlobCallCount()).To(Equal(1))
 			Expect(bucket.DeleteBlobArgsForCall(0)).To(Equal("temporary-backup-artifact/common_blobs.json"))
 		})
+
+		Context("when it fails to delete a blob", func() {
+			BeforeEach(func() {
+				bucket.DeleteBlobReturns(fmt.Errorf("I failed to delete"))
+			})
+
+			It("reports an error", func() {
+				err := backuper.CleanupLiveBuckets()
+				Expect(err).To(MatchError("I failed to delete"))
+			})
+		})
+
+		Context("when it fails to list the blobs", func() {
+			BeforeEach(func() {
+				bucket.ListBlobsReturns(nil, fmt.Errorf("I failed to list blobs"))
+			})
+
+			It("reports an error", func() {
+				err := backuper.CleanupLiveBuckets()
+				Expect(err).To(MatchError("I failed to list blobs"))
+			})
+		})
 	})
 
 	Describe("CopyBlobsWithinBackupBucket", func() {
@@ -288,7 +298,7 @@ var _ = Describe("Backuper", func() {
 		var backupBucket *fakes.FakeBucket
 		var bucketPairID = "droplets"
 
-		var backuper gcs.Backuper
+		var backuper gcs.GCSBackuper
 
 		const firstBucketName = "first-bucket-name"
 
@@ -368,6 +378,20 @@ var _ = Describe("Backuper", func() {
 			It("returns an error", func() {
 				err := backuper.CopyBlobsWithinBackupBucket(backupBucketAddresses)
 				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("when deleting common_blobs.json faisl", func() {
+			backupBucketAddresses := make(map[string]gcs.BackupBucketAddress)
+			BeforeEach(func() {
+				backupBucketAddresses["droplets"] = gcs.BackupBucketAddress{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
+				backupBucket.GetBlobReturns([]byte(`[{"name": "1970_01_01_00_00_00/droplets/file1"}]`), nil)
+				backupBucket.DeleteBlobReturns(fmt.Errorf("I failed at deleting common_blobs.json"))
+			})
+
+			It("returns an error", func() {
+				err := backuper.CopyBlobsWithinBackupBucket(backupBucketAddresses)
+				Expect(err).To(MatchError("I failed at deleting common_blobs.json"))
 			})
 		})
 

@@ -5,6 +5,12 @@ import (
 	"io/ioutil"
 )
 
+//go:generate counterfeiter -o fakes/fake_artifact.go . BackupArtifact
+type BackupArtifact interface {
+	Write(backups map[string]BackupBucketAddress) error
+	Read() (map[string]BackupBucketAddress, error)
+}
+
 type Artifact struct {
 	path string
 }

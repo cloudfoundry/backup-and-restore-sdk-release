@@ -7,29 +7,28 @@ import (
 	"time"
 )
 
-type Backuper struct {
+//go:generate counterfeiter -o fakes/fake_backuper.go . Backuper
+type Backuper interface {
+	CreateLiveBucketSnapshot() error
+	CopyBlobsWithinBackupBucket(backupBucketAddresses map[string]BackupBucketAddress) error
+	CleanupLiveBuckets() error
+	TransferBlobsToBackupBucket() (map[string]BackupBucketAddress, error)
+}
+
+type GCSBackuper struct {
 	buckets map[string]BucketPair
 }
 
 const liveBucketBackupArtifactName = "temporary-backup-artifact"
 const commonBlobsName = "common_blobs.json"
 
-func NewBackuper(buckets map[string]BucketPair) Backuper {
-	return Backuper{
+func NewBackuper(buckets map[string]BucketPair) GCSBackuper {
+	return GCSBackuper{
 		buckets: buckets,
 	}
 }
 
-func (b *Backuper) Unlock() (map[string]BackupBucketAddress, error) {
-
-	backupBuckets, err := b.TransferBlobsToBackupBucket()
-
-	err = b.CopyBlobsWithinBackupBucket(backupBuckets)
-
-	return backupBuckets, err
-}
-
-func (b *Backuper) CreateLiveBucketSnapshot() error {
+func (b *GCSBackuper) CreateLiveBucketSnapshot() error {
 	for _, bucketPair := range b.buckets {
 		var commonBlobs []Blob
 		bucket := bucketPair.Bucket
@@ -74,7 +73,7 @@ func (b *Backuper) CreateLiveBucketSnapshot() error {
 	return nil
 }
 
-func (b *Backuper) CleanupLiveBuckets() error {
+func (b *GCSBackuper) CleanupLiveBuckets() error {
 	for _, bucketPair := range b.buckets {
 		blobs, err := bucketPair.Bucket.ListBlobs()
 		if err != nil {
@@ -93,7 +92,7 @@ func (b *Backuper) CleanupLiveBuckets() error {
 	return nil
 }
 
-func (b *Backuper) TransferBlobsToBackupBucket() (map[string]BackupBucketAddress, error) {
+func (b *GCSBackuper) TransferBlobsToBackupBucket() (map[string]BackupBucketAddress, error) {
 	timestamp := time.Now().Format("2006_01_02_15_04_05")
 
 	backupBuckets := make(map[string]BackupBucketAddress)
@@ -103,7 +102,6 @@ func (b *Backuper) TransferBlobsToBackupBucket() (map[string]BackupBucketAddress
 		backupBucket := bucketPair.BackupBucket
 
 		backupBlobs, err := bucket.ListBlobs()
-
 		if err != nil {
 			return nil, err
 		}
@@ -128,7 +126,7 @@ func (b *Backuper) TransferBlobsToBackupBucket() (map[string]BackupBucketAddress
 	return backupBuckets, nil
 }
 
-func (b *Backuper) CopyBlobsWithinBackupBucket(backupBucketAddresses map[string]BackupBucketAddress) error {
+func (b *GCSBackuper) CopyBlobsWithinBackupBucket(backupBucketAddresses map[string]BackupBucketAddress) error {
 	for bucketId, backupBucketAddress := range backupBucketAddresses {
 		commonBlobBytes, err := b.buckets[bucketId].BackupBucket.GetBlob(backupBucketAddress.Path + "/common_blobs.json")
 		if err != nil {
@@ -142,7 +140,6 @@ func (b *Backuper) CopyBlobsWithinBackupBucket(backupBucketAddresses map[string]
 		}
 
 		err = b.buckets[bucketId].BackupBucket.DeleteBlob(backupBucketAddress.Path + "/common_blobs.json")
-
 		if err != nil {
 			return err
 		}

@@ -50,7 +50,10 @@ func main() {
 
 		defer backuper.CleanupLiveBuckets()
 
-		backupBuckets, err := backuper.Unlock()
+		backupBuckets, err := backuper.TransferBlobsToBackupBucket()
+		exitOnError(err)
+
+		err = backuper.CopyBlobsWithinBackupBucket(backupBuckets)
 		exitOnError(err)
 
 		err = artifact.Write(backupBuckets)
