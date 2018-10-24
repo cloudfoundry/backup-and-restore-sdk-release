@@ -8,14 +8,16 @@ import (
 )
 
 type FakeBackuper struct {
-	CreateLiveBucketSnapshotStub        func() error
+	CreateLiveBucketSnapshotStub        func() (map[string]gcs.BackupBucketAddress, error)
 	createLiveBucketSnapshotMutex       sync.RWMutex
 	createLiveBucketSnapshotArgsForCall []struct{}
 	createLiveBucketSnapshotReturns     struct {
-		result1 error
+		result1 map[string]gcs.BackupBucketAddress
+		result2 error
 	}
 	createLiveBucketSnapshotReturnsOnCall map[int]struct {
-		result1 error
+		result1 map[string]gcs.BackupBucketAddress
+		result2 error
 	}
 	CopyBlobsWithinBackupBucketStub        func(backupBucketAddresses map[string]gcs.BackupBucketAddress) error
 	copyBlobsWithinBackupBucketMutex       sync.RWMutex
@@ -43,7 +45,7 @@ type FakeBackuper struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeBackuper) CreateLiveBucketSnapshot() error {
+func (fake *FakeBackuper) CreateLiveBucketSnapshot() (map[string]gcs.BackupBucketAddress, error) {
 	fake.createLiveBucketSnapshotMutex.Lock()
 	ret, specificReturn := fake.createLiveBucketSnapshotReturnsOnCall[len(fake.createLiveBucketSnapshotArgsForCall)]
 	fake.createLiveBucketSnapshotArgsForCall = append(fake.createLiveBucketSnapshotArgsForCall, struct{}{})
@@ -53,9 +55,9 @@ func (fake *FakeBackuper) CreateLiveBucketSnapshot() error {
 		return fake.CreateLiveBucketSnapshotStub()
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.createLiveBucketSnapshotReturns.result1
+	return fake.createLiveBucketSnapshotReturns.result1, fake.createLiveBucketSnapshotReturns.result2
 }
 
 func (fake *FakeBackuper) CreateLiveBucketSnapshotCallCount() int {
@@ -64,23 +66,26 @@ func (fake *FakeBackuper) CreateLiveBucketSnapshotCallCount() int {
 	return len(fake.createLiveBucketSnapshotArgsForCall)
 }
 
-func (fake *FakeBackuper) CreateLiveBucketSnapshotReturns(result1 error) {
+func (fake *FakeBackuper) CreateLiveBucketSnapshotReturns(result1 map[string]gcs.BackupBucketAddress, result2 error) {
 	fake.CreateLiveBucketSnapshotStub = nil
 	fake.createLiveBucketSnapshotReturns = struct {
-		result1 error
-	}{result1}
+		result1 map[string]gcs.BackupBucketAddress
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeBackuper) CreateLiveBucketSnapshotReturnsOnCall(i int, result1 error) {
+func (fake *FakeBackuper) CreateLiveBucketSnapshotReturnsOnCall(i int, result1 map[string]gcs.BackupBucketAddress, result2 error) {
 	fake.CreateLiveBucketSnapshotStub = nil
 	if fake.createLiveBucketSnapshotReturnsOnCall == nil {
 		fake.createLiveBucketSnapshotReturnsOnCall = make(map[int]struct {
-			result1 error
+			result1 map[string]gcs.BackupBucketAddress
+			result2 error
 		})
 	}
 	fake.createLiveBucketSnapshotReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
+		result1 map[string]gcs.BackupBucketAddress
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeBackuper) CopyBlobsWithinBackupBucket(backupBucketAddresses map[string]gcs.BackupBucketAddress) error {

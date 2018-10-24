@@ -28,7 +28,6 @@ var _ = Describe("BackupAction", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(backuper.CreateLiveBucketSnapshotCallCount()).To(Equal(1))
-				Expect(backuper.TransferBlobsToBackupBucketCallCount()).To(Equal(1))
 				Expect(backuper.CopyBlobsWithinBackupBucketCallCount()).To(Equal(1))
 			})
 
@@ -40,27 +39,12 @@ var _ = Describe("BackupAction", func() {
 
 	Context("when CreateLiveBucketSnapshot fails", func() {
 		It("fails with the correct error", func() {
-			backuper.CreateLiveBucketSnapshotReturns(fmt.Errorf("I failed to create a live bucket snapshot"))
+			backuper.CreateLiveBucketSnapshotReturns(nil, fmt.Errorf("I failed to create a live bucket snapshot"))
 			err = backupAction.Run(backuper, artifact)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError("I failed to create a live bucket snapshot"))
 
 			Expect(backuper.CreateLiveBucketSnapshotCallCount()).To(Equal(1))
-			Expect(backuper.TransferBlobsToBackupBucketCallCount()).To(Equal(0))
-			Expect(backuper.CopyBlobsWithinBackupBucketCallCount()).To(Equal(0))
-			Expect(artifact.WriteCallCount()).To(Equal(0))
-		})
-	})
-
-	Context("when TransferBlobsToBackupBucket fails", func() {
-		It("fails with the correct error", func() {
-			backuper.TransferBlobsToBackupBucketReturns(nil, fmt.Errorf("I failed to transfer blobs"))
-			err = backupAction.Run(backuper, artifact)
-			Expect(err).To(HaveOccurred())
-			Expect(err).To(MatchError("I failed to transfer blobs"))
-
-			Expect(backuper.CreateLiveBucketSnapshotCallCount()).To(Equal(1))
-			Expect(backuper.TransferBlobsToBackupBucketCallCount()).To(Equal(1))
 			Expect(backuper.CopyBlobsWithinBackupBucketCallCount()).To(Equal(0))
 			Expect(artifact.WriteCallCount()).To(Equal(0))
 		})
@@ -74,7 +58,6 @@ var _ = Describe("BackupAction", func() {
 			Expect(err).To(MatchError("I failed to copy blobs"))
 
 			Expect(backuper.CreateLiveBucketSnapshotCallCount()).To(Equal(1))
-			Expect(backuper.TransferBlobsToBackupBucketCallCount()).To(Equal(1))
 			Expect(backuper.CopyBlobsWithinBackupBucketCallCount()).To(Equal(1))
 			Expect(artifact.WriteCallCount()).To(Equal(0))
 		})
@@ -88,7 +71,6 @@ var _ = Describe("BackupAction", func() {
 			Expect(err).To(MatchError("I failed to write"))
 
 			Expect(backuper.CreateLiveBucketSnapshotCallCount()).To(Equal(1))
-			Expect(backuper.TransferBlobsToBackupBucketCallCount()).To(Equal(1))
 			Expect(backuper.CopyBlobsWithinBackupBucketCallCount()).To(Equal(1))
 			Expect(artifact.WriteCallCount()).To(Equal(1))
 		})

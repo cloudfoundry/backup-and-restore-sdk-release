@@ -7,12 +7,7 @@ func NewBackupAction() BackupAction {
 }
 
 func (b BackupAction) Run(backuper Backuper, artifact BackupArtifact) error {
-	err := backuper.CreateLiveBucketSnapshot()
-	if err != nil {
-		return err
-	}
-
-	_, err = backuper.TransferBlobsToBackupBucket()
+	_, err := backuper.CreateLiveBucketSnapshot()
 	if err != nil {
 		return err
 	}

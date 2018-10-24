@@ -13,16 +13,15 @@ func main() {
 	gcpServiceAccountKeyPath := flag.String("gcp-service-account-key", "", "Path to GCP service account key")
 	backupAction := flag.Bool("backup", false, "Run blobstore backup")
 	restoreAction := flag.Bool("restore", false, "Run blobstore restore")
-	unlockAction := flag.Bool("unlock", false, "Run blobstore unlock")
 
 	flag.Parse()
 
-	if !*backupAction && !*restoreAction && !*unlockAction {
-		log.Fatal("missing --unlock, --backup or --restore flag")
+	if !*backupAction && !*restoreAction {
+		log.Fatal("missing --backup or --restore flag")
 	}
 
-	if (*backupAction && *restoreAction) || (*backupAction && *unlockAction) || (*unlockAction && *restoreAction) {
-		log.Fatal("only one of: --unlock, --backup or --restore can be provided")
+	if *backupAction && *restoreAction {
+		log.Fatal("only one of: --backup or --restore can be provided")
 	}
 
 	config, err := gcs.ParseConfig(*configPath)
@@ -39,13 +38,8 @@ func main() {
 	if *backupAction {
 		backuper := gcs.NewBackuper(buckets)
 
-		err := backuper.CreateLiveBucketSnapshot()
+		backupBuckets, err := backuper.CreateLiveBucketSnapshot()
 
-		exitOnError(err)
-	} else if *unlockAction {
-		backuper := gcs.NewBackuper(buckets)
-
-		backupBuckets, err := backuper.TransferBlobsToBackupBucket()
 		exitOnError(err)
 
 		err = backuper.CopyBlobsWithinBackupBucket(backupBuckets)

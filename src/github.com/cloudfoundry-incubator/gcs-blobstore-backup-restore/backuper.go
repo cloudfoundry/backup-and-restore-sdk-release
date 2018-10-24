@@ -9,7 +9,7 @@ import (
 
 //go:generate counterfeiter -o fakes/fake_backuper.go . Backuper
 type Backuper interface {
-	CreateLiveBucketSnapshot() error
+	CreateLiveBucketSnapshot() (map[string]BackupBucketAddress, error)
 	CopyBlobsWithinBackupBucket(backupBucketAddresses map[string]BackupBucketAddress) error
 	TransferBlobsToBackupBucket() (map[string]BackupBucketAddress, error)
 }
@@ -27,19 +27,29 @@ func NewBackuper(buckets map[string]BucketPair) GCSBackuper {
 	}
 }
 
-func (b *GCSBackuper) CreateLiveBucketSnapshot() error {
-	for _, bucketPair := range b.buckets {
+func (b *GCSBackuper) CreateLiveBucketSnapshot() (map[string]BackupBucketAddress, error) {
+	timestamp := time.Now().Format("2006_01_02_15_04_05")
+
+	backupBuckets := make(map[string]BackupBucketAddress)
+
+	for id, bucketPair := range b.buckets {
 		var commonBlobs []Blob
 		bucket := bucketPair.Bucket
+		backupBucket := bucketPair.BackupBucket
+
+		backupBuckets[id] = BackupBucketAddress{
+			BucketName: backupBucket.Name(),
+			Path:       fmt.Sprintf("%s/%s", timestamp, id),
+		}
 
 		blobs, err := bucket.ListBlobs()
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		lastBackupBlobs, err := bucketPair.BackupBucket.ListLastBackupBlobs()
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		inLastBackup := make(map[string]Blob)
@@ -52,24 +62,24 @@ func (b *GCSBackuper) CreateLiveBucketSnapshot() error {
 			if blobFromBackup, ok := inLastBackup[blob.Name]; ok {
 				commonBlobs = append(commonBlobs, blobFromBackup)
 			} else {
-				err := bucket.CopyBlobWithinBucket(blob.Name, fmt.Sprintf("%s/%s", liveBucketBackupArtifactName, blob.Name))
+				err := bucket.CopyBlobBetweenBuckets(backupBucket, blob.Name, blob.Name)
 				if err != nil {
-					return err
+					return nil, err
 				}
 			}
 		}
 
 		j, err := json.Marshal(commonBlobs)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		err = bucket.CreateFile(liveBucketBackupArtifactName+"/"+commonBlobsName, j)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
-	return nil
+	return backupBuckets, nil
 }
 
 func (b *GCSBackuper) TransferBlobsToBackupBucket() (map[string]BackupBucketAddress, error) {
