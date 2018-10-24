@@ -32,10 +32,6 @@ var _ = Describe("BackupAction", func() {
 				Expect(backuper.CopyBlobsWithinBackupBucketCallCount()).To(Equal(1))
 			})
 
-			By("running cleanup", func() {
-				Expect(backuper.CleanupLiveBucketsCallCount()).To(Equal(1))
-			})
-
 			By("generating backup artifact", func() {
 				Expect(artifact.WriteCallCount()).To(Equal(1))
 			})
@@ -84,22 +80,6 @@ var _ = Describe("BackupAction", func() {
 		})
 	})
 
-	Context("when CleanupLiveBuckets fails", func() {
-		It("fails with the correct error", func() {
-			backuper.CleanupLiveBucketsReturns(fmt.Errorf("I failed to clean up"))
-			err = backupAction.Run(backuper, artifact)
-			Expect(err).To(HaveOccurred())
-			Expect(err).To(MatchError("I failed to clean up"))
-
-			Expect(backuper.CreateLiveBucketSnapshotCallCount()).To(Equal(1))
-			Expect(backuper.TransferBlobsToBackupBucketCallCount()).To(Equal(1))
-			Expect(backuper.CopyBlobsWithinBackupBucketCallCount()).To(Equal(1))
-			Expect(backuper.CleanupLiveBucketsCallCount()).To(Equal(1))
-
-			Expect(artifact.WriteCallCount()).To(Equal(0))
-		})
-	})
-
 	Context("when artifact fails to write", func() {
 		It("fails with the correct error", func() {
 			artifact.WriteReturns(fmt.Errorf("I failed to write"))
@@ -110,7 +90,6 @@ var _ = Describe("BackupAction", func() {
 			Expect(backuper.CreateLiveBucketSnapshotCallCount()).To(Equal(1))
 			Expect(backuper.TransferBlobsToBackupBucketCallCount()).To(Equal(1))
 			Expect(backuper.CopyBlobsWithinBackupBucketCallCount()).To(Equal(1))
-			Expect(backuper.CleanupLiveBucketsCallCount()).To(Equal(1))
 			Expect(artifact.WriteCallCount()).To(Equal(1))
 		})
 	})

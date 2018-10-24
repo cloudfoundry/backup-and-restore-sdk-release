@@ -11,7 +11,6 @@ import (
 type Backuper interface {
 	CreateLiveBucketSnapshot() error
 	CopyBlobsWithinBackupBucket(backupBucketAddresses map[string]BackupBucketAddress) error
-	CleanupLiveBuckets() error
 	TransferBlobsToBackupBucket() (map[string]BackupBucketAddress, error)
 }
 
@@ -68,25 +67,6 @@ func (b *GCSBackuper) CreateLiveBucketSnapshot() error {
 		err = bucket.CreateFile(liveBucketBackupArtifactName+"/"+commonBlobsName, j)
 		if err != nil {
 			return err
-		}
-	}
-	return nil
-}
-
-func (b *GCSBackuper) CleanupLiveBuckets() error {
-	for _, bucketPair := range b.buckets {
-		blobs, err := bucketPair.Bucket.ListBlobs()
-		if err != nil {
-			return err
-		}
-
-		for _, blob := range blobs {
-			if strings.HasPrefix(blob.Name, fmt.Sprintf("%s/", liveBucketBackupArtifactName)) {
-				err = bucketPair.Bucket.DeleteBlob(blob.Name)
-				if err != nil {
-					return err
-				}
-			}
 		}
 	}
 	return nil

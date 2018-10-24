@@ -28,15 +28,6 @@ type FakeBackuper struct {
 	copyBlobsWithinBackupBucketReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CleanupLiveBucketsStub        func() error
-	cleanupLiveBucketsMutex       sync.RWMutex
-	cleanupLiveBucketsArgsForCall []struct{}
-	cleanupLiveBucketsReturns     struct {
-		result1 error
-	}
-	cleanupLiveBucketsReturnsOnCall map[int]struct {
-		result1 error
-	}
 	TransferBlobsToBackupBucketStub        func() (map[string]gcs.BackupBucketAddress, error)
 	transferBlobsToBackupBucketMutex       sync.RWMutex
 	transferBlobsToBackupBucketArgsForCall []struct{}
@@ -140,46 +131,6 @@ func (fake *FakeBackuper) CopyBlobsWithinBackupBucketReturnsOnCall(i int, result
 	}{result1}
 }
 
-func (fake *FakeBackuper) CleanupLiveBuckets() error {
-	fake.cleanupLiveBucketsMutex.Lock()
-	ret, specificReturn := fake.cleanupLiveBucketsReturnsOnCall[len(fake.cleanupLiveBucketsArgsForCall)]
-	fake.cleanupLiveBucketsArgsForCall = append(fake.cleanupLiveBucketsArgsForCall, struct{}{})
-	fake.recordInvocation("CleanupLiveBuckets", []interface{}{})
-	fake.cleanupLiveBucketsMutex.Unlock()
-	if fake.CleanupLiveBucketsStub != nil {
-		return fake.CleanupLiveBucketsStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.cleanupLiveBucketsReturns.result1
-}
-
-func (fake *FakeBackuper) CleanupLiveBucketsCallCount() int {
-	fake.cleanupLiveBucketsMutex.RLock()
-	defer fake.cleanupLiveBucketsMutex.RUnlock()
-	return len(fake.cleanupLiveBucketsArgsForCall)
-}
-
-func (fake *FakeBackuper) CleanupLiveBucketsReturns(result1 error) {
-	fake.CleanupLiveBucketsStub = nil
-	fake.cleanupLiveBucketsReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeBackuper) CleanupLiveBucketsReturnsOnCall(i int, result1 error) {
-	fake.CleanupLiveBucketsStub = nil
-	if fake.cleanupLiveBucketsReturnsOnCall == nil {
-		fake.cleanupLiveBucketsReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.cleanupLiveBucketsReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
 func (fake *FakeBackuper) TransferBlobsToBackupBucket() (map[string]gcs.BackupBucketAddress, error) {
 	fake.transferBlobsToBackupBucketMutex.Lock()
 	ret, specificReturn := fake.transferBlobsToBackupBucketReturnsOnCall[len(fake.transferBlobsToBackupBucketArgsForCall)]
@@ -230,8 +181,6 @@ func (fake *FakeBackuper) Invocations() map[string][][]interface{} {
 	defer fake.createLiveBucketSnapshotMutex.RUnlock()
 	fake.copyBlobsWithinBackupBucketMutex.RLock()
 	defer fake.copyBlobsWithinBackupBucketMutex.RUnlock()
-	fake.cleanupLiveBucketsMutex.RLock()
-	defer fake.cleanupLiveBucketsMutex.RUnlock()
 	fake.transferBlobsToBackupBucketMutex.RLock()
 	defer fake.transferBlobsToBackupBucketMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

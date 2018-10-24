@@ -23,11 +23,6 @@ func (b BackupAction) Run(backuper Backuper, artifact BackupArtifact) error {
 		return err
 	}
 
-	err = backuper.CleanupLiveBuckets()
-	if err != nil {
-		return err
-	}
-
 	err = artifact.Write(backupBucketAddresses)
 	if err != nil {
 		return err

@@ -243,56 +243,6 @@ var _ = Describe("GCSBackuper", func() {
 		})
 	})
 
-	Describe("CleanupLiveBuckets", func() {
-		var bucket *fakes.FakeBucket
-		var bucketPairID = "droplets"
-
-		var backuper gcs.GCSBackuper
-
-		const firstBucketName = "first-bucket-name"
-
-		BeforeEach(func() {
-			bucket = new(fakes.FakeBucket)
-			bucket.NameReturns(firstBucketName)
-			bucket.ListBlobsReturns([]gcs.Blob{{Name: "temporary-backup-artifact/common_blobs.json"}}, nil)
-
-			backuper = gcs.NewBackuper(map[string]gcs.BucketPair{
-				bucketPairID: {
-					Bucket: bucket,
-				},
-			})
-		})
-
-		It("Deletes live bucket backup artifact", func() {
-			err := backuper.CleanupLiveBuckets()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(bucket.DeleteBlobCallCount()).To(Equal(1))
-			Expect(bucket.DeleteBlobArgsForCall(0)).To(Equal("temporary-backup-artifact/common_blobs.json"))
-		})
-
-		Context("when it fails to delete a blob", func() {
-			BeforeEach(func() {
-				bucket.DeleteBlobReturns(fmt.Errorf("I failed to delete"))
-			})
-
-			It("reports an error", func() {
-				err := backuper.CleanupLiveBuckets()
-				Expect(err).To(MatchError("I failed to delete"))
-			})
-		})
-
-		Context("when it fails to list the blobs", func() {
-			BeforeEach(func() {
-				bucket.ListBlobsReturns(nil, fmt.Errorf("I failed to list blobs"))
-			})
-
-			It("reports an error", func() {
-				err := backuper.CleanupLiveBuckets()
-				Expect(err).To(MatchError("I failed to list blobs"))
-			})
-		})
-	})
-
 	Describe("CopyBlobsWithinBackupBucket", func() {
 		var bucket *fakes.FakeBucket
 		var backupBucket *fakes.FakeBucket
