@@ -15,11 +15,11 @@ import (
 
 var _ = Describe("GCS Blobstore System Tests", func() {
 	var (
-		gcsClient               GCSClient
-		bucket, backupBucket    string
-		blob1, blob2, blob3     string
-		instance                JobInstance
-		instanceArtifactDirPath string
+		gcsClient                  GCSClient
+		bucket, backupBucket       string
+		blob1, blob2, blob3, blob4 string
+		instance                   JobInstance
+		instanceArtifactDirPath    string
 	)
 
 	BeforeEach(func() {
@@ -29,6 +29,7 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 		blob1 = timestampedName("test_file_1_")
 		blob2 = timestampedName("test_file_2_")
 		blob3 = timestampedName("test_file_3_")
+		blob4 = timestampedName("test_file_4_")
 
 		instance = JobInstance{
 			Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
@@ -46,18 +47,18 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 	})
 
 	Describe("Backup", func() {
-		Context("When no previous backup has been taken", func() {
+		Context("when no previous backup has been taken", func() {
 			BeforeEach(func() {
 				gcsClient.WriteBlobToBucket(bucket, blob1, "TEST_BLOB_1")
 				gcsClient.WriteBlobToBucket(bucket, blob2, "TEST_BLOB_2")
 				gcsClient.WriteBlobToBucket(bucket, blob3, "TEST_BLOB_3")
 			})
 			It("creates a backup", func() {
-				By("Running a backup", func() {
+				By("successfully running a backup", func() {
 					instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/backup")
 				})
 
-				By("Having a complete remote backup", func() {
+				By("creating a complete remote backup", func() {
 					backupBucketFolders := gcsClient.ListDirsFromBucket(backupBucket)
 					Expect(backupBucketFolders).To(MatchRegexp(
 						".*\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/"))
@@ -68,7 +69,7 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 					Expect(backupBucketContent).To(ContainSubstring(blob3))
 				})
 
-				By("Having a complete backup artifact", func() {
+				By("generating a complete backup artifact", func() {
 					session := instance.Run(fmt.Sprintf("cat %s/%s", instanceArtifactDirPath, "blobstore.json"))
 					Expect(session).Should(gexec.Exit(0))
 					fileContents := string(session.Out.Contents())
@@ -81,7 +82,7 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 			})
 		})
 
-		Context("and a previous backup has been taken", func() {
+		Context("when a previous backup has been taken", func() {
 			var previousBackupTimestamp = "1970_01_01_00_00_00"
 			BeforeEach(func() {
 				gcsClient.WriteBlobToBucket(bucket, blob1, "TEST_BLOB_1")
@@ -89,28 +90,31 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 				gcsClient.WriteBlobToBucket(bucket, blob3, "TEST_BLOB_3")
 			})
 
-			Context("and there are no new blobs since the previous backup", func() {
+			Context("and there are new blobs since the previous backup", func() {
 				BeforeEach(func() {
 					previousBackupDir := fmt.Sprintf("%s/droplets/", previousBackupTimestamp)
 					gcsClient.WriteBlobToBucket(backupBucket, previousBackupDir+blob1, "TEST_BLOB_1")
 					gcsClient.WriteBlobToBucket(backupBucket, previousBackupDir+blob2, "TEST_BLOB_2")
 					gcsClient.WriteBlobToBucket(backupBucket, previousBackupDir+blob3, "TEST_BLOB_3")
+
+					gcsClient.WriteBlobToBucket(bucket, blob4, "TEST_BLOB_4")
 				})
 
 				It("creates a complete backup", func() {
 					var backupBucketFolders string
-					By("Running a backup", func() {
-						instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/backup")
+					By("successfully running a backup", func() {
+						instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" +
+							instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/backup")
 					})
 
-					By("Not overwriting the previous backup artifact", func() {
+					By("not overwriting the previous backup artifact", func() {
 						backupBucketFolders = gcsClient.ListDirsFromBucket(backupBucket)
 						backupBucketFolders = strings.TrimSuffix(backupBucketFolders, "\n")
 						backupDirs := strings.Split(backupBucketFolders, "\n")
 						Expect(backupDirs).To(HaveLen(2))
 					})
 
-					By("Having a complete remote backup", func() {
+					By("creating a complete remote backup", func() {
 						backupBucketFolders = removePreviousBackup(backupBucketFolders, backupBucket, previousBackupTimestamp)
 
 						Expect(backupBucketFolders).To(MatchRegexp(
@@ -120,6 +124,7 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 						Expect(backupBucketContent).To(ContainSubstring(blob1))
 						Expect(backupBucketContent).To(ContainSubstring(blob2))
 						Expect(backupBucketContent).To(ContainSubstring(blob3))
+						Expect(backupBucketContent).To(ContainSubstring(blob4))
 					})
 				})
 			})
