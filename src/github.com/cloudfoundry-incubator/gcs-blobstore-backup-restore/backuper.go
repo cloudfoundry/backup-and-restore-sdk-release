@@ -10,14 +10,11 @@ import (
 type Backuper interface {
 	CreateLiveBucketSnapshot() (map[string]BackupBucketAddress, map[string][]Blob, error)
 	CopyBlobsWithinBackupBucket(map[string]BackupBucketAddress, map[string][]Blob) error
-	TransferBlobsToBackupBucket() (map[string]BackupBucketAddress, error)
 }
 
 type GCSBackuper struct {
 	buckets map[string]BucketPair
 }
-
-const liveBucketBackupArtifactName = "temporary-backup-artifact"
 
 func NewBackuper(buckets map[string]BucketPair) GCSBackuper {
 	return GCSBackuper{
@@ -72,40 +69,6 @@ func (b *GCSBackuper) CreateLiveBucketSnapshot() (map[string]BackupBucketAddress
 		commonBlobs[id] = commonBlobList
 	}
 	return backupBuckets, commonBlobs, nil
-}
-
-func (b *GCSBackuper) TransferBlobsToBackupBucket() (map[string]BackupBucketAddress, error) {
-	timestamp := time.Now().Format("2006_01_02_15_04_05")
-
-	backupBuckets := make(map[string]BackupBucketAddress)
-
-	for id, bucketPair := range b.buckets {
-		bucket := bucketPair.Bucket
-		backupBucket := bucketPair.BackupBucket
-
-		backupBlobs, err := bucket.ListBlobs()
-		if err != nil {
-			return nil, err
-		}
-
-		backupBuckets[id] = BackupBucketAddress{
-			BucketName: backupBucket.Name(),
-			Path:       fmt.Sprintf("%s/%s", timestamp, id),
-		}
-		for _, blob := range backupBlobs {
-			if strings.HasPrefix(blob.Name, fmt.Sprintf("%s/", liveBucketBackupArtifactName)) {
-
-				blobName := strings.Replace(blob.Name, liveBucketBackupArtifactName, fmt.Sprintf("%s/%s", timestamp, id), 1)
-
-				err := bucket.CopyBlobBetweenBuckets(backupBucket, blob.Name, blobName)
-				if err != nil {
-					return nil, err
-				}
-			}
-		}
-	}
-
-	return backupBuckets, nil
 }
 
 func (b *GCSBackuper) CopyBlobsWithinBackupBucket(backupBucketAddresses map[string]BackupBucketAddress, commonBlobs map[string][]Blob) error {

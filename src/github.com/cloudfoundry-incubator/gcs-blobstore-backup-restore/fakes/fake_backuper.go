@@ -33,17 +33,6 @@ type FakeBackuper struct {
 	copyBlobsWithinBackupBucketReturnsOnCall map[int]struct {
 		result1 error
 	}
-	TransferBlobsToBackupBucketStub        func() (map[string]gcs.BackupBucketAddress, error)
-	transferBlobsToBackupBucketMutex       sync.RWMutex
-	transferBlobsToBackupBucketArgsForCall []struct{}
-	transferBlobsToBackupBucketReturns     struct {
-		result1 map[string]gcs.BackupBucketAddress
-		result2 error
-	}
-	transferBlobsToBackupBucketReturnsOnCall map[int]struct {
-		result1 map[string]gcs.BackupBucketAddress
-		result2 error
-	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -143,49 +132,6 @@ func (fake *FakeBackuper) CopyBlobsWithinBackupBucketReturnsOnCall(i int, result
 	}{result1}
 }
 
-func (fake *FakeBackuper) TransferBlobsToBackupBucket() (map[string]gcs.BackupBucketAddress, error) {
-	fake.transferBlobsToBackupBucketMutex.Lock()
-	ret, specificReturn := fake.transferBlobsToBackupBucketReturnsOnCall[len(fake.transferBlobsToBackupBucketArgsForCall)]
-	fake.transferBlobsToBackupBucketArgsForCall = append(fake.transferBlobsToBackupBucketArgsForCall, struct{}{})
-	fake.recordInvocation("TransferBlobsToBackupBucket", []interface{}{})
-	fake.transferBlobsToBackupBucketMutex.Unlock()
-	if fake.TransferBlobsToBackupBucketStub != nil {
-		return fake.TransferBlobsToBackupBucketStub()
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.transferBlobsToBackupBucketReturns.result1, fake.transferBlobsToBackupBucketReturns.result2
-}
-
-func (fake *FakeBackuper) TransferBlobsToBackupBucketCallCount() int {
-	fake.transferBlobsToBackupBucketMutex.RLock()
-	defer fake.transferBlobsToBackupBucketMutex.RUnlock()
-	return len(fake.transferBlobsToBackupBucketArgsForCall)
-}
-
-func (fake *FakeBackuper) TransferBlobsToBackupBucketReturns(result1 map[string]gcs.BackupBucketAddress, result2 error) {
-	fake.TransferBlobsToBackupBucketStub = nil
-	fake.transferBlobsToBackupBucketReturns = struct {
-		result1 map[string]gcs.BackupBucketAddress
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeBackuper) TransferBlobsToBackupBucketReturnsOnCall(i int, result1 map[string]gcs.BackupBucketAddress, result2 error) {
-	fake.TransferBlobsToBackupBucketStub = nil
-	if fake.transferBlobsToBackupBucketReturnsOnCall == nil {
-		fake.transferBlobsToBackupBucketReturnsOnCall = make(map[int]struct {
-			result1 map[string]gcs.BackupBucketAddress
-			result2 error
-		})
-	}
-	fake.transferBlobsToBackupBucketReturnsOnCall[i] = struct {
-		result1 map[string]gcs.BackupBucketAddress
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *FakeBackuper) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -193,8 +139,6 @@ func (fake *FakeBackuper) Invocations() map[string][][]interface{} {
 	defer fake.createLiveBucketSnapshotMutex.RUnlock()
 	fake.copyBlobsWithinBackupBucketMutex.RLock()
 	defer fake.copyBlobsWithinBackupBucketMutex.RUnlock()
-	fake.transferBlobsToBackupBucketMutex.RLock()
-	defer fake.transferBlobsToBackupBucketMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
