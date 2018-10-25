@@ -28,15 +28,15 @@ type FakeBucket struct {
 		result1 []gcs.Blob
 		result2 error
 	}
-	ListLastBackupBlobsStub        func() ([]gcs.Blob, error)
+	ListLastBackupBlobsStub        func() (map[string]gcs.Blob, error)
 	listLastBackupBlobsMutex       sync.RWMutex
 	listLastBackupBlobsArgsForCall []struct{}
 	listLastBackupBlobsReturns     struct {
-		result1 []gcs.Blob
+		result1 map[string]gcs.Blob
 		result2 error
 	}
 	listLastBackupBlobsReturnsOnCall map[int]struct {
-		result1 []gcs.Blob
+		result1 map[string]gcs.Blob
 		result2 error
 	}
 	CopyBlobWithinBucketStub        func(string, string) error
@@ -187,7 +187,7 @@ func (fake *FakeBucket) ListBlobsReturnsOnCall(i int, result1 []gcs.Blob, result
 	}{result1, result2}
 }
 
-func (fake *FakeBucket) ListLastBackupBlobs() ([]gcs.Blob, error) {
+func (fake *FakeBucket) ListLastBackupBlobs() (map[string]gcs.Blob, error) {
 	fake.listLastBackupBlobsMutex.Lock()
 	ret, specificReturn := fake.listLastBackupBlobsReturnsOnCall[len(fake.listLastBackupBlobsArgsForCall)]
 	fake.listLastBackupBlobsArgsForCall = append(fake.listLastBackupBlobsArgsForCall, struct{}{})
@@ -208,24 +208,24 @@ func (fake *FakeBucket) ListLastBackupBlobsCallCount() int {
 	return len(fake.listLastBackupBlobsArgsForCall)
 }
 
-func (fake *FakeBucket) ListLastBackupBlobsReturns(result1 []gcs.Blob, result2 error) {
+func (fake *FakeBucket) ListLastBackupBlobsReturns(result1 map[string]gcs.Blob, result2 error) {
 	fake.ListLastBackupBlobsStub = nil
 	fake.listLastBackupBlobsReturns = struct {
-		result1 []gcs.Blob
+		result1 map[string]gcs.Blob
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeBucket) ListLastBackupBlobsReturnsOnCall(i int, result1 []gcs.Blob, result2 error) {
+func (fake *FakeBucket) ListLastBackupBlobsReturnsOnCall(i int, result1 map[string]gcs.Blob, result2 error) {
 	fake.ListLastBackupBlobsStub = nil
 	if fake.listLastBackupBlobsReturnsOnCall == nil {
 		fake.listLastBackupBlobsReturnsOnCall = make(map[int]struct {
-			result1 []gcs.Blob
+			result1 map[string]gcs.Blob
 			result2 error
 		})
 	}
 	fake.listLastBackupBlobsReturnsOnCall[i] = struct {
-		result1 []gcs.Blob
+		result1 map[string]gcs.Blob
 		result2 error
 	}{result1, result2}
 }

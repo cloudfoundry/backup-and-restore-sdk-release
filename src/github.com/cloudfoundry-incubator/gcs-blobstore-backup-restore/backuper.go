@@ -39,20 +39,14 @@ func (b *GCSBackuper) CreateLiveBucketSnapshot() (map[string]BackupBucketAddress
 			Path:       fmt.Sprintf("%s/%s", timestamp, id),
 		}
 
+		inLastBackup, err := backupBucket.ListLastBackupBlobs()
+		if err != nil {
+			return nil, nil, err
+		}
+
 		blobs, err := bucket.ListBlobs()
 		if err != nil {
 			return nil, nil, err
-		}
-
-		lastBackupBlobs, err := bucketPair.BackupBucket.ListLastBackupBlobs()
-		if err != nil {
-			return nil, nil, err
-		}
-
-		inLastBackup := make(map[string]Blob)
-		for _, blob := range lastBackupBlobs {
-			nameParts := strings.Split(blob.Name, "/")
-			inLastBackup[nameParts[len(nameParts)-1]] = blob
 		}
 
 		for _, blob := range blobs {

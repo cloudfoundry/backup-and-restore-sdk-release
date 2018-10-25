@@ -116,7 +116,7 @@ var _ = Describe("Bucket", func() {
 			})
 
 			Context("when there are no previous backups", func() {
-				It("returns an empty slice", func() {
+				It("returns an empty map", func() {
 					blobs, err := backupBucket.ListLastBackupBlobs()
 					Expect(err).NotTo(HaveOccurred())
 					Expect(blobs).To(HaveLen(0))
