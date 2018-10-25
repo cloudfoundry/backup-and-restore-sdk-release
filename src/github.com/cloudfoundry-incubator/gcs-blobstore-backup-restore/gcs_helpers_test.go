@@ -11,10 +11,6 @@ import (
 
 	"io/ioutil"
 
-	"strings"
-
-	"strconv"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -44,15 +40,9 @@ func DeleteBucket(bucketName string) {
 	runSuccessfully("gsutil", "rm", "-r", "gs://"+bucketName)
 }
 
-func UploadFile(bucketName, blobName, fileContents string) int64 {
+func UploadFile(bucketName, blobName, fileContents string) {
 	file := createTmpFile("", blobName, fileContents)
-
-	_, stdErr := runSuccessfully("gsutil", "cp", "-v", file.Name(), "gs://"+bucketName+"/"+blobName)
-	generationIDString := strings.TrimSpace(strings.Split(strings.Split(stdErr, "\n")[1], "#")[1])
-	generationID, err := strconv.ParseInt(generationIDString, 10, 64)
-	Expect(err).NotTo(HaveOccurred())
-
-	return generationID
+	runSuccessfully("gsutil", "cp", "-v", file.Name(), "gs://"+bucketName+"/"+blobName)
 }
 
 func ReadFile(bucketName, blobName string) string {
@@ -60,15 +50,9 @@ func ReadFile(bucketName, blobName string) string {
 	return output
 }
 
-func UploadFileWithDir(bucketName, dir, blobName, fileContents string) int64 {
+func UploadFileWithDir(bucketName, dir, blobName, fileContents string) {
 	file := createTmpFile(dir, blobName, fileContents)
-
-	_, stdErr := runSuccessfully("gsutil", "cp", "-v", file.Name(), "gs://"+bucketName+"/"+dir+"/"+blobName)
-	generationIDString := strings.TrimSpace(strings.Split(strings.Split(stdErr, "\n")[1], "#")[1])
-	generationID, err := strconv.ParseInt(generationIDString, 10, 64)
-	Expect(err).NotTo(HaveOccurred())
-
-	return generationID
+	runSuccessfully("gsutil", "cp", "-v", file.Name(), "gs://"+bucketName+"/"+dir+"/"+blobName)
 }
 
 func createTmpFile(dirName, fileName, fileContents string) *os.File {

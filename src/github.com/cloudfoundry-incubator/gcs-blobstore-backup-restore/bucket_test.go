@@ -76,16 +76,15 @@ var _ = Describe("Bucket", func() {
 		})
 
 		Context("when the bucket has files in sub directories", func() {
-			var file1GenerationID, file2GenerationID, file3GenerationID int64
 
 			BeforeEach(func() {
 				bucketName = CreateBucketWithTimestampedName("list_blobs")
-				file1GenerationID = UploadFileWithDir(bucketName, "dir1", "file1", "file-content")
-				file2GenerationID = UploadFileWithDir(bucketName, "dir2", "file2", "file-content")
-				file3GenerationID = UploadFile(bucketName, "file3", "file-content")
+				UploadFileWithDir(bucketName, "dir1", "file1", "file-content")
+				UploadFileWithDir(bucketName, "dir2", "file2", "file-content")
+				UploadFile(bucketName, "file3", "file-content")
 			})
 
-			It("lists all files and its generation_ids", func() {
+			It("lists all files", func() {
 				blobs, err := bucket.ListBlobs()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(ConsistOf(
@@ -125,10 +124,9 @@ var _ = Describe("Bucket", func() {
 			})
 
 			Context("when there is one previous backup", func() {
-				var file1GenerationID int64
 
 				BeforeEach(func() {
-					file1GenerationID = UploadFileWithDir(backupBucketName, "1970_01_01_00_00_00", "file1", "file-content")
+					UploadFileWithDir(backupBucketName, "1970_01_01_00_00_00", "file1", "file-content")
 				})
 
 				It("returns all the blobs from the previous backup", func() {
@@ -139,11 +137,10 @@ var _ = Describe("Bucket", func() {
 			})
 
 			Context("when there is more than one previous backup", func() {
-				var file1GenerationID, file2GenerationID int64
 
 				BeforeEach(func() {
-					file1GenerationID = UploadFileWithDir(backupBucketName, "1970_01_01_00_00_00", "file1", "file-content1")
-					file2GenerationID = UploadFileWithDir(backupBucketName, "1970_01_02_00_00_00", "file2", "file-content2")
+					UploadFileWithDir(backupBucketName, "1970_01_01_00_00_00", "file1", "file-content1")
+					UploadFileWithDir(backupBucketName, "1970_01_02_00_00_00", "file2", "file-content2")
 				})
 
 				It("returns only the blobs from the most recent previous backup", func() {
@@ -176,11 +173,10 @@ var _ = Describe("Bucket", func() {
 		})
 
 		Context("copying an existing file", func() {
-			var file1GenerationID int64
 
 			BeforeEach(func() {
 				bucketName = CreateBucketWithTimestampedName("list_blobs")
-				file1GenerationID = UploadFile(bucketName, "file1", "file-content")
+				UploadFile(bucketName, "file1", "file-content")
 
 				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
 				Expect(err).NotTo(HaveOccurred())
@@ -223,14 +219,13 @@ var _ = Describe("Bucket", func() {
 		var srcBucket gcs.Bucket
 		var dstBucket gcs.Bucket
 		var err error
-		var file1GenerationID int64
 
 		Context("copying an existing file", func() {
 
 			BeforeEach(func() {
 				srcBucketName = CreateBucketWithTimestampedName("src")
 				dstBucketName = CreateBucketWithTimestampedName("dst")
-				file1GenerationID = UploadFile(srcBucketName, "file1", "file-content")
+				UploadFile(srcBucketName, "file1", "file-content")
 
 				srcBucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), srcBucketName)
 				Expect(err).NotTo(HaveOccurred())
@@ -285,7 +280,7 @@ var _ = Describe("Bucket", func() {
 		Context("copying to a bucket that doesn't exist", func() {
 			BeforeEach(func() {
 				srcBucketName = CreateBucketWithTimestampedName("src")
-				file1GenerationID = UploadFile(srcBucketName, "file1", "file-content")
+				UploadFile(srcBucketName, "file1", "file-content")
 
 				srcBucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), srcBucketName)
 				Expect(err).NotTo(HaveOccurred())
