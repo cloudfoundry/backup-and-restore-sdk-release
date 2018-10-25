@@ -1,7 +1,6 @@
 package gcs_test
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -21,6 +20,7 @@ var _ = Describe("GCSBackuper", func() {
 
 		const firstBucketName = "first-bucket-name"
 		const secondBucketName = "second-bucket-name"
+		const bucketId = "bucket-id"
 
 		BeforeEach(func() {
 			bucket = new(fakes.FakeBucket)
@@ -29,7 +29,7 @@ var _ = Describe("GCSBackuper", func() {
 			backupBucket.NameReturns(secondBucketName)
 
 			backuper = gcs.NewBackuper(map[string]gcs.BucketPair{
-				"first": {
+				bucketId: {
 					Bucket:       bucket,
 					BackupBucket: backupBucket,
 				},
@@ -57,13 +57,10 @@ var _ = Describe("GCSBackuper", func() {
 
 				It("creates an empty common blobs file", func() {
 
-					_, err := backuper.CreateLiveBucketSnapshot()
+					_, commonBlobs, err := backuper.CreateLiveBucketSnapshot()
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(bucket.CreateFileCallCount()).To(Equal(1))
-					file, contents := bucket.CreateFileArgsForCall(0)
-					Expect(file).To(Equal("temporary-backup-artifact/common_blobs.json"))
-					Expect(contents).To(Equal([]byte("null")))
+					Expect(commonBlobs[bucketId]).To(BeEmpty())
 				})
 			})
 		})
@@ -84,43 +81,17 @@ var _ = Describe("GCSBackuper", func() {
 			})
 
 			It("creates a common blobs file", func() {
-				_, err := backuper.CreateLiveBucketSnapshot()
+				_, commonBlobs, err := backuper.CreateLiveBucketSnapshot()
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bucket.CreateFileCallCount()).To(Equal(1))
-				file, contents := bucket.CreateFileArgsForCall(0)
-				Expect(file).To(Equal("temporary-backup-artifact/common_blobs.json"))
-				j, _ := json.Marshal([]gcs.Blob{{Name: "1970_01_01_00_00_00/droplets/" + blob1}})
-				Expect(contents).To(Equal(j))
-			})
-
-			Context("when the delta is empty", func() {
-				BeforeEach(func() {
-					blob1 = "file_1_a"
-					bucket.ListBlobsReturns([]gcs.Blob{
-						{Name: blob1},
-					}, nil)
-
-					backupBucket.ListLastBackupBlobsReturns([]gcs.Blob{
-						{Name: "1970_01_01_00_00_00/droplets/" + blob1},
-					}, nil)
-				})
-
-				It("creates a common_blobs.json in the live bucket", func() {
-					_, err := backuper.CreateLiveBucketSnapshot()
-					Expect(err).NotTo(HaveOccurred())
-
-					Expect(bucket.CreateFileCallCount()).To(Equal(1))
-					filePath, _ := bucket.CreateFileArgsForCall(0)
-					Expect(filePath).To(Equal("temporary-backup-artifact/common_blobs.json"))
-				})
+				Expect(commonBlobs[bucketId]).To(Equal([]gcs.Blob{{Name: "1970_01_01_00_00_00/droplets/" + blob1}}))
 			})
 		})
 
 		Context("when list blobs fails", func() {
 			It("returns an error", func() {
 				bucket.ListBlobsReturns(nil, errors.New("ifailed"))
-				_, err := backuper.CreateLiveBucketSnapshot()
+				_, _, err := backuper.CreateLiveBucketSnapshot()
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError("ifailed"))
 			})
@@ -241,12 +212,12 @@ var _ = Describe("GCSBackuper", func() {
 		Context("when all of the blobs are common", func() {
 			var blob1 string
 			backupBucketAddresses := make(map[string]gcs.BackupBucketAddress)
+			commonBlobs := make(map[string][]gcs.Blob)
 
 			BeforeEach(func() {
 				blob1 = "file1"
 				bucket.ListBlobsReturns([]gcs.Blob{
 					{Name: blob1},
-					{Name: "temporary_backup_artifact/common_blobs.json"},
 				}, nil)
 				backupBucket.ListLastBackupBlobsReturns([]gcs.Blob{
 					{Name: "1970_01_01_00_00_00/droplets/" + blob1},
@@ -255,79 +226,49 @@ var _ = Describe("GCSBackuper", func() {
 				backupBucketAddresses["droplets"] = gcs.BackupBucketAddress{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
 				backupBucket.GetBlobReturns([]byte(`[{"name": "1970_01_01_00_00_00/droplets/file1"}]`), nil)
 				backupBucket.DeleteBlobReturns(nil)
+
+				commonBlobs[bucketPairID] = []gcs.Blob{{Name: "1970_01_01_00_00_00/droplets/" + blob1}}
 			})
 
 			It("copies over all the common blobs from the previous backup", func() {
-				err := backuper.CopyBlobsWithinBackupBucket(backupBucketAddresses)
+				err := backuper.CopyBlobsWithinBackupBucket(backupBucketAddresses, commonBlobs)
 				Expect(err).NotTo(HaveOccurred())
-
-				Expect(backupBucket.GetBlobCallCount()).To(Equal(1))
-				Expect(backupBucket.GetBlobArgsForCall(0)).To(Equal("2006_01_02_15_04_05/" + bucketPairID + "/common_blobs.json"))
 
 				Expect(backupBucket.CopyBlobWithinBucketCallCount()).To(Equal(1))
 				blob, path := backupBucket.CopyBlobWithinBucketArgsForCall(0)
 				Expect(blob).To(Equal("1970_01_01_00_00_00/droplets/" + blob1))
 				Expect(path).To(Equal("2006_01_02_15_04_05/" + bucketPairID + "/file1"))
-
-				Expect(backupBucket.DeleteBlobCallCount()).To(Equal(1))
-				Expect(backupBucket.DeleteBlobArgsForCall(0)).To(Equal("2006_01_02_15_04_05/" + bucketPairID + "/common_blobs.json"))
 			})
 		})
 
-		Context("when the common_blobs.json cannot be read", func() {
+		Context("when the commonBlobs map does not contain a bucket id", func() {
 			backupBucketAddresses := make(map[string]gcs.BackupBucketAddress)
 
 			BeforeEach(func() {
 				backupBucketAddresses["droplets"] = gcs.BackupBucketAddress{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
-				backupBucket.GetBlobReturns([]byte{}, fmt.Errorf("gcs error"))
-			})
-
-			It("returns a useful error", func() {
-				err := backuper.CopyBlobsWithinBackupBucket(backupBucketAddresses)
-				Expect(err).To(MatchError("failed to get 2006_01_02_15_04_05/droplets/common_blobs.json: gcs error"))
-			})
-		})
-
-		Context("when the common_blobs.json is not valid JSON", func() {
-			backupBucketAddresses := make(map[string]gcs.BackupBucketAddress)
-
-			BeforeEach(func() {
-				backupBucketAddresses["droplets"] = gcs.BackupBucketAddress{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
-				backupBucket.GetBlobReturns([]byte(`not json`), nil)
 			})
 
 			It("returns an error", func() {
-				err := backuper.CopyBlobsWithinBackupBucket(backupBucketAddresses)
-				Expect(err).To(HaveOccurred())
-			})
-		})
-
-		Context("when deleting common_blobs.json faisl", func() {
-			backupBucketAddresses := make(map[string]gcs.BackupBucketAddress)
-			BeforeEach(func() {
-				backupBucketAddresses["droplets"] = gcs.BackupBucketAddress{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
-				backupBucket.GetBlobReturns([]byte(`[{"name": "1970_01_01_00_00_00/droplets/file1"}]`), nil)
-				backupBucket.DeleteBlobReturns(fmt.Errorf("I failed at deleting common_blobs.json"))
-			})
-
-			It("returns an error", func() {
-				err := backuper.CopyBlobsWithinBackupBucket(backupBucketAddresses)
-				Expect(err).To(MatchError("I failed at deleting common_blobs.json"))
+				err := backuper.CopyBlobsWithinBackupBucket(backupBucketAddresses, nil)
+				Expect(err).To(MatchError("cannot find commonBlobs for bucket id: droplets"))
 			})
 		})
 
 		Context("when a common blob is missing", func() {
 			backupBucketAddresses := make(map[string]gcs.BackupBucketAddress)
+			commonBlobs := make(map[string][]gcs.Blob)
 
 			BeforeEach(func() {
 				backupBucketAddresses["droplets"] = gcs.BackupBucketAddress{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
 				backupBucket.GetBlobReturns([]byte(`[{"name": "1970_01_01_00_00_00/droplets/file1"}]`), nil)
 				backupBucket.CopyBlobWithinBucketReturns(fmt.Errorf("gcs copy error"))
+
+				commonBlobs["droplets"] = []gcs.Blob{{Name: "heyheyhey"}}
 			})
 
-			It("returns an error", func() {
-				err := backuper.CopyBlobsWithinBackupBucket(backupBucketAddresses)
-				Expect(err).To(HaveOccurred())
+			It("returns the corret error", func() {
+				err := backuper.CopyBlobsWithinBackupBucket(backupBucketAddresses, commonBlobs)
+				Expect(err).To(MatchError("gcs copy error"))
 			})
 		})
 	})

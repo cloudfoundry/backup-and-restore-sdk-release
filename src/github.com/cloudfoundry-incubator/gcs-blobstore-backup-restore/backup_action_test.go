@@ -39,7 +39,7 @@ var _ = Describe("BackupAction", func() {
 
 	Context("when CreateLiveBucketSnapshot fails", func() {
 		It("fails with the correct error", func() {
-			backuper.CreateLiveBucketSnapshotReturns(nil, fmt.Errorf("I failed to create a live bucket snapshot"))
+			backuper.CreateLiveBucketSnapshotReturns(nil, nil, fmt.Errorf("I failed to create a live bucket snapshot"))
 			err = backupAction.Run(backuper, artifact)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError("I failed to create a live bucket snapshot"))

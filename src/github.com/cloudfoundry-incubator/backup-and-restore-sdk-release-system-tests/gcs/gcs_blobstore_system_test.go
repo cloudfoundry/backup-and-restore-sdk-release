@@ -57,19 +57,6 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 					instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/backup")
 				})
 
-				By("Seeing the live blob snapshot inside the live bucket", func() {
-					liveBucketContent := gcsClient.ListDirsFromBucket(bucket)
-					Expect(liveBucketContent).To(ContainSubstring("temporary-backup-artifact"))
-					liveBucketContent = gcsClient.ListDirsFromBucket(bucket + "/temporary-backup-artifact")
-					Expect(liveBucketContent).To(ContainSubstring("temporary-backup-artifact/" + blob1))
-					Expect(liveBucketContent).To(ContainSubstring("temporary-backup-artifact/" + blob2))
-					Expect(liveBucketContent).To(ContainSubstring("temporary-backup-artifact/" + blob3))
-				})
-
-				By("Running unlock", func() {
-					instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/post-backup-unlock")
-				})
-
 				By("Having a complete remote backup", func() {
 					backupBucketFolders := gcsClient.ListDirsFromBucket(backupBucket)
 					Expect(backupBucketFolders).To(MatchRegexp(
@@ -90,11 +77,6 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 					Expect(fileContents).To(ContainSubstring("\"bucket_name\":\"" + backupBucket + "\""))
 					Expect(fileContents).To(MatchRegexp(
 						"\"path\":\"\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}\\/droplets\""))
-				})
-
-				By("Having cleaned up the live bucket", func() {
-					liveBucketContent := gcsClient.ListDirsFromBucket(bucket)
-					Expect(liveBucketContent).NotTo(ContainSubstring("temporary-backup-artifact"))
 				})
 			})
 		})
@@ -119,17 +101,6 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 					var backupBucketFolders string
 					By("Running a backup", func() {
 						instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/backup")
-					})
-
-					By("Seeing a snapshot inside the live bucket containing only a common_blobs.json", func() {
-						liveBucketContent := gcsClient.ListDirsFromBucket(bucket)
-						Expect(liveBucketContent).To(ContainSubstring("temporary-backup-artifact"))
-						liveBucketContent = gcsClient.ListDirsFromBucket(bucket + "/temporary-backup-artifact")
-						Expect(liveBucketContent).To(Equal("gs://" + bucket + "/temporary-backup-artifact/common_blobs.json\n"))
-					})
-
-					By("Running unlock", func() {
-						instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/post-backup-unlock")
 					})
 
 					By("Not overwriting the previous backup artifact", func() {

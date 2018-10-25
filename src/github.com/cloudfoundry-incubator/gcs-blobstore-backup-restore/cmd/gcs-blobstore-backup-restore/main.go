@@ -38,11 +38,11 @@ func main() {
 	if *backupAction {
 		backuper := gcs.NewBackuper(buckets)
 
-		backupBuckets, err := backuper.CreateLiveBucketSnapshot()
+		backupBuckets, commonBlobs, err := backuper.CreateLiveBucketSnapshot()
 
 		exitOnError(err)
 
-		err = backuper.CopyBlobsWithinBackupBucket(backupBuckets)
+		err = backuper.CopyBlobsWithinBackupBucket(backupBuckets, commonBlobs)
 		exitOnError(err)
 
 		err = artifact.Write(backupBuckets)
