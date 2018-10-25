@@ -24,7 +24,7 @@ var _ = Describe("Artifact", func() {
 			})
 
 			It("persists the backups in it", func() {
-				err := artifact.Write(map[string]gcs.BackupBucketAddress{
+				err := artifact.Write(map[string]gcs.BackupBucketDir{
 					"bucket_identifier": {
 						BucketName: "bucket_name",
 						Path:       "a_path",
@@ -50,7 +50,7 @@ var _ = Describe("Artifact", func() {
 			})
 
 			It("returns an error", func() {
-				err := artifact.Write(map[string]gcs.BackupBucketAddress{})
+				err := artifact.Write(map[string]gcs.BackupBucketDir{})
 
 				Expect(err).To(HaveOccurred())
 			})

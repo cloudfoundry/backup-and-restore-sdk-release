@@ -76,10 +76,10 @@ var _ = Describe("GCSBackuper", func() {
 				}, nil)
 
 				lastBackupBlobs := map[string]gcs.Blob{
-					blob1: gcs.Blob{Name: "1970_01_01_00_00_00/droplets/" + blob1},
+					blob1: {Name: "1970_01_01_00_00_00/droplets/" + blob1},
 				}
 
-				backupBucket.ListLastBackupBlobsReturns(lastBackupBlobs, nil)
+				backupBucket.LastBackupBlobsReturns(lastBackupBlobs, nil)
 			})
 
 			It("creates a common blobs file", func() {
@@ -127,7 +127,7 @@ var _ = Describe("GCSBackuper", func() {
 
 		Context("when all of the blobs are common", func() {
 			var blob1 string
-			backupBucketAddresses := make(map[string]gcs.BackupBucketAddress)
+			backupBucketAddresses := make(map[string]gcs.BackupBucketDir)
 			commonBlobs := make(map[string][]gcs.Blob)
 
 			BeforeEach(func() {
@@ -136,12 +136,12 @@ var _ = Describe("GCSBackuper", func() {
 					{Name: blob1},
 				}, nil)
 
-				backupBucket.ListLastBackupBlobsReturns(map[string]gcs.Blob{
+				backupBucket.LastBackupBlobsReturns(map[string]gcs.Blob{
 					blob1: {Name: "1970_01_01_00_00_00/droplets/" + blob1},
 				}, nil)
 
 				backupBucket.CopyBlobBetweenBucketsReturns(nil)
-				backupBucketAddresses["droplets"] = gcs.BackupBucketAddress{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
+				backupBucketAddresses["droplets"] = gcs.BackupBucketDir{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
 				backupBucket.GetBlobReturns([]byte(`[{"name": "1970_01_01_00_00_00/droplets/file1"}]`), nil)
 				backupBucket.DeleteBlobReturns(nil)
 
@@ -160,10 +160,10 @@ var _ = Describe("GCSBackuper", func() {
 		})
 
 		Context("when the commonBlobs map does not contain a bucket id", func() {
-			backupBucketAddresses := make(map[string]gcs.BackupBucketAddress)
+			backupBucketAddresses := make(map[string]gcs.BackupBucketDir)
 
 			BeforeEach(func() {
-				backupBucketAddresses["droplets"] = gcs.BackupBucketAddress{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
+				backupBucketAddresses["droplets"] = gcs.BackupBucketDir{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
 			})
 
 			It("returns an error", func() {
@@ -173,11 +173,11 @@ var _ = Describe("GCSBackuper", func() {
 		})
 
 		Context("when a common blob is missing", func() {
-			backupBucketAddresses := make(map[string]gcs.BackupBucketAddress)
+			backupBucketAddresses := make(map[string]gcs.BackupBucketDir)
 			commonBlobs := make(map[string][]gcs.Blob)
 
 			BeforeEach(func() {
-				backupBucketAddresses["droplets"] = gcs.BackupBucketAddress{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
+				backupBucketAddresses["droplets"] = gcs.BackupBucketDir{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
 				backupBucket.GetBlobReturns([]byte(`[{"name": "1970_01_01_00_00_00/droplets/file1"}]`), nil)
 				backupBucket.CopyBlobWithinBucketReturns(fmt.Errorf("gcs copy error"))
 

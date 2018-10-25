@@ -28,14 +28,14 @@ type FakeBucket struct {
 		result1 []gcs.Blob
 		result2 error
 	}
-	ListLastBackupBlobsStub        func() (map[string]gcs.Blob, error)
-	listLastBackupBlobsMutex       sync.RWMutex
-	listLastBackupBlobsArgsForCall []struct{}
-	listLastBackupBlobsReturns     struct {
+	LastBackupBlobsStub        func() (map[string]gcs.Blob, error)
+	lastBackupBlobsMutex       sync.RWMutex
+	lastBackupBlobsArgsForCall []struct{}
+	lastBackupBlobsReturns     struct {
 		result1 map[string]gcs.Blob
 		result2 error
 	}
-	listLastBackupBlobsReturnsOnCall map[int]struct {
+	lastBackupBlobsReturnsOnCall map[int]struct {
 		result1 map[string]gcs.Blob
 		result2 error
 	}
@@ -187,44 +187,44 @@ func (fake *FakeBucket) ListBlobsReturnsOnCall(i int, result1 []gcs.Blob, result
 	}{result1, result2}
 }
 
-func (fake *FakeBucket) ListLastBackupBlobs() (map[string]gcs.Blob, error) {
-	fake.listLastBackupBlobsMutex.Lock()
-	ret, specificReturn := fake.listLastBackupBlobsReturnsOnCall[len(fake.listLastBackupBlobsArgsForCall)]
-	fake.listLastBackupBlobsArgsForCall = append(fake.listLastBackupBlobsArgsForCall, struct{}{})
-	fake.recordInvocation("ListLastBackupBlobs", []interface{}{})
-	fake.listLastBackupBlobsMutex.Unlock()
-	if fake.ListLastBackupBlobsStub != nil {
-		return fake.ListLastBackupBlobsStub()
+func (fake *FakeBucket) LastBackupBlobs() (map[string]gcs.Blob, error) {
+	fake.lastBackupBlobsMutex.Lock()
+	ret, specificReturn := fake.lastBackupBlobsReturnsOnCall[len(fake.lastBackupBlobsArgsForCall)]
+	fake.lastBackupBlobsArgsForCall = append(fake.lastBackupBlobsArgsForCall, struct{}{})
+	fake.recordInvocation("LastBackupBlobs", []interface{}{})
+	fake.lastBackupBlobsMutex.Unlock()
+	if fake.LastBackupBlobsStub != nil {
+		return fake.LastBackupBlobsStub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.listLastBackupBlobsReturns.result1, fake.listLastBackupBlobsReturns.result2
+	return fake.lastBackupBlobsReturns.result1, fake.lastBackupBlobsReturns.result2
 }
 
-func (fake *FakeBucket) ListLastBackupBlobsCallCount() int {
-	fake.listLastBackupBlobsMutex.RLock()
-	defer fake.listLastBackupBlobsMutex.RUnlock()
-	return len(fake.listLastBackupBlobsArgsForCall)
+func (fake *FakeBucket) LastBackupBlobsCallCount() int {
+	fake.lastBackupBlobsMutex.RLock()
+	defer fake.lastBackupBlobsMutex.RUnlock()
+	return len(fake.lastBackupBlobsArgsForCall)
 }
 
-func (fake *FakeBucket) ListLastBackupBlobsReturns(result1 map[string]gcs.Blob, result2 error) {
-	fake.ListLastBackupBlobsStub = nil
-	fake.listLastBackupBlobsReturns = struct {
+func (fake *FakeBucket) LastBackupBlobsReturns(result1 map[string]gcs.Blob, result2 error) {
+	fake.LastBackupBlobsStub = nil
+	fake.lastBackupBlobsReturns = struct {
 		result1 map[string]gcs.Blob
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeBucket) ListLastBackupBlobsReturnsOnCall(i int, result1 map[string]gcs.Blob, result2 error) {
-	fake.ListLastBackupBlobsStub = nil
-	if fake.listLastBackupBlobsReturnsOnCall == nil {
-		fake.listLastBackupBlobsReturnsOnCall = make(map[int]struct {
+func (fake *FakeBucket) LastBackupBlobsReturnsOnCall(i int, result1 map[string]gcs.Blob, result2 error) {
+	fake.LastBackupBlobsStub = nil
+	if fake.lastBackupBlobsReturnsOnCall == nil {
+		fake.lastBackupBlobsReturnsOnCall = make(map[int]struct {
 			result1 map[string]gcs.Blob
 			result2 error
 		})
 	}
-	fake.listLastBackupBlobsReturnsOnCall[i] = struct {
+	fake.lastBackupBlobsReturnsOnCall[i] = struct {
 		result1 map[string]gcs.Blob
 		result2 error
 	}{result1, result2}
@@ -489,8 +489,8 @@ func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	defer fake.nameMutex.RUnlock()
 	fake.listBlobsMutex.RLock()
 	defer fake.listBlobsMutex.RUnlock()
-	fake.listLastBackupBlobsMutex.RLock()
-	defer fake.listLastBackupBlobsMutex.RUnlock()
+	fake.lastBackupBlobsMutex.RLock()
+	defer fake.lastBackupBlobsMutex.RUnlock()
 	fake.copyBlobWithinBucketMutex.RLock()
 	defer fake.copyBlobWithinBucketMutex.RUnlock()
 	fake.copyBlobBetweenBucketsMutex.RLock()

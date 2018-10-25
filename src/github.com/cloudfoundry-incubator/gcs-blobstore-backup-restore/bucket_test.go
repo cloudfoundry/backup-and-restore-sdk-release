@@ -96,7 +96,7 @@ var _ = Describe("Bucket", func() {
 		})
 	})
 
-	Describe("ListLastBackupBlobs", func() {
+	Describe("LastBackupBlobs", func() {
 		var backupBucketName string
 		var backupBucket gcs.Bucket
 		var err error
@@ -117,7 +117,7 @@ var _ = Describe("Bucket", func() {
 
 			Context("when there are no previous backups", func() {
 				It("returns an empty map", func() {
-					blobs, err := backupBucket.ListLastBackupBlobs()
+					blobs, err := backupBucket.LastBackupBlobs()
 					Expect(err).NotTo(HaveOccurred())
 					Expect(blobs).To(HaveLen(0))
 				})
@@ -130,7 +130,7 @@ var _ = Describe("Bucket", func() {
 				})
 
 				It("returns all the blobs from the previous backup", func() {
-					blobs, err := backupBucket.ListLastBackupBlobs()
+					blobs, err := backupBucket.LastBackupBlobs()
 					Expect(err).NotTo(HaveOccurred())
 					Expect(blobs).To(ConsistOf(gcs.Blob{Name: "1970_01_01_00_00_00/file1"}))
 				})
@@ -144,7 +144,7 @@ var _ = Describe("Bucket", func() {
 				})
 
 				It("returns only the blobs from the most recent previous backup", func() {
-					blobs, err := backupBucket.ListLastBackupBlobs()
+					blobs, err := backupBucket.LastBackupBlobs()
 					Expect(err).NotTo(HaveOccurred())
 					Expect(blobs).To(ConsistOf(gcs.Blob{Name: "1970_01_02_00_00_00/file2"}))
 				})
@@ -157,7 +157,7 @@ var _ = Describe("Bucket", func() {
 			})
 
 			It("returns an error", func() {
-				_, err = backupBucket.ListLastBackupBlobs()
+				_, err = backupBucket.LastBackupBlobs()
 				Expect(err).To(HaveOccurred())
 			})
 		})

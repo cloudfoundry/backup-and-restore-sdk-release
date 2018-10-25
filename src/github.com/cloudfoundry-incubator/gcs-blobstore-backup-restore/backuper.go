@@ -8,8 +8,8 @@ import (
 
 //go:generate counterfeiter -o fakes/fake_backuper.go . Backuper
 type Backuper interface {
-	CreateLiveBucketSnapshot() (map[string]BackupBucketAddress, map[string][]Blob, error)
-	CopyBlobsWithinBackupBucket(map[string]BackupBucketAddress, map[string][]Blob) error
+	CreateLiveBucketSnapshot() (map[string]BackupBucketDir, map[string][]Blob, error)
+	CopyBlobsWithinBackupBucket(map[string]BackupBucketDir, map[string][]Blob) error
 }
 
 type GCSBackuper struct {
@@ -22,24 +22,22 @@ func NewBackuper(buckets map[string]BucketPair) GCSBackuper {
 	}
 }
 
-func (b *GCSBackuper) CreateLiveBucketSnapshot() (map[string]BackupBucketAddress, map[string][]Blob, error) {
+func (b *GCSBackuper) CreateLiveBucketSnapshot() (map[string]BackupBucketDir, map[string][]Blob, error) {
 	timestamp := time.Now().Format("2006_01_02_15_04_05")
+	backupBuckets := make(map[string]BackupBucketDir)
+	allCommonBlobs := make(map[string][]Blob)
 
-	backupBuckets := make(map[string]BackupBucketAddress)
-
-	commonBlobs := make(map[string][]Blob)
-
-	for id, bucketPair := range b.buckets {
-		var commonBlobList []Blob
+	for bucketId, bucketPair := range b.buckets {
+		var bucketCommonBlobs []Blob
 		bucket := bucketPair.Bucket
 		backupBucket := bucketPair.BackupBucket
 
-		backupBuckets[id] = BackupBucketAddress{
+		backupBuckets[bucketId] = BackupBucketDir{
 			BucketName: backupBucket.Name(),
-			Path:       fmt.Sprintf("%s/%s", timestamp, id),
+			Path:       fmt.Sprintf("%s/%s", timestamp, bucketId),
 		}
 
-		inLastBackup, err := backupBucket.ListLastBackupBlobs()
+		lastBackupBlobs, err := backupBucket.LastBackupBlobs()
 		if err != nil {
 			return nil, nil, err
 		}
@@ -50,22 +48,22 @@ func (b *GCSBackuper) CreateLiveBucketSnapshot() (map[string]BackupBucketAddress
 		}
 
 		for _, blob := range blobs {
-			if blobFromBackup, ok := inLastBackup[blob.Name]; ok {
-				commonBlobList = append(commonBlobList, blobFromBackup)
+			if blobFromBackup, ok := lastBackupBlobs[blob.Name]; ok {
+				bucketCommonBlobs = append(bucketCommonBlobs, blobFromBackup)
 			} else {
-				err := bucket.CopyBlobBetweenBuckets(backupBucket, blob.Name, fmt.Sprintf("%s/%s", backupBuckets[id].Path, blob.Name))
+				err := bucket.CopyBlobBetweenBuckets(backupBucket, blob.Name, fmt.Sprintf("%s/%s", backupBuckets[bucketId].Path, blob.Name))
 				if err != nil {
 					return nil, nil, err
 				}
 			}
 		}
 
-		commonBlobs[id] = commonBlobList
+		allCommonBlobs[bucketId] = bucketCommonBlobs
 	}
-	return backupBuckets, commonBlobs, nil
+	return backupBuckets, allCommonBlobs, nil
 }
 
-func (b *GCSBackuper) CopyBlobsWithinBackupBucket(backupBucketAddresses map[string]BackupBucketAddress, commonBlobs map[string][]Blob) error {
+func (b *GCSBackuper) CopyBlobsWithinBackupBucket(backupBucketAddresses map[string]BackupBucketDir, commonBlobs map[string][]Blob) error {
 	for bucketId, backupBucketAddress := range backupBucketAddresses {
 		commonBlobList, ok := commonBlobs[bucketId]
 		if !ok {

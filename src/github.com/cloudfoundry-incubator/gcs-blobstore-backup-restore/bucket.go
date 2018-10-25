@@ -19,7 +19,7 @@ const readWriteScope = "https://www.googleapis.com/auth/devstorage.read_write"
 type Bucket interface {
 	Name() string
 	ListBlobs() ([]Blob, error)
-	ListLastBackupBlobs() (map[string]Blob, error)
+	LastBackupBlobs() (map[string]Blob, error)
 	CopyBlobWithinBucket(string, string) error
 	CopyBlobBetweenBuckets(Bucket, string, string) error
 	DeleteBlob(string) error
@@ -113,9 +113,9 @@ func (b SDKBucket) ListBlobs() ([]Blob, error) {
 	return blobs, nil
 }
 
-func (b SDKBucket) ListLastBackupBlobs() (map[string]Blob, error) {
+func (b SDKBucket) LastBackupBlobs() (map[string]Blob, error) {
 	var lastBackupBlobs []Blob
-	inLastBackup := make(map[string]Blob)
+	lastBackupBlobsMap := make(map[string]Blob)
 
 	allBackupBlobs, err := b.ListBlobs()
 	if err != nil {
@@ -136,10 +136,10 @@ func (b SDKBucket) ListLastBackupBlobs() (map[string]Blob, error) {
 
 	for _, blob := range lastBackupBlobs {
 		nameParts := strings.Split(blob.Name, "/")
-		inLastBackup[nameParts[len(nameParts)-1]] = blob
+		lastBackupBlobsMap[nameParts[len(nameParts)-1]] = blob
 	}
 
-	return inLastBackup, nil
+	return lastBackupBlobsMap, nil
 }
 
 func (b SDKBucket) CopyBlobWithinBucket(srcBlob, dstBlob string) error {
