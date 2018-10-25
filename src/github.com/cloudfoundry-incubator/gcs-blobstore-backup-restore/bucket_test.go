@@ -55,27 +55,7 @@ var _ = Describe("Bucket", func() {
 			DeleteBucket(bucketName)
 		})
 
-		Context("when the bucket has a few files", func() {
-
-			BeforeEach(func() {
-				bucketName = CreateBucketWithTimestampedName("list_blobs")
-				UploadFile(bucketName, "file1", "file-content")
-				UploadFile(bucketName, "file2", "file-content")
-				UploadFile(bucketName, "file3", "file-content")
-			})
-
-			It("lists all files", func() {
-				blobs, err := bucket.ListBlobs()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(blobs).To(ConsistOf(
-					gcs.Blob{Name: "file1"},
-					gcs.Blob{Name: "file2"},
-					gcs.Blob{Name: "file3"},
-				))
-			})
-		})
-
-		Context("when the bucket has files in sub directories", func() {
+		Context("when the bucket has files", func() {
 
 			BeforeEach(func() {
 				bucketName = CreateBucketWithTimestampedName("list_blobs")
@@ -158,7 +138,7 @@ var _ = Describe("Bucket", func() {
 
 			It("returns an error", func() {
 				_, err = backupBucket.LastBackupBlobs()
-				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError("storage: bucket doesn't exist"))
 			})
 		})
 	})

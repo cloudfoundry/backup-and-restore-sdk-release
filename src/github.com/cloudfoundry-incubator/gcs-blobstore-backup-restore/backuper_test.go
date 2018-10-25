@@ -11,11 +11,11 @@ import (
 	"github.com/cloudfoundry-incubator/gcs-blobstore-backup-restore/fakes"
 )
 
-var _ = Describe("GCSBackuper", func() {
+var _ = Describe("Backuper", func() {
 	Describe("CreateLiveBucketSnapshot", func() {
 		var bucket *fakes.FakeBucket
 		var backupBucket *fakes.FakeBucket
-		var backuper gcs.GCSBackuper
+		var backuper gcs.Backuper
 
 		var blob1, blob2 string
 
@@ -127,7 +127,7 @@ var _ = Describe("GCSBackuper", func() {
 		var backupBucket *fakes.FakeBucket
 		var bucketPairID = "droplets"
 
-		var backuper gcs.GCSBackuper
+		var backuper gcs.Backuper
 
 		const firstBucketName = "first-bucket-name"
 
