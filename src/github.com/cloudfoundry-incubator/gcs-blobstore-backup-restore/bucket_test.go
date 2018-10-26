@@ -191,21 +191,6 @@ var _ = Describe("Bucket", func() {
 				))
 			})
 		})
-
-		Context("copying a file that doesn't exist", func() {
-
-			BeforeEach(func() {
-				bucketName = CreateBucketWithTimestampedName("list_blobs")
-
-				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("errors", func() {
-				err := bucket.CopyBlobWithinBucket("foobar", "copydir/file1")
-				Expect(err).To(HaveOccurred())
-			})
-		})
 	})
 
 	Describe("CopyBlobBetweenBuckets", func() {
@@ -293,64 +278,40 @@ var _ = Describe("Bucket", func() {
 		})
 	})
 
-	Describe("Delete", func() {
-		var bucketName string
-		var bucket gcs.Bucket
-		var err error
-		var fileName = "file1"
+	Describe("DeleteBlob", func() {
+		var (
+			bucketName string
+			bucket     gcs.Bucket
+			err        error
+			dirName    = "mydir"
+			fileName1  = "file1"
+			fileName2  = "file2"
+		)
 
-		Context("deleting an existing file", func() {
-
-			BeforeEach(func() {
-				bucketName = CreateBucketWithTimestampedName("src")
-				UploadFile(bucketName, fileName, "file-content")
-
-				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
-				Expect(err).NotTo(HaveOccurred())
-
-			})
-
-			AfterEach(func() {
-				DeleteBucket(bucketName)
-			})
-
-			It("deletes the blob", func() {
-
-				err := bucket.DeleteBlob(fileName)
-				Expect(err).NotTo(HaveOccurred())
-
-				blobs, err := bucket.ListBlobs()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(blobs).To(BeNil())
-			})
+		AfterEach(func() {
+			DeleteBucket(bucketName)
 		})
 
-		Context("deleting a file that doesn't exist", func() {
+		Context("when deleting a file that doesn't exist", func() {
 
 			BeforeEach(func() {
 				bucketName = CreateBucketWithTimestampedName("src")
-				UploadFile(bucketName, fileName, "file-content")
+				UploadFile(bucketName, fileName1, "file-content")
 
 				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
 				Expect(err).NotTo(HaveOccurred())
 
-			})
-
-			AfterEach(func() {
-				DeleteBucket(bucketName)
 			})
 
 			It("errors", func() {
 
-				err := bucket.DeleteBlob(fileName + "idontexist")
+				err := bucket.DeleteBlob(fileName1 + "idontexist")
 				Expect(err).To(HaveOccurred())
 			})
 		})
 
-		Context("deleting files in a folder", func() {
-			var dirName = "mydir"
-			var fileName1 = "file1"
-			var fileName2 = "file2"
+		Context("when deleting existing files", func() {
+
 			BeforeEach(func() {
 				bucketName = CreateBucketWithTimestampedName("src")
 				UploadFileWithDir(bucketName, dirName, fileName1, "file-content")
@@ -359,10 +320,6 @@ var _ = Describe("Bucket", func() {
 				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
 				Expect(err).NotTo(HaveOccurred())
 
-			})
-
-			AfterEach(func() {
-				DeleteBucket(bucketName)
 			})
 
 			It("deletes all files and the folder", func() {
