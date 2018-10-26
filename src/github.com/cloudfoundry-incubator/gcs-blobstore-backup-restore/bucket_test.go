@@ -51,12 +51,7 @@ var _ = Describe("Bucket", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		AfterEach(func() {
-			DeleteBucket(bucketName)
-		})
-
 		Context("when the bucket has files", func() {
-
 			BeforeEach(func() {
 				bucketName = CreateBucketWithTimestampedName("list_blobs")
 				UploadFileWithDir(bucketName, "dir1", "file1", "file-content")
@@ -72,6 +67,26 @@ var _ = Describe("Bucket", func() {
 					gcs.Blob{Name: "dir2/file2"},
 					gcs.Blob{Name: "file3"},
 				))
+			})
+
+			AfterEach(func() {
+				DeleteBucket(bucketName)
+			})
+		})
+
+		Context("when providing a non-existing bucket", func() {
+			It("returns an error", func() {
+				config := map[string]gcs.Config{
+					"droplets": {
+						BucketName:       "I-am-not-a-bucket",
+						BackupBucketName: "definitely-not-a-bucket",
+					},
+				}
+
+				bucketPair, err := gcs.BuildBuckets(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = bucketPair["droplets"].Bucket.ListBlobs()
+				Expect(err).To(MatchError("storage: bucket doesn't exist"))
 			})
 		})
 	})
