@@ -115,6 +115,7 @@ var _ = Describe("MySQL", func() {
 							"-v",
 							"--single-transaction",
 							"--skip-add-locks",
+							"--set-gtid-purged=OFF",
 							fmt.Sprintf("--result-file=%s", artifactFile),
 							databaseName,
 						}
@@ -151,6 +152,7 @@ var _ = Describe("MySQL", func() {
 							fmt.Sprintf("--port=%d", port),
 							"-v",
 							"--single-transaction",
+							"--set-gtid-purged=OFF",
 							"--skip-add-locks",
 							fmt.Sprintf("--result-file=%s", artifactFile),
 							databaseName,
@@ -209,6 +211,7 @@ var _ = Describe("MySQL", func() {
 								HavePrefix("--ssl-ca="),
 								"--ssl-mode=VERIFY_IDENTITY",
 								"-v",
+								"--set-gtid-purged=OFF",
 								"--single-transaction",
 								"--skip-add-locks",
 								fmt.Sprintf("--result-file=%s", artifactFile),
@@ -274,6 +277,7 @@ var _ = Describe("MySQL", func() {
 								"--ssl-mode=VERIFY_IDENTITY",
 								"-v",
 								"--single-transaction",
+								"--set-gtid-purged=OFF",
 								"--skip-add-locks",
 								fmt.Sprintf("--result-file=%s", artifactFile),
 								databaseName,
@@ -683,6 +687,7 @@ var _ = Describe("MySQL", func() {
 							fmt.Sprintf("--port=%d", port),
 							HavePrefix("--ssl-cipher="),
 							"-v",
+							"--set-gtid-purged=OFF",
 							"--single-transaction",
 							"--skip-add-locks",
 							fmt.Sprintf("--result-file=%s", artifactFile),
@@ -722,6 +727,7 @@ var _ = Describe("MySQL", func() {
 							HavePrefix("--ssl-cipher="),
 							"-v",
 							"--single-transaction",
+							"--set-gtid-purged=OFF",
 							"--skip-add-locks",
 							fmt.Sprintf("--result-file=%s", artifactFile),
 							databaseName,
@@ -780,6 +786,7 @@ var _ = Describe("MySQL", func() {
 								fmt.Sprintf("--host=%s", host),
 								fmt.Sprintf("--port=%d", port),
 								HavePrefix("--ssl-ca="),
+								"--set-gtid-purged=OFF",
 								"-v",
 								"--single-transaction",
 								"--skip-add-locks",
@@ -847,6 +854,7 @@ var _ = Describe("MySQL", func() {
 								"-v",
 								"--single-transaction",
 								"--skip-add-locks",
+								"--set-gtid-purged=OFF",
 								fmt.Sprintf("--result-file=%s", artifactFile),
 								databaseName,
 							}
@@ -1175,6 +1183,166 @@ var _ = Describe("MySQL", func() {
 				It("also fails", func() {
 					Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
 					Eventually(session).Should(gexec.Exit(1))
+				})
+			})
+		})
+	})
+
+	Context("mysql 5.5", func() {
+		BeforeEach(func() {
+			artifactFile = tempFilePath()
+			fakeMysqlClient57.Reset()
+			fakeMysqlDump55.Reset()
+			fakeMysqlClient55.Reset()
+
+			envVars["MYSQL_CLIENT_5_7_PATH"] = fakeMysqlClient57.Path
+			envVars["MYSQL_CLIENT_5_5_PATH"] = fakeMysqlClient55.Path
+			envVars["MYSQL_DUMP_5_5_PATH"] = fakeMysqlDump55.Path
+		})
+
+		Context("backup", func() {
+			BeforeEach(func() {
+				configFile = saveFile(fmt.Sprintf(`{
+					"adapter":  "mysql",
+					"username": "%s",
+					"password": "%s",
+					"host":     "%s",
+					"port":     %d,
+					"database": "%s"
+				}`,
+					username,
+					password,
+					host,
+					port,
+					databaseName))
+			})
+
+			JustBeforeEach(func() {
+				cmd := exec.Command(
+					compiledSDKPath,
+					"--artifact-file",
+					artifactFile,
+					"--config",
+					configFile.Name(),
+					"--backup")
+
+				for key, val := range envVars {
+					cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
+				}
+
+				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).ToNot(HaveOccurred())
+				Eventually(session).Should(gexec.Exit())
+			})
+
+			Context("when mysqldump succeeds", func() {
+				BeforeEach(func() {
+					fakeMysqlClient57.WhenCalled().WillPrintToStdOut("MYSQL server version 5.5.18")
+					fakeMysqlDump55.WhenCalled().WillExitWith(0)
+				})
+
+				It("calls mysqldump with the correct arguments", func() {
+					Expect(fakeMysqlDump55.Invocations()).To(HaveLen(1))
+					expectedArgs := []interface{}{
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						HavePrefix("--ssl-cipher="),
+						"-v",
+						"--single-transaction",
+						"--skip-add-locks",
+						fmt.Sprintf("--result-file=%s", artifactFile),
+						databaseName,
+					}
+
+					Expect(fakeMysqlDump55.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+					Expect(fakeMysqlDump55.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+
+					Expect(session).Should(gexec.Exit(0))
+				})
+
+				Context("when TLS is configured with hostname verification turned off", func() {
+					BeforeEach(func() {
+						configFile = saveFile(fmt.Sprintf(`{
+							"adapter":  "mysql",
+							"username": "%s",
+							"password": "%s",
+							"host":     "%s",
+							"port":     %d,
+							"database": "%s",
+							"tls": {
+								"skip_host_verify": true,
+								"cert": {
+									"ca": "A_CA_CERT"
+								}
+							}
+						}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
+					})
+
+					It("calls mysqldump with the correct arguments", func() {
+						expectedArgs := []interface{}{
+							fmt.Sprintf("--user=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							HavePrefix("--ssl-ca="),
+							"-v",
+							"--single-transaction",
+							"--skip-add-locks",
+							fmt.Sprintf("--result-file=%s", artifactFile),
+							databaseName,
+						}
+
+						Expect(fakeMysqlDump55.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+					})
+				})
+
+				Context("when TLS is configured with client cert and private key", func() {
+					BeforeEach(func() {
+						configFile = saveFile(fmt.Sprintf(`{
+							"adapter":  "mysql",
+							"username": "%s",
+							"password": "%s",
+							"host":     "%s",
+							"port":     %d,
+							"database": "%s",
+							"tls": {
+								"cert": {
+									"ca": "A_CA_CERT",
+									"certificate": "A_CLIENT_CERT",
+									"private_key": "A_CLIENT_KEY"
+								}
+							}
+						}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
+					})
+
+					It("calls mysqldump with the correct arguments", func() {
+						expectedArgs := []interface{}{
+							fmt.Sprintf("--user=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							HavePrefix("--ssl-ca="),
+							HavePrefix("--ssl-cert="),
+							HavePrefix("--ssl-key="),
+							"--ssl-verify-server-cert",
+							"-v",
+							"--single-transaction",
+							"--skip-add-locks",
+							fmt.Sprintf("--result-file=%s", artifactFile),
+							databaseName,
+						}
+
+						Expect(fakeMysqlDump55.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+					})
 				})
 			})
 		})

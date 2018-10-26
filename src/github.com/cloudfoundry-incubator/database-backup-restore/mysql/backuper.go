@@ -5,17 +5,19 @@ import (
 )
 
 type Backuper struct {
-	config             config.ConnectionConfig
-	backupBinary       string
-	useLegacySslFlags  bool
-	sslOptionsProvider SSLOptionsProvider
+	config                    config.ConnectionConfig
+	backupBinary              string
+	useLegacySslFlags         bool
+	sslOptionsProvider        SSLOptionsProvider
+	additionalOptionsProvider AdditionalOptionsProvider
 }
 
-func NewBackuper(config config.ConnectionConfig, backupBinary string, sslOptionsProvider SSLOptionsProvider) Backuper {
+func NewBackuper(config config.ConnectionConfig, backupBinary string, sslOptionsProvider SSLOptionsProvider, additionalOptionsProvider AdditionalOptionsProvider) Backuper {
 	return Backuper{
-		config:             config,
-		backupBinary:       backupBinary,
-		sslOptionsProvider: sslOptionsProvider,
+		config:                    config,
+		backupBinary:              backupBinary,
+		sslOptionsProvider:        sslOptionsProvider,
+		additionalOptionsProvider: additionalOptionsProvider,
 	}
 }
 
@@ -29,6 +31,7 @@ func (b Backuper) Action(artifactFilePath string) error {
 	}
 
 	cmdArgs = append(cmdArgs, b.config.Tables...)
+	cmdArgs = append(cmdArgs, b.additionalOptionsProvider.BuildParams()...)
 
 	_, _, err := NewMysqlCommand(b.config, b.backupBinary, b.sslOptionsProvider).WithParams(cmdArgs...).Run()
 

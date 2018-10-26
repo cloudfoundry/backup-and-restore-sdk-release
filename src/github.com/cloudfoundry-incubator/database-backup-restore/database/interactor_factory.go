@@ -57,8 +57,9 @@ func (f InteractorFactory) makeMysqlBackuper(config config.ConnectionConfig) (In
 	}
 
 	mysqlSSLProvider := f.getSSLCommandProvider(mysqldbVersion)
+	mysqlAdditionalOptionsProvider := f.getAdditionalOptionsProvider(mysqldbVersion)
 
-	return mysql.NewBackuper(config, mysqlDumpPath, mysqlSSLProvider), nil
+	return mysql.NewBackuper(config, mysqlDumpPath, mysqlSSLProvider, mysqlAdditionalOptionsProvider), nil
 }
 
 func (f InteractorFactory) makeMysqlRestorer(config config.ConnectionConfig) (Interactor, error) {
@@ -133,6 +134,14 @@ func (f InteractorFactory) getSSLCommandProvider(mysqlVersion version.DatabaseSe
 		return mysql.NewDefaultSSLProvider(f.tempFolderManager)
 	} else {
 		return mysql.NewLegacySSLOptionsProvider(f.tempFolderManager)
+	}
+}
+
+func (f InteractorFactory) getAdditionalOptionsProvider(mysqlVersion version.DatabaseServerVersion) mysql.AdditionalOptionsProvider {
+	if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "5", "20")) {
+		return mysql.NewLegacyAdditionalOptionsProvider()
+	} else {
+		return mysql.NewDefaultAdditionalOptionsProvider()
 	}
 }
 
