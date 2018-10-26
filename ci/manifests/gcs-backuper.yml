@@ -20,6 +20,9 @@ name: ((deployment-name))
 releases:
 - name: backup-and-restore-sdk
   version: latest
+- name: bpm
+  version: latest
+  url: https://bosh.io/d/github.com/cloudfoundry-incubator/bpm-release
 
 stemcells:
 - alias: xenial
@@ -38,9 +41,13 @@ instance_groups:
   - name: default
   azs: [z1]
   jobs:
+  - name: bpm
+    release: bpm
   - name: gcs-blobstore-backup-restorer
     release: backup-and-restore-sdk
     properties:
+      bpm:
+        enabled: true
       enabled: true
       gcp_service_account_key: ((gcp-service-account-key))
       buckets:

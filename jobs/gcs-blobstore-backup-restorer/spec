@@ -22,12 +22,17 @@ templates:
   restore.erb: bin/bbr/restore
   buckets.json.erb: config/buckets.json
   gcp-service-account-key.json.erb: config/gcp-service-account-key.json
+  bpm.yml.erb: config/bpm.yml
 
 
 packages:
 - gcs-blobstore-backup-restorer
 
 properties:
+  bpm:
+    enabled:
+      default: false
+      description: "use bpm to run gcs backup and restore scripts"
   enabled:
     default: false
     description: "Enable backup and restore scripts in this job"
