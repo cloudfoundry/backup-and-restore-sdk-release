@@ -49,7 +49,6 @@ var _ = Describe("Backuper", func() {
 				}, nil)
 
 				bucket.CopyBlobWithinBucketReturns(nil)
-				bucket.CreateFileReturns(nil)
 			})
 
 			It("returns an empty common blobs map", func() {
@@ -163,7 +162,6 @@ var _ = Describe("Backuper", func() {
 
 				backupBucket.CopyBlobBetweenBucketsReturns(nil)
 				backupBucketAddresses["droplets"] = gcs.BackupBucketDir{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
-				backupBucket.GetBlobReturns([]byte(`[{"name": "1970_01_01_00_00_00/droplets/file1"}]`), nil)
 				backupBucket.DeleteBlobReturns(nil)
 
 				commonBlobs[bucketPairID] = []gcs.Blob{{Name: "1970_01_01_00_00_00/droplets/" + blob1}}
@@ -199,7 +197,6 @@ var _ = Describe("Backuper", func() {
 
 			BeforeEach(func() {
 				backupBucketAddresses["droplets"] = gcs.BackupBucketDir{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
-				backupBucket.GetBlobReturns([]byte(`[{"name": "1970_01_01_00_00_00/droplets/file1"}]`), nil)
 				backupBucket.CopyBlobWithinBucketReturns(fmt.Errorf("gcs copy error"))
 
 				commonBlobs["droplets"] = []gcs.Blob{{Name: "heyheyhey"}}

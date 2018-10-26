@@ -3,7 +3,6 @@ package gcs
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"strings"
 
 	"cloud.google.com/go/storage"
@@ -23,8 +22,6 @@ type Bucket interface {
 	CopyBlobWithinBucket(string, string) error
 	CopyBlobBetweenBuckets(Bucket, string, string) error
 	DeleteBlob(string) error
-	CreateFile(name string, content []byte) error
-	GetBlob(string) ([]byte, error)
 }
 
 type BucketPair struct {
@@ -163,28 +160,4 @@ func (b SDKBucket) CopyBlobBetweenBuckets(dstBucket Bucket, srcBlob, dstBlob str
 
 func (b SDKBucket) DeleteBlob(blob string) error {
 	return b.client.Bucket(b.name).Object(blob).Delete(b.ctx)
-}
-
-func (b SDKBucket) CreateFile(name string, content []byte) error {
-	writer := b.client.Bucket(b.name).Object(name).NewWriter(b.ctx)
-	writer.Write(content)
-	err := writer.Close()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (b SDKBucket) GetBlob(blob string) ([]byte, error) {
-	reader, err := b.client.Bucket(b.name).Object(blob).NewReader(b.ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer reader.Close()
-
-	content, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return nil, err
-	}
-	return content, nil
 }

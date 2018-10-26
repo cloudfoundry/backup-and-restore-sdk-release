@@ -75,31 +75,6 @@ type FakeBucket struct {
 	deleteBlobReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CreateFileStub        func(name string, content []byte) error
-	createFileMutex       sync.RWMutex
-	createFileArgsForCall []struct {
-		name    string
-		content []byte
-	}
-	createFileReturns struct {
-		result1 error
-	}
-	createFileReturnsOnCall map[int]struct {
-		result1 error
-	}
-	GetBlobStub        func(string) ([]byte, error)
-	getBlobMutex       sync.RWMutex
-	getBlobArgsForCall []struct {
-		arg1 string
-	}
-	getBlobReturns struct {
-		result1 []byte
-		result2 error
-	}
-	getBlobReturnsOnCall map[int]struct {
-		result1 []byte
-		result2 error
-	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -377,111 +352,6 @@ func (fake *FakeBucket) DeleteBlobReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeBucket) CreateFile(name string, content []byte) error {
-	var contentCopy []byte
-	if content != nil {
-		contentCopy = make([]byte, len(content))
-		copy(contentCopy, content)
-	}
-	fake.createFileMutex.Lock()
-	ret, specificReturn := fake.createFileReturnsOnCall[len(fake.createFileArgsForCall)]
-	fake.createFileArgsForCall = append(fake.createFileArgsForCall, struct {
-		name    string
-		content []byte
-	}{name, contentCopy})
-	fake.recordInvocation("CreateFile", []interface{}{name, contentCopy})
-	fake.createFileMutex.Unlock()
-	if fake.CreateFileStub != nil {
-		return fake.CreateFileStub(name, content)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.createFileReturns.result1
-}
-
-func (fake *FakeBucket) CreateFileCallCount() int {
-	fake.createFileMutex.RLock()
-	defer fake.createFileMutex.RUnlock()
-	return len(fake.createFileArgsForCall)
-}
-
-func (fake *FakeBucket) CreateFileArgsForCall(i int) (string, []byte) {
-	fake.createFileMutex.RLock()
-	defer fake.createFileMutex.RUnlock()
-	return fake.createFileArgsForCall[i].name, fake.createFileArgsForCall[i].content
-}
-
-func (fake *FakeBucket) CreateFileReturns(result1 error) {
-	fake.CreateFileStub = nil
-	fake.createFileReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeBucket) CreateFileReturnsOnCall(i int, result1 error) {
-	fake.CreateFileStub = nil
-	if fake.createFileReturnsOnCall == nil {
-		fake.createFileReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.createFileReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeBucket) GetBlob(arg1 string) ([]byte, error) {
-	fake.getBlobMutex.Lock()
-	ret, specificReturn := fake.getBlobReturnsOnCall[len(fake.getBlobArgsForCall)]
-	fake.getBlobArgsForCall = append(fake.getBlobArgsForCall, struct {
-		arg1 string
-	}{arg1})
-	fake.recordInvocation("GetBlob", []interface{}{arg1})
-	fake.getBlobMutex.Unlock()
-	if fake.GetBlobStub != nil {
-		return fake.GetBlobStub(arg1)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.getBlobReturns.result1, fake.getBlobReturns.result2
-}
-
-func (fake *FakeBucket) GetBlobCallCount() int {
-	fake.getBlobMutex.RLock()
-	defer fake.getBlobMutex.RUnlock()
-	return len(fake.getBlobArgsForCall)
-}
-
-func (fake *FakeBucket) GetBlobArgsForCall(i int) string {
-	fake.getBlobMutex.RLock()
-	defer fake.getBlobMutex.RUnlock()
-	return fake.getBlobArgsForCall[i].arg1
-}
-
-func (fake *FakeBucket) GetBlobReturns(result1 []byte, result2 error) {
-	fake.GetBlobStub = nil
-	fake.getBlobReturns = struct {
-		result1 []byte
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeBucket) GetBlobReturnsOnCall(i int, result1 []byte, result2 error) {
-	fake.GetBlobStub = nil
-	if fake.getBlobReturnsOnCall == nil {
-		fake.getBlobReturnsOnCall = make(map[int]struct {
-			result1 []byte
-			result2 error
-		})
-	}
-	fake.getBlobReturnsOnCall[i] = struct {
-		result1 []byte
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -497,10 +367,6 @@ func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	defer fake.copyBlobBetweenBucketsMutex.RUnlock()
 	fake.deleteBlobMutex.RLock()
 	defer fake.deleteBlobMutex.RUnlock()
-	fake.createFileMutex.RLock()
-	defer fake.createFileMutex.RUnlock()
-	fake.getBlobMutex.RLock()
-	defer fake.getBlobMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
