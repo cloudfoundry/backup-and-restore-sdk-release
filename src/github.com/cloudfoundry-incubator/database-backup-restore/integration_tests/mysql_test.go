@@ -1348,3 +1348,173 @@ var _ = Describe("MySQL", func() {
 		})
 	})
 })
+
+var _ = Describe("MariaDB", func() {
+	var session *gexec.Session
+	var username = "testuser"
+	var host = "127.0.0.1"
+	var port = 1234
+	var databaseName = "mycooldb"
+	var password = "password"
+	var artifactFile string
+	var err error
+	var configFile *os.File
+
+	Context("mariadb 10.1", func() {
+		BeforeEach(func() {
+			artifactFile = tempFilePath()
+			fakeMariaDBDump.Reset()
+			fakeMysqlClient57.Reset()
+
+			envVars["MYSQL_CLIENT_5_7_PATH"] = fakeMysqlClient57.Path
+			envVars["MARIADB_DUMP_PATH"] = fakeMariaDBDump.Path
+		})
+
+		Context("backup", func() {
+			BeforeEach(func() {
+				configFile = saveFile(fmt.Sprintf(`{
+					"adapter":  "mysql",
+					"username": "%s",
+					"password": "%s",
+					"host":     "%s",
+					"port":     %d,
+					"database": "%s"
+				}`,
+					username,
+					password,
+					host,
+					port,
+					databaseName))
+			})
+
+			JustBeforeEach(func() {
+				cmd := exec.Command(
+					compiledSDKPath,
+					"--artifact-file",
+					artifactFile,
+					"--config",
+					configFile.Name(),
+					"--backup")
+
+				for key, val := range envVars {
+					cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
+				}
+
+				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).ToNot(HaveOccurred())
+				Eventually(session).Should(gexec.Exit())
+			})
+
+			Context("when mysqldump succeeds", func() {
+				BeforeEach(func() {
+					fakeMysqlClient57.WhenCalled().WillPrintToStdOut("10.1.34-MariaDB")
+					fakeMariaDBDump.WhenCalled().WillExitWith(0)
+				})
+
+				It("calls mysqldump with the correct arguments", func() {
+					Expect(fakeMariaDBDump.Invocations()).To(HaveLen(1))
+					expectedArgs := []interface{}{
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						HavePrefix("--ssl-cipher="),
+						"-v",
+						"--single-transaction",
+						"--skip-add-locks",
+						fmt.Sprintf("--result-file=%s", artifactFile),
+						databaseName,
+					}
+
+					Expect(fakeMariaDBDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+					Expect(fakeMariaDBDump.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+
+					Expect(session).Should(gexec.Exit(0))
+				})
+
+				Context("when TLS is configured with hostname verification turned off", func() {
+					BeforeEach(func() {
+						configFile = saveFile(fmt.Sprintf(`{
+							"adapter":  "mysql",
+							"username": "%s",
+							"password": "%s",
+							"host":     "%s",
+							"port":     %d,
+							"database": "%s",
+							"tls": {
+								"skip_host_verify": true,
+								"cert": {
+									"ca": "A_CA_CERT"
+								}
+							}
+						}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
+					})
+
+					It("calls mysqldump with the correct arguments", func() {
+						expectedArgs := []interface{}{
+							fmt.Sprintf("--user=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							HavePrefix("--ssl-ca="),
+							"-v",
+							"--single-transaction",
+							"--skip-add-locks",
+							fmt.Sprintf("--result-file=%s", artifactFile),
+							databaseName,
+						}
+
+						Expect(fakeMariaDBDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+					})
+				})
+
+				Context("when TLS is configured with client cert and private key", func() {
+					BeforeEach(func() {
+						configFile = saveFile(fmt.Sprintf(`{
+							"adapter":  "mysql",
+							"username": "%s",
+							"password": "%s",
+							"host":     "%s",
+							"port":     %d,
+							"database": "%s",
+							"tls": {
+								"cert": {
+									"ca": "A_CA_CERT",
+									"certificate": "A_CLIENT_CERT",
+									"private_key": "A_CLIENT_KEY"
+								}
+							}
+						}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
+					})
+
+					It("calls mysqldump with the correct arguments", func() {
+						expectedArgs := []interface{}{
+							fmt.Sprintf("--user=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							HavePrefix("--ssl-ca="),
+							HavePrefix("--ssl-cert="),
+							HavePrefix("--ssl-key="),
+							"--ssl-verify-server-cert",
+							"-v",
+							"--single-transaction",
+							"--skip-add-locks",
+							fmt.Sprintf("--result-file=%s", artifactFile),
+							databaseName,
+						}
+
+						Expect(fakeMariaDBDump.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+					})
+				})
+			})
+		})
+	})
+})

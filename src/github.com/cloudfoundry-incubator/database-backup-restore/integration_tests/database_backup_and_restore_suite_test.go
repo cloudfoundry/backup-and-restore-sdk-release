@@ -44,6 +44,8 @@ var fakeMysqlClient56 *binmock.Mock
 var fakeMysqlDump56 *binmock.Mock
 var fakeMysqlClient57 *binmock.Mock
 var fakeMysqlDump57 *binmock.Mock
+var fakeMariaDBClient *binmock.Mock
+var fakeMariaDBDump *binmock.Mock
 
 var _ = BeforeSuite(func() {
 	var err error
@@ -62,6 +64,8 @@ var _ = BeforeSuite(func() {
 	fakeMysqlClient56 = binmock.NewBinMock(Fail)
 	fakeMysqlDump57 = binmock.NewBinMock(Fail)
 	fakeMysqlClient57 = binmock.NewBinMock(Fail)
+	fakeMariaDBClient = binmock.NewBinMock(Fail)
+	fakeMariaDBDump = binmock.NewBinMock(Fail)
 })
 
 var _ = BeforeEach(func() {

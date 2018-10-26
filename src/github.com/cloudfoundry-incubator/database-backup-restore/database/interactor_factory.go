@@ -138,10 +138,10 @@ func (f InteractorFactory) getSSLCommandProvider(mysqlVersion version.DatabaseSe
 }
 
 func (f InteractorFactory) getAdditionalOptionsProvider(mysqlVersion version.DatabaseServerVersion) mysql.AdditionalOptionsProvider {
-	if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "5", "20")) {
-		return mysql.NewLegacyAdditionalOptionsProvider()
+	if mysqlVersion.Implementation == "mariadb" || mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "5", "20")) {
+		return mysql.NewEmptyAdditionalOptionsProvider()
 	} else {
-		return mysql.NewDefaultAdditionalOptionsProvider()
+		return mysql.NewPurgeGTIDOptionProvider()
 	}
 }
 

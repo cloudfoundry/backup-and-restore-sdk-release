@@ -4,22 +4,22 @@ type AdditionalOptionsProvider interface {
 	BuildParams() []string
 }
 
-type DefaultAdditionalOptionsProvider struct{}
+type PurgeGTIDOptionProvider struct{}
 
-func (p DefaultAdditionalOptionsProvider) BuildParams() []string {
+func (p PurgeGTIDOptionProvider) BuildParams() []string {
 	return []string{"--set-gtid-purged=OFF"}
 }
 
-func NewDefaultAdditionalOptionsProvider() DefaultAdditionalOptionsProvider {
-	return DefaultAdditionalOptionsProvider{}
+func NewPurgeGTIDOptionProvider() PurgeGTIDOptionProvider {
+	return PurgeGTIDOptionProvider{}
 }
 
-type LegacyAdditionalOptionsProvider struct{}
+type EmptyAdditionalOptionsProvider struct{}
 
-func (p LegacyAdditionalOptionsProvider) BuildParams() []string {
+func (p EmptyAdditionalOptionsProvider) BuildParams() []string {
 	return []string{}
 }
 
-func NewLegacyAdditionalOptionsProvider() LegacyAdditionalOptionsProvider {
-	return LegacyAdditionalOptionsProvider{}
+func NewEmptyAdditionalOptionsProvider() EmptyAdditionalOptionsProvider {
+	return EmptyAdditionalOptionsProvider{}
 }
