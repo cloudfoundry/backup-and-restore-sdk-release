@@ -37,8 +37,8 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 			Index:      "0",
 		}
 
-		instanceArtifactDirPath = timestampedName("/tmp/gcs-blobstore-backup-restorer")
-		instance.RunSuccessfully("mkdir -p " + instanceArtifactDirPath)
+		instanceArtifactDirPath = "/var/vcap/store/gcs-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
+		instance.RunSuccessfully("sudo mkdir -p " + instanceArtifactDirPath)
 	})
 
 	AfterEach(func() {
@@ -46,7 +46,7 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 		gcsClient.DeleteAllBlobInBucket(fmt.Sprintf(backupBucket + "/*"))
 	})
 
-	Describe("Backup", func() {
+	Describe("Backup and bpm is enabled", func() {
 		Context("when no previous backup has been taken", func() {
 			BeforeEach(func() {
 				gcsClient.WriteBlobToBucket(bucket, blob1, "TEST_BLOB_1")
@@ -55,7 +55,8 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 			})
 			It("creates a backup", func() {
 				By("successfully running a backup", func() {
-					instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/backup")
+					instance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
+						" /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/backup")
 				})
 
 				By("creating a complete remote backup", func() {
@@ -103,7 +104,7 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 				It("creates a complete backup", func() {
 					var backupBucketFolders string
 					By("successfully running a backup", func() {
-						instance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" +
+						instance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" +
 							instanceArtifactDirPath + " /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/backup")
 					})
 
