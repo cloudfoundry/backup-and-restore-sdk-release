@@ -38,14 +38,14 @@ func main() {
 	if *backupAction {
 		backuper := gcs.NewBackuper(buckets)
 
-		backupBuckets, commonBlobs, err := backuper.CreateLiveBucketSnapshot()
+		backupBucketDirectories, commonBlobs, err := backuper.CreateLiveBucketSnapshot()
 
 		exitOnError(err)
 
-		err = backuper.CopyBlobsWithinBackupBucket(backupBuckets, commonBlobs)
+		err = backuper.CopyBlobsWithinBackupBucket(backupBucketDirectories, commonBlobs)
 		exitOnError(err)
 
-		err = artifact.Write(backupBuckets)
+		err = artifact.Write(backupBucketDirectories)
 		exitOnError(err)
 	} else {
 		panic("restore not implemented")

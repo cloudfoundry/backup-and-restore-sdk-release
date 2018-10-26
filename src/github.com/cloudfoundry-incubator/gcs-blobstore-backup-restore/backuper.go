@@ -16,9 +16,9 @@ func NewBackuper(buckets map[string]BucketPair) Backuper {
 	}
 }
 
-func (b *Backuper) CreateLiveBucketSnapshot() (map[string]BackupBucketDir, map[string][]Blob, error) {
+func (b *Backuper) CreateLiveBucketSnapshot() (map[string]BackupBucketDirectory, map[string][]Blob, error) {
 	timestamp := time.Now().Format("2006_01_02_15_04_05")
-	backupBuckets := make(map[string]BackupBucketDir)
+	backupBucketDirectories := make(map[string]BackupBucketDirectory)
 	allCommonBlobs := make(map[string][]Blob)
 
 	for bucketId, bucketPair := range b.buckets {
@@ -26,7 +26,7 @@ func (b *Backuper) CreateLiveBucketSnapshot() (map[string]BackupBucketDir, map[s
 		bucket := bucketPair.Bucket
 		backupBucket := bucketPair.BackupBucket
 
-		backupBuckets[bucketId] = BackupBucketDir{
+		backupBucketDirectories[bucketId] = BackupBucketDirectory{
 			BucketName: backupBucket.Name(),
 			Path:       fmt.Sprintf("%s/%s", timestamp, bucketId),
 		}
@@ -45,7 +45,7 @@ func (b *Backuper) CreateLiveBucketSnapshot() (map[string]BackupBucketDir, map[s
 			if blobFromBackup, ok := lastBackupBlobs[blob.Name]; ok {
 				bucketCommonBlobs = append(bucketCommonBlobs, blobFromBackup)
 			} else {
-				err := bucket.CopyBlobBetweenBuckets(backupBucket, blob.Name, fmt.Sprintf("%s/%s", backupBuckets[bucketId].Path, blob.Name))
+				err := bucket.CopyBlobBetweenBuckets(backupBucket, blob.Name, fmt.Sprintf("%s/%s", backupBucketDirectories[bucketId].Path, blob.Name))
 				if err != nil {
 					return nil, nil, err
 				}
@@ -54,10 +54,10 @@ func (b *Backuper) CreateLiveBucketSnapshot() (map[string]BackupBucketDir, map[s
 
 		allCommonBlobs[bucketId] = bucketCommonBlobs
 	}
-	return backupBuckets, allCommonBlobs, nil
+	return backupBucketDirectories, allCommonBlobs, nil
 }
 
-func (b *Backuper) CopyBlobsWithinBackupBucket(backupBucketAddresses map[string]BackupBucketDir, commonBlobs map[string][]Blob) error {
+func (b *Backuper) CopyBlobsWithinBackupBucket(backupBucketAddresses map[string]BackupBucketDirectory, commonBlobs map[string][]Blob) error {
 	for bucketId, backupBucketAddress := range backupBucketAddresses {
 		commonBlobList, ok := commonBlobs[bucketId]
 		if !ok {

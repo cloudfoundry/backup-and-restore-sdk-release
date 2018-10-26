@@ -19,15 +19,15 @@ var _ = Describe("Backuper", func() {
 
 		var blob1, blob2 string
 
-		const firstBucketName = "first-bucket-name"
-		const secondBucketName = "second-bucket-name"
+		const LiveBucketName = "first-bucket-name"
+		const BackupBucketName = "second-bucket-name"
 		const bucketId = "bucket-id"
 
 		BeforeEach(func() {
 			bucket = new(fakes.FakeBucket)
-			bucket.NameReturns(firstBucketName)
+			bucket.NameReturns(LiveBucketName)
 			backupBucket = new(fakes.FakeBucket)
-			backupBucket.NameReturns(secondBucketName)
+			backupBucket.NameReturns(BackupBucketName)
 			blob1 = "file_1_a"
 			blob2 = "file_1_b"
 
@@ -42,7 +42,6 @@ var _ = Describe("Backuper", func() {
 		Context("when there is no previous backup artifact", func() {
 
 			BeforeEach(func() {
-
 				bucket.ListBlobsReturns([]gcs.Blob{
 					{Name: blob1},
 					{Name: blob2},
@@ -52,10 +51,13 @@ var _ = Describe("Backuper", func() {
 			})
 
 			It("returns an empty common blobs map", func() {
-				_, commonBlobs, err := backuper.CreateLiveBucketSnapshot()
+				backupBuckets, commonBlobs, err := backuper.CreateLiveBucketSnapshot()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(commonBlobs[bucketId]).To(BeEmpty())
+				Expect(backupBuckets[bucketId].BucketName).To(Equal(BackupBucketName))
+				Expect(backupBuckets[bucketId].Path).To(MatchRegexp(".*\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/.*"))
+
 			})
 
 		})
@@ -81,7 +83,7 @@ var _ = Describe("Backuper", func() {
 				Expect(commonBlobs[bucketId]).To(Equal([]gcs.Blob{{Name: "1970_01_01_00_00_00/droplets/" + blob1}}))
 			})
 
-			It("returns a map of valid BackupBucketDir", func() {
+			It("returns a map of valid BackupBucketDirectory", func() {
 				backupBucketDir, _, err := backuper.CreateLiveBucketSnapshot()
 				Expect(err).NotTo(HaveOccurred())
 
@@ -147,7 +149,7 @@ var _ = Describe("Backuper", func() {
 
 		Context("when all of the blobs are common", func() {
 			var blob1 string
-			backupBucketAddresses := make(map[string]gcs.BackupBucketDir)
+			backupBucketAddresses := make(map[string]gcs.BackupBucketDirectory)
 			commonBlobs := make(map[string][]gcs.Blob)
 
 			BeforeEach(func() {
@@ -161,7 +163,7 @@ var _ = Describe("Backuper", func() {
 				}, nil)
 
 				backupBucket.CopyBlobBetweenBucketsReturns(nil)
-				backupBucketAddresses["droplets"] = gcs.BackupBucketDir{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
+				backupBucketAddresses["droplets"] = gcs.BackupBucketDirectory{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
 				backupBucket.DeleteBlobReturns(nil)
 
 				commonBlobs[bucketPairID] = []gcs.Blob{{Name: "1970_01_01_00_00_00/droplets/" + blob1}}
@@ -179,10 +181,10 @@ var _ = Describe("Backuper", func() {
 		})
 
 		Context("when the commonBlobs map does not contain a bucket id", func() {
-			backupBucketAddresses := make(map[string]gcs.BackupBucketDir)
+			backupBucketAddresses := make(map[string]gcs.BackupBucketDirectory)
 
 			BeforeEach(func() {
-				backupBucketAddresses["droplets"] = gcs.BackupBucketDir{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
+				backupBucketAddresses["droplets"] = gcs.BackupBucketDirectory{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
 			})
 
 			It("returns an error", func() {
@@ -192,11 +194,11 @@ var _ = Describe("Backuper", func() {
 		})
 
 		Context("when a common blob is missing", func() {
-			backupBucketAddresses := make(map[string]gcs.BackupBucketDir)
+			backupBucketAddresses := make(map[string]gcs.BackupBucketDirectory)
 			commonBlobs := make(map[string][]gcs.Blob)
 
 			BeforeEach(func() {
-				backupBucketAddresses["droplets"] = gcs.BackupBucketDir{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
+				backupBucketAddresses["droplets"] = gcs.BackupBucketDirectory{BucketName: firstBucketName, Path: "2006_01_02_15_04_05/droplets"}
 				backupBucket.CopyBlobWithinBucketReturns(fmt.Errorf("gcs copy error"))
 
 				commonBlobs["droplets"] = []gcs.Blob{{Name: "heyheyhey"}}
