@@ -226,6 +226,7 @@ var _ = Describe("InteractorFactory", func() {
 						connectionConfig,
 						"mariadb_dump",
 						mysql.NewLegacySSLOptionsProvider(tempFolderManager),
+						mysql.NewEmptyAdditionalOptionsProvider(),
 					)))
 				})
 			})
@@ -242,6 +243,7 @@ var _ = Describe("InteractorFactory", func() {
 						connectionConfig,
 						"mysql_55_dump",
 						mysql.NewLegacySSLOptionsProvider(tempFolderManager),
+						mysql.NewEmptyAdditionalOptionsProvider(),
 					)))
 				})
 			})
@@ -258,6 +260,7 @@ var _ = Describe("InteractorFactory", func() {
 						connectionConfig,
 						"mysql_56_dump",
 						mysql.NewLegacySSLOptionsProvider(tempFolderManager),
+						mysql.NewPurgeGTIDOptionProvider(),
 					)))
 				})
 			})
@@ -281,6 +284,7 @@ var _ = Describe("InteractorFactory", func() {
 						connectionConfig,
 						"mysql_57_dump",
 						mysql.NewDefaultSSLProvider(tempFolderManager),
+						mysql.NewPurgeGTIDOptionProvider(),
 					)))
 				})
 			})
