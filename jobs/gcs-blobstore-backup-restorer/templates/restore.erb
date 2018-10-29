@@ -3,9 +3,31 @@
 set -eu
 
 <% if p('enabled') %>
-/var/vcap/packages/gcs-blobstore-backup-restorer/bin/gcs-blobstore-backup-restore \
-    --restore \
-    --config /var/vcap/jobs/gcs-blobstore-backup-restorer/config/buckets.json \
-    --gcp-service-account-key /var/vcap/jobs/gcs-blobstore-backup-restorer/config/gcp-service-account-key.json \
-    --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
+restore() {
+  /var/vcap/packages/gcs-blobstore-backup-restorer/bin/gcs-blobstore-backup-restore \
+      --restore \
+      --config /var/vcap/jobs/gcs-blobstore-backup-restorer/config/buckets.json \
+      --gcp-service-account-key /var/vcap/jobs/gcs-blobstore-backup-restorer/config/gcp-service-account-key.json \
+      --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
+}
+
+case ${1:-} in
+  run)
+    restore
+    ;;
+
+  *)
+
+    <% if p("bpm.enabled") %>
+      /var/vcap/jobs/bpm/bin/bpm run gcs-blobstore-backup-restorer \
+        -p restore \
+        -v "${BBR_ARTIFACT_DIRECTORY%/}:writable" \
+        -e BBR_ARTIFACT_DIRECTORY="$BBR_ARTIFACT_DIRECTORY"
+    <% else %>
+      restore
+    <% end %>
+    ;;
+
+esac
+
 <% end %>

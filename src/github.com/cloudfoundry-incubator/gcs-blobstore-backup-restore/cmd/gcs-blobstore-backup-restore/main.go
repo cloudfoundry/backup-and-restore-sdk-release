@@ -39,7 +39,6 @@ func main() {
 		backuper := gcs.NewBackuper(buckets)
 
 		backupBucketDirectories, commonBlobs, err := backuper.CreateLiveBucketSnapshot()
-
 		exitOnError(err)
 
 		err = backuper.CopyBlobsWithinBackupBucket(backupBucketDirectories, commonBlobs)
@@ -48,7 +47,13 @@ func main() {
 		err = artifact.Write(backupBucketDirectories)
 		exitOnError(err)
 	} else {
-		panic("restore not implemented")
+		restorer := gcs.NewRestorer(buckets)
+
+		backupBuckets, err := artifact.Read()
+		exitOnError(err)
+
+		err = restorer.Restore(backupBuckets)
+		exitOnError(err)
 	}
 }
 

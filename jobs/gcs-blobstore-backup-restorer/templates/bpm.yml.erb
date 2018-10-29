@@ -3,3 +3,7 @@ processes:
   executable: /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/backup
   args:
   - run
+- name: restore
+  executable: /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/restore
+  args:
+  - run

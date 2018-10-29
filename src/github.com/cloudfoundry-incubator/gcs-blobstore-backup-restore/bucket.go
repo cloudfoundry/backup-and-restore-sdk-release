@@ -21,6 +21,7 @@ type Bucket interface {
 	LastBackupBlobs() (map[string]Blob, error)
 	CopyBlobWithinBucket(string, string) error
 	CopyBlobBetweenBuckets(Bucket, string, string) error
+	CopyBlobsBetweenBuckets(Bucket, string) error
 	DeleteBlob(string) error
 }
 
@@ -153,6 +154,29 @@ func (b SDKBucket) CopyBlobBetweenBuckets(dstBucket Bucket, srcBlob, dstBlob str
 	_, err := dst.CopierFrom(src).Run(b.ctx)
 	if err != nil {
 		return fmt.Errorf("failed to copy object: %v", err)
+	}
+
+	return nil
+}
+
+func (b SDKBucket) CopyBlobsBetweenBuckets(destinationBucket Bucket, sourcePath string) error {
+	if destinationBucket == nil {
+		return errors.New("destination bucket does not exist")
+	}
+
+	blobs, err := b.ListBlobs()
+	if err != nil {
+		return err
+	}
+
+	for _, blob := range blobs {
+		if strings.HasPrefix(blob.Name, sourcePath+"/") {
+			destinationName := strings.TrimPrefix(blob.Name, sourcePath+"/")
+			err = b.CopyBlobBetweenBuckets(destinationBucket, blob.Name, destinationName)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

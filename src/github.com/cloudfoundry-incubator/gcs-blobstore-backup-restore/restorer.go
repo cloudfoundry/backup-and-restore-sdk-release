@@ -1,55 +1,41 @@
 package gcs
 
+import "fmt"
+
 type Restorer struct {
-	buckets           map[string]BucketPair
-	executionStrategy Strategy
+	buckets map[string]BucketPair
 }
 
-func NewRestorer(buckets map[string]BucketPair, executionStrategy Strategy) Restorer {
+func NewRestorer(buckets map[string]BucketPair) Restorer {
 	return Restorer{
-		buckets:           buckets,
-		executionStrategy: executionStrategy,
+		buckets: buckets,
 	}
 }
 
-func (r Restorer) Restore(backups map[string]BucketBackup) error {
-	//for bucketIdentifier := range backups {
-	//	_, exists := r.buckets[bucketIdentifier]
-	//	if !exists {
-	//		return fmt.Errorf("bucket identifier '%s' not found in buckets configuration", bucketIdentifier)
-	//	}
-	//}
-	//
-	//for _, bucket := range r.buckets {
-	//	enabled, err := bucket.VersioningEnabled()
-	//	if err != nil {
-	//		return fmt.Errorf("failed to check if versioning is enabled on bucket '%s': %s", bucket.Name(), err)
-	//	}
-	//
-	//	if !enabled {
-	//		return fmt.Errorf("versioning is not enabled on bucket '%s'", bucket.Name())
-	//	}
-	//}
-	//
-	//for bucketIdentifier, backup := range backups {
-	//	bucket := r.buckets[bucketIdentifier]
-	//
-	//	errs := r.executionStrategy.Run(backup.Blobs, func(blob Blob) error {
-	//		return bucket.CopyVersion(blob, backup.Name)
-	//	})
-	//
-	//	if len(errs) != 0 {
-	//		return formatErrors(fmt.Sprintf("failed to restore bucket '%s'", bucket.Name()), errs)
-	//	}
-	//}
+func (r Restorer) Restore(backupArtifact map[string]BackupBucketDirectory) error {
+	for bucketID := range backupArtifact {
+		_, ok := r.buckets[bucketID]
+		if !ok {
+			return fmt.Errorf("no entry found in restore config for bucket: %s", bucketID)
+		}
+	}
+
+	for bucketID := range r.buckets {
+		_, ok := backupArtifact[bucketID]
+		if !ok {
+			return fmt.Errorf("no entry found in restore artifact for bucket: %s", bucketID)
+		}
+	}
+
+	for bucketID, backupBucketDirectory := range backupArtifact {
+		err := r.buckets[bucketID].BackupBucket.CopyBlobsBetweenBuckets(
+			r.buckets[bucketID].Bucket,
+			backupBucketDirectory.Path,
+		)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
-
-//func formatErrors(contextString string, errors []error) error {
-//	errorStrings := make([]string, len(errors))
-//	for i, err := range errors {
-//		errorStrings[i] = err.Error()
-//	}
-//	return fmt.Errorf("%s: %s", contextString, strings.Join(errorStrings, "\n"))
-//}

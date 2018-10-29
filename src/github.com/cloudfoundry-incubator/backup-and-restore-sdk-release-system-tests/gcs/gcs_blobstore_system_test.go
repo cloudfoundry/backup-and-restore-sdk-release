@@ -53,7 +53,7 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 				gcsClient.WriteBlobToBucket(bucket, blob2, "TEST_BLOB_2")
 				gcsClient.WriteBlobToBucket(bucket, blob3, "TEST_BLOB_3")
 			})
-			It("creates a backup", func() {
+			It("creates a backup and restores", func() {
 				By("successfully running a backup", func() {
 					instance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
 						" /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/backup")
@@ -80,6 +80,18 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 					Expect(fileContents).To(MatchRegexp(
 						"\"path\":\"\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}\\/droplets\""))
 				})
+
+				By("restoring from a backup artifact", func() {
+					gcsClient.DeleteBlobInBucket(bucket, blob1)
+
+					instance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
+						" /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/restore")
+
+					liveBucketContent := gcsClient.ListDirsFromBucket(bucket)
+					Expect(liveBucketContent).To(ContainSubstring(blob1))
+					Expect(liveBucketContent).To(ContainSubstring(blob2))
+					Expect(liveBucketContent).To(ContainSubstring(blob3))
+				})
 			})
 		})
 
@@ -101,7 +113,7 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 					gcsClient.WriteBlobToBucket(bucket, blob4, "TEST_BLOB_4")
 				})
 
-				It("creates a complete backup", func() {
+				It("creates a complete backup and restores", func() {
 					var backupBucketFolders string
 					By("successfully running a backup", func() {
 						instance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" +
@@ -126,6 +138,19 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 						Expect(backupBucketContent).To(ContainSubstring(blob2))
 						Expect(backupBucketContent).To(ContainSubstring(blob3))
 						Expect(backupBucketContent).To(ContainSubstring(blob4))
+					})
+
+					By("restoring from the backup artifact", func() {
+						gcsClient.DeleteBlobInBucket(bucket, blob1)
+
+						instance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
+							" /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/restore")
+
+						liveBucketContent := gcsClient.ListDirsFromBucket(bucket)
+						Expect(liveBucketContent).To(ContainSubstring(blob1))
+						Expect(liveBucketContent).To(ContainSubstring(blob2))
+						Expect(liveBucketContent).To(ContainSubstring(blob3))
+						Expect(liveBucketContent).To(ContainSubstring(blob4))
 					})
 				})
 			})

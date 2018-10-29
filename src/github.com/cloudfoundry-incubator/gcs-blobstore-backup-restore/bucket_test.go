@@ -278,6 +278,69 @@ var _ = Describe("Bucket", func() {
 		})
 	})
 
+	Describe("CopyBlobsBetweenBuckets", func() {
+		var (
+			srcBucketName string
+			dstBucketName string
+			srcBucket     gcs.Bucket
+			dstBucket     gcs.Bucket
+			badBucket     gcs.Bucket
+			err           error
+		)
+
+		BeforeEach(func() {
+			srcBucketName = CreateBucketWithTimestampedName("src")
+			dstBucketName = CreateBucketWithTimestampedName("dst")
+			UploadFile(srcBucketName, "file1", "file-content")
+			UploadFile(dstBucketName, "file4", "file-content")
+			UploadFileWithDir(srcBucketName, "sourcePath", "file2", "file-content2")
+			UploadFileWithDir(srcBucketName, "sourcePath", "file3", "file-content3")
+
+			srcBucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), srcBucketName)
+			Expect(err).NotTo(HaveOccurred())
+
+			dstBucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), dstBucketName)
+			Expect(err).NotTo(HaveOccurred())
+
+			badBucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), "badBucket")
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			DeleteBucket(srcBucketName)
+			DeleteBucket(dstBucketName)
+		})
+
+		It("copies only the blobs from source/sourcePath to destination/destinationPath", func() {
+			err := srcBucket.CopyBlobsBetweenBuckets(dstBucket, "sourcePath")
+			Expect(err).NotTo(HaveOccurred())
+
+			blobs, err := dstBucket.ListBlobs()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(blobs).To(ConsistOf(
+				gcs.Blob{Name: "file2"},
+				gcs.Blob{Name: "file3"},
+				gcs.Blob{Name: "file4"},
+			))
+		})
+
+		It("returns an error if the destination bucket does not exist", func() {
+			err := srcBucket.CopyBlobsBetweenBuckets(nil, "sourcePath")
+			Expect(err).To(MatchError("destination bucket does not exist"))
+		})
+
+		It("returns an error when the source bucket does not exist", func() {
+			err := badBucket.CopyBlobsBetweenBuckets(dstBucket, "path")
+			Expect(err).To(HaveOccurred())
+		})
+
+		It("returns an error when the destination bucket does not exist", func() {
+			err := srcBucket.CopyBlobsBetweenBuckets(badBucket, "sourcePath")
+			Expect(err).To(HaveOccurred())
+		})
+
+	})
+
 	Describe("DeleteBlob", func() {
 		var (
 			bucketName string
