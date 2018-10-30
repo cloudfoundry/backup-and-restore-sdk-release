@@ -29,10 +29,9 @@ packages:
 - gcs-blobstore-backup-restorer
 
 properties:
-  bpm:
-    enabled:
-      default: false
-      description: "use bpm to run gcs backup and restore scripts"
+  bpm.enabled:
+    default: false
+    description: "use bpm to run gcs backup and restore scripts"
   enabled:
     default: false
     description: "Enable backup and restore scripts in this job"
