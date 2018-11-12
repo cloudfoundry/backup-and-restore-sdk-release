@@ -139,31 +139,33 @@ properties:
 
 ### Google Cloud Storage Blobstores
 
-**:warning: Warning**: Support for Google Cloud Storage is incomplete and should not be used. :warning:
-
-`gcs-blobstore-backup-restorer` only supports Google Cloud Storage (GCS) buckets that have versioning enabled. For more details about enabling versioning and retention policy on your blobstore, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html#gcs).
-
-`gcs-blobstore-backup-restorer` backs up blobstores by storing the generation number of each live blob, not the actual files. At restore time, those versions will be restored. This makes backups and restores faster, but also means that **restores only work if the original buckets still exist**. For more information, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html#gcs).
+`gcs-blobstore-backup-restorer` backs up blobstores by copying over only new blobs from live buckets, and copying over the needed old blobs from the previous backup, which is in the backup bucket, to create a complete backup artifact. By only copying over the new blobs, backups are faster, as this utlisies the high speed of intrabucket copying in GCS. At restore time, the blobs in this artifact will be restored. For more information, see the [Cloud Foundry documentation](https://docs.cloudfoundry.org/bbr/external-blobstores.html#gcs).
 
 ##### Google Cloud Storage Properties
 
 The `gcs-blobstore-backup-restorer` job can be configured using the following properties:
 
 * `enabled` [Boolean]: enables the backup and restore scripts. `false` by default.
-* `buckets` [Hash]: a map from bucket identifiers to their configuration. For each bucket, you'll need to specify the following properties:
-  * `name` [String]: the bucket name
-  * `gcp_service_account_key` [String]: JSON service account key
+* `gcp_service_account_key` [String]: JSON service account key
+* `buckets` [Hash]: a map from the bucket descriptors to their live and backup buckets:
+  * `name` [String]: the bucket name descriptor, required values are:
+    * `bucket_name` [String]
+    * `backup_bucket_name` [String]
 
-Here are example job properties to configure two GCS buckets: `my_bucket` and `other_bucket`.
+Here are example job properties to configure the live and backup GCS buckets:
 
 ```yaml
 properties:
   enabled: true
+  gcp_service_account_key: ((gcs_service_account_json_key))
   buckets:
-    my_bucket:
-      name: "((my_bucket_key))"
-      gcp_service_account_key: "((my_bucket_gcp_service_account_key))"
-    other_bucket:
-      name: "((other_bucket_key))"
-      gcp_service_account_key: "((other_bucket_gcp_service_account_key))"
+    droplets:
+      bucket_name: ((droplet_directory_key))
+      backup_bucket_name: ((droplet_backup_directory_key))
+    buildpacks:
+      bucket_name: ((buildpack_directory_key))
+      backup_bucket_name: ((buildpack_backup_directory_key))
+    packages:
+      bucket_name: ((app_package_directory_key))
+      backup_bucket_name: ((app_package_backup_directory_key))
 ```
