@@ -87,9 +87,6 @@ func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, se
 		liveBucketName        string
 		bucketObjectUnderTest s3.UnversionedBucket
 		err                   error
-		testFile1             string
-		testFile2             string
-		liveFile              string
 		creds                 s3.AccessKey
 	)
 
@@ -97,9 +94,9 @@ func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, se
 		creds = s3.AccessKey{Id: accessKey, Secret: secretKey}
 
 		liveBucketName = setUpUnversionedBucket(liveRegion, endpoint, creds)
-		testFile1 = uploadFile(liveBucketName, endpoint, "path1/file1", "FILE1", creds)
-		liveFile = uploadFile(liveBucketName, endpoint, "live/location/leaf/node", "CONTENTS", creds)
-		testFile2 = uploadFile(liveBucketName, endpoint, "path2/file2", "FILE2", creds)
+		uploadFile(liveBucketName, endpoint, "path1/file1", "FILE1", creds)
+		uploadFile(liveBucketName, endpoint, "live/location/leaf/node", "CONTENTS", creds)
+		uploadFile(liveBucketName, endpoint, "path2/file2", "FILE2", creds)
 	})
 
 	AfterEach(func() {

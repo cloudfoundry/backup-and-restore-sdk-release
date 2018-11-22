@@ -409,7 +409,7 @@ var _ = Describe("MySQL", func() {
 			JustBeforeEach(func() {
 				err := ioutil.WriteFile(artifactFile, []byte("SOME BACKUP SQL"), 0644)
 				if err != nil {
-					log.Fatalln("Failed to write to artifact file, %s", err)
+					log.Fatalln("Failed to write to artifact file, %s", err.Error())
 				}
 
 				cmd := exec.Command(
@@ -985,7 +985,7 @@ var _ = Describe("MySQL", func() {
 			JustBeforeEach(func() {
 				err := ioutil.WriteFile(artifactFile, []byte("SOME BACKUP SQL"), 0644)
 				if err != nil {
-					log.Fatalln("Failed to write to artifact file, %s", err)
+					log.Fatalln("Failed to write to artifact file, %s", err.Error())
 				}
 
 				cmd := exec.Command(

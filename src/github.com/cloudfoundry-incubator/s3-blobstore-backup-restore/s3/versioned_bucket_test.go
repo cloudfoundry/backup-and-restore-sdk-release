@@ -19,7 +19,6 @@ var _ = Describe("VersionedBucket", func() {
 		var secondVersionOfFile1 string
 		var thirdVersionOfFile1 string
 		var firstVersionOfFile2 string
-		var deletedVersionOfFile2 string
 
 		var creds = s3.AccessKey{
 			Id:     accessKey,
@@ -33,7 +32,7 @@ var _ = Describe("VersionedBucket", func() {
 			secondVersionOfFile1 = uploadFile(bucketName, endpoint, "test-1", "1-B", creds)
 			thirdVersionOfFile1 = uploadFile(bucketName, endpoint, "test-1", "1-C", creds)
 			firstVersionOfFile2 = uploadFile(bucketName, endpoint, "test-2", "2-A", creds)
-			deletedVersionOfFile2 = deleteFile(bucketName, endpoint, "test-2", creds)
+			deleteFile(bucketName, endpoint, "test-2", creds)
 
 			bucketObjectUnderTest, err = s3.NewBucket(bucketName, mainRegion, endpoint, creds, false)
 			Expect(err).NotTo(HaveOccurred())
