@@ -13,7 +13,6 @@ The Backup and Restore SDK BOSH release is used for two distinct things:
 
 Backup and Restore SDK Release status [![Build SDK Release Badge](https://backup-and-restore.ci.cf-app.com/api/v1/teams/main/pipelines/backup-and-restore-sdk-release/jobs/create-release/badge)](https://backup-and-restore.ci.cf-app.com/teams/main/pipelines/backup-and-restore-sdk-release)
 
-
 ## Database Backup and Restore
 
 | Name     | Version | Status                                                                                                                                                                                                                                                                                     |
