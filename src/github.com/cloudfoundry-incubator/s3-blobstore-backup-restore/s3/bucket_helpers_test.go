@@ -102,7 +102,7 @@ func downloadFileToTmp(bucket, endpoint, key string, creds s3.AccessKey) string 
 		"--key", key,
 		bodyFile.Name())
 
-	runAwsCommandWithTimeout(creds.Id, creds.Secret, baseCmd, 5*time.Minute)
+	runAwsCommandWithTimeout(creds.Id, creds.Secret, baseCmd, 7*time.Minute)
 
 	return bodyFile.Name()
 }
