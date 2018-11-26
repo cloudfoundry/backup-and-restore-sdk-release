@@ -86,7 +86,7 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 			By("backing up from the source bucket to the backup bucket", func() {
 				WriteFileInBucket(region, bucket, "original/path/to/file", "FILE1")
 				preBackupFiles = ListFilesFromBucket(backupRegion, backupBucket)
-				Expect(preBackupFiles).To(ConsistOf([]string{"original/path/to/file"}))
+				Expect(preBackupFiles).To(BeEmpty())
 
 				backuperInstance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
 					" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/backup")
