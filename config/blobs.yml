@@ -14,10 +14,10 @@ mysql/mysql-5.6.42.tar.gz:
   size: 328979165
   object_id: 13d28e57-cd48-4a81-74f3-fbcb1981f7ee
   sha: 2a401d2e383c1bd0bdc86ffe5a212391de1f18ed
-mysql/mysql-5.7.20.tar.gz:
-  size: 51725558
-  object_id: bc2091eb-1157-4b8a-46ea-f641ccb11be7
-  sha: 567061d786d89fe65cb6fb70d0e70e36278e9ef2
+mysql/mysql-5.7.24.tar.gz:
+  size: 644930593
+  object_id: 1838759f-aa6a-4912-71c5-539a0f99c0d2
+  sha: a0a8e7a6f9bcfb544ddec19026f9f27c56c8bf95
 postgres/postgresql-9.4.11.tar.gz:
   size: 23380382
   object_id: 9421c4cd-7954-42ab-6bbd-34217696d34b
