@@ -10,10 +10,10 @@ mysql/mysql-5.5.62.tar.gz:
   size: 198993245
   object_id: f3383dcd-531e-4416-791b-6394e562d25a
   sha: 9492091e3f404f1dffdbcdb3bcc41a7fc5d4d8de
-mysql/mysql-5.6.38.tar.gz:
-  size: 32197625
-  object_id: d980d7c9-21a0-4f66-6b1b-0266f077aef9
-  sha: bbd89dc891799b84ca0228e996bda1ec5365b38a
+mysql/mysql-5.6.42.tar.gz:
+  size: 328979165
+  object_id: 13d28e57-cd48-4a81-74f3-fbcb1981f7ee
+  sha: 2a401d2e383c1bd0bdc86ffe5a212391de1f18ed
 mysql/mysql-5.7.20.tar.gz:
   size: 51725558
   object_id: bc2091eb-1157-4b8a-46ea-f641ccb11be7
