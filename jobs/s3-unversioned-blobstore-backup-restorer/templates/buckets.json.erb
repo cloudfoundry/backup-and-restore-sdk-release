@@ -11,6 +11,10 @@
       if bucket['name'].eql? bucket['backup']['name']
         raise "Invalid bucket configuration for "+name+", name and backup.name must be distinct"
       end
+
+      if bucket['aws_access_key_id'] && bucket['aws_secret_access_key'] && bucket['use_iam_profile']
+        raise "Invalid configuration, both the access key ID and the secret key pair and an IAM profile were used for bucket " + name
+      end
     end
 
     backup_bucket_names.each do |name|

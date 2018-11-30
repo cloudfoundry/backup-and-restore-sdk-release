@@ -115,6 +115,30 @@ describe 's3-unversioned-blobstore-backup-restorer job' do
          expect { buckets_template.render(manifest) }.to(raise_error(RuntimeError, 'Invalid bucket configuration, my_packages_bucket is used as a source bucket and a backup bucket'))
         end
       end
+
+      context 'both secrets keys and an IAM profile are configured' do
+        it 'errors' do
+          manifest = {
+            "enabled" => true,
+            "buckets" => {
+              "droplets"  => {
+                "name" => "the_droplets_bucket",
+                "region" => "eu-west-1",
+                "aws_access_key_id" => "AWS_ACCESS_KEY_ID",
+                "aws_secret_access_key" => "AWS_SECRET_ACCESS_KEY",
+                "endpoint" => "endpoint_to_s3_compatible_blobstore",
+                "use_iam_profile" => true,
+                "backup" => {
+                  "name" => "the_droplets_backup_bucket",
+                  "region" => "eu-west-2",
+                }
+              },
+            }
+          }
+
+         expect { buckets_template.render(manifest) }.to(raise_error(RuntimeError, 'Invalid configuration, both the access key ID and the secret key pair and an IAM profile were used for bucket droplets'))
+        end
+      end
     end
   end
 
