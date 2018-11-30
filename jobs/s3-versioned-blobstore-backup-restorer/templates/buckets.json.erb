@@ -1,1 +1,15 @@
-<%= p('buckets').to_json %>
+<%=
+  def validate_buckets(buckets)
+    buckets.each do |name, bucket|
+      if bucket['aws_access_key_id'] && bucket['aws_secret_access_key'] && bucket['use_iam_profile']
+        raise "Invalid configuration, both the access key ID and the secret key pair and an IAM profile were used for bucket " + name
+      end
+    end
+  end
+
+  buckets = p('buckets')
+
+  validate_buckets(buckets)
+
+  buckets.to_json
+%>
