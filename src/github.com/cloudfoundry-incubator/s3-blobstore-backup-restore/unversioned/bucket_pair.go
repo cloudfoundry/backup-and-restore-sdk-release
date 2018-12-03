@@ -7,7 +7,7 @@ import (
 
 	"errors"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/execution"
+	"github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
 )
 
@@ -23,14 +23,14 @@ type BucketPair interface {
 type S3BucketPair struct {
 	liveBucket        s3.UnversionedBucket
 	backupBucket      s3.UnversionedBucket
-	executionStrategy execution.Strategy
+	executionStrategy executor.ParallelExecutor
 }
 
-func NewS3BucketPair(liveBucket, backupBucket s3.UnversionedBucket, executionStrategy execution.Strategy) S3BucketPair {
+func NewS3BucketPair(liveBucket, backupBucket s3.UnversionedBucket) S3BucketPair {
 	return S3BucketPair{
 		liveBucket:        liveBucket,
 		backupBucket:      backupBucket,
-		executionStrategy: executionStrategy,
+		executionStrategy: executor.NewParallelExecutor(),
 	}
 }
 
@@ -40,10 +40,14 @@ func (p S3BucketPair) Backup(backupLocation string) (BackupBucketAddress, error)
 		return BackupBucketAddress{}, err
 	}
 
-	errs := p.executionStrategy.Run(files, func(file string) error {
-		return p.backupBucket.CopyObject(file, "", backupLocation, p.liveBucket.Name(), p.liveBucket.RegionName())
-	})
+	var executables []executor.Executable
+	for _, file := range files {
+		executables = append(executables, ExecutableBackup{file: file, backupAction: func(file string) error {
+			return p.backupBucket.CopyObject(file, "", backupLocation, p.liveBucket.Name(), p.liveBucket.RegionName())
+		}})
+	}
 
+	errs := p.executionStrategy.Run([][]executor.Executable{executables})
 	if len(errs) != 0 {
 		return BackupBucketAddress{}, formatErrors(
 			fmt.Sprintf("failed to backup bucket %s", p.liveBucket.Name()),
@@ -59,20 +63,33 @@ func (p S3BucketPair) Backup(backupLocation string) (BackupBucketAddress, error)
 	}, nil
 }
 
+type ExecutableBackup struct {
+	file         string
+	backupAction func(string) error
+}
+
+func (e ExecutableBackup) Execute() error {
+	return e.backupAction(e.file)
+}
+
 func (p S3BucketPair) Restore(backupLocation string) error {
-	filesToRestore, err := p.backupBucket.ListFiles(backupLocation)
+	files, err := p.backupBucket.ListFiles(backupLocation)
 	if err != nil {
 		return fmt.Errorf("cannot list files in %s\n %v", p.backupBucket.Name(), err)
 	}
 
-	if len(filesToRestore) == 0 {
+	if len(files) == 0 {
 		return fmt.Errorf("no files found in %s in bucket %s to restore", backupLocation, p.backupBucket.Name())
 	}
 
-	errs := p.executionStrategy.Run(filesToRestore, func(file string) error {
-		return p.liveBucket.CopyObject(file, backupLocation, "", p.backupBucket.Name(), p.backupBucket.RegionName())
-	})
+	var executables []executor.Executable
+	for _, file := range files {
+		executables = append(executables, ExecutableBackup{file: file, backupAction: func(file string) error {
+			return p.liveBucket.CopyObject(file, backupLocation, "", p.backupBucket.Name(), p.backupBucket.RegionName())
+		}})
+	}
 
+	errs := p.executionStrategy.Run([][]executor.Executable{executables})
 	if len(errs) != 0 {
 		return formatErrors(
 			fmt.Sprintf("failed to restore bucket %s", p.liveBucket.Name()),

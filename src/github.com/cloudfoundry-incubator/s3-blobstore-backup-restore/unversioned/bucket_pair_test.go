@@ -6,7 +6,6 @@ import (
 
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/execution"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -23,7 +22,7 @@ var _ = Describe("BucketPair", func() {
 	BeforeEach(func() {
 		liveBucket = new(fakes.FakeUnversionedBucket)
 		backupBucket = new(fakes.FakeUnversionedBucket)
-		bucketPair = unversioned.NewS3BucketPair(liveBucket, backupBucket, execution.NewParallelStrategy())
+		bucketPair = unversioned.NewS3BucketPair(liveBucket, backupBucket)
 
 		liveBucket.NameReturns("liveBucket")
 		liveBucket.RegionNameReturns("liveBucketRegion")
@@ -208,13 +207,13 @@ var _ = Describe("BucketPair", func() {
 	Describe("CheckValidity", func() {
 		Context("when the live bucket and the backup bucket are not the same", func() {
 			It("returns nil", func() {
-				Expect(unversioned.NewS3BucketPair(liveBucket, backupBucket, nil).CheckValidity()).To(BeNil())
+				Expect(unversioned.NewS3BucketPair(liveBucket, backupBucket).CheckValidity()).To(BeNil())
 			})
 		})
 
 		Context("when the live bucket and the backup bucket are the same", func() {
 			It("returns an error", func() {
-				Expect(unversioned.NewS3BucketPair(liveBucket, liveBucket, nil).CheckValidity()).To(MatchError("live bucket and backup bucket cannot be the same"))
+				Expect(unversioned.NewS3BucketPair(liveBucket, liveBucket).CheckValidity()).To(MatchError("live bucket and backup bucket cannot be the same"))
 			})
 		})
 	})
