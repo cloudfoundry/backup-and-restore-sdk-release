@@ -244,47 +244,29 @@ func (bucket Bucket) copyVersionWithMultipart(sourceBucketName, blobKey, copySou
 	}
 
 	numParts := int64(math.Ceil(float64(blobSize) / float64(partSize)))
-	partUploadOutputs := make(chan partUploadOutput, numParts)
-
-	for i := int64(1); i <= numParts; i++ {
-		go func(partNumber int64) {
-			partStart := (partNumber - 1) * partSize
-			partEnd := int64(math.Min(float64(partNumber*partSize-1), float64(blobSize-1)))
-
-			copyPartOutput, err := bucket.s3Client.UploadPartCopy(&s3.UploadPartCopyInput{
-				Bucket:          aws.String(bucket.Name()),
-				Key:             aws.String(destinationKey),
-				UploadId:        aws.String(*createOutput.UploadId),
-				CopySource:      aws.String(copySourceString),
-				CopySourceRange: aws.String(fmt.Sprintf("bytes=%d-%d", partStart, partEnd)),
-				PartNumber:      aws.Int64(partNumber),
-			})
-
-			if err != nil {
-				partUploadOutputs <- partUploadOutput{
-					&s3.CompletedPart{},
-					fmt.Errorf("failed to upload part with range: %d-%d: %s", partStart, partEnd, err),
-				}
-			} else {
-				partUploadOutputs <- partUploadOutput{
-					&s3.CompletedPart{
-						PartNumber: aws.Int64(partNumber),
-						ETag:       copyPartOutput.CopyPartResult.ETag,
-					},
-					nil,
-				}
-			}
-		}(i)
-	}
-
 	var parts []*s3.CompletedPart
 	var errors []error
-	for i := int64(0); i < numParts; i++ {
-		partUploadOutput := <-partUploadOutputs
-		if partUploadOutput.err != nil {
-			errors = append(errors, partUploadOutput.err)
+
+	for partNumber := int64(1); partNumber <= numParts; partNumber++ {
+		partStart := (partNumber - 1) * partSize
+		partEnd := int64(math.Min(float64(partNumber*partSize-1), float64(blobSize-1)))
+
+		copyPartOutput, err := bucket.s3Client.UploadPartCopy(&s3.UploadPartCopyInput{
+			Bucket:          aws.String(bucket.Name()),
+			Key:             aws.String(destinationKey),
+			UploadId:        aws.String(*createOutput.UploadId),
+			CopySource:      aws.String(copySourceString),
+			CopySourceRange: aws.String(fmt.Sprintf("bytes=%d-%d", partStart, partEnd)),
+			PartNumber:      aws.Int64(partNumber),
+		})
+
+		if err != nil {
+			errors = append(errors, fmt.Errorf("failed to upload part with range: %d-%d: %s", partStart, partEnd, err))
 		} else {
-			parts = append(parts, partUploadOutput.completedPart)
+			parts = append(parts, &s3.CompletedPart{
+				PartNumber: aws.Int64(partNumber),
+				ETag:       copyPartOutput.CopyPartResult.ETag,
+			})
 		}
 	}
 
