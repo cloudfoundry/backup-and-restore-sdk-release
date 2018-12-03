@@ -1,8 +1,6 @@
 package s3_test
 
 import (
-	"os"
-
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -14,8 +12,8 @@ var _ = Describe("UnversionedBucket", func() {
 			"eu-west-1",
 			"us-west-1",
 			"",
-			os.Getenv("TEST_AWS_ACCESS_KEY_ID"),
-			os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
+			TestAWSAccessKeyID,
+			TestAWSSecretAccessKey,
 		)
 	})
 
@@ -24,8 +22,8 @@ var _ = Describe("UnversionedBucket", func() {
 			"eu-west-1",
 			"us-west-1",
 			"https://object.ecstestdrive.com",
-			os.Getenv("TEST_ECS_ACCESS_KEY_ID"),
-			os.Getenv("TEST_ECS_SECRET_ACCESS_KEY"),
+			TestECSAccessKeyID,
+			TestECSSecretAccessKey,
 		)
 	})
 
@@ -41,8 +39,8 @@ var _ = Describe("UnversionedBucket", func() {
 		BeforeEach(func() {
 			endpoint = ""
 			creds = s3.AccessKey{
-				Id:     os.Getenv("TEST_AWS_ACCESS_KEY_ID"),
-				Secret: os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
+				Id:     TestAWSAccessKeyID,
+				Secret: TestAWSSecretAccessKey,
 			}
 			region = "eu-west-1"
 			preExistingBigFileBucketName = "large-blob-test-bucket-unversioned"

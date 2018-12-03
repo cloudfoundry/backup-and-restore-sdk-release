@@ -1,8 +1,6 @@
 package s3_test
 
 import (
-	"os"
-
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -24,8 +22,8 @@ var _ = Describe("Bucket", func() {
 				endpoint = ""
 				unversionedBucketRegion = "eu-west-1"
 				creds = s3.AccessKey{
-					Id:     os.Getenv("TEST_AWS_ACCESS_KEY_ID"),
-					Secret: os.Getenv("TEST_AWS_SECRET_ACCESS_KEY"),
+					Id:     TestAWSAccessKeyID,
+					Secret: TestAWSSecretAccessKey,
 				}
 
 				unversionedBucketName = setUpUnversionedBucket(unversionedBucketRegion, endpoint, creds)
