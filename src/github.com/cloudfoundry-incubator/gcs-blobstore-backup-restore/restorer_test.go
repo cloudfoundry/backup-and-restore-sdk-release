@@ -71,7 +71,7 @@ var _ = Describe("Restorer", func() {
 		Context("when a copy fails", func() {
 			BeforeEach(func() {
 				firstBackupBucket.CopyBlobsBetweenBucketsReturns(fmt.Errorf("foo"))
-				secondBackupBucket.CopyBlobsBetweenBucketsReturns(fmt.Errorf("bar"))
+				secondBackupBucket.CopyBlobsBetweenBucketsReturns(fmt.Errorf("foo"))
 			})
 
 			It("returns an error on the first failure", func() {
