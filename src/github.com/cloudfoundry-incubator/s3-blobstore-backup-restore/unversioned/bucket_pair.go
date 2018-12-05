@@ -27,10 +27,12 @@ type S3BucketPair struct {
 }
 
 func NewS3BucketPair(liveBucket, backupBucket s3.UnversionedBucket) S3BucketPair {
+	exe := executor.NewParallelExecutor()
+	exe.SetMaxInFlight(200)
 	return S3BucketPair{
 		liveBucket:        liveBucket,
 		backupBucket:      backupBucket,
-		executionStrategy: executor.NewParallelExecutor(),
+		executionStrategy: exe,
 	}
 }
 

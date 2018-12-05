@@ -74,12 +74,12 @@
   version = "v1.15.2"
 
 [[projects]]
-  digest = "1:e14795cb124175ff706a5f0348e890fc48580d339eabf0137a09b84d4ae41a63"
+  branch = "master"
+  digest = "1:f3c53210c5aca4c71f51e7332c33bc5bdb0854903750b9945496530793d6cf11"
   name = "github.com/cloudfoundry-incubator/bosh-backup-and-restore"
   packages = ["executor"]
   pruneopts = "UT"
-  revision = "343a685f0e8e6414a6c582c03ff1511498d88a9b"
-  version = "v1.3.1"
+  revision = "a66673f8a21fdbfffa71d351b7f8bc2e69ea9988"
 
 [[projects]]
   digest = "1:fe8a03a8222d5b913f256972933d26d24ad7c8286692a42943bc01633cc8fce3"
