@@ -356,25 +356,21 @@ var _ = Describe("Bucket", func() {
 		})
 
 		Context("when deleting a file that doesn't exist", func() {
-
 			BeforeEach(func() {
 				bucketName = CreateBucketWithTimestampedName("src")
 				UploadFile(bucketName, fileName1, "file-content")
 
 				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
 				Expect(err).NotTo(HaveOccurred())
-
 			})
 
 			It("errors", func() {
-
 				err := bucket.DeleteBlob(fileName1 + "idontexist")
 				Expect(err).To(HaveOccurred())
 			})
 		})
 
 		Context("when deleting existing files", func() {
-
 			BeforeEach(func() {
 				bucketName = CreateBucketWithTimestampedName("src")
 				UploadFileWithDir(bucketName, dirName, fileName1, "file-content")
@@ -382,11 +378,9 @@ var _ = Describe("Bucket", func() {
 
 				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
 				Expect(err).NotTo(HaveOccurred())
-
 			})
 
 			It("deletes all files and the folder", func() {
-
 				err := bucket.DeleteBlob(fmt.Sprintf("%s/%s", dirName, fileName1))
 				Expect(err).NotTo(HaveOccurred())
 
@@ -396,6 +390,49 @@ var _ = Describe("Bucket", func() {
 				blobs, err := bucket.ListBlobs()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(BeNil())
+			})
+		})
+	})
+
+	Describe("CreateBackupCompleteBlob", func() {
+		var (
+			bucketName string
+			bucket     gcs.Bucket
+			err        error
+		)
+
+		BeforeEach(func() {
+			bucketName = CreateBucketWithTimestampedName("backup-complete")
+
+			bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			DeleteBucket(bucketName)
+		})
+
+		Context("when creating the blob succeeds", func() {
+			It("creates the blob correctly", func() {
+				err := bucket.CreateBackupCompleteBlob("test-create-backup-complete")
+
+				Expect(err).NotTo(HaveOccurred())
+				blobs, err := bucket.ListBlobs()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(blobs).To(ConsistOf(
+					gcs.Blob{Name: "test-create-backup-complete/backup_complete"},
+				))
+			})
+		})
+
+		Context("when creating the blob fails", func() {
+			It("returns the correct error", func() {
+				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), "iamnotabucket")
+				Expect(err).NotTo(HaveOccurred())
+
+				err := bucket.CreateBackupCompleteBlob("test-create-backup-complete")
+
+				Expect(err).To(MatchError(ContainSubstring("failed creating backup complete blob")))
 			})
 		})
 	})

@@ -68,6 +68,7 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 					Expect(backupBucketContent).To(ContainSubstring(blob1))
 					Expect(backupBucketContent).To(ContainSubstring(blob2))
 					Expect(backupBucketContent).To(ContainSubstring(blob3))
+					Expect(backupBucketContent).To(ContainSubstring("backup_complete"))
 				})
 
 				By("generating a complete backup artifact", func() {

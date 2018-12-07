@@ -23,6 +23,7 @@ type Bucket interface {
 	CopyBlobBetweenBuckets(Bucket, string, string) error
 	CopyBlobsBetweenBuckets(Bucket, string) error
 	DeleteBlob(string) error
+	CreateBackupCompleteBlob(prefix string) error
 }
 
 type BucketPair struct {
@@ -184,4 +185,20 @@ func (b SDKBucket) CopyBlobsBetweenBuckets(destinationBucket Bucket, sourcePath 
 
 func (b SDKBucket) DeleteBlob(blob string) error {
 	return b.client.Bucket(b.name).Object(blob).Delete(b.ctx)
+}
+
+func (b SDKBucket) CreateBackupCompleteBlob(prefix string) error {
+	writer := b.client.Bucket(b.name).Object(fmt.Sprintf("%s/backup_complete", prefix)).NewWriter(b.ctx)
+
+	_, err := writer.Write([]byte{})
+	if err != nil {
+		return fmt.Errorf("failed creating backup complete blob: %s", err)
+	}
+
+	err = writer.Close()
+	if err != nil {
+		return fmt.Errorf("failed creating backup complete blob: %s", err)
+	}
+
+	return nil
 }

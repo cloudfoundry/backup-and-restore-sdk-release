@@ -64,15 +64,22 @@ func (b *Backuper) CopyBlobsWithinBackupBucket(backupBucketAddresses map[string]
 			return fmt.Errorf("cannot find commonBlobs for bucket id: %s", bucketId)
 		}
 
+		backupBucket := b.buckets[bucketId].BackupBucket
+
 		for _, blob := range commonBlobList {
 			nameParts := strings.Split(blob.Name, "/")
 			destinationBlobName := fmt.Sprintf("%s/%s", backupBucketAddress.Path, nameParts[len(nameParts)-1])
-			err := b.buckets[bucketId].BackupBucket.CopyBlobWithinBucket(blob.Name, destinationBlobName)
+			err := backupBucket.CopyBlobWithinBucket(blob.Name, destinationBlobName)
 			if err != nil {
 				return err
 			}
 		}
 
+		err := backupBucket.CreateBackupCompleteBlob(backupBucketAddress.Path)
+		if err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
