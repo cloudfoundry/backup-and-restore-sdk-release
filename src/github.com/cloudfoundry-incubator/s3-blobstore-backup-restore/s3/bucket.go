@@ -179,7 +179,7 @@ func (bucket Bucket) copyVersion(blobKey, versionId, originPath, destinationPath
 	copySourceString := fmt.Sprintf("/%s/%s/%s?versionId=%s", originBucketName, originPath, blobKey, versionId)
 	copySourceString = strings.Replace(copySourceString, "//", "/", -1)
 
-	if sizeInMbs(blobSize) <= 100 {
+	if sizeInMbs(blobSize) <= 1024 {
 		return bucket.copyVersionWithSingleRequest(originBucketName, blobKey, copySourceString, destinationPath)
 	} else {
 		return bucket.copyVersionWithMultipart(originBucketName, blobKey, copySourceString, destinationPath, blobSize)
