@@ -27,58 +27,74 @@ var _ = Describe("UnversionedBucket", func() {
 		)
 	})
 
-	Describe("CopyObject with a big file on AWS", func() {
-		var endpoint string
-		var creds s3.AccessKey
-		var preExistingBigFileBucketName string
-		var destinationBucketName string
-		var region string
-		var bucketObjectUnderTest s3.UnversionedBucket
-		var err error
+	Describe("AWS S3 large file test", func() {
+		RunLargeFileTest(
+			"eu-west-1", "",
+			TestAWSAccessKeyID,
+			TestAWSSecretAccessKey,
+			"large-blob-test-bucket-unversioned")
+	})
 
-		BeforeEach(func() {
-			endpoint = ""
-			creds = s3.AccessKey{
-				Id:     TestAWSAccessKeyID,
-				Secret: TestAWSSecretAccessKey,
-			}
-			region = "eu-west-1"
-			preExistingBigFileBucketName = "large-blob-test-bucket-unversioned"
-			destinationBucketName = setUpUnversionedBucket("eu-west-1", endpoint, creds)
-
-			bucketObjectUnderTest, err = s3.NewBucket(destinationBucketName, region, endpoint, creds, false)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		AfterEach(func() {
-			tearDownBucket(destinationBucketName, endpoint, creds)
-		})
-
-		JustBeforeEach(func() {
-			err = bucketObjectUnderTest.CopyObject(
-				"big_file",
-				"",
-				"path/to/file",
-				preExistingBigFileBucketName,
-				region,
-			)
-
-		})
-
-		It("works", func() {
-			By("succeeding")
-			Expect(err).NotTo(HaveOccurred())
-
-			By("copying the large file")
-			Expect(listFiles(destinationBucketName, endpoint, creds)).To(ConsistOf("path/to/file/big_file"))
-
-			By("not corrupting the large file")
-			Expect(
-				shasum(downloadFileToTmp(destinationBucketName, endpoint, "path/to/file/big_file", creds))).To(
-				Equal("188f500de28479d67e7375566750472e58e4cec1"))
-		})
+	Describe("ECS S3-compatible buckets large file test", func() {
+		RunLargeFileTest(
+			"eu-west-1",
+			"https://object.ecstestdrive.com",
+			TestECSAccessKeyID,
+			TestECSSecretAccessKey,
+			"sdk-unversioned-big-file-unit-test",
+		)
 	})
 })
+
+func RunLargeFileTest(region, endpoint, accessKey, secretKey, preExistingBigFileBucketName string) {
+
+	var (
+		creds                 s3.AccessKey
+		bucketObjectUnderTest s3.UnversionedBucket
+		err                   error
+		destinationBucketName string
+	)
+
+	BeforeEach(func() {
+		creds = s3.AccessKey{
+			Id:     accessKey,
+			Secret: secretKey,
+		}
+
+		destinationBucketName = setUpUnversionedBucket("eu-west-1", endpoint, creds)
+
+		bucketObjectUnderTest, err = s3.NewBucket(destinationBucketName, region, endpoint, creds, false)
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	AfterEach(func() {
+		tearDownBucket(destinationBucketName, endpoint, creds)
+	})
+
+	JustBeforeEach(func() {
+		err = bucketObjectUnderTest.CopyObject(
+			"big_file",
+			"",
+			"path/to/file",
+			preExistingBigFileBucketName,
+			region,
+		)
+
+	})
+
+	It("works", func() {
+		By("succeeding")
+		Expect(err).NotTo(HaveOccurred())
+
+		By("copying the large file")
+		Expect(listFiles(destinationBucketName, endpoint, creds)).To(ConsistOf("path/to/file/big_file"))
+
+		By("not corrupting the large file")
+		Expect(
+			shasum(downloadFileToTmp(destinationBucketName, endpoint, "path/to/file/big_file", creds))).To(
+			Equal("91d50642dd930e9542c39d36f0516d45f4e1af0d"))
+	})
+}
 
 func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, secretKey string) {
 	var (
