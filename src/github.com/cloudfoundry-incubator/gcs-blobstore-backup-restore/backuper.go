@@ -16,6 +16,20 @@ func NewBackuper(buckets map[string]BucketPair) Backuper {
 	}
 }
 
+func (b *Backuper) Backup() (map[string]BackupBucketDirectory, error) {
+	backupBucketDirectories, commonBlobs, err := b.CreateLiveBucketSnapshot()
+	if err != nil {
+		return nil, err
+	}
+
+	err = b.CopyBlobsWithinBackupBucket(backupBucketDirectories, commonBlobs)
+	if err != nil {
+		return nil, err
+	}
+
+	return backupBucketDirectories, nil
+}
+
 func (b *Backuper) CreateLiveBucketSnapshot() (map[string]BackupBucketDirectory, map[string][]Blob, error) {
 	timestamp := time.Now().Format("2006_01_02_15_04_05")
 	backupBucketDirectories := make(map[string]BackupBucketDirectory)
