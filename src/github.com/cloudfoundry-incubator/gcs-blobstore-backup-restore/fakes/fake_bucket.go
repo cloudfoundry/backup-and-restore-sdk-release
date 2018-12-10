@@ -17,15 +17,28 @@ type FakeBucket struct {
 	nameReturnsOnCall map[int]struct {
 		result1 string
 	}
-	ListBlobsStub        func() ([]gcs.Blob, error)
+	ListBlobsStub        func(prefix string) ([]gcs.Blob, error)
 	listBlobsMutex       sync.RWMutex
-	listBlobsArgsForCall []struct{}
-	listBlobsReturns     struct {
+	listBlobsArgsForCall []struct {
+		prefix string
+	}
+	listBlobsReturns struct {
 		result1 []gcs.Blob
 		result2 error
 	}
 	listBlobsReturnsOnCall map[int]struct {
 		result1 []gcs.Blob
+		result2 error
+	}
+	ListDirectoriesStub        func() ([]string, error)
+	listDirectoriesMutex       sync.RWMutex
+	listDirectoriesArgsForCall []struct{}
+	listDirectoriesReturns     struct {
+		result1 []string
+		result2 error
+	}
+	listDirectoriesReturnsOnCall map[int]struct {
+		result1 []string
 		result2 error
 	}
 	LastBackupBlobsStub        func() (map[string]gcs.Blob, error)
@@ -76,10 +89,10 @@ type FakeBucket struct {
 	copyBlobsBetweenBucketsReturnsOnCall map[int]struct {
 		result1 error
 	}
-	DeleteBlobStub        func(string) error
+	DeleteBlobStub        func(name string) error
 	deleteBlobMutex       sync.RWMutex
 	deleteBlobArgsForCall []struct {
-		arg1 string
+		name string
 	}
 	deleteBlobReturns struct {
 		result1 error
@@ -97,6 +110,19 @@ type FakeBucket struct {
 	}
 	createBackupCompleteBlobReturnsOnCall map[int]struct {
 		result1 error
+	}
+	IsCompleteBackupStub        func(prefix string) (bool, error)
+	isCompleteBackupMutex       sync.RWMutex
+	isCompleteBackupArgsForCall []struct {
+		prefix string
+	}
+	isCompleteBackupReturns struct {
+		result1 bool
+		result2 error
+	}
+	isCompleteBackupReturnsOnCall map[int]struct {
+		result1 bool
+		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -142,14 +168,16 @@ func (fake *FakeBucket) NameReturnsOnCall(i int, result1 string) {
 	}{result1}
 }
 
-func (fake *FakeBucket) ListBlobs() ([]gcs.Blob, error) {
+func (fake *FakeBucket) ListBlobs(prefix string) ([]gcs.Blob, error) {
 	fake.listBlobsMutex.Lock()
 	ret, specificReturn := fake.listBlobsReturnsOnCall[len(fake.listBlobsArgsForCall)]
-	fake.listBlobsArgsForCall = append(fake.listBlobsArgsForCall, struct{}{})
-	fake.recordInvocation("ListBlobs", []interface{}{})
+	fake.listBlobsArgsForCall = append(fake.listBlobsArgsForCall, struct {
+		prefix string
+	}{prefix})
+	fake.recordInvocation("ListBlobs", []interface{}{prefix})
 	fake.listBlobsMutex.Unlock()
 	if fake.ListBlobsStub != nil {
-		return fake.ListBlobsStub()
+		return fake.ListBlobsStub(prefix)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -161,6 +189,12 @@ func (fake *FakeBucket) ListBlobsCallCount() int {
 	fake.listBlobsMutex.RLock()
 	defer fake.listBlobsMutex.RUnlock()
 	return len(fake.listBlobsArgsForCall)
+}
+
+func (fake *FakeBucket) ListBlobsArgsForCall(i int) string {
+	fake.listBlobsMutex.RLock()
+	defer fake.listBlobsMutex.RUnlock()
+	return fake.listBlobsArgsForCall[i].prefix
 }
 
 func (fake *FakeBucket) ListBlobsReturns(result1 []gcs.Blob, result2 error) {
@@ -181,6 +215,49 @@ func (fake *FakeBucket) ListBlobsReturnsOnCall(i int, result1 []gcs.Blob, result
 	}
 	fake.listBlobsReturnsOnCall[i] = struct {
 		result1 []gcs.Blob
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeBucket) ListDirectories() ([]string, error) {
+	fake.listDirectoriesMutex.Lock()
+	ret, specificReturn := fake.listDirectoriesReturnsOnCall[len(fake.listDirectoriesArgsForCall)]
+	fake.listDirectoriesArgsForCall = append(fake.listDirectoriesArgsForCall, struct{}{})
+	fake.recordInvocation("ListDirectories", []interface{}{})
+	fake.listDirectoriesMutex.Unlock()
+	if fake.ListDirectoriesStub != nil {
+		return fake.ListDirectoriesStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.listDirectoriesReturns.result1, fake.listDirectoriesReturns.result2
+}
+
+func (fake *FakeBucket) ListDirectoriesCallCount() int {
+	fake.listDirectoriesMutex.RLock()
+	defer fake.listDirectoriesMutex.RUnlock()
+	return len(fake.listDirectoriesArgsForCall)
+}
+
+func (fake *FakeBucket) ListDirectoriesReturns(result1 []string, result2 error) {
+	fake.ListDirectoriesStub = nil
+	fake.listDirectoriesReturns = struct {
+		result1 []string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeBucket) ListDirectoriesReturnsOnCall(i int, result1 []string, result2 error) {
+	fake.ListDirectoriesStub = nil
+	if fake.listDirectoriesReturnsOnCall == nil {
+		fake.listDirectoriesReturnsOnCall = make(map[int]struct {
+			result1 []string
+			result2 error
+		})
+	}
+	fake.listDirectoriesReturnsOnCall[i] = struct {
+		result1 []string
 		result2 error
 	}{result1, result2}
 }
@@ -376,16 +453,16 @@ func (fake *FakeBucket) CopyBlobsBetweenBucketsReturnsOnCall(i int, result1 erro
 	}{result1}
 }
 
-func (fake *FakeBucket) DeleteBlob(arg1 string) error {
+func (fake *FakeBucket) DeleteBlob(name string) error {
 	fake.deleteBlobMutex.Lock()
 	ret, specificReturn := fake.deleteBlobReturnsOnCall[len(fake.deleteBlobArgsForCall)]
 	fake.deleteBlobArgsForCall = append(fake.deleteBlobArgsForCall, struct {
-		arg1 string
-	}{arg1})
-	fake.recordInvocation("DeleteBlob", []interface{}{arg1})
+		name string
+	}{name})
+	fake.recordInvocation("DeleteBlob", []interface{}{name})
 	fake.deleteBlobMutex.Unlock()
 	if fake.DeleteBlobStub != nil {
-		return fake.DeleteBlobStub(arg1)
+		return fake.DeleteBlobStub(name)
 	}
 	if specificReturn {
 		return ret.result1
@@ -402,7 +479,7 @@ func (fake *FakeBucket) DeleteBlobCallCount() int {
 func (fake *FakeBucket) DeleteBlobArgsForCall(i int) string {
 	fake.deleteBlobMutex.RLock()
 	defer fake.deleteBlobMutex.RUnlock()
-	return fake.deleteBlobArgsForCall[i].arg1
+	return fake.deleteBlobArgsForCall[i].name
 }
 
 func (fake *FakeBucket) DeleteBlobReturns(result1 error) {
@@ -472,6 +549,57 @@ func (fake *FakeBucket) CreateBackupCompleteBlobReturnsOnCall(i int, result1 err
 	}{result1}
 }
 
+func (fake *FakeBucket) IsCompleteBackup(prefix string) (bool, error) {
+	fake.isCompleteBackupMutex.Lock()
+	ret, specificReturn := fake.isCompleteBackupReturnsOnCall[len(fake.isCompleteBackupArgsForCall)]
+	fake.isCompleteBackupArgsForCall = append(fake.isCompleteBackupArgsForCall, struct {
+		prefix string
+	}{prefix})
+	fake.recordInvocation("IsCompleteBackup", []interface{}{prefix})
+	fake.isCompleteBackupMutex.Unlock()
+	if fake.IsCompleteBackupStub != nil {
+		return fake.IsCompleteBackupStub(prefix)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.isCompleteBackupReturns.result1, fake.isCompleteBackupReturns.result2
+}
+
+func (fake *FakeBucket) IsCompleteBackupCallCount() int {
+	fake.isCompleteBackupMutex.RLock()
+	defer fake.isCompleteBackupMutex.RUnlock()
+	return len(fake.isCompleteBackupArgsForCall)
+}
+
+func (fake *FakeBucket) IsCompleteBackupArgsForCall(i int) string {
+	fake.isCompleteBackupMutex.RLock()
+	defer fake.isCompleteBackupMutex.RUnlock()
+	return fake.isCompleteBackupArgsForCall[i].prefix
+}
+
+func (fake *FakeBucket) IsCompleteBackupReturns(result1 bool, result2 error) {
+	fake.IsCompleteBackupStub = nil
+	fake.isCompleteBackupReturns = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeBucket) IsCompleteBackupReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.IsCompleteBackupStub = nil
+	if fake.isCompleteBackupReturnsOnCall == nil {
+		fake.isCompleteBackupReturnsOnCall = make(map[int]struct {
+			result1 bool
+			result2 error
+		})
+	}
+	fake.isCompleteBackupReturnsOnCall[i] = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -479,6 +607,8 @@ func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	defer fake.nameMutex.RUnlock()
 	fake.listBlobsMutex.RLock()
 	defer fake.listBlobsMutex.RUnlock()
+	fake.listDirectoriesMutex.RLock()
+	defer fake.listDirectoriesMutex.RUnlock()
 	fake.lastBackupBlobsMutex.RLock()
 	defer fake.lastBackupBlobsMutex.RUnlock()
 	fake.copyBlobWithinBucketMutex.RLock()
@@ -491,6 +621,8 @@ func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	defer fake.deleteBlobMutex.RUnlock()
 	fake.createBackupCompleteBlobMutex.RLock()
 	defer fake.createBackupCompleteBlobMutex.RUnlock()
+	fake.isCompleteBackupMutex.RLock()
+	defer fake.isCompleteBackupMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

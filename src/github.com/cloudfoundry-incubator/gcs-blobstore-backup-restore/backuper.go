@@ -50,7 +50,7 @@ func (b *Backuper) CreateLiveBucketSnapshot() (map[string]BackupBucketDirectory,
 			return nil, nil, err
 		}
 
-		blobs, err := liveBucket.ListBlobs()
+		blobs, err := liveBucket.ListBlobs("")
 		if err != nil {
 			return nil, nil, err
 		}

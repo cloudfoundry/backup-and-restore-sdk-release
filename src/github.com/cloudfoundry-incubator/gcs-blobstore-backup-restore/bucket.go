@@ -17,13 +17,15 @@ const readWriteScope = "https://www.googleapis.com/auth/devstorage.read_write"
 //go:generate counterfeiter -o fakes/fake_bucket.go . Bucket
 type Bucket interface {
 	Name() string
-	ListBlobs() ([]Blob, error)
+	ListBlobs(prefix string) ([]Blob, error)
+	ListDirectories() ([]string, error)
 	LastBackupBlobs() (map[string]Blob, error)
 	CopyBlobWithinBucket(string, string) error
 	CopyBlobBetweenBuckets(Bucket, string, string) error
 	CopyBlobsBetweenBuckets(Bucket, string) error
-	DeleteBlob(string) error
+	DeleteBlob(name string) error
 	CreateBackupCompleteBlob(prefix string) error
+	IsCompleteBackup(prefix string) (bool, error)
 }
 
 type BucketPair struct {
@@ -72,6 +74,14 @@ type SDKBucket struct {
 	client *storage.Client
 }
 
+func (b SDKBucket) IsCompleteBackup(prefix string) (bool, error) {
+	panic("implement me")
+}
+
+func (b SDKBucket) ListDirectories() ([]string, error) {
+	panic("implement me")
+}
+
 func NewSDKBucket(serviceAccountKeyJson string, name string) (SDKBucket, error) {
 	ctx := context.Background()
 
@@ -94,7 +104,7 @@ func (b SDKBucket) Name() string {
 	return b.name
 }
 
-func (b SDKBucket) ListBlobs() ([]Blob, error) {
+func (b SDKBucket) ListBlobs(_ string) ([]Blob, error) {
 	var blobs []Blob
 
 	objectsIterator := b.handle.Objects(b.ctx, nil)
@@ -118,7 +128,7 @@ func (b SDKBucket) LastBackupBlobs() (map[string]Blob, error) {
 	var lastBackupBlobs []Blob
 	lastBackupBlobsMap := make(map[string]Blob)
 
-	allBackupBlobs, err := b.ListBlobs()
+	allBackupBlobs, err := b.ListBlobs("")
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +177,7 @@ func (b SDKBucket) CopyBlobsBetweenBuckets(destinationBucket Bucket, sourcePath 
 		return errors.New("destination bucket does not exist")
 	}
 
-	blobs, err := b.ListBlobs()
+	blobs, err := b.ListBlobs("")
 	if err != nil {
 		return err
 	}
