@@ -13,9 +13,10 @@ import (
 
 var _ = Describe("Backuper", func() {
 	Describe("CreateLiveBucketSnapshot", func() {
-		var bucket *fakes.FakeBucket
+		var liveBucket *fakes.FakeBucket
 		var backupBucket *fakes.FakeBucket
 		var backuper gcs.Backuper
+		var artifactFinder *fakes.FakeBackupArtifactFinder
 
 		var blob1, blob2 string
 
@@ -24,17 +25,19 @@ var _ = Describe("Backuper", func() {
 		const bucketId = "bucket-id"
 
 		BeforeEach(func() {
-			bucket = new(fakes.FakeBucket)
-			bucket.NameReturns(LiveBucketName)
+			liveBucket = new(fakes.FakeBucket)
+			liveBucket.NameReturns(LiveBucketName)
 			backupBucket = new(fakes.FakeBucket)
 			backupBucket.NameReturns(BackupBucketName)
+			artifactFinder = new(fakes.FakeBackupArtifactFinder)
 			blob1 = "file_1_a"
 			blob2 = "file_1_b"
 
 			backuper = gcs.NewBackuper(map[string]gcs.BucketPair{
 				bucketId: {
-					Bucket:       bucket,
+					LiveBucket:   liveBucket,
 					BackupBucket: backupBucket,
+					BackupFinder: artifactFinder,
 				},
 			})
 		})
@@ -42,12 +45,12 @@ var _ = Describe("Backuper", func() {
 		Context("when there is no previous backup artifact", func() {
 
 			BeforeEach(func() {
-				bucket.ListBlobsReturns([]gcs.Blob{
+				liveBucket.ListBlobsReturns([]gcs.Blob{
 					{Name: blob1},
 					{Name: blob2},
 				}, nil)
 
-				bucket.CopyBlobWithinBucketReturns(nil)
+				liveBucket.CopyBlobWithinBucketReturns(nil)
 			})
 
 			It("returns an empty common blobs map", func() {
@@ -64,7 +67,7 @@ var _ = Describe("Backuper", func() {
 
 		Context("when there is a previous backup artifact", func() {
 			BeforeEach(func() {
-				bucket.ListBlobsReturns([]gcs.Blob{
+				liveBucket.ListBlobsReturns([]gcs.Blob{
 					{Name: blob1},
 					{Name: blob2},
 				}, nil)
@@ -73,13 +76,13 @@ var _ = Describe("Backuper", func() {
 					blob1: {Name: "1970_01_01_00_00_00/droplets/" + blob1},
 				}
 
-				backupBucket.LastBackupBlobsReturns(lastBackupBlobs, nil)
+				artifactFinder.ListBlobsReturns(lastBackupBlobs, nil)
 			})
 
 			It("returns a map of common blobs", func() {
 				_, commonBlobs, err := backuper.CreateLiveBucketSnapshot()
-				Expect(err).NotTo(HaveOccurred())
 
+				Expect(err).NotTo(HaveOccurred())
 				Expect(commonBlobs[bucketId]).To(Equal([]gcs.Blob{{Name: "1970_01_01_00_00_00/droplets/" + blob1}}))
 			})
 
@@ -94,7 +97,7 @@ var _ = Describe("Backuper", func() {
 
 		Context("when listing LastBackupBlobs from backup bucket fails", func() {
 			It("returns an error", func() {
-				backupBucket.LastBackupBlobsReturns(nil, errors.New("i failed to return last backup blobs"))
+				artifactFinder.ListBlobsReturns(nil, errors.New("i failed to return last backup blobs"))
 				_, _, err := backuper.CreateLiveBucketSnapshot()
 				Expect(err).To(MatchError("i failed to return last backup blobs"))
 			})
@@ -102,7 +105,7 @@ var _ = Describe("Backuper", func() {
 
 		Context("when list blobs fails", func() {
 			It("returns an error", func() {
-				bucket.ListBlobsReturns(nil, errors.New("ifailed"))
+				liveBucket.ListBlobsReturns(nil, errors.New("ifailed"))
 				_, _, err := backuper.CreateLiveBucketSnapshot()
 				Expect(err).To(MatchError("ifailed"))
 			})
@@ -110,12 +113,12 @@ var _ = Describe("Backuper", func() {
 
 		Context("when copy blob to backup bucket fails", func() {
 			BeforeEach(func() {
-				bucket.ListBlobsReturns([]gcs.Blob{
+				liveBucket.ListBlobsReturns([]gcs.Blob{
 					{Name: blob1}}, nil)
 			})
 
 			It("returns an error", func() {
-				bucket.CopyBlobBetweenBucketsReturns(errors.New("i failed to copy blob2 to backup bucket"))
+				liveBucket.CopyBlobBetweenBucketsReturns(errors.New("i failed to copy blob2 to backup bucket"))
 				_, _, err := backuper.CreateLiveBucketSnapshot()
 				Expect(err).To(MatchError("i failed to copy blob2 to backup bucket"))
 			})
@@ -141,7 +144,7 @@ var _ = Describe("Backuper", func() {
 
 			backuper = gcs.NewBackuper(map[string]gcs.BucketPair{
 				bucketPairID: {
-					Bucket:       bucket,
+					LiveBucket:   bucket,
 					BackupBucket: backupBucket,
 				},
 			})
@@ -227,7 +230,7 @@ var _ = Describe("Backuper", func() {
 				backupBucket.CreateBackupCompleteBlobReturns(errors.New("fail"))
 				backuper = gcs.NewBackuper(map[string]gcs.BucketPair{
 					bucketPairID: {
-						Bucket:       bucket,
+						LiveBucket:   bucket,
 						BackupBucket: backupBucket,
 					},
 				})

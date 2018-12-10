@@ -29,7 +29,7 @@ func (r Restorer) Restore(backupArtifact map[string]BackupBucketDirectory) error
 
 	for bucketID, backupBucketDirectory := range backupArtifact {
 		err := r.buckets[bucketID].BackupBucket.CopyBlobsBetweenBuckets(
-			r.buckets[bucketID].Bucket,
+			r.buckets[bucketID].LiveBucket,
 			backupBucketDirectory.Path,
 		)
 		if err != nil {

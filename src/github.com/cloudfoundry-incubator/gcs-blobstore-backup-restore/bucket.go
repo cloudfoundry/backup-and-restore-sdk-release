@@ -27,11 +27,12 @@ type Bucket interface {
 }
 
 type BucketPair struct {
-	Bucket       Bucket
+	LiveBucket   Bucket
 	BackupBucket Bucket
+	BackupFinder BackupFinder
 }
 
-func BuildBuckets(gcpServiceAccountKey string, config map[string]Config) (map[string]BucketPair, error) {
+func BuildBucketPairs(gcpServiceAccountKey string, config map[string]Config) (map[string]BucketPair, error) {
 	buckets := map[string]BucketPair{}
 
 	for bucketId, bucketConfig := range config {
@@ -46,8 +47,9 @@ func BuildBuckets(gcpServiceAccountKey string, config map[string]Config) (map[st
 		}
 
 		buckets[bucketId] = BucketPair{
-			Bucket:       bucket,
+			LiveBucket:   bucket,
 			BackupBucket: backupBucket,
+			BackupFinder: NewLastBackupFinder(backupBucket),
 		}
 	}
 

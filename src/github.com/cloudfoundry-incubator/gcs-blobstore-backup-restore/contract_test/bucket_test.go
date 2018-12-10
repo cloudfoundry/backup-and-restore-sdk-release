@@ -9,8 +9,8 @@ import (
 )
 
 var _ = Describe("Bucket", func() {
-	Describe("BuildBuckets", func() {
-		It("builds buckets", func() {
+	Describe("BuildBucketPairs", func() {
+		It("builds bucket pairs", func() {
 			config := map[string]gcs.Config{
 				"droplets": {
 					BucketName:       "droplets-bucket",
@@ -18,12 +18,13 @@ var _ = Describe("Bucket", func() {
 				},
 			}
 
-			buckets, err := gcs.BuildBuckets(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
+			buckets, err := gcs.BuildBucketPairs(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(buckets).To(HaveLen(1))
-			Expect(buckets["droplets"].Bucket.Name()).To(Equal("droplets-bucket"))
+			Expect(buckets["droplets"].LiveBucket.Name()).To(Equal("droplets-bucket"))
 			Expect(buckets["droplets"].BackupBucket.Name()).To(Equal("backup-droplets-bucket"))
+			Expect(buckets["droplets"].BackupFinder).NotTo(BeNil())
 		})
 
 		Context("when providing invalid service account key", func() {
@@ -35,7 +36,7 @@ var _ = Describe("Bucket", func() {
 					},
 				}
 
-				_, err := gcs.BuildBuckets("not-valid-json", config)
+				_, err := gcs.BuildBucketPairs("not-valid-json", config)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -83,9 +84,9 @@ var _ = Describe("Bucket", func() {
 					},
 				}
 
-				bucketPair, err := gcs.BuildBuckets(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
+				bucketPair, err := gcs.BuildBucketPairs(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = bucketPair["droplets"].Bucket.ListBlobs()
+				_, err = bucketPair["droplets"].LiveBucket.ListBlobs()
 				Expect(err).To(MatchError("storage: bucket doesn't exist"))
 			})
 		})

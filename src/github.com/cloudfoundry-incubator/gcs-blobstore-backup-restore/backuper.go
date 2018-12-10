@@ -7,12 +7,12 @@ import (
 )
 
 type Backuper struct {
-	buckets map[string]BucketPair
+	bucketPairs map[string]BucketPair
 }
 
-func NewBackuper(buckets map[string]BucketPair) Backuper {
+func NewBackuper(bucketPairs map[string]BucketPair) Backuper {
 	return Backuper{
-		buckets: buckets,
+		bucketPairs: bucketPairs,
 	}
 }
 
@@ -35,9 +35,9 @@ func (b *Backuper) CreateLiveBucketSnapshot() (map[string]BackupBucketDirectory,
 	backupBucketDirectories := make(map[string]BackupBucketDirectory)
 	allCommonBlobs := make(map[string][]Blob)
 
-	for bucketId, bucketPair := range b.buckets {
+	for bucketId, bucketPair := range b.bucketPairs {
 		var bucketCommonBlobs []Blob
-		bucket := bucketPair.Bucket
+		liveBucket := bucketPair.LiveBucket
 		backupBucket := bucketPair.BackupBucket
 
 		backupBucketDirectories[bucketId] = BackupBucketDirectory{
@@ -45,12 +45,12 @@ func (b *Backuper) CreateLiveBucketSnapshot() (map[string]BackupBucketDirectory,
 			Path:       fmt.Sprintf("%s/%s", timestamp, bucketId),
 		}
 
-		lastBackupBlobs, err := backupBucket.LastBackupBlobs()
+		lastBackupBlobs, err := bucketPair.BackupFinder.ListBlobs()
 		if err != nil {
 			return nil, nil, err
 		}
 
-		blobs, err := bucket.ListBlobs()
+		blobs, err := liveBucket.ListBlobs()
 		if err != nil {
 			return nil, nil, err
 		}
@@ -59,7 +59,7 @@ func (b *Backuper) CreateLiveBucketSnapshot() (map[string]BackupBucketDirectory,
 			if blobFromBackup, ok := lastBackupBlobs[blob.Name]; ok {
 				bucketCommonBlobs = append(bucketCommonBlobs, blobFromBackup)
 			} else {
-				err := bucket.CopyBlobBetweenBuckets(backupBucket, blob.Name, fmt.Sprintf("%s/%s", backupBucketDirectories[bucketId].Path, blob.Name))
+				err := liveBucket.CopyBlobBetweenBuckets(backupBucket, blob.Name, fmt.Sprintf("%s/%s", backupBucketDirectories[bucketId].Path, blob.Name))
 				if err != nil {
 					return nil, nil, err
 				}
@@ -78,7 +78,7 @@ func (b *Backuper) CopyBlobsWithinBackupBucket(backupBucketAddresses map[string]
 			return fmt.Errorf("cannot find commonBlobs for bucket id: %s", bucketId)
 		}
 
-		backupBucket := b.buckets[bucketId].BackupBucket
+		backupBucket := b.bucketPairs[bucketId].BackupBucket
 
 		for _, blob := range commonBlobList {
 			nameParts := strings.Split(blob.Name, "/")

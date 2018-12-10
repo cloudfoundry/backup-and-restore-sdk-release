@@ -35,8 +35,8 @@ var _ = Describe("Restorer", func() {
 		firstBackupBucket.NameReturns(firstBackupBucketName)
 		secondBackupBucket.NameReturns(secondBackupBucketName)
 		config := map[string]gcs.BucketPair{
-			"first":  {Bucket: firstBucket, BackupBucket: firstBackupBucket},
-			"second": {Bucket: secondBucket, BackupBucket: secondBackupBucket},
+			"first":  {LiveBucket: firstBucket, BackupBucket: firstBackupBucket},
+			"second": {LiveBucket: secondBucket, BackupBucket: secondBackupBucket},
 		}
 
 		restorer = gcs.NewRestorer(config)
