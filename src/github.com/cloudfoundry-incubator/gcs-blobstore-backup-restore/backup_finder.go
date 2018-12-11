@@ -26,30 +26,45 @@ func (f *LastBackupFinder) ListBlobs() (map[string]Blob, error) {
 		return nil, fmt.Errorf("failed listing last backup blobs: %s", err)
 	}
 
+	completeDirectory, err := f.findLastCompleteDirectory(directories)
+	if err != nil {
+		return nil, fmt.Errorf("failed listing last backup blobs: %s", err)
+	}
+
+	if completeDirectory == "" {
+		return map[string]Blob{}, nil
+	}
+
+	blobs, err := f.bucket.ListBlobs(completeDirectory)
+	if err != nil {
+		return nil, fmt.Errorf("failed listing last backup blobs: %s", err)
+	}
+
 	blobsMap := map[string]Blob{}
-
-	if len(directories) == 0 {
-		return blobsMap, nil
-	}
-
-	isComplete, err := f.bucket.IsCompleteBackup(directories[0])
-	if err != nil {
-		return nil, fmt.Errorf("failed listing last backup blobs: %s", err)
-	}
-
-	if !isComplete {
-		return blobsMap, nil
-	}
-
-	blobs, err := f.bucket.ListBlobs(directories[0])
-	if err != nil {
-		return nil, fmt.Errorf("failed listing last backup blobs: %s", err)
-	}
-
 	for _, blob := range blobs {
 		nameParts := strings.Split(blob.Name, "/")
 		blobsMap[nameParts[len(nameParts)-1]] = blob
 	}
 
 	return blobsMap, nil
+}
+
+func (f *LastBackupFinder) findLastCompleteDirectory(directories []string) (string, error) {
+	var completeDirectory string
+
+	for i := len(directories) - 1; i >= 0; i-- {
+		dir := directories[i]
+
+		isComplete, err := f.bucket.IsCompleteBackup(dir)
+		if err != nil {
+			return "", err
+		}
+
+		if isComplete {
+			completeDirectory = dir
+			break
+		}
+	}
+
+	return completeDirectory, nil
 }
