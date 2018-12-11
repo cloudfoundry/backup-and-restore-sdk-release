@@ -1,4 +1,4 @@
-package gcs_test
+package contract_test
 
 import (
 	"os"
@@ -43,11 +43,6 @@ func DeleteBucket(bucketName string) {
 func UploadFile(bucketName, blobName, fileContents string) {
 	file := createTmpFile("", blobName, fileContents)
 	runSuccessfully("gsutil", "cp", "-v", file.Name(), "gs://"+bucketName+"/"+blobName)
-}
-
-func ReadFile(bucketName, blobName string) string {
-	output, _ := runSuccessfully("gsutil", "cat", "gs://"+bucketName+"/"+blobName)
-	return output
 }
 
 func UploadFileWithDir(bucketName, dir, blobName, fileContents string) {

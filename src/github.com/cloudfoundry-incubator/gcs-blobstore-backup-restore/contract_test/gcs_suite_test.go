@@ -1,4 +1,4 @@
-package gcs_test
+package contract_test
 
 import (
 	"testing"
@@ -14,3 +14,8 @@ func TestGcsBlobstoreBackupRestore(t *testing.T) {
 	SetDefaultEventuallyTimeout(15 * time.Minute)
 	RunSpecs(t, "GCS Suite")
 }
+
+var _ = SynchronizedBeforeSuite(func() []byte {
+	Authenticate(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"))
+	return nil
+}, func([]byte) {})

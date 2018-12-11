@@ -1,4 +1,4 @@
-package gcs_test
+package contract_test
 
 import (
 	"fmt"
