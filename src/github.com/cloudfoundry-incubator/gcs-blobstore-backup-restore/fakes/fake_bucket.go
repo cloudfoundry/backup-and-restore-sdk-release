@@ -100,15 +100,15 @@ type FakeBucket struct {
 	deleteBlobReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CreateBackupCompleteBlobStub        func(prefix string) error
-	createBackupCompleteBlobMutex       sync.RWMutex
-	createBackupCompleteBlobArgsForCall []struct {
+	MarkBackupCompleteStub        func(prefix string) error
+	markBackupCompleteMutex       sync.RWMutex
+	markBackupCompleteArgsForCall []struct {
 		prefix string
 	}
-	createBackupCompleteBlobReturns struct {
+	markBackupCompleteReturns struct {
 		result1 error
 	}
-	createBackupCompleteBlobReturnsOnCall map[int]struct {
+	markBackupCompleteReturnsOnCall map[int]struct {
 		result1 error
 	}
 	IsBackupCompleteStub        func(prefix string) (bool, error)
@@ -501,50 +501,50 @@ func (fake *FakeBucket) DeleteBlobReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeBucket) CreateBackupCompleteBlob(prefix string) error {
-	fake.createBackupCompleteBlobMutex.Lock()
-	ret, specificReturn := fake.createBackupCompleteBlobReturnsOnCall[len(fake.createBackupCompleteBlobArgsForCall)]
-	fake.createBackupCompleteBlobArgsForCall = append(fake.createBackupCompleteBlobArgsForCall, struct {
+func (fake *FakeBucket) MarkBackupComplete(prefix string) error {
+	fake.markBackupCompleteMutex.Lock()
+	ret, specificReturn := fake.markBackupCompleteReturnsOnCall[len(fake.markBackupCompleteArgsForCall)]
+	fake.markBackupCompleteArgsForCall = append(fake.markBackupCompleteArgsForCall, struct {
 		prefix string
 	}{prefix})
-	fake.recordInvocation("CreateBackupCompleteBlob", []interface{}{prefix})
-	fake.createBackupCompleteBlobMutex.Unlock()
-	if fake.CreateBackupCompleteBlobStub != nil {
-		return fake.CreateBackupCompleteBlobStub(prefix)
+	fake.recordInvocation("MarkBackupComplete", []interface{}{prefix})
+	fake.markBackupCompleteMutex.Unlock()
+	if fake.MarkBackupCompleteStub != nil {
+		return fake.MarkBackupCompleteStub(prefix)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.createBackupCompleteBlobReturns.result1
+	return fake.markBackupCompleteReturns.result1
 }
 
-func (fake *FakeBucket) CreateBackupCompleteBlobCallCount() int {
-	fake.createBackupCompleteBlobMutex.RLock()
-	defer fake.createBackupCompleteBlobMutex.RUnlock()
-	return len(fake.createBackupCompleteBlobArgsForCall)
+func (fake *FakeBucket) MarkBackupCompleteCallCount() int {
+	fake.markBackupCompleteMutex.RLock()
+	defer fake.markBackupCompleteMutex.RUnlock()
+	return len(fake.markBackupCompleteArgsForCall)
 }
 
-func (fake *FakeBucket) CreateBackupCompleteBlobArgsForCall(i int) string {
-	fake.createBackupCompleteBlobMutex.RLock()
-	defer fake.createBackupCompleteBlobMutex.RUnlock()
-	return fake.createBackupCompleteBlobArgsForCall[i].prefix
+func (fake *FakeBucket) MarkBackupCompleteArgsForCall(i int) string {
+	fake.markBackupCompleteMutex.RLock()
+	defer fake.markBackupCompleteMutex.RUnlock()
+	return fake.markBackupCompleteArgsForCall[i].prefix
 }
 
-func (fake *FakeBucket) CreateBackupCompleteBlobReturns(result1 error) {
-	fake.CreateBackupCompleteBlobStub = nil
-	fake.createBackupCompleteBlobReturns = struct {
+func (fake *FakeBucket) MarkBackupCompleteReturns(result1 error) {
+	fake.MarkBackupCompleteStub = nil
+	fake.markBackupCompleteReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeBucket) CreateBackupCompleteBlobReturnsOnCall(i int, result1 error) {
-	fake.CreateBackupCompleteBlobStub = nil
-	if fake.createBackupCompleteBlobReturnsOnCall == nil {
-		fake.createBackupCompleteBlobReturnsOnCall = make(map[int]struct {
+func (fake *FakeBucket) MarkBackupCompleteReturnsOnCall(i int, result1 error) {
+	fake.MarkBackupCompleteStub = nil
+	if fake.markBackupCompleteReturnsOnCall == nil {
+		fake.markBackupCompleteReturnsOnCall = make(map[int]struct {
 			result1 error
 		})
 	}
-	fake.createBackupCompleteBlobReturnsOnCall[i] = struct {
+	fake.markBackupCompleteReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -619,8 +619,8 @@ func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	defer fake.copyBlobsBetweenBucketsMutex.RUnlock()
 	fake.deleteBlobMutex.RLock()
 	defer fake.deleteBlobMutex.RUnlock()
-	fake.createBackupCompleteBlobMutex.RLock()
-	defer fake.createBackupCompleteBlobMutex.RUnlock()
+	fake.markBackupCompleteMutex.RLock()
+	defer fake.markBackupCompleteMutex.RUnlock()
 	fake.isBackupCompleteMutex.RLock()
 	defer fake.isBackupCompleteMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

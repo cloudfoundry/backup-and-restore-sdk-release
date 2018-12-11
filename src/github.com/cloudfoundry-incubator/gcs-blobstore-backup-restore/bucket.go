@@ -24,7 +24,7 @@ type Bucket interface {
 	CopyBlobBetweenBuckets(Bucket, string, string) error
 	CopyBlobsBetweenBuckets(Bucket, string) error
 	DeleteBlob(name string) error
-	CreateBackupCompleteBlob(prefix string) error
+	MarkBackupComplete(prefix string) error
 	IsBackupComplete(prefix string) (bool, error)
 }
 
@@ -195,7 +195,7 @@ func (b SDKBucket) DeleteBlob(blob string) error {
 	return b.client.Bucket(b.name).Object(blob).Delete(b.ctx)
 }
 
-func (b SDKBucket) CreateBackupCompleteBlob(prefix string) error {
+func (b SDKBucket) MarkBackupComplete(prefix string) error {
 	writer := b.client.Bucket(b.name).Object(backupCompletePath(prefix)).NewWriter(b.ctx)
 
 	_, err := writer.Write([]byte{})

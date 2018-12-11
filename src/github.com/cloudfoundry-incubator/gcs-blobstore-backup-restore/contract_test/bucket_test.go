@@ -395,7 +395,7 @@ var _ = Describe("Bucket", func() {
 		})
 	})
 
-	Describe("CreateBackupCompleteBlob", func() {
+	Describe("MarkBackupComplete", func() {
 		var (
 			bucketName string
 			bucket     gcs.Bucket
@@ -415,7 +415,7 @@ var _ = Describe("Bucket", func() {
 
 		Context("when creating the blob succeeds", func() {
 			It("creates the blob correctly", func() {
-				err := bucket.CreateBackupCompleteBlob("test-create-backup-complete")
+				err := bucket.MarkBackupComplete("test-create-backup-complete")
 
 				Expect(err).NotTo(HaveOccurred())
 				blobs, err := bucket.ListBlobs("")
@@ -431,7 +431,7 @@ var _ = Describe("Bucket", func() {
 				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), "iamnotabucket")
 				Expect(err).NotTo(HaveOccurred())
 
-				err := bucket.CreateBackupCompleteBlob("test-create-backup-complete")
+				err := bucket.MarkBackupComplete("test-create-backup-complete")
 
 				Expect(err).To(MatchError(ContainSubstring("failed creating backup complete blob")))
 			})

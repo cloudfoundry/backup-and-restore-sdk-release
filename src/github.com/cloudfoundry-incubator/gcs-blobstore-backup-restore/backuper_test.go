@@ -186,8 +186,8 @@ var _ = Describe("Backuper", func() {
 				err := backuper.CopyBlobsWithinBackupBucket(backupBucketAddresses, commonBlobs)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(backupBucket.CreateBackupCompleteBlobCallCount()).To(Equal(1))
-				Expect(backupBucket.CreateBackupCompleteBlobArgsForCall(0)).To(Equal("2006_01_02_15_04_05/" + bucketPairID))
+				Expect(backupBucket.MarkBackupCompleteCallCount()).To(Equal(1))
+				Expect(backupBucket.MarkBackupCompleteArgsForCall(0)).To(Equal("2006_01_02_15_04_05/" + bucketPairID))
 			})
 		})
 
@@ -202,7 +202,7 @@ var _ = Describe("Backuper", func() {
 				err := backuper.CopyBlobsWithinBackupBucket(backupBucketAddresses, nil)
 				Expect(err).To(MatchError("cannot find commonBlobs for bucket id: droplets"))
 
-				Expect(backupBucket.CreateBackupCompleteBlobCallCount()).To(BeZero())
+				Expect(backupBucket.MarkBackupCompleteCallCount()).To(BeZero())
 			})
 		})
 
@@ -221,13 +221,13 @@ var _ = Describe("Backuper", func() {
 				err := backuper.CopyBlobsWithinBackupBucket(backupBucketAddresses, commonBlobs)
 				Expect(err).To(MatchError("gcs copy error"))
 
-				Expect(backupBucket.CreateBackupCompleteBlobCallCount()).To(BeZero())
+				Expect(backupBucket.MarkBackupCompleteCallCount()).To(BeZero())
 			})
 		})
 
 		Context("when creating a backup complete blob fails", func() {
 			It("returns the correct error", func() {
-				backupBucket.CreateBackupCompleteBlobReturns(errors.New("fail"))
+				backupBucket.MarkBackupCompleteReturns(errors.New("fail"))
 				backuper = gcs.NewBackuper(map[string]gcs.BucketPair{
 					bucketPairID: {
 						LiveBucket:   bucket,

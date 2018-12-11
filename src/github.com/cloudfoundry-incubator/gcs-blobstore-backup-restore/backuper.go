@@ -89,7 +89,7 @@ func (b *Backuper) CopyBlobsWithinBackupBucket(backupBucketAddresses map[string]
 			}
 		}
 
-		err := backupBucket.CreateBackupCompleteBlob(backupBucketAddress.Path)
+		err := backupBucket.MarkBackupComplete(backupBucketAddress.Path)
 		if err != nil {
 			return err
 		}
