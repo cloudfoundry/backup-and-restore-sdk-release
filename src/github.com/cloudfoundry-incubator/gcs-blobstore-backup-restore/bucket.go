@@ -25,7 +25,7 @@ type Bucket interface {
 	CopyBlobsBetweenBuckets(Bucket, string) error
 	DeleteBlob(name string) error
 	CreateBackupCompleteBlob(prefix string) error
-	IsCompleteBackup(prefix string) (bool, error)
+	IsBackupComplete(prefix string) (bool, error)
 }
 
 type BucketPair struct {
@@ -74,14 +74,6 @@ type SDKBucket struct {
 	client *storage.Client
 }
 
-func (b SDKBucket) IsCompleteBackup(prefix string) (bool, error) {
-	panic("implement me")
-}
-
-func (b SDKBucket) ListDirectories() ([]string, error) {
-	panic("implement me")
-}
-
 func NewSDKBucket(serviceAccountKeyJson string, name string) (SDKBucket, error) {
 	ctx := context.Background()
 
@@ -122,6 +114,10 @@ func (b SDKBucket) ListBlobs(_ string) ([]Blob, error) {
 	}
 
 	return blobs, nil
+}
+
+func (b SDKBucket) ListDirectories() ([]string, error) {
+	panic("implement me")
 }
 
 func (b SDKBucket) LastBackupBlobs() (map[string]Blob, error) {
@@ -200,7 +196,7 @@ func (b SDKBucket) DeleteBlob(blob string) error {
 }
 
 func (b SDKBucket) CreateBackupCompleteBlob(prefix string) error {
-	writer := b.client.Bucket(b.name).Object(fmt.Sprintf("%s/backup_complete", prefix)).NewWriter(b.ctx)
+	writer := b.client.Bucket(b.name).Object(backupCompletePath(prefix)).NewWriter(b.ctx)
 
 	_, err := writer.Write([]byte{})
 	if err != nil {
@@ -213,4 +209,21 @@ func (b SDKBucket) CreateBackupCompleteBlob(prefix string) error {
 	}
 
 	return nil
+}
+
+func (b SDKBucket) IsBackupComplete(prefix string) (bool, error) {
+	_, err := b.handle.Object(backupCompletePath(prefix)).Attrs(b.ctx)
+	if err != nil {
+		if err == storage.ErrObjectNotExist {
+			return false, nil
+		}
+
+		return false, fmt.Errorf("failed checking backup complete blob: %s", err)
+	}
+
+	return true, nil
+}
+
+func backupCompletePath(prefix string) string {
+	return fmt.Sprintf("%s/backup_complete", prefix)
 }

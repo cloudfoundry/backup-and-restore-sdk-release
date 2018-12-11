@@ -437,4 +437,56 @@ var _ = Describe("Bucket", func() {
 			})
 		})
 	})
+
+	Describe("IsBackupComplete", func() {
+		const prefix = "droplets"
+
+		var (
+			bucketName string
+			bucket     gcs.Bucket
+			err        error
+		)
+
+		BeforeEach(func() {
+			bucketName = CreateBucketWithTimestampedName("is-backup-complete")
+
+			bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			DeleteBucket(bucketName)
+		})
+
+		Context("when the directory contains the backup complete blob", func() {
+			It("returns true", func() {
+				UploadFileWithDir(bucketName, prefix, "backup_complete", "")
+
+				isCompleteBackup, err := bucket.IsBackupComplete(prefix)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(isCompleteBackup).To(BeTrue())
+			})
+		})
+
+		Context("when the directory does not contain the backup complete blob", func() {
+			It("returns true", func() {
+				isCompleteBackup, err := bucket.IsBackupComplete(prefix)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(isCompleteBackup).To(BeFalse())
+			})
+		})
+
+		Context("when the request fails", func() {
+			It("returns an error", func() {
+				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), "")
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err := bucket.IsBackupComplete("foobar")
+
+				Expect(err).To(MatchError(ContainSubstring("failed checking backup complete blob")))
+			})
+		})
+	})
 })

@@ -55,7 +55,7 @@ func (f *LastBackupFinder) findLastCompleteDirectory(directories []string) (stri
 	for i := len(directories) - 1; i >= 0; i-- {
 		dir := directories[i]
 
-		isComplete, err := f.bucket.IsCompleteBackup(dir)
+		isComplete, err := f.bucket.IsBackupComplete(dir)
 		if err != nil {
 			return "", err
 		}

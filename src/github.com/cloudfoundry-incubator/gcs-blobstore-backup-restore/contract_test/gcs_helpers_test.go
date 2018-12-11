@@ -31,7 +31,7 @@ func Authenticate(serviceAccountKey string) {
 }
 
 func CreateBucketWithTimestampedName(prefix string) string {
-	bucketName := fmt.Sprintf("%s_%d", prefix, time.Now().UnixNano())
+	bucketName := fmt.Sprintf("%s-%d", prefix, time.Now().UnixNano())
 	runSuccessfully("gsutil", "mb", "-c", "regional", "-l", "europe-west2", "gs://"+bucketName)
 	return bucketName
 }

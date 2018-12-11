@@ -27,7 +27,7 @@ var _ = Describe("BackupFinder", func() {
 			backupBucket = new(fakes.FakeBucket)
 
 			backupBucket.ListDirectoriesReturns([]string{firstBackupDir}, nil)
-			backupBucket.IsCompleteBackupReturns(true, nil)
+			backupBucket.IsBackupCompleteReturns(true, nil)
 
 			backupFinder = gcs.NewLastBackupFinder(backupBucket)
 		})
@@ -47,8 +47,8 @@ var _ = Describe("BackupFinder", func() {
 				})
 
 				By("checking if the last directory is complete", func() {
-					Expect(backupBucket.IsCompleteBackupCallCount()).To(Equal(1))
-					Expect(backupBucket.IsCompleteBackupArgsForCall(0)).To(Equal(firstBackupDir))
+					Expect(backupBucket.IsBackupCompleteCallCount()).To(Equal(1))
+					Expect(backupBucket.IsBackupCompleteArgsForCall(0)).To(Equal(firstBackupDir))
 				})
 
 				By("listing all blobs from the last directory", func() {
@@ -66,17 +66,17 @@ var _ = Describe("BackupFinder", func() {
 		Context("when there is no complete backup", func() {
 			It("returns an empty blobs map", func() {
 				backupBucket.ListDirectoriesReturns([]string{firstBackupDir, secondBackupDir, thirdBackupDir}, nil)
-				backupBucket.IsCompleteBackupReturnsOnCall(0, false, nil)
-				backupBucket.IsCompleteBackupReturnsOnCall(1, false, nil)
-				backupBucket.IsCompleteBackupReturnsOnCall(2, false, nil)
+				backupBucket.IsBackupCompleteReturnsOnCall(0, false, nil)
+				backupBucket.IsBackupCompleteReturnsOnCall(1, false, nil)
+				backupBucket.IsBackupCompleteReturnsOnCall(2, false, nil)
 
 				backupBlobs, err := backupFinder.ListBlobs()
 
-				Expect(err).ToNot(HaveOccurred())
-				Expect(backupBucket.IsCompleteBackupCallCount()).To(Equal(3))
-				Expect(backupBucket.IsCompleteBackupArgsForCall(0)).To(Equal(thirdBackupDir))
-				Expect(backupBucket.IsCompleteBackupArgsForCall(1)).To(Equal(secondBackupDir))
-				Expect(backupBucket.IsCompleteBackupArgsForCall(2)).To(Equal(firstBackupDir))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(backupBucket.IsBackupCompleteCallCount()).To(Equal(3))
+				Expect(backupBucket.IsBackupCompleteArgsForCall(0)).To(Equal(thirdBackupDir))
+				Expect(backupBucket.IsBackupCompleteArgsForCall(1)).To(Equal(secondBackupDir))
+				Expect(backupBucket.IsBackupCompleteArgsForCall(2)).To(Equal(firstBackupDir))
 				Expect(backupBucket.ListBlobsCallCount()).To(BeZero())
 				Expect(backupBlobs).To(BeEmpty())
 			})
@@ -85,8 +85,8 @@ var _ = Describe("BackupFinder", func() {
 		Context("when there are multiple backups and only one is complete", func() {
 			It("lists all the complete backup blobs", func() {
 				backupBucket.ListDirectoriesReturns([]string{firstBackupDir, secondBackupDir, thirdBackupDir}, nil)
-				backupBucket.IsCompleteBackupReturnsOnCall(0, false, nil)
-				backupBucket.IsCompleteBackupReturnsOnCall(1, true, nil)
+				backupBucket.IsBackupCompleteReturnsOnCall(0, false, nil)
+				backupBucket.IsBackupCompleteReturnsOnCall(1, true, nil)
 
 				blob := gcs.Blob{Name: fmt.Sprintf("%s/bucket-id/some-blob-name", secondBackupDir)}
 				lastBackupBlobs := []gcs.Blob{blob}
@@ -95,9 +95,9 @@ var _ = Describe("BackupFinder", func() {
 				blobs, err := backupFinder.ListBlobs()
 
 				Expect(err).ToNot(HaveOccurred())
-				Expect(backupBucket.IsCompleteBackupArgsForCall(0)).To(Equal(thirdBackupDir))
-				Expect(backupBucket.IsCompleteBackupArgsForCall(1)).To(Equal(secondBackupDir))
-				Expect(backupBucket.IsCompleteBackupCallCount()).To(Equal(2))
+				Expect(backupBucket.IsBackupCompleteArgsForCall(0)).To(Equal(thirdBackupDir))
+				Expect(backupBucket.IsBackupCompleteArgsForCall(1)).To(Equal(secondBackupDir))
+				Expect(backupBucket.IsBackupCompleteCallCount()).To(Equal(2))
 				Expect(backupBucket.ListBlobsCallCount()).To(Equal(1))
 				Expect(backupBucket.ListBlobsArgsForCall(0)).To(Equal(secondBackupDir))
 				Expect(blobs).To(Equal(map[string]gcs.Blob{
@@ -123,11 +123,11 @@ var _ = Describe("BackupFinder", func() {
 			_, err := backupFinder.ListBlobs()
 
 			Expect(err).To(MatchError(ContainSubstring("failed listing last backup blobs")))
-			Expect(backupBucket.IsCompleteBackupCallCount()).To(BeZero())
+			Expect(backupBucket.IsBackupCompleteCallCount()).To(BeZero())
 		})
 
 		It("returns an error when checking is complete fails", func() {
-			backupBucket.IsCompleteBackupReturns(false, errors.New("failed"))
+			backupBucket.IsBackupCompleteReturns(false, errors.New("failed"))
 
 			_, err := backupFinder.ListBlobs()
 
