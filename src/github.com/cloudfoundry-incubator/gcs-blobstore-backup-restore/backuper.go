@@ -58,12 +58,14 @@ func (b *Backuper) CopyNewBlobs() (map[string]BucketBackup, map[string][]Blob, e
 
 		var previouslyBackedUpBucketBlobs []Blob
 		for _, liveBlob := range liveBlobs {
-			if previouslyBackedUpLiveBlob, ok := allBackupBlobs[liveBlob.Name]; ok {
-				previouslyBackedUpBucketBlobs = append(previouslyBackedUpBucketBlobs, previouslyBackedUpLiveBlob)
-			} else {
-				err := liveBucket.CopyBlobToBucket(backupBucket, liveBlob.Name, fmt.Sprintf("%s/%s", bucketBackups[bucketID].Path, liveBlob.Name))
-				if err != nil {
-					return nil, nil, err
+			if !liveBlob.IsBackupComplete() {
+				if previouslyBackedUpLiveBlob, ok := allBackupBlobs[liveBlob.Name()]; ok {
+					previouslyBackedUpBucketBlobs = append(previouslyBackedUpBucketBlobs, previouslyBackedUpLiveBlob)
+				} else {
+					err := liveBucket.CopyBlobToBucket(backupBucket, liveBlob.Name(), fmt.Sprintf("%s/%s", bucketBackups[bucketID].Path, liveBlob.Name()))
+					if err != nil {
+						return nil, nil, err
+					}
 				}
 			}
 		}
@@ -83,9 +85,9 @@ func (b *Backuper) CopyPreviouslyBackedUpBlobs(bucketBackups map[string]BucketBa
 		backupBucket := b.bucketPairs[bucketID].BackupBucket
 
 		for _, blob := range blobs {
-			nameParts := strings.Split(blob.Name, "/")
+			nameParts := strings.Split(blob.Name(), "/")
 			destinationBlobName := fmt.Sprintf("%s/%s", bucketBackup.Path, nameParts[len(nameParts)-1])
-			err := backupBucket.CopyBlobWithinBucket(blob.Name, destinationBlobName)
+			err := backupBucket.CopyBlobWithinBucket(blob.Name(), destinationBlobName)
 			if err != nil {
 				return err
 			}

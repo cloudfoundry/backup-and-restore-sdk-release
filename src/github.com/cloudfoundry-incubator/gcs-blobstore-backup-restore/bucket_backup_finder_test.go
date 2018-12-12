@@ -40,8 +40,8 @@ var _ = Describe("BucketBackupFinder", func() {
 
 		Context("when there is a complete backup", func() {
 			It("lists all backup blobs", func() {
-				someBlob := gcs.Blob{Name: fmt.Sprintf("%s/some-blob-name", firstBucketBackupDir)}
-				anotherBlob := gcs.Blob{Name: fmt.Sprintf("%s/another-blob-name", firstBucketBackupDir)}
+				someBlob := gcs.NewBlob(fmt.Sprintf("%s/some-blob-name", firstBucketBackupDir))
+				anotherBlob := gcs.NewBlob(fmt.Sprintf("%s/another-blob-name", firstBucketBackupDir))
 				lastBackupBlobs := []gcs.Blob{someBlob, anotherBlob}
 				backupBucket.ListBlobsReturns(lastBackupBlobs, nil)
 
@@ -94,7 +94,7 @@ var _ = Describe("BucketBackupFinder", func() {
 				backupBucket.IsBackupCompleteReturnsOnCall(0, false, nil)
 				backupBucket.IsBackupCompleteReturnsOnCall(1, true, nil)
 
-				blob := gcs.Blob{Name: fmt.Sprintf("%s/some-blob-name", secondBucketBackupDir)}
+				blob := gcs.NewBlob(fmt.Sprintf("%s/some-blob-name", secondBucketBackupDir))
 				lastBackupBlobs := []gcs.Blob{blob}
 				backupBucket.ListBlobsReturns(lastBackupBlobs, nil)
 

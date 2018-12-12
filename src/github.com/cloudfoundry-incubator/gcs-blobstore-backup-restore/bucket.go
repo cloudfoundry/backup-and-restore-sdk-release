@@ -28,10 +28,6 @@ type Bucket interface {
 	IsBackupComplete(prefix string) (bool, error)
 }
 
-type Blob struct {
-	Name string `json:"name"`
-}
-
 type SDKBucket struct {
 	name   string
 	handle *storage.BucketHandle
@@ -58,7 +54,7 @@ func NewSDKBucket(serviceAccountKeyJson string, name string) (SDKBucket, error) 
 }
 
 func (b SDKBucket) Name() string {
-	return b.name
+	return b.Name()
 }
 
 func (b SDKBucket) ListBlobs(prefix string) ([]Blob, error) {
@@ -79,7 +75,7 @@ func (b SDKBucket) ListBlobs(prefix string) ([]Blob, error) {
 			return nil, err
 		}
 
-		blobs = append(blobs, Blob{Name: objectAttributes.Name})
+		blobs = append(blobs, Blob{name: objectAttributes.Name})
 	}
 
 	return blobs, nil
@@ -122,7 +118,7 @@ func (b SDKBucket) CopyBlobToBucket(dstBucket Bucket, srcBlob, dstBlob string) e
 		return errors.New("destination bucket does not exist")
 	}
 
-	src := b.client.Bucket(b.name).Object(srcBlob)
+	src := b.client.Bucket(b.Name()).Object(srcBlob)
 	dst := b.client.Bucket(dstBucket.Name()).Object(dstBlob)
 	_, err := dst.CopierFrom(src).Run(b.ctx)
 	if err != nil {
@@ -143,9 +139,9 @@ func (b SDKBucket) CopyBlobsToBucket(dstBucket Bucket, srcPrefix string) error {
 	}
 
 	for _, blob := range blobs {
-		if strings.HasPrefix(blob.Name, srcPrefix+"/") {
-			destinationName := strings.TrimPrefix(blob.Name, srcPrefix+"/")
-			err = b.CopyBlobToBucket(dstBucket, blob.Name, destinationName)
+		if strings.HasPrefix(blob.Name(), srcPrefix+"/") {
+			destinationName := strings.TrimPrefix(blob.Name(), srcPrefix+"/")
+			err = b.CopyBlobToBucket(dstBucket, blob.Name(), destinationName)
 			if err != nil {
 				return err
 			}
@@ -156,11 +152,12 @@ func (b SDKBucket) CopyBlobsToBucket(dstBucket Bucket, srcPrefix string) error {
 }
 
 func (b SDKBucket) DeleteBlob(blob string) error {
-	return b.client.Bucket(b.name).Object(blob).Delete(b.ctx)
+	return b.client.Bucket(b.Name()).Object(blob).Delete(b.ctx)
 }
 
 func (b SDKBucket) MarkBackupComplete(prefix string) error {
-	writer := b.client.Bucket(b.name).Object(backupCompletePath(prefix)).NewWriter(b.ctx)
+	blob := NewBackupCompleteBlob(prefix)
+	writer := b.client.Bucket(b.Name()).Object(blob.Name()).NewWriter(b.ctx)
 
 	_, err := writer.Write([]byte{})
 	if err != nil {
@@ -176,7 +173,8 @@ func (b SDKBucket) MarkBackupComplete(prefix string) error {
 }
 
 func (b SDKBucket) IsBackupComplete(prefix string) (bool, error) {
-	_, err := b.handle.Object(backupCompletePath(prefix)).Attrs(b.ctx)
+	blob := NewBackupCompleteBlob(prefix)
+	_, err := b.handle.Object(blob.Name()).Attrs(b.ctx)
 	if err != nil {
 		if err == storage.ErrObjectNotExist {
 			return false, nil
@@ -186,8 +184,4 @@ func (b SDKBucket) IsBackupComplete(prefix string) (bool, error) {
 	}
 
 	return true, nil
-}
-
-func backupCompletePath(prefix string) string {
-	return fmt.Sprintf("%s/backup_complete", prefix)
 }
