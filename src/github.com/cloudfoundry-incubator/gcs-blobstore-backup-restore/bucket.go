@@ -28,36 +28,6 @@ type Bucket interface {
 	IsBackupComplete(prefix string) (bool, error)
 }
 
-type BucketPair struct {
-	LiveBucket   Bucket
-	BackupBucket Bucket
-	BackupFinder BackupFinder
-}
-
-func BuildBucketPairs(gcpServiceAccountKey string, config map[string]Config) (map[string]BucketPair, error) {
-	buckets := map[string]BucketPair{}
-
-	for bucketId, bucketConfig := range config {
-		bucket, err := NewSDKBucket(gcpServiceAccountKey, bucketConfig.BucketName)
-		if err != nil {
-			return nil, err
-		}
-
-		backupBucket, err := NewSDKBucket(gcpServiceAccountKey, bucketConfig.BackupBucketName)
-		if err != nil {
-			return nil, err
-		}
-
-		buckets[bucketId] = BucketPair{
-			LiveBucket:   bucket,
-			BackupBucket: backupBucket,
-			BackupFinder: NewLastBackupFinder(backupBucket),
-		}
-	}
-
-	return buckets, nil
-}
-
 type Blob struct {
 	Name string `json:"name"`
 }
