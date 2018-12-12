@@ -90,4 +90,4 @@ func (fake *FakeBackupArtifactFinder) recordInvocation(key string, args []interf
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ gcs.BackupFinder = new(FakeBackupArtifactFinder)
+var _ gcs.BucketBackupFinder = new(FakeBackupArtifactFinder)

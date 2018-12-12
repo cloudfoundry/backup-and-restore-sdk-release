@@ -3,7 +3,7 @@ package gcs
 type BucketPair struct {
 	LiveBucket   Bucket
 	BackupBucket Bucket
-	BackupFinder BackupFinder
+	BackupFinder BucketBackupFinder
 }
 
 func BuildBucketPairs(gcpServiceAccountKey string, config map[string]Config) (map[string]BucketPair, error) {
@@ -23,7 +23,7 @@ func BuildBucketPairs(gcpServiceAccountKey string, config map[string]Config) (ma
 		buckets[bucketID] = BucketPair{
 			LiveBucket:   bucket,
 			BackupBucket: backupBucket,
-			BackupFinder: NewLastBackupFinder(backupBucket),
+			BackupFinder: NewLastBucketBackupFinder(bucketID, backupBucket),
 		}
 	}
 
