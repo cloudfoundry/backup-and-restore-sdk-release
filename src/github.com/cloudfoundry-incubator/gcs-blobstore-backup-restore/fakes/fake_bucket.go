@@ -41,22 +41,11 @@ type FakeBucket struct {
 		result1 []string
 		result2 error
 	}
-	LastBackupBlobsStub        func() (map[string]gcs.Blob, error)
-	lastBackupBlobsMutex       sync.RWMutex
-	lastBackupBlobsArgsForCall []struct{}
-	lastBackupBlobsReturns     struct {
-		result1 map[string]gcs.Blob
-		result2 error
-	}
-	lastBackupBlobsReturnsOnCall map[int]struct {
-		result1 map[string]gcs.Blob
-		result2 error
-	}
-	CopyBlobWithinBucketStub        func(string, string) error
+	CopyBlobWithinBucketStub        func(src string, dst string) error
 	copyBlobWithinBucketMutex       sync.RWMutex
 	copyBlobWithinBucketArgsForCall []struct {
-		arg1 string
-		arg2 string
+		src string
+		dst string
 	}
 	copyBlobWithinBucketReturns struct {
 		result1 error
@@ -64,29 +53,29 @@ type FakeBucket struct {
 	copyBlobWithinBucketReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CopyBlobBetweenBucketsStub        func(gcs.Bucket, string, string) error
-	copyBlobBetweenBucketsMutex       sync.RWMutex
-	copyBlobBetweenBucketsArgsForCall []struct {
-		arg1 gcs.Bucket
-		arg2 string
-		arg3 string
+	CopyBlobToBucketStub        func(bucket gcs.Bucket, src string, dst string) error
+	copyBlobToBucketMutex       sync.RWMutex
+	copyBlobToBucketArgsForCall []struct {
+		bucket gcs.Bucket
+		src    string
+		dst    string
 	}
-	copyBlobBetweenBucketsReturns struct {
+	copyBlobToBucketReturns struct {
 		result1 error
 	}
-	copyBlobBetweenBucketsReturnsOnCall map[int]struct {
+	copyBlobToBucketReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CopyBlobsBetweenBucketsStub        func(gcs.Bucket, string) error
-	copyBlobsBetweenBucketsMutex       sync.RWMutex
-	copyBlobsBetweenBucketsArgsForCall []struct {
-		arg1 gcs.Bucket
-		arg2 string
+	CopyBlobsToBucketStub        func(bucket gcs.Bucket, src string) error
+	copyBlobsToBucketMutex       sync.RWMutex
+	copyBlobsToBucketArgsForCall []struct {
+		bucket gcs.Bucket
+		src    string
 	}
-	copyBlobsBetweenBucketsReturns struct {
+	copyBlobsToBucketReturns struct {
 		result1 error
 	}
-	copyBlobsBetweenBucketsReturnsOnCall map[int]struct {
+	copyBlobsToBucketReturnsOnCall map[int]struct {
 		result1 error
 	}
 	DeleteBlobStub        func(name string) error
@@ -262,60 +251,17 @@ func (fake *FakeBucket) ListBackupsReturnsOnCall(i int, result1 []string, result
 	}{result1, result2}
 }
 
-func (fake *FakeBucket) LastBackupBlobs() (map[string]gcs.Blob, error) {
-	fake.lastBackupBlobsMutex.Lock()
-	ret, specificReturn := fake.lastBackupBlobsReturnsOnCall[len(fake.lastBackupBlobsArgsForCall)]
-	fake.lastBackupBlobsArgsForCall = append(fake.lastBackupBlobsArgsForCall, struct{}{})
-	fake.recordInvocation("LastBackupBlobs", []interface{}{})
-	fake.lastBackupBlobsMutex.Unlock()
-	if fake.LastBackupBlobsStub != nil {
-		return fake.LastBackupBlobsStub()
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.lastBackupBlobsReturns.result1, fake.lastBackupBlobsReturns.result2
-}
-
-func (fake *FakeBucket) LastBackupBlobsCallCount() int {
-	fake.lastBackupBlobsMutex.RLock()
-	defer fake.lastBackupBlobsMutex.RUnlock()
-	return len(fake.lastBackupBlobsArgsForCall)
-}
-
-func (fake *FakeBucket) LastBackupBlobsReturns(result1 map[string]gcs.Blob, result2 error) {
-	fake.LastBackupBlobsStub = nil
-	fake.lastBackupBlobsReturns = struct {
-		result1 map[string]gcs.Blob
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeBucket) LastBackupBlobsReturnsOnCall(i int, result1 map[string]gcs.Blob, result2 error) {
-	fake.LastBackupBlobsStub = nil
-	if fake.lastBackupBlobsReturnsOnCall == nil {
-		fake.lastBackupBlobsReturnsOnCall = make(map[int]struct {
-			result1 map[string]gcs.Blob
-			result2 error
-		})
-	}
-	fake.lastBackupBlobsReturnsOnCall[i] = struct {
-		result1 map[string]gcs.Blob
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeBucket) CopyBlobWithinBucket(arg1 string, arg2 string) error {
+func (fake *FakeBucket) CopyBlobWithinBucket(src string, dst string) error {
 	fake.copyBlobWithinBucketMutex.Lock()
 	ret, specificReturn := fake.copyBlobWithinBucketReturnsOnCall[len(fake.copyBlobWithinBucketArgsForCall)]
 	fake.copyBlobWithinBucketArgsForCall = append(fake.copyBlobWithinBucketArgsForCall, struct {
-		arg1 string
-		arg2 string
-	}{arg1, arg2})
-	fake.recordInvocation("CopyBlobWithinBucket", []interface{}{arg1, arg2})
+		src string
+		dst string
+	}{src, dst})
+	fake.recordInvocation("CopyBlobWithinBucket", []interface{}{src, dst})
 	fake.copyBlobWithinBucketMutex.Unlock()
 	if fake.CopyBlobWithinBucketStub != nil {
-		return fake.CopyBlobWithinBucketStub(arg1, arg2)
+		return fake.CopyBlobWithinBucketStub(src, dst)
 	}
 	if specificReturn {
 		return ret.result1
@@ -332,7 +278,7 @@ func (fake *FakeBucket) CopyBlobWithinBucketCallCount() int {
 func (fake *FakeBucket) CopyBlobWithinBucketArgsForCall(i int) (string, string) {
 	fake.copyBlobWithinBucketMutex.RLock()
 	defer fake.copyBlobWithinBucketMutex.RUnlock()
-	return fake.copyBlobWithinBucketArgsForCall[i].arg1, fake.copyBlobWithinBucketArgsForCall[i].arg2
+	return fake.copyBlobWithinBucketArgsForCall[i].src, fake.copyBlobWithinBucketArgsForCall[i].dst
 }
 
 func (fake *FakeBucket) CopyBlobWithinBucketReturns(result1 error) {
@@ -354,101 +300,101 @@ func (fake *FakeBucket) CopyBlobWithinBucketReturnsOnCall(i int, result1 error) 
 	}{result1}
 }
 
-func (fake *FakeBucket) CopyBlobBetweenBuckets(arg1 gcs.Bucket, arg2 string, arg3 string) error {
-	fake.copyBlobBetweenBucketsMutex.Lock()
-	ret, specificReturn := fake.copyBlobBetweenBucketsReturnsOnCall[len(fake.copyBlobBetweenBucketsArgsForCall)]
-	fake.copyBlobBetweenBucketsArgsForCall = append(fake.copyBlobBetweenBucketsArgsForCall, struct {
-		arg1 gcs.Bucket
-		arg2 string
-		arg3 string
-	}{arg1, arg2, arg3})
-	fake.recordInvocation("CopyBlobBetweenBuckets", []interface{}{arg1, arg2, arg3})
-	fake.copyBlobBetweenBucketsMutex.Unlock()
-	if fake.CopyBlobBetweenBucketsStub != nil {
-		return fake.CopyBlobBetweenBucketsStub(arg1, arg2, arg3)
+func (fake *FakeBucket) CopyBlobToBucket(bucket gcs.Bucket, src string, dst string) error {
+	fake.copyBlobToBucketMutex.Lock()
+	ret, specificReturn := fake.copyBlobToBucketReturnsOnCall[len(fake.copyBlobToBucketArgsForCall)]
+	fake.copyBlobToBucketArgsForCall = append(fake.copyBlobToBucketArgsForCall, struct {
+		bucket gcs.Bucket
+		src    string
+		dst    string
+	}{bucket, src, dst})
+	fake.recordInvocation("CopyBlobToBucket", []interface{}{bucket, src, dst})
+	fake.copyBlobToBucketMutex.Unlock()
+	if fake.CopyBlobToBucketStub != nil {
+		return fake.CopyBlobToBucketStub(bucket, src, dst)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.copyBlobBetweenBucketsReturns.result1
+	return fake.copyBlobToBucketReturns.result1
 }
 
-func (fake *FakeBucket) CopyBlobBetweenBucketsCallCount() int {
-	fake.copyBlobBetweenBucketsMutex.RLock()
-	defer fake.copyBlobBetweenBucketsMutex.RUnlock()
-	return len(fake.copyBlobBetweenBucketsArgsForCall)
+func (fake *FakeBucket) CopyBlobToBucketCallCount() int {
+	fake.copyBlobToBucketMutex.RLock()
+	defer fake.copyBlobToBucketMutex.RUnlock()
+	return len(fake.copyBlobToBucketArgsForCall)
 }
 
-func (fake *FakeBucket) CopyBlobBetweenBucketsArgsForCall(i int) (gcs.Bucket, string, string) {
-	fake.copyBlobBetweenBucketsMutex.RLock()
-	defer fake.copyBlobBetweenBucketsMutex.RUnlock()
-	return fake.copyBlobBetweenBucketsArgsForCall[i].arg1, fake.copyBlobBetweenBucketsArgsForCall[i].arg2, fake.copyBlobBetweenBucketsArgsForCall[i].arg3
+func (fake *FakeBucket) CopyBlobToBucketArgsForCall(i int) (gcs.Bucket, string, string) {
+	fake.copyBlobToBucketMutex.RLock()
+	defer fake.copyBlobToBucketMutex.RUnlock()
+	return fake.copyBlobToBucketArgsForCall[i].bucket, fake.copyBlobToBucketArgsForCall[i].src, fake.copyBlobToBucketArgsForCall[i].dst
 }
 
-func (fake *FakeBucket) CopyBlobBetweenBucketsReturns(result1 error) {
-	fake.CopyBlobBetweenBucketsStub = nil
-	fake.copyBlobBetweenBucketsReturns = struct {
+func (fake *FakeBucket) CopyBlobToBucketReturns(result1 error) {
+	fake.CopyBlobToBucketStub = nil
+	fake.copyBlobToBucketReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeBucket) CopyBlobBetweenBucketsReturnsOnCall(i int, result1 error) {
-	fake.CopyBlobBetweenBucketsStub = nil
-	if fake.copyBlobBetweenBucketsReturnsOnCall == nil {
-		fake.copyBlobBetweenBucketsReturnsOnCall = make(map[int]struct {
+func (fake *FakeBucket) CopyBlobToBucketReturnsOnCall(i int, result1 error) {
+	fake.CopyBlobToBucketStub = nil
+	if fake.copyBlobToBucketReturnsOnCall == nil {
+		fake.copyBlobToBucketReturnsOnCall = make(map[int]struct {
 			result1 error
 		})
 	}
-	fake.copyBlobBetweenBucketsReturnsOnCall[i] = struct {
+	fake.copyBlobToBucketReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeBucket) CopyBlobsBetweenBuckets(arg1 gcs.Bucket, arg2 string) error {
-	fake.copyBlobsBetweenBucketsMutex.Lock()
-	ret, specificReturn := fake.copyBlobsBetweenBucketsReturnsOnCall[len(fake.copyBlobsBetweenBucketsArgsForCall)]
-	fake.copyBlobsBetweenBucketsArgsForCall = append(fake.copyBlobsBetweenBucketsArgsForCall, struct {
-		arg1 gcs.Bucket
-		arg2 string
-	}{arg1, arg2})
-	fake.recordInvocation("CopyBlobsBetweenBuckets", []interface{}{arg1, arg2})
-	fake.copyBlobsBetweenBucketsMutex.Unlock()
-	if fake.CopyBlobsBetweenBucketsStub != nil {
-		return fake.CopyBlobsBetweenBucketsStub(arg1, arg2)
+func (fake *FakeBucket) CopyBlobsToBucket(bucket gcs.Bucket, src string) error {
+	fake.copyBlobsToBucketMutex.Lock()
+	ret, specificReturn := fake.copyBlobsToBucketReturnsOnCall[len(fake.copyBlobsToBucketArgsForCall)]
+	fake.copyBlobsToBucketArgsForCall = append(fake.copyBlobsToBucketArgsForCall, struct {
+		bucket gcs.Bucket
+		src    string
+	}{bucket, src})
+	fake.recordInvocation("CopyBlobsToBucket", []interface{}{bucket, src})
+	fake.copyBlobsToBucketMutex.Unlock()
+	if fake.CopyBlobsToBucketStub != nil {
+		return fake.CopyBlobsToBucketStub(bucket, src)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.copyBlobsBetweenBucketsReturns.result1
+	return fake.copyBlobsToBucketReturns.result1
 }
 
-func (fake *FakeBucket) CopyBlobsBetweenBucketsCallCount() int {
-	fake.copyBlobsBetweenBucketsMutex.RLock()
-	defer fake.copyBlobsBetweenBucketsMutex.RUnlock()
-	return len(fake.copyBlobsBetweenBucketsArgsForCall)
+func (fake *FakeBucket) CopyBlobsToBucketCallCount() int {
+	fake.copyBlobsToBucketMutex.RLock()
+	defer fake.copyBlobsToBucketMutex.RUnlock()
+	return len(fake.copyBlobsToBucketArgsForCall)
 }
 
-func (fake *FakeBucket) CopyBlobsBetweenBucketsArgsForCall(i int) (gcs.Bucket, string) {
-	fake.copyBlobsBetweenBucketsMutex.RLock()
-	defer fake.copyBlobsBetweenBucketsMutex.RUnlock()
-	return fake.copyBlobsBetweenBucketsArgsForCall[i].arg1, fake.copyBlobsBetweenBucketsArgsForCall[i].arg2
+func (fake *FakeBucket) CopyBlobsToBucketArgsForCall(i int) (gcs.Bucket, string) {
+	fake.copyBlobsToBucketMutex.RLock()
+	defer fake.copyBlobsToBucketMutex.RUnlock()
+	return fake.copyBlobsToBucketArgsForCall[i].bucket, fake.copyBlobsToBucketArgsForCall[i].src
 }
 
-func (fake *FakeBucket) CopyBlobsBetweenBucketsReturns(result1 error) {
-	fake.CopyBlobsBetweenBucketsStub = nil
-	fake.copyBlobsBetweenBucketsReturns = struct {
+func (fake *FakeBucket) CopyBlobsToBucketReturns(result1 error) {
+	fake.CopyBlobsToBucketStub = nil
+	fake.copyBlobsToBucketReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeBucket) CopyBlobsBetweenBucketsReturnsOnCall(i int, result1 error) {
-	fake.CopyBlobsBetweenBucketsStub = nil
-	if fake.copyBlobsBetweenBucketsReturnsOnCall == nil {
-		fake.copyBlobsBetweenBucketsReturnsOnCall = make(map[int]struct {
+func (fake *FakeBucket) CopyBlobsToBucketReturnsOnCall(i int, result1 error) {
+	fake.CopyBlobsToBucketStub = nil
+	if fake.copyBlobsToBucketReturnsOnCall == nil {
+		fake.copyBlobsToBucketReturnsOnCall = make(map[int]struct {
 			result1 error
 		})
 	}
-	fake.copyBlobsBetweenBucketsReturnsOnCall[i] = struct {
+	fake.copyBlobsToBucketReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -609,14 +555,12 @@ func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	defer fake.listBlobsMutex.RUnlock()
 	fake.listBackupsMutex.RLock()
 	defer fake.listBackupsMutex.RUnlock()
-	fake.lastBackupBlobsMutex.RLock()
-	defer fake.lastBackupBlobsMutex.RUnlock()
 	fake.copyBlobWithinBucketMutex.RLock()
 	defer fake.copyBlobWithinBucketMutex.RUnlock()
-	fake.copyBlobBetweenBucketsMutex.RLock()
-	defer fake.copyBlobBetweenBucketsMutex.RUnlock()
-	fake.copyBlobsBetweenBucketsMutex.RLock()
-	defer fake.copyBlobsBetweenBucketsMutex.RUnlock()
+	fake.copyBlobToBucketMutex.RLock()
+	defer fake.copyBlobToBucketMutex.RUnlock()
+	fake.copyBlobsToBucketMutex.RLock()
+	defer fake.copyBlobsToBucketMutex.RUnlock()
 	fake.deleteBlobMutex.RLock()
 	defer fake.deleteBlobMutex.RUnlock()
 	fake.markBackupCompleteMutex.RLock()

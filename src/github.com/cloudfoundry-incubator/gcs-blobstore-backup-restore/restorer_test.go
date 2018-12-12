@@ -16,7 +16,7 @@ var _ = Describe("Restorer", func() {
 	var secondBackupBucket *fakes.FakeBucket
 
 	var restorer gcs.Restorer
-	var artifact map[string]gcs.BackupBucketDirectory
+	var artifact map[string]gcs.BucketBackup
 
 	const firstBucketName = "first-bucket-name"
 	const secondBucketName = "second-bucket-name"
@@ -44,34 +44,34 @@ var _ = Describe("Restorer", func() {
 
 	Context("when the configuration is valid", func() {
 		BeforeEach(func() {
-			artifact = map[string]gcs.BackupBucketDirectory{
+			artifact = map[string]gcs.BucketBackup{
 				"first":  {BucketName: firstBackupBucketName, Path: timestamp + "/first"},
 				"second": {BucketName: secondBackupBucketName, Path: timestamp + "/second"},
 			}
 
-			firstBackupBucket.CopyBlobsBetweenBucketsReturns(nil)
-			secondBackupBucket.CopyBlobsBetweenBucketsReturns(nil)
+			firstBackupBucket.CopyBlobsToBucketReturns(nil)
+			secondBackupBucket.CopyBlobsToBucketReturns(nil)
 		})
 
 		It("copies the blobs from the path in the backup bucket to the live bucket for each bucketPair", func() {
 			err := restorer.Restore(artifact)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(firstBackupBucket.CopyBlobsBetweenBucketsCallCount()).To(Equal(1))
-			destinationBucket, sourcePath := firstBackupBucket.CopyBlobsBetweenBucketsArgsForCall(0)
+			Expect(firstBackupBucket.CopyBlobsToBucketCallCount()).To(Equal(1))
+			destinationBucket, sourcePath := firstBackupBucket.CopyBlobsToBucketArgsForCall(0)
 			Expect(destinationBucket).To(Equal(firstBucket))
 			Expect(sourcePath).To(Equal(timestamp + "/first"))
 
-			Expect(secondBackupBucket.CopyBlobsBetweenBucketsCallCount()).To(Equal(1))
-			destinationBucket, sourcePath = secondBackupBucket.CopyBlobsBetweenBucketsArgsForCall(0)
+			Expect(secondBackupBucket.CopyBlobsToBucketCallCount()).To(Equal(1))
+			destinationBucket, sourcePath = secondBackupBucket.CopyBlobsToBucketArgsForCall(0)
 			Expect(destinationBucket).To(Equal(secondBucket))
 			Expect(sourcePath).To(Equal(timestamp + "/second"))
 		})
 
 		Context("when a copy fails", func() {
 			BeforeEach(func() {
-				firstBackupBucket.CopyBlobsBetweenBucketsReturns(fmt.Errorf("foo"))
-				secondBackupBucket.CopyBlobsBetweenBucketsReturns(fmt.Errorf("foo"))
+				firstBackupBucket.CopyBlobsToBucketReturns(fmt.Errorf("foo"))
+				secondBackupBucket.CopyBlobsToBucketReturns(fmt.Errorf("foo"))
 			})
 
 			It("returns an error on the first failure", func() {
@@ -83,7 +83,7 @@ var _ = Describe("Restorer", func() {
 
 	Context("when there is a mismatch between the artifact and the config", func() {
 		It("fails if the artifact contains a bucket id that does not exist in the config", func() {
-			artifact = map[string]gcs.BackupBucketDirectory{
+			artifact = map[string]gcs.BucketBackup{
 				"first":  {},
 				"second": {},
 				"third":  {},
@@ -93,7 +93,7 @@ var _ = Describe("Restorer", func() {
 		})
 
 		It("fails if the config contains a bucket id that does not exist in the artifact", func() {
-			artifact = map[string]gcs.BackupBucketDirectory{"first": {}}
+			artifact = map[string]gcs.BucketBackup{"first": {}}
 			err := restorer.Restore(artifact)
 			Expect(err).To(MatchError("no entry found in restore artifact for bucket: second"))
 		})

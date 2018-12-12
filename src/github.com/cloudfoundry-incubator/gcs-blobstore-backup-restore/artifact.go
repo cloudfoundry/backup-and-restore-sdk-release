@@ -7,15 +7,15 @@ import (
 
 //go:generate counterfeiter -o fakes/fake_artifact.go . BackupArtifact
 type BackupArtifact interface {
-	Write(backups map[string]BackupBucketDirectory) error
-	Read() (map[string]BackupBucketDirectory, error)
+	Write(backups map[string]BucketBackup) error
+	Read() (map[string]BucketBackup, error)
 }
 
 type Artifact struct {
 	path string
 }
 
-type BackupBucketDirectory struct {
+type BucketBackup struct {
 	BucketName string `json:"bucket_name"`
 	Path       string `json:"path"`
 }
@@ -24,7 +24,7 @@ func NewArtifact(path string) Artifact {
 	return Artifact{path: path}
 }
 
-func (a Artifact) Write(backups map[string]BackupBucketDirectory) error {
+func (a Artifact) Write(backups map[string]BucketBackup) error {
 
 	filesContents, err := json.Marshal(backups)
 	if err != nil {
@@ -34,13 +34,13 @@ func (a Artifact) Write(backups map[string]BackupBucketDirectory) error {
 	return ioutil.WriteFile(a.path, filesContents, 0644)
 }
 
-func (a Artifact) Read() (map[string]BackupBucketDirectory, error) {
+func (a Artifact) Read() (map[string]BucketBackup, error) {
 	fileContents, err := ioutil.ReadFile(a.path)
 	if err != nil {
 		return nil, err
 	}
 
-	var backupBuckets = map[string]BackupBucketDirectory{}
+	var backupBuckets = map[string]BucketBackup{}
 
 	err = json.Unmarshal(fileContents, &backupBuckets)
 	if err != nil {

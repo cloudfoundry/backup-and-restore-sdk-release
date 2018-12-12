@@ -18,80 +18,80 @@ func NewBackuper(bucketPairs map[string]BucketPair) Backuper {
 	}
 }
 
-func (b *Backuper) Backup() (map[string]BackupBucketDirectory, error) {
-	backupBucketDirectories, commonBlobs, err := b.CreateLiveBucketSnapshot()
+func (b *Backuper) Backup() (map[string]BucketBackup, error) {
+	bucketBackups, previouslyBackedUpBlobs, err := b.CopyNewBlobs()
 	if err != nil {
 		return nil, err
 	}
 
-	err = b.CopyBlobsWithinBackupBucket(backupBucketDirectories, commonBlobs)
+	err = b.CopyPreviouslyBackedUpBlobs(bucketBackups, previouslyBackedUpBlobs)
 	if err != nil {
 		return nil, err
 	}
 
-	return backupBucketDirectories, nil
+	return bucketBackups, nil
 }
 
-func (b *Backuper) CreateLiveBucketSnapshot() (map[string]BackupBucketDirectory, map[string][]Blob, error) {
+func (b *Backuper) CopyNewBlobs() (map[string]BucketBackup, map[string][]Blob, error) {
 	timestamp := time.Now().Format(timestampFormat)
-	backupBucketDirectories := make(map[string]BackupBucketDirectory)
-	allCommonBlobs := make(map[string][]Blob)
+	bucketBackups := make(map[string]BucketBackup)
+	previouslyBackedUpBlobs := make(map[string][]Blob)
 
-	for bucketId, bucketPair := range b.bucketPairs {
-		var bucketCommonBlobs []Blob
+	for bucketID, bucketPair := range b.bucketPairs {
 		liveBucket := bucketPair.LiveBucket
 		backupBucket := bucketPair.BackupBucket
 
-		backupBucketDirectories[bucketId] = BackupBucketDirectory{
+		bucketBackups[bucketID] = BucketBackup{
 			BucketName: backupBucket.Name(),
-			Path:       fmt.Sprintf("%s/%s", timestamp, bucketId),
+			Path:       fmt.Sprintf("%s/%s", timestamp, bucketID),
 		}
 
-		lastBackupBlobs, err := bucketPair.BackupFinder.ListBlobs()
+		allBackupBlobs, err := bucketPair.BackupFinder.ListBlobs()
 		if err != nil {
 			return nil, nil, err
 		}
 
-		blobs, err := liveBucket.ListBlobs("")
+		liveBlobs, err := liveBucket.ListBlobs("")
 		if err != nil {
 			return nil, nil, err
 		}
 
-		for _, blob := range blobs {
-			if blobFromBackup, ok := lastBackupBlobs[blob.Name]; ok {
-				bucketCommonBlobs = append(bucketCommonBlobs, blobFromBackup)
+		var previouslyBackedUpBucketBlobs []Blob
+		for _, liveBlob := range liveBlobs {
+			if previouslyBackedUpLiveBlob, ok := allBackupBlobs[liveBlob.Name]; ok {
+				previouslyBackedUpBucketBlobs = append(previouslyBackedUpBucketBlobs, previouslyBackedUpLiveBlob)
 			} else {
-				err := liveBucket.CopyBlobBetweenBuckets(backupBucket, blob.Name, fmt.Sprintf("%s/%s", backupBucketDirectories[bucketId].Path, blob.Name))
+				err := liveBucket.CopyBlobToBucket(backupBucket, liveBlob.Name, fmt.Sprintf("%s/%s", bucketBackups[bucketID].Path, liveBlob.Name))
 				if err != nil {
 					return nil, nil, err
 				}
 			}
 		}
 
-		allCommonBlobs[bucketId] = bucketCommonBlobs
+		previouslyBackedUpBlobs[bucketID] = previouslyBackedUpBucketBlobs
 	}
-	return backupBucketDirectories, allCommonBlobs, nil
+	return bucketBackups, previouslyBackedUpBlobs, nil
 }
 
-func (b *Backuper) CopyBlobsWithinBackupBucket(backupBucketAddresses map[string]BackupBucketDirectory, commonBlobs map[string][]Blob) error {
-	for bucketId, backupBucketAddress := range backupBucketAddresses {
-		commonBlobList, ok := commonBlobs[bucketId]
+func (b *Backuper) CopyPreviouslyBackedUpBlobs(bucketBackups map[string]BucketBackup, previouslyBackedUpBlobs map[string][]Blob) error {
+	for bucketID, bucketBackup := range bucketBackups {
+		blobs, ok := previouslyBackedUpBlobs[bucketID]
 		if !ok {
-			return fmt.Errorf("cannot find commonBlobs for bucket id: %s", bucketId)
+			return fmt.Errorf("cannot find previously backed up blobs for bucket id: %s", bucketID)
 		}
 
-		backupBucket := b.bucketPairs[bucketId].BackupBucket
+		backupBucket := b.bucketPairs[bucketID].BackupBucket
 
-		for _, blob := range commonBlobList {
+		for _, blob := range blobs {
 			nameParts := strings.Split(blob.Name, "/")
-			destinationBlobName := fmt.Sprintf("%s/%s", backupBucketAddress.Path, nameParts[len(nameParts)-1])
+			destinationBlobName := fmt.Sprintf("%s/%s", bucketBackup.Path, nameParts[len(nameParts)-1])
 			err := backupBucket.CopyBlobWithinBucket(blob.Name, destinationBlobName)
 			if err != nil {
 				return err
 			}
 		}
 
-		err := backupBucket.MarkBackupComplete(backupBucketAddress.Path)
+		err := backupBucket.MarkBackupComplete(bucketBackup.Path)
 		if err != nil {
 			return err
 		}

@@ -152,73 +152,6 @@ var _ = Describe("Bucket", func() {
 		})
 	})
 
-	Describe("LastBackupBlobs", func() {
-		var backupBucketName string
-		var backupBucket gcs.Bucket
-		var err error
-
-		JustBeforeEach(func() {
-			backupBucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), backupBucketName)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		Context("when the bucket exists", func() {
-			BeforeEach(func() {
-				backupBucketName = CreateBucketWithTimestampedName("list_last_backup_blobs")
-			})
-
-			AfterEach(func() {
-				DeleteBucket(backupBucketName)
-			})
-
-			Context("when there are no previous backups", func() {
-				It("returns an empty map", func() {
-					blobs, err := backupBucket.LastBackupBlobs()
-					Expect(err).NotTo(HaveOccurred())
-					Expect(blobs).To(HaveLen(0))
-				})
-			})
-
-			Context("when there is one previous backup", func() {
-
-				BeforeEach(func() {
-					UploadFileWithDir(backupBucketName, "1970_01_01_00_00_00", "file1", "file-content")
-				})
-
-				It("returns all the blobs from the previous backup", func() {
-					blobs, err := backupBucket.LastBackupBlobs()
-					Expect(err).NotTo(HaveOccurred())
-					Expect(blobs).To(ConsistOf(gcs.Blob{Name: "1970_01_01_00_00_00/file1"}))
-				})
-			})
-
-			Context("when there is more than one previous backup", func() {
-
-				BeforeEach(func() {
-					UploadFileWithDir(backupBucketName, "1970_01_01_00_00_00", "file1", "file-content1")
-					UploadFileWithDir(backupBucketName, "1970_01_02_00_00_00", "file2", "file-content2")
-				})
-
-				It("returns only the blobs from the most recent previous backup", func() {
-					blobs, err := backupBucket.LastBackupBlobs()
-					Expect(err).NotTo(HaveOccurred())
-					Expect(blobs).To(ConsistOf(gcs.Blob{Name: "1970_01_02_00_00_00/file2"}))
-				})
-			})
-		})
-
-		Context("when the bucket does not exist", func() {
-			BeforeEach(func() {
-				backupBucketName = "not-a-bucket"
-			})
-
-			It("returns an error", func() {
-				_, err = backupBucket.LastBackupBlobs()
-				Expect(err).To(MatchError("storage: bucket doesn't exist"))
-			})
-		})
-	})
-
 	Describe("CopyBlobWithinBucket", func() {
 		var bucketName string
 		var bucket gcs.Bucket
@@ -254,7 +187,7 @@ var _ = Describe("Bucket", func() {
 		})
 	})
 
-	Describe("CopyBlobBetweenBuckets", func() {
+	Describe("CopyBlobToBucket", func() {
 		var srcBucketName string
 		var dstBucketName string
 		var srcBucket gcs.Bucket
@@ -283,7 +216,7 @@ var _ = Describe("Bucket", func() {
 			It("copies the blob to the specified location", func() {
 				blob := gcs.Blob{Name: "file1"}
 
-				err := srcBucket.CopyBlobBetweenBuckets(dstBucket, blob.Name, "copydir/file1")
+				err := srcBucket.CopyBlobToBucket(dstBucket, blob.Name, "copydir/file1")
 				Expect(err).NotTo(HaveOccurred())
 
 				blobs, err := dstBucket.ListBlobs("")
@@ -312,7 +245,7 @@ var _ = Describe("Bucket", func() {
 			})
 
 			It("errors with a useful message", func() {
-				err := srcBucket.CopyBlobBetweenBuckets(dstBucket, "foobar", "copydir/file1")
+				err := srcBucket.CopyBlobToBucket(dstBucket, "foobar", "copydir/file1")
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError(ContainSubstring("failed to copy object: ")))
 			})
@@ -332,14 +265,14 @@ var _ = Describe("Bucket", func() {
 			})
 
 			It("errors", func() {
-				err := srcBucket.CopyBlobBetweenBuckets(nil, "file1", "copydir/file1")
+				err := srcBucket.CopyBlobToBucket(nil, "file1", "copydir/file1")
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError("destination bucket does not exist"))
 			})
 		})
 	})
 
-	Describe("CopyBlobsBetweenBuckets", func() {
+	Describe("CopyBlobsToBucket", func() {
 		var (
 			srcBucketName string
 			dstBucketName string
@@ -373,7 +306,7 @@ var _ = Describe("Bucket", func() {
 		})
 
 		It("copies only the blobs from source/sourcePath to destination/destinationPath", func() {
-			err := srcBucket.CopyBlobsBetweenBuckets(dstBucket, "sourcePath")
+			err := srcBucket.CopyBlobsToBucket(dstBucket, "sourcePath")
 			Expect(err).NotTo(HaveOccurred())
 
 			blobs, err := dstBucket.ListBlobs("")
@@ -386,17 +319,17 @@ var _ = Describe("Bucket", func() {
 		})
 
 		It("returns an error if the destination bucket does not exist", func() {
-			err := srcBucket.CopyBlobsBetweenBuckets(nil, "sourcePath")
+			err := srcBucket.CopyBlobsToBucket(nil, "sourcePath")
 			Expect(err).To(MatchError("destination bucket does not exist"))
 		})
 
 		It("returns an error when the source bucket does not exist", func() {
-			err := badBucket.CopyBlobsBetweenBuckets(dstBucket, "path")
+			err := badBucket.CopyBlobsToBucket(dstBucket, "path")
 			Expect(err).To(HaveOccurred())
 		})
 
 		It("returns an error when the destination bucket does not exist", func() {
-			err := srcBucket.CopyBlobsBetweenBuckets(badBucket, "sourcePath")
+			err := srcBucket.CopyBlobsToBucket(badBucket, "sourcePath")
 			Expect(err).To(HaveOccurred())
 		})
 

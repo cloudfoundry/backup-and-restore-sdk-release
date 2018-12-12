@@ -20,10 +20,9 @@ type Bucket interface {
 	Name() string
 	ListBlobs(prefix string) ([]Blob, error)
 	ListBackups() ([]string, error)
-	LastBackupBlobs() (map[string]Blob, error)
-	CopyBlobWithinBucket(string, string) error
-	CopyBlobBetweenBuckets(Bucket, string, string) error
-	CopyBlobsBetweenBuckets(Bucket, string) error
+	CopyBlobWithinBucket(src string, dst string) error
+	CopyBlobToBucket(bucket Bucket, src string, dst string) error
+	CopyBlobsToBucket(bucket Bucket, src string) error
 	DeleteBlob(name string) error
 	MarkBackupComplete(prefix string) error
 	IsBackupComplete(prefix string) (bool, error)
@@ -31,11 +30,6 @@ type Bucket interface {
 
 type Blob struct {
 	Name string `json:"name"`
-}
-
-type BucketBackup struct {
-	Name  string `json:"name"`
-	Blobs []Blob `json:"blobs"`
 }
 
 type SDKBucket struct {
@@ -119,40 +113,11 @@ func (b SDKBucket) ListBackups() ([]string, error) {
 	return dirs, nil
 }
 
-func (b SDKBucket) LastBackupBlobs() (map[string]Blob, error) {
-	var lastBackupBlobs []Blob
-	lastBackupBlobsMap := make(map[string]Blob)
-
-	allBackupBlobs, err := b.ListBlobs("")
-	if err != nil {
-		return nil, err
-	}
-
-	if len(allBackupBlobs) == 0 {
-		return nil, nil
-	}
-
-	lastBackupTimestamp := strings.Split(allBackupBlobs[len(allBackupBlobs)-1].Name, "/")[0]
-
-	for _, blob := range allBackupBlobs {
-		if strings.HasPrefix(blob.Name, lastBackupTimestamp) {
-			lastBackupBlobs = append(lastBackupBlobs, blob)
-		}
-	}
-
-	for _, blob := range lastBackupBlobs {
-		nameParts := strings.Split(blob.Name, "/")
-		lastBackupBlobsMap[nameParts[len(nameParts)-1]] = blob
-	}
-
-	return lastBackupBlobsMap, nil
-}
-
 func (b SDKBucket) CopyBlobWithinBucket(srcBlob, dstBlob string) error {
-	return b.CopyBlobBetweenBuckets(b, srcBlob, dstBlob)
+	return b.CopyBlobToBucket(b, srcBlob, dstBlob)
 }
 
-func (b SDKBucket) CopyBlobBetweenBuckets(dstBucket Bucket, srcBlob, dstBlob string) error {
+func (b SDKBucket) CopyBlobToBucket(dstBucket Bucket, srcBlob, dstBlob string) error {
 	if dstBucket == nil {
 		return errors.New("destination bucket does not exist")
 	}
@@ -167,8 +132,8 @@ func (b SDKBucket) CopyBlobBetweenBuckets(dstBucket Bucket, srcBlob, dstBlob str
 	return nil
 }
 
-func (b SDKBucket) CopyBlobsBetweenBuckets(destinationBucket Bucket, sourcePath string) error {
-	if destinationBucket == nil {
+func (b SDKBucket) CopyBlobsToBucket(dstBucket Bucket, srcPrefix string) error {
+	if dstBucket == nil {
 		return errors.New("destination bucket does not exist")
 	}
 
@@ -178,9 +143,9 @@ func (b SDKBucket) CopyBlobsBetweenBuckets(destinationBucket Bucket, sourcePath 
 	}
 
 	for _, blob := range blobs {
-		if strings.HasPrefix(blob.Name, sourcePath+"/") {
-			destinationName := strings.TrimPrefix(blob.Name, sourcePath+"/")
-			err = b.CopyBlobBetweenBuckets(destinationBucket, blob.Name, destinationName)
+		if strings.HasPrefix(blob.Name, srcPrefix+"/") {
+			destinationName := strings.TrimPrefix(blob.Name, srcPrefix+"/")
+			err = b.CopyBlobToBucket(dstBucket, blob.Name, destinationName)
 			if err != nil {
 				return err
 			}

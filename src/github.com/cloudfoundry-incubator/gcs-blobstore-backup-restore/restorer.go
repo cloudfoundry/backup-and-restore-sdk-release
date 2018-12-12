@@ -12,7 +12,7 @@ func NewRestorer(buckets map[string]BucketPair) Restorer {
 	}
 }
 
-func (r Restorer) Restore(backupArtifact map[string]BackupBucketDirectory) error {
+func (r Restorer) Restore(backupArtifact map[string]BucketBackup) error {
 	for bucketID := range backupArtifact {
 		_, ok := r.buckets[bucketID]
 		if !ok {
@@ -28,7 +28,7 @@ func (r Restorer) Restore(backupArtifact map[string]BackupBucketDirectory) error
 	}
 
 	for bucketID, backupBucketDirectory := range backupArtifact {
-		err := r.buckets[bucketID].BackupBucket.CopyBlobsBetweenBuckets(
+		err := r.buckets[bucketID].BackupBucket.CopyBlobsToBucket(
 			r.buckets[bucketID].LiveBucket,
 			backupBucketDirectory.Path,
 		)

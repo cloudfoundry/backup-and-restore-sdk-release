@@ -8,10 +8,10 @@ import (
 )
 
 type FakeBackupArtifact struct {
-	WriteStub        func(backups map[string]gcs.BackupBucketDirectory) error
+	WriteStub        func(backups map[string]gcs.BucketBackup) error
 	writeMutex       sync.RWMutex
 	writeArgsForCall []struct {
-		backups map[string]gcs.BackupBucketDirectory
+		backups map[string]gcs.BucketBackup
 	}
 	writeReturns struct {
 		result1 error
@@ -19,26 +19,26 @@ type FakeBackupArtifact struct {
 	writeReturnsOnCall map[int]struct {
 		result1 error
 	}
-	ReadStub        func() (map[string]gcs.BackupBucketDirectory, error)
+	ReadStub        func() (map[string]gcs.BucketBackup, error)
 	readMutex       sync.RWMutex
 	readArgsForCall []struct{}
 	readReturns     struct {
-		result1 map[string]gcs.BackupBucketDirectory
+		result1 map[string]gcs.BucketBackup
 		result2 error
 	}
 	readReturnsOnCall map[int]struct {
-		result1 map[string]gcs.BackupBucketDirectory
+		result1 map[string]gcs.BucketBackup
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeBackupArtifact) Write(backups map[string]gcs.BackupBucketDirectory) error {
+func (fake *FakeBackupArtifact) Write(backups map[string]gcs.BucketBackup) error {
 	fake.writeMutex.Lock()
 	ret, specificReturn := fake.writeReturnsOnCall[len(fake.writeArgsForCall)]
 	fake.writeArgsForCall = append(fake.writeArgsForCall, struct {
-		backups map[string]gcs.BackupBucketDirectory
+		backups map[string]gcs.BucketBackup
 	}{backups})
 	fake.recordInvocation("Write", []interface{}{backups})
 	fake.writeMutex.Unlock()
@@ -57,7 +57,7 @@ func (fake *FakeBackupArtifact) WriteCallCount() int {
 	return len(fake.writeArgsForCall)
 }
 
-func (fake *FakeBackupArtifact) WriteArgsForCall(i int) map[string]gcs.BackupBucketDirectory {
+func (fake *FakeBackupArtifact) WriteArgsForCall(i int) map[string]gcs.BucketBackup {
 	fake.writeMutex.RLock()
 	defer fake.writeMutex.RUnlock()
 	return fake.writeArgsForCall[i].backups
@@ -82,7 +82,7 @@ func (fake *FakeBackupArtifact) WriteReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeBackupArtifact) Read() (map[string]gcs.BackupBucketDirectory, error) {
+func (fake *FakeBackupArtifact) Read() (map[string]gcs.BucketBackup, error) {
 	fake.readMutex.Lock()
 	ret, specificReturn := fake.readReturnsOnCall[len(fake.readArgsForCall)]
 	fake.readArgsForCall = append(fake.readArgsForCall, struct{}{})
@@ -103,24 +103,24 @@ func (fake *FakeBackupArtifact) ReadCallCount() int {
 	return len(fake.readArgsForCall)
 }
 
-func (fake *FakeBackupArtifact) ReadReturns(result1 map[string]gcs.BackupBucketDirectory, result2 error) {
+func (fake *FakeBackupArtifact) ReadReturns(result1 map[string]gcs.BucketBackup, result2 error) {
 	fake.ReadStub = nil
 	fake.readReturns = struct {
-		result1 map[string]gcs.BackupBucketDirectory
+		result1 map[string]gcs.BucketBackup
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeBackupArtifact) ReadReturnsOnCall(i int, result1 map[string]gcs.BackupBucketDirectory, result2 error) {
+func (fake *FakeBackupArtifact) ReadReturnsOnCall(i int, result1 map[string]gcs.BucketBackup, result2 error) {
 	fake.ReadStub = nil
 	if fake.readReturnsOnCall == nil {
 		fake.readReturnsOnCall = make(map[int]struct {
-			result1 map[string]gcs.BackupBucketDirectory
+			result1 map[string]gcs.BucketBackup
 			result2 error
 		})
 	}
 	fake.readReturnsOnCall[i] = struct {
-		result1 map[string]gcs.BackupBucketDirectory
+		result1 map[string]gcs.BucketBackup
 		result2 error
 	}{result1, result2}
 }
