@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const timestampFormat = "2006_01_02_15_04_05"
+
 type Backuper struct {
 	bucketPairs map[string]BucketPair
 }
@@ -31,7 +33,7 @@ func (b *Backuper) Backup() (map[string]BackupBucketDirectory, error) {
 }
 
 func (b *Backuper) CreateLiveBucketSnapshot() (map[string]BackupBucketDirectory, map[string][]Blob, error) {
-	timestamp := time.Now().Format("2006_01_02_15_04_05")
+	timestamp := time.Now().Format(timestampFormat)
 	backupBucketDirectories := make(map[string]BackupBucketDirectory)
 	allCommonBlobs := make(map[string][]Blob)
 

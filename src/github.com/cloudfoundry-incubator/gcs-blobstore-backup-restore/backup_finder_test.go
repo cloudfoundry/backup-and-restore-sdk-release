@@ -12,6 +12,7 @@ import (
 
 var _ = Describe("BackupFinder", func() {
 	const (
+		bucketID        = "bucket-id"
 		firstBackupDir  = "first-backup-dir"
 		secondBackupDir = "second-backup-dir"
 		thirdBackupDir  = "third-backup-dir"
@@ -26,7 +27,7 @@ var _ = Describe("BackupFinder", func() {
 		BeforeEach(func() {
 			backupBucket = new(fakes.FakeBucket)
 
-			backupBucket.ListDirectoriesReturns([]string{firstBackupDir}, nil)
+			backupBucket.ListBackupsReturns([]string{firstBackupDir}, nil)
 			backupBucket.IsBackupCompleteReturns(true, nil)
 
 			backupFinder = gcs.NewLastBackupFinder(backupBucket)
@@ -34,16 +35,16 @@ var _ = Describe("BackupFinder", func() {
 
 		Context("when there is a complete backup", func() {
 			It("lists all backup blobs", func() {
-				someBlob := gcs.Blob{Name: fmt.Sprintf("%s/bucket-id/some-blob-name", firstBackupDir)}
-				anotherBlob := gcs.Blob{Name: fmt.Sprintf("%s/bucket-id/another-blob-name", firstBackupDir)}
+				someBlob := gcs.Blob{Name: fmt.Sprintf("%s/%s/some-blob-name", firstBackupDir, bucketID)}
+				anotherBlob := gcs.Blob{Name: fmt.Sprintf("%s/%s/another-blob-name", firstBackupDir, bucketID)}
 				lastBackupBlobs := []gcs.Blob{someBlob, anotherBlob}
 				backupBucket.ListBlobsReturns(lastBackupBlobs, nil)
 
 				blobs, err := backupFinder.ListBlobs()
 
 				Expect(err).NotTo(HaveOccurred())
-				By("calling listDirectories", func() {
-					Expect(backupBucket.ListDirectoriesCallCount()).To(Equal(1))
+				By("calling ListBackups", func() {
+					Expect(backupBucket.ListBackupsCallCount()).To(Equal(1))
 				})
 
 				By("checking if the last directory is complete", func() {
@@ -65,7 +66,7 @@ var _ = Describe("BackupFinder", func() {
 
 		Context("when there is no complete backup", func() {
 			It("returns an empty blobs map", func() {
-				backupBucket.ListDirectoriesReturns([]string{firstBackupDir, secondBackupDir, thirdBackupDir}, nil)
+				backupBucket.ListBackupsReturns([]string{firstBackupDir, secondBackupDir, thirdBackupDir}, nil)
 				backupBucket.IsBackupCompleteReturnsOnCall(0, false, nil)
 				backupBucket.IsBackupCompleteReturnsOnCall(1, false, nil)
 				backupBucket.IsBackupCompleteReturnsOnCall(2, false, nil)
@@ -84,11 +85,11 @@ var _ = Describe("BackupFinder", func() {
 
 		Context("when there are multiple backups and only one is complete", func() {
 			It("lists all the complete backup blobs", func() {
-				backupBucket.ListDirectoriesReturns([]string{firstBackupDir, secondBackupDir, thirdBackupDir}, nil)
+				backupBucket.ListBackupsReturns([]string{firstBackupDir, secondBackupDir, thirdBackupDir}, nil)
 				backupBucket.IsBackupCompleteReturnsOnCall(0, false, nil)
 				backupBucket.IsBackupCompleteReturnsOnCall(1, true, nil)
 
-				blob := gcs.Blob{Name: fmt.Sprintf("%s/bucket-id/some-blob-name", secondBackupDir)}
+				blob := gcs.Blob{Name: fmt.Sprintf("%s/%s/some-blob-name", secondBackupDir, bucketID)}
 				lastBackupBlobs := []gcs.Blob{blob}
 				backupBucket.ListBlobsReturns(lastBackupBlobs, nil)
 
@@ -108,7 +109,7 @@ var _ = Describe("BackupFinder", func() {
 
 		Context("when there are no directories in the backup bucket", func() {
 			It("returns an empty blobs map", func() {
-				backupBucket.ListDirectoriesReturns(nil, nil)
+				backupBucket.ListBackupsReturns(nil, nil)
 
 				blobs, err := backupFinder.ListBlobs()
 
@@ -118,7 +119,7 @@ var _ = Describe("BackupFinder", func() {
 		})
 
 		It("returns an error when listing directories fails", func() {
-			backupBucket.ListDirectoriesReturns(nil, errors.New("failed"))
+			backupBucket.ListBackupsReturns(nil, errors.New("failed"))
 
 			_, err := backupFinder.ListBlobs()
 

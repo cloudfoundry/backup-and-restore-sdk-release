@@ -30,14 +30,14 @@ type FakeBucket struct {
 		result1 []gcs.Blob
 		result2 error
 	}
-	ListDirectoriesStub        func() ([]string, error)
-	listDirectoriesMutex       sync.RWMutex
-	listDirectoriesArgsForCall []struct{}
-	listDirectoriesReturns     struct {
+	ListBackupsStub        func() ([]string, error)
+	listBackupsMutex       sync.RWMutex
+	listBackupsArgsForCall []struct{}
+	listBackupsReturns     struct {
 		result1 []string
 		result2 error
 	}
-	listDirectoriesReturnsOnCall map[int]struct {
+	listBackupsReturnsOnCall map[int]struct {
 		result1 []string
 		result2 error
 	}
@@ -219,44 +219,44 @@ func (fake *FakeBucket) ListBlobsReturnsOnCall(i int, result1 []gcs.Blob, result
 	}{result1, result2}
 }
 
-func (fake *FakeBucket) ListDirectories() ([]string, error) {
-	fake.listDirectoriesMutex.Lock()
-	ret, specificReturn := fake.listDirectoriesReturnsOnCall[len(fake.listDirectoriesArgsForCall)]
-	fake.listDirectoriesArgsForCall = append(fake.listDirectoriesArgsForCall, struct{}{})
-	fake.recordInvocation("ListDirectories", []interface{}{})
-	fake.listDirectoriesMutex.Unlock()
-	if fake.ListDirectoriesStub != nil {
-		return fake.ListDirectoriesStub()
+func (fake *FakeBucket) ListBackups() ([]string, error) {
+	fake.listBackupsMutex.Lock()
+	ret, specificReturn := fake.listBackupsReturnsOnCall[len(fake.listBackupsArgsForCall)]
+	fake.listBackupsArgsForCall = append(fake.listBackupsArgsForCall, struct{}{})
+	fake.recordInvocation("ListBackups", []interface{}{})
+	fake.listBackupsMutex.Unlock()
+	if fake.ListBackupsStub != nil {
+		return fake.ListBackupsStub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.listDirectoriesReturns.result1, fake.listDirectoriesReturns.result2
+	return fake.listBackupsReturns.result1, fake.listBackupsReturns.result2
 }
 
-func (fake *FakeBucket) ListDirectoriesCallCount() int {
-	fake.listDirectoriesMutex.RLock()
-	defer fake.listDirectoriesMutex.RUnlock()
-	return len(fake.listDirectoriesArgsForCall)
+func (fake *FakeBucket) ListBackupsCallCount() int {
+	fake.listBackupsMutex.RLock()
+	defer fake.listBackupsMutex.RUnlock()
+	return len(fake.listBackupsArgsForCall)
 }
 
-func (fake *FakeBucket) ListDirectoriesReturns(result1 []string, result2 error) {
-	fake.ListDirectoriesStub = nil
-	fake.listDirectoriesReturns = struct {
+func (fake *FakeBucket) ListBackupsReturns(result1 []string, result2 error) {
+	fake.ListBackupsStub = nil
+	fake.listBackupsReturns = struct {
 		result1 []string
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeBucket) ListDirectoriesReturnsOnCall(i int, result1 []string, result2 error) {
-	fake.ListDirectoriesStub = nil
-	if fake.listDirectoriesReturnsOnCall == nil {
-		fake.listDirectoriesReturnsOnCall = make(map[int]struct {
+func (fake *FakeBucket) ListBackupsReturnsOnCall(i int, result1 []string, result2 error) {
+	fake.ListBackupsStub = nil
+	if fake.listBackupsReturnsOnCall == nil {
+		fake.listBackupsReturnsOnCall = make(map[int]struct {
 			result1 []string
 			result2 error
 		})
 	}
-	fake.listDirectoriesReturnsOnCall[i] = struct {
+	fake.listBackupsReturnsOnCall[i] = struct {
 		result1 []string
 		result2 error
 	}{result1, result2}
@@ -607,8 +607,8 @@ func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	defer fake.nameMutex.RUnlock()
 	fake.listBlobsMutex.RLock()
 	defer fake.listBlobsMutex.RUnlock()
-	fake.listDirectoriesMutex.RLock()
-	defer fake.listDirectoriesMutex.RUnlock()
+	fake.listBackupsMutex.RLock()
+	defer fake.listBackupsMutex.RUnlock()
 	fake.lastBackupBlobsMutex.RLock()
 	defer fake.lastBackupBlobsMutex.RUnlock()
 	fake.copyBlobWithinBucketMutex.RLock()

@@ -3,6 +3,7 @@ package gcs
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"cloud.google.com/go/storage"
@@ -18,7 +19,7 @@ const readWriteScope = "https://www.googleapis.com/auth/devstorage.read_write"
 type Bucket interface {
 	Name() string
 	ListBlobs(prefix string) ([]Blob, error)
-	ListDirectories() ([]string, error)
+	ListBackups() ([]string, error)
 	LastBackupBlobs() (map[string]Blob, error)
 	CopyBlobWithinBucket(string, string) error
 	CopyBlobBetweenBuckets(Bucket, string, string) error
@@ -86,8 +87,32 @@ func (b SDKBucket) ListBlobs(_ string) ([]Blob, error) {
 	return blobs, nil
 }
 
-func (b SDKBucket) ListDirectories() ([]string, error) {
-	panic("implement me")
+func (b SDKBucket) ListBackups() ([]string, error) {
+	var dirs []string
+
+	storageQuery := &storage.Query{
+		Delimiter: "/",
+	}
+	objectsIterator := b.handle.Objects(b.ctx, storageQuery)
+	for {
+		objectAttributes, err := objectsIterator.Next()
+		if err != nil {
+			if err == iterator.Done {
+				break
+			}
+
+			return nil, err
+		}
+
+		dir := strings.TrimSuffix(objectAttributes.Prefix, "/")
+		regex := regexp.MustCompile(`^\d{4}(_\d{2}){5}$`)
+
+		if regex.MatchString(dir) {
+			dirs = append(dirs, dir)
+		}
+	}
+
+	return dirs, nil
 }
 
 func (b SDKBucket) LastBackupBlobs() (map[string]Blob, error) {

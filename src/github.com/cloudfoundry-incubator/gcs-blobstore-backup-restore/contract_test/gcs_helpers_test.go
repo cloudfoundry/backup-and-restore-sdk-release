@@ -46,7 +46,7 @@ func UploadFile(bucketName, blobName, fileContents string) {
 }
 
 func UploadFileWithDir(bucketName, dir, blobName, fileContents string) {
-	file := createTmpFile(dir, blobName, fileContents)
+	file := createTmpFile("", blobName, fileContents)
 	runSuccessfully("gsutil", "cp", "-v", file.Name(), "gs://"+bucketName+"/"+dir+"/"+blobName)
 }
 

@@ -21,7 +21,7 @@ func NewLastBackupFinder(bucket Bucket) *LastBackupFinder {
 }
 
 func (f *LastBackupFinder) ListBlobs() (map[string]Blob, error) {
-	directories, err := f.bucket.ListDirectories()
+	directories, err := f.bucket.ListBackups()
 	if err != nil {
 		return nil, fmt.Errorf("failed listing last backup blobs: %s", err)
 	}

@@ -92,6 +92,68 @@ var _ = Describe("Bucket", func() {
 		})
 	})
 
+	Describe("ListBackups", func() {
+		var (
+			bucketName string
+			bucket     gcs.Bucket
+			err        error
+		)
+
+		BeforeEach(func() {
+			bucketName = CreateBucketWithTimestampedName("list-directories")
+
+			bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			DeleteBucket(bucketName)
+		})
+
+		Context("when the bucket only contains backups", func() {
+			It("returns the list of backups in lexical order", func() {
+				thirdBackup := "2006_03_03_03_03_03"
+				UploadFileWithDir(bucketName, fmt.Sprintf("%s/baz/foo/bar", thirdBackup), "some-blob", "")
+
+				firstBackup := "2006_01_01_01_01_01"
+				UploadFileWithDir(bucketName, fmt.Sprintf("%s/foo/bar/baz", firstBackup), "some-blob", "")
+
+				secondBackup := "2006_02_02_02_02_02"
+				UploadFileWithDir(bucketName, fmt.Sprintf("%s/foo/bar/baz", secondBackup), "some-blob", "")
+
+				backups, err := bucket.ListBackups()
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(backups).To(Equal([]string{firstBackup, secondBackup, thirdBackup}))
+			})
+		})
+
+		Context("when the bucket contains backups and other objects", func() {
+			It("only returns the backups", func() {
+				backup := "2006_01_02_15_04_05"
+				UploadFileWithDir(bucketName, fmt.Sprintf("%s/foo/bar/baz", backup), "some-blob", "")
+				UploadFileWithDir(bucketName, "baz/foo/bar", "some-different-blob", "")
+				UploadFile(bucketName, "some-top-level-blob", "")
+
+				backups, err := bucket.ListBackups()
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(backups).To(ConsistOf(backup))
+			})
+		})
+
+		Context("when the bucket does not exist", func() {
+			It("returns an error", func() {
+				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), "idontexist")
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err := bucket.ListBackups()
+
+				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
+
 	Describe("LastBackupBlobs", func() {
 		var backupBucketName string
 		var backupBucket gcs.Bucket
