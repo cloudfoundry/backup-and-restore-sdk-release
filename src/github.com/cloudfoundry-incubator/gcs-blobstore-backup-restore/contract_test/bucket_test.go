@@ -52,21 +52,19 @@ var _ = Describe("Bucket", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		Context("when the bucket has files", func() {
+		Context("when the bucket contains multiple files and some match the prefix", func() {
 			BeforeEach(func() {
 				bucketName = CreateBucketWithTimestampedName("list_blobs")
-				UploadFileWithDir(bucketName, "dir1", "file1", "file-content")
-				UploadFileWithDir(bucketName, "dir2", "file2", "file-content")
+				UploadFileWithDir(bucketName, "my/prefix", "file1", "file-content")
+				UploadFileWithDir(bucketName, "not/my/prefix", "file2", "file-content")
 				UploadFile(bucketName, "file3", "file-content")
 			})
 
-			It("lists all files", func() {
-				blobs, err := bucket.ListBlobs("")
+			It("lists all files that have the prefix", func() {
+				blobs, err := bucket.ListBlobs("my/prefix")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(ConsistOf(
-					gcs.Blob{Name: "dir1/file1"},
-					gcs.Blob{Name: "dir2/file2"},
-					gcs.Blob{Name: "file3"},
+					gcs.Blob{Name: "my/prefix/file1"},
 				))
 			})
 

@@ -67,17 +67,21 @@ func (b SDKBucket) Name() string {
 	return b.name
 }
 
-func (b SDKBucket) ListBlobs(_ string) ([]Blob, error) {
+func (b SDKBucket) ListBlobs(prefix string) ([]Blob, error) {
 	var blobs []Blob
 
-	objectsIterator := b.handle.Objects(b.ctx, nil)
+	query := &storage.Query{
+		Prefix: prefix,
+	}
+	objectsIterator := b.handle.Objects(b.ctx, query)
+
 	for {
 		objectAttributes, err := objectsIterator.Next()
-		if err == iterator.Done {
-			break
-		}
-
 		if err != nil {
+			if err == iterator.Done {
+				break
+			}
+
 			return nil, err
 		}
 
