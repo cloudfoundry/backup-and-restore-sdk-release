@@ -1,8 +1,13 @@
 package gcs
 
-import "fmt"
+import (
+	"strings"
+)
 
-const backupCompleteIdentifier = "backup_complete"
+const (
+	backupCompleteIdentifier = "backup_complete"
+	blobNameDelimiter        = "/"
+)
 
 type Blob struct {
 	name string `json:"name"`
@@ -15,8 +20,13 @@ func NewBlob(name string) Blob {
 }
 
 func NewBackupCompleteBlob(prefix string) Blob {
+	name := prefix + blobNameDelimiter + backupCompleteIdentifier
+	if prefix == "" {
+		name = backupCompleteIdentifier
+	}
+
 	return Blob{
-		name: fmt.Sprintf("%s/%s", prefix, backupCompleteIdentifier),
+		name: name,
 	}
 }
 
@@ -24,6 +34,11 @@ func (b Blob) Name() string {
 	return b.name
 }
 
+func (b Blob) Resource() string {
+	parts := strings.Split(b.name, blobNameDelimiter)
+	return parts[len(parts)-1]
+}
+
 func (b Blob) IsBackupComplete() bool {
-	return b.name == backupCompleteIdentifier
+	return b.Resource() == backupCompleteIdentifier
 }

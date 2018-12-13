@@ -12,8 +12,8 @@ func NewRestorer(buckets map[string]BucketPair) Restorer {
 	}
 }
 
-func (r Restorer) Restore(backupArtifact map[string]BucketBackup) error {
-	for bucketID := range backupArtifact {
+func (r Restorer) Restore(bucketBackups map[string]BucketBackup) error {
+	for bucketID := range bucketBackups {
 		_, ok := r.buckets[bucketID]
 		if !ok {
 			return fmt.Errorf("no entry found in restore config for bucket: %s", bucketID)
@@ -21,16 +21,16 @@ func (r Restorer) Restore(backupArtifact map[string]BucketBackup) error {
 	}
 
 	for bucketID := range r.buckets {
-		_, ok := backupArtifact[bucketID]
+		_, ok := bucketBackups[bucketID]
 		if !ok {
 			return fmt.Errorf("no entry found in restore artifact for bucket: %s", bucketID)
 		}
 	}
 
-	for bucketID, backupBucketDirectory := range backupArtifact {
+	for bucketID, bucketBackup := range bucketBackups {
 		err := r.buckets[bucketID].BackupBucket.CopyBlobsToBucket(
 			r.buckets[bucketID].LiveBucket,
-			backupBucketDirectory.Path,
+			bucketBackup.Path,
 		)
 		if err != nil {
 			return err

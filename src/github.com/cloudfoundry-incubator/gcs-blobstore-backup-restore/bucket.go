@@ -75,7 +75,7 @@ func (b SDKBucket) ListBlobs(prefix string) ([]Blob, error) {
 			return nil, err
 		}
 
-		blobs = append(blobs, Blob{name: objectAttributes.Name})
+		blobs = append(blobs, NewBlob(objectAttributes.Name))
 	}
 
 	return blobs, nil
@@ -139,8 +139,13 @@ func (b SDKBucket) CopyBlobsToBucket(dstBucket Bucket, srcPrefix string) error {
 	}
 
 	for _, blob := range blobs {
-		if strings.HasPrefix(blob.Name(), srcPrefix+"/") {
-			destinationName := strings.TrimPrefix(blob.Name(), srcPrefix+"/")
+		if blob.IsBackupComplete() {
+			continue
+		}
+
+		if strings.HasPrefix(blob.Name(), srcPrefix+blobNameDelimiter) {
+			destinationName := strings.TrimPrefix(blob.Name(), srcPrefix+blobNameDelimiter)
+
 			err = b.CopyBlobToBucket(dstBucket, blob.Name(), destinationName)
 			if err != nil {
 				return err

@@ -281,10 +281,11 @@ var _ = Describe("Bucket", func() {
 		BeforeEach(func() {
 			srcBucketName = CreateBucketWithTimestampedName("src")
 			dstBucketName = CreateBucketWithTimestampedName("dst")
-			UploadFile(srcBucketName, "file1", "file-content")
-			UploadFile(dstBucketName, "file4", "file-content")
+			UploadFile(srcBucketName, "notInSourcePath", "file-content")
+			UploadFile(dstBucketName, "alreadyInDstBucket", "file-content")
+			UploadFileWithDir(srcBucketName, "sourcePath", "file1", "file-content1")
 			UploadFileWithDir(srcBucketName, "sourcePath", "file2", "file-content2")
-			UploadFileWithDir(srcBucketName, "sourcePath", "file3", "file-content3")
+			UploadFileWithDir(srcBucketName, "sourcePath", gcs.NewBackupCompleteBlob("sourcePath").Resource(), "")
 
 			srcBucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), srcBucketName)
 			Expect(err).NotTo(HaveOccurred())
@@ -308,10 +309,19 @@ var _ = Describe("Bucket", func() {
 			blobs, err := dstBucket.ListBlobs("")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(blobs).To(ConsistOf(
+				gcs.NewBlob("file1"),
 				gcs.NewBlob("file2"),
-				gcs.NewBlob("file3"),
-				gcs.NewBlob("file4"),
+				gcs.NewBlob("alreadyInDstBucket"),
 			))
+		})
+
+		It("skips copying backup complete blobs to the destination", func() {
+			err := srcBucket.CopyBlobsToBucket(dstBucket, "sourcePath")
+			Expect(err).NotTo(HaveOccurred())
+
+			blobs, err := dstBucket.ListBlobs("")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(blobs).NotTo(ContainElement(gcs.NewBackupCompleteBlob("")))
 		})
 
 		It("returns an error if the destination bucket does not exist", func() {

@@ -152,10 +152,10 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 						Expect(liveBucketContent).To(ContainSubstring(blob2))
 						Expect(liveBucketContent).To(ContainSubstring(blob3))
 						Expect(liveBucketContent).To(ContainSubstring(blob4))
+						Expect(liveBucketContent).NotTo(ContainSubstring("backup_complete"))
 					})
 				})
 			})
-
 		})
 	})
 })
