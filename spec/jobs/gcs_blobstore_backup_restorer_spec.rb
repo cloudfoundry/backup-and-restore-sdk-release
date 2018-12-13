@@ -11,7 +11,7 @@ describe 'gcs-blobstore-backup-restorer job' do
   let(:gcp_service_account_key_template) { job.template('config/gcp-service-account-key.json') }
   let(:restore_template) { job.template('bin/bbr/restore') }
 
-  describe 'backup' do
+  describe 'backuper templates' do
     context 'when backup is not enabled' do
       it 'the templated script is empty' do
         config = backup_template.render({})
@@ -46,7 +46,52 @@ describe 'gcs-blobstore-backup-restorer job' do
                 "gcp_service_account_key" => "{}"
                 }
               }
-          ) }.to(raise_error(RuntimeError, 'Invalid bucket configuration for droplets, bucket_name and backup_bucket_name must be distinct'))
+          ) }.to(raise_error(RuntimeError, "Invalid bucket configuration for 'droplets', bucket_name and backup_bucket_name must be distinct"))
+        end
+      end
+
+      context 'and the live bucket name is blank' do
+        it 'errors' do
+          manifest = {
+            "buckets" => {
+              "droplets" => {
+                "bucket_name" => "     ",
+                "backup_bucket_name" => "my_backup_bucket",
+              }
+            }
+          }
+          expect { buckets_template.render(manifest) }.to(raise_error(
+            RuntimeError, "Invalid bucket configuration for 'droplets', bucket_name and backup_bucket_name must be configured"
+          ))
+        end
+      end
+
+      context 'and the backup bucket name is blank' do
+        it 'errors' do
+          manifest = {
+            "buckets" => {
+              "droplets" => {
+                "bucket_name" => "my_bucket",
+                "backup_bucket_name" => " ",
+              }
+            }
+          }
+          expect { buckets_template.render(manifest) }.to(raise_error(
+            RuntimeError, "Invalid bucket configuration for 'droplets', bucket_name and backup_bucket_name must be configured"
+          ))
+        end
+      end
+
+      context 'and the buckets are empty hash' do
+        it 'errors' do
+          manifest = {
+            "buckets" => {
+              "droplets" => {}
+            }
+          }
+          expect { buckets_template.render(manifest) }.to(raise_error(
+            RuntimeError, "Invalid bucket configuration for 'droplets', bucket_name and backup_bucket_name must be configured"
+          ))
         end
       end
 
@@ -73,7 +118,7 @@ describe 'gcs-blobstore-backup-restorer job' do
                 "gcp_service_account_key" => "{}"
               }
             }
-          ) }.to(raise_error(RuntimeError, 'Invalid bucket configuration, bucket2 is used as a source bucket and a backup bucket'))
+          ) }.to(raise_error(RuntimeError, "Invalid bucket configuration, 'bucket2' is used as a source bucket and a backup bucket"))
         end
       end
     end

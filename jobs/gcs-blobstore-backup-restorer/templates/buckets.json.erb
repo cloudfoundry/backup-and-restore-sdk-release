@@ -1,21 +1,32 @@
 <%=
   def validate_buckets(buckets)
+    buckets.each do |bucket_id, bucket|
+      bucket_name = bucket.fetch('bucket_name', '')
+      if bucket_name.strip.empty?
+        raise "Invalid bucket configuration for '#{bucket_id}', bucket_name and backup_bucket_name must be configured"
+      end
+
+      backup_bucket_name = bucket.fetch('backup_bucket_name', '')
+      if backup_bucket_name.strip.empty?
+        raise "Invalid bucket configuration for '#{bucket_id}', bucket_name and backup_bucket_name must be configured"
+      end
+
+      if bucket_name.eql? backup_bucket_name
+        raise "Invalid bucket configuration for '#{bucket_id}', bucket_name and backup_bucket_name must be distinct"
+      end
+    end
 
     bucket_names = []
     backup_bucket_names = []
 
-    buckets.each do |name, bucket|
+    buckets.each do |bucket_id, bucket|
       bucket_names << bucket['bucket_name']
       backup_bucket_names << bucket['backup_bucket_name']
-
-      if bucket['bucket_name'].eql? bucket['backup_bucket_name']
-        raise "Invalid bucket configuration for "+name+", bucket_name and backup_bucket_name must be distinct"
-      end
     end
 
     backup_bucket_names.each do |name|
       if bucket_names.include? name
-        raise "Invalid bucket configuration, "+name+" is used as a source bucket and a backup bucket"
+        raise "Invalid bucket configuration, '#{name}' is used as a source bucket and a backup bucket"
       end
     end
   end
