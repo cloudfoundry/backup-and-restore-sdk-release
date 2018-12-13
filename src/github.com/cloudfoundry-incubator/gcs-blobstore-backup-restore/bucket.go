@@ -54,7 +54,7 @@ func NewSDKBucket(serviceAccountKeyJson string, name string) (SDKBucket, error) 
 }
 
 func (b SDKBucket) Name() string {
-	return b.Name()
+	return b.name
 }
 
 func (b SDKBucket) ListBlobs(prefix string) ([]Blob, error) {

@@ -162,7 +162,6 @@ var _ = Describe("Bucket", func() {
 		})
 
 		Context("copying an existing file", func() {
-
 			BeforeEach(func() {
 				bucketName = CreateBucketWithTimestampedName("list_blobs")
 				UploadFile(bucketName, "file1", "file-content")
@@ -172,15 +171,13 @@ var _ = Describe("Bucket", func() {
 			})
 
 			It("copies the blob to the specified location", func() {
-				blob := gcs.NewBlob("file1")
-
-				err := bucket.CopyBlobWithinBucket(blob.Name(), "copydir/file1")
+				err := bucket.CopyBlobWithinBucket("file1", "copydir/file1")
 				Expect(err).NotTo(HaveOccurred())
 
 				blobs, err := bucket.ListBlobs("")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(ConsistOf(
-					blob,
+					gcs.NewBlob("file1"),
 					gcs.NewBlob("copydir/file1"),
 				))
 			})
@@ -195,7 +192,6 @@ var _ = Describe("Bucket", func() {
 		var err error
 
 		Context("copying an existing file", func() {
-
 			BeforeEach(func() {
 				srcBucketName = CreateBucketWithTimestampedName("src")
 				dstBucketName = CreateBucketWithTimestampedName("dst")
