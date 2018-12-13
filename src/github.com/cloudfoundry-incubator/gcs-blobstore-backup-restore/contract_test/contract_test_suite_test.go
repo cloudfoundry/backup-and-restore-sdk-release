@@ -12,7 +12,7 @@ import (
 func TestGcsBlobstoreBackupRestore(t *testing.T) {
 	RegisterFailHandler(Fail)
 	SetDefaultEventuallyTimeout(15 * time.Minute)
-	RunSpecs(t, "GCS Suite")
+	RunSpecs(t, "GCS Contract Tests")
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {

@@ -64,7 +64,7 @@ var _ = Describe("Bucket", func() {
 				blobs, err := bucket.ListBlobs("my/prefix")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(ConsistOf(
-					gcs.Blob{Name: "my/prefix/file1"},
+					gcs.NewBlob("my/prefix/file1"),
 				))
 			})
 
@@ -162,7 +162,6 @@ var _ = Describe("Bucket", func() {
 		})
 
 		Context("copying an existing file", func() {
-
 			BeforeEach(func() {
 				bucketName = CreateBucketWithTimestampedName("list_blobs")
 				UploadFile(bucketName, "file1", "file-content")
@@ -172,16 +171,14 @@ var _ = Describe("Bucket", func() {
 			})
 
 			It("copies the blob to the specified location", func() {
-				blob := gcs.Blob{Name: "file1"}
-
-				err := bucket.CopyBlobWithinBucket(blob.Name, "copydir/file1")
+				err := bucket.CopyBlobWithinBucket("file1", "copydir/file1")
 				Expect(err).NotTo(HaveOccurred())
 
 				blobs, err := bucket.ListBlobs("")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(ConsistOf(
-					blob,
-					gcs.Blob{Name: "copydir/file1"},
+					gcs.NewBlob("file1"),
+					gcs.NewBlob("copydir/file1"),
 				))
 			})
 		})
@@ -195,7 +192,6 @@ var _ = Describe("Bucket", func() {
 		var err error
 
 		Context("copying an existing file", func() {
-
 			BeforeEach(func() {
 				srcBucketName = CreateBucketWithTimestampedName("src")
 				dstBucketName = CreateBucketWithTimestampedName("dst")
@@ -214,15 +210,15 @@ var _ = Describe("Bucket", func() {
 			})
 
 			It("copies the blob to the specified location", func() {
-				blob := gcs.Blob{Name: "file1"}
+				blob := gcs.NewBlob("file1")
 
-				err := srcBucket.CopyBlobToBucket(dstBucket, blob.Name, "copydir/file1")
+				err := srcBucket.CopyBlobToBucket(dstBucket, blob.Name(), "copydir/file1")
 				Expect(err).NotTo(HaveOccurred())
 
 				blobs, err := dstBucket.ListBlobs("")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(ConsistOf(
-					gcs.Blob{Name: "copydir/file1"},
+					gcs.NewBlob("copydir/file1"),
 				))
 			})
 		})
@@ -312,9 +308,9 @@ var _ = Describe("Bucket", func() {
 			blobs, err := dstBucket.ListBlobs("")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(blobs).To(ConsistOf(
-				gcs.Blob{Name: "file2"},
-				gcs.Blob{Name: "file3"},
-				gcs.Blob{Name: "file4"},
+				gcs.NewBlob("file2"),
+				gcs.NewBlob("file3"),
+				gcs.NewBlob("file4"),
 			))
 		})
 
@@ -414,7 +410,7 @@ var _ = Describe("Bucket", func() {
 				blobs, err := bucket.ListBlobs("")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(ConsistOf(
-					gcs.Blob{Name: "test-create-backup-complete/backup_complete"},
+					gcs.NewBlob("test-create-backup-complete/backup_complete"),
 				))
 			})
 		})

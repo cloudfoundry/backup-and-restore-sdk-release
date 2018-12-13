@@ -44,7 +44,7 @@ func (f *LastBucketBackupFinder) ListBlobs() (map[string]Blob, error) {
 
 	blobsMap := map[string]Blob{}
 	for _, blob := range blobs {
-		nameParts := strings.Split(blob.Name, "/")
+		nameParts := strings.Split(blob.Name(), "/")
 		blobsMap[nameParts[len(nameParts)-1]] = blob
 	}
 

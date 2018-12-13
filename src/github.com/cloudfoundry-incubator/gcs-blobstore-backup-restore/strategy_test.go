@@ -31,9 +31,9 @@ var _ = Describe("Strategy", func() {
 	Context("when the actions fail", func() {
 		It("returns the errors from each action", func() {
 			strategy := gcs.NewParallelStrategy()
-			blobs := []gcs.Blob{{Name: "one"}, {Name: "two"}}
+			blobs := []gcs.Blob{gcs.NewBlob("one"), gcs.NewBlob("two")}
 			action := func(blob gcs.Blob) error {
-				return errors.New(blob.Name)
+				return errors.New(blob.Name())
 			}
 
 			errs := strategy.Run(blobs, action)
