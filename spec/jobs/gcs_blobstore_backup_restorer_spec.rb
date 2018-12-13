@@ -50,6 +50,22 @@ describe 'gcs-blobstore-backup-restorer job' do
         end
       end
 
+      context 'and the bucket_id is blank' do
+        it 'errors' do
+          manifest = {
+            "buckets" => {
+              "    " => {
+                "bucket_name" => "my_bucket",
+                "backup_bucket_name" => "my_backup_bucket",
+              }
+            }
+          }
+          expect { buckets_template.render(manifest) }.to(raise_error(
+            RuntimeError, "Invalid buckets configuration, must not be blank"
+          ))
+        end
+      end
+
       context 'and the live bucket name is blank' do
         it 'errors' do
           manifest = {

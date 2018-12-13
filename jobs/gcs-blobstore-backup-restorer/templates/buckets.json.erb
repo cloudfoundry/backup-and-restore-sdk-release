@@ -1,6 +1,10 @@
 <%=
   def validate_buckets(buckets)
     buckets.each do |bucket_id, bucket|
+      if bucket_id.strip.empty?
+        raise "Invalid buckets configuration, must not be blank"
+      end
+
       bucket_name = bucket.fetch('bucket_name', '')
       if bucket_name.strip.empty?
         raise "Invalid bucket configuration for '#{bucket_id}', bucket_name and backup_bucket_name must be configured"
