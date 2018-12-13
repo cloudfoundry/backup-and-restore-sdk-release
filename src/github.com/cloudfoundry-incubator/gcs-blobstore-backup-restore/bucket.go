@@ -133,7 +133,7 @@ func (b SDKBucket) CopyBlobsToBucket(dstBucket Bucket, srcPrefix string) error {
 		return errors.New("destination bucket does not exist")
 	}
 
-	blobs, err := b.ListBlobs("")
+	blobs, err := b.ListBlobs(srcPrefix)
 	if err != nil {
 		return err
 	}
@@ -143,13 +143,11 @@ func (b SDKBucket) CopyBlobsToBucket(dstBucket Bucket, srcPrefix string) error {
 			continue
 		}
 
-		if strings.HasPrefix(blob.Name(), srcPrefix+blobNameDelimiter) {
-			destinationName := strings.TrimPrefix(blob.Name(), srcPrefix+blobNameDelimiter)
+		destinationName := strings.TrimPrefix(blob.Name(), srcPrefix+blobNameDelimiter)
 
-			err = b.CopyBlobToBucket(dstBucket, blob.Name(), destinationName)
-			if err != nil {
-				return err
-			}
+		err = b.CopyBlobToBucket(dstBucket, blob.Name(), destinationName)
+		if err != nil {
+			return err
 		}
 	}
 
