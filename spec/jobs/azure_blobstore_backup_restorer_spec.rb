@@ -1,18 +1,31 @@
 require 'rspec'
 require 'yaml'
 require 'bosh/template/test'
+require 'json'
 
 describe 'azure-blobstore-backup-restorer job' do
   let(:release) { Bosh::Template::Test::ReleaseDir.new(File.join(File.dirname(__FILE__), '../..')) }
   let(:job) { release.job('azure-blobstore-backup-restorer') }
   let(:backup_template) { job.template('bin/bbr/backup') }
   let(:restore_template) { job.template('bin/bbr/restore') }
+  let(:containers_template) { job.template('config/containers.json') }
 
   describe 'backup' do
     context 'when backup is not enabled' do
       it 'the templated script is empty' do
         config = backup_template.render({})
         expect(config.strip).to eq("#!/usr/bin/env bash\n\nset -eu")
+      end
+
+      it 'the bucket config is empty' do
+        manifest = {
+          "enabled" => false,
+          "containers" => {
+            "droplets" => nil
+          }
+        }
+        config = containers_template.render(manifest)
+        expect(config.strip).to eq("")
       end
     end
 

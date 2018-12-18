@@ -17,6 +17,30 @@ describe 'gcs-blobstore-backup-restorer job' do
         config = backup_template.render({})
         expect(config.strip).to eq("#!/usr/bin/env bash\n\nset -eu")
       end
+
+      it 'the bucket config is empty' do
+        manifest = {
+          "enabled" => false,
+          "gcp_service_account_key" => nil,
+          "buckets" => {
+            "droplets"  => nil
+          }
+        }
+        config = buckets_template.render(manifest)
+        expect(config.strip).to eq("")
+      end
+
+      it 'the gcp_service_account_key config is empty' do
+        manifest = {
+          "enabled" => false,
+          "gcp_service_account_key" => nil,
+          "buckets" => {
+            "droplets"  => nil
+          }
+        }
+        config = gcp_service_account_key_template.render(manifest)
+        expect(config.strip).to eq("")
+      end
     end
 
     context 'when backup is enabled' do
@@ -53,6 +77,7 @@ describe 'gcs-blobstore-backup-restorer job' do
       context 'and the bucket_id is blank' do
         it 'errors' do
           manifest = {
+            "enabled" => true,
             "buckets" => {
               "    " => {
                 "bucket_name" => "my_bucket",
@@ -69,6 +94,7 @@ describe 'gcs-blobstore-backup-restorer job' do
       context 'and the live bucket name is blank' do
         it 'errors' do
           manifest = {
+            "enabled" => true,
             "buckets" => {
               "droplets" => {
                 "bucket_name" => "     ",
@@ -85,6 +111,7 @@ describe 'gcs-blobstore-backup-restorer job' do
       context 'and the backup bucket name is blank' do
         it 'errors' do
           manifest = {
+            "enabled" => true,
             "buckets" => {
               "droplets" => {
                 "bucket_name" => "my_bucket",
@@ -101,6 +128,7 @@ describe 'gcs-blobstore-backup-restorer job' do
       context 'and the buckets are empty hash' do
         it 'errors' do
           manifest = {
+            "enabled" => true,
             "buckets" => {
               "droplets" => {}
             }
@@ -114,6 +142,7 @@ describe 'gcs-blobstore-backup-restorer job' do
       context 'the GCS key provided is not valid JSON' do
         it 'errors' do
           expect { gcp_service_account_key_template.render(
+            "enabled" => true,
             "gcp_service_account_key" => "{not valid json}"
           ) }.to(raise_error(RuntimeError, 'Invalid gcp_service_account_key provided; it is not valid JSON'))
         end

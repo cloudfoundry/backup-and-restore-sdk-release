@@ -1,5 +1,6 @@
 require 'rspec'
 require 'yaml'
+require 'json'
 require 'bosh/template/test'
 
 describe 's3-unversioned-blobstore-backup-restorer job' do
@@ -11,9 +12,29 @@ describe 's3-unversioned-blobstore-backup-restorer job' do
 
   describe 'backup' do
     context 'when backup is not enabled' do
-      it 'the templated script is empty' do
+      it 'the templated backup script is empty' do
         config = backup_template.render({})
         expect(config.strip).to eq("#!/usr/bin/env bash\n\nset -eu")
+      end
+
+      it 'the templated buckets script is empty' do
+        manifest = {
+          "enabled" => false,
+          "buckets" => {
+            "droplets"  => {
+              "name" => nil,
+              "region" => nil,
+              "aws_access_key_id" => nil,
+              "aws_secret_access_key" => nil,
+              "endpoint" => nil,
+              "use_iam_profile" => nil,
+              "backup" => nil
+            }
+          }
+        }
+
+        config = buckets_template.render(manifest)
+        expect(config.strip).to eq("")
       end
     end
 

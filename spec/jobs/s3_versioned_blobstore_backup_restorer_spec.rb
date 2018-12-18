@@ -1,6 +1,7 @@
 require 'rspec'
 require 'yaml'
 require 'bosh/template/test'
+require 'json'
 
 describe 's3-versioned-blobstore-backup-restorer job' do
   let(:release) { Bosh::Template::Test::ReleaseDir.new(File.join(File.dirname(__FILE__), '../..')) }
@@ -14,6 +15,17 @@ describe 's3-versioned-blobstore-backup-restorer job' do
       it 'the templated script is empty' do
         config = backup_template.render({})
         expect(config.strip).to eq("#!/usr/bin/env bash\n\nset -eu")
+      end
+
+      it 'the bucket config is empty' do
+        manifest = {
+          "enabled" => false,
+          "buckets" => {
+            "droplets"  => nil
+            }
+          }
+        config = buckets_template.render(manifest)
+        expect(config.strip).to eq("")
       end
     end
 

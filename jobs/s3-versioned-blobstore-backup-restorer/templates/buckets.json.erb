@@ -7,9 +7,11 @@
     end
   end
 
-  buckets = p('buckets')
 
-  validate_buckets(buckets)
+  if p('enabled')
+    buckets = p('buckets')
+    validate_buckets(buckets)
+    buckets.to_json
+  end
 
-  buckets.to_json
 %>

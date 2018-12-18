@@ -1,1 +1,5 @@
-<%= p('containers').to_json %>
+<%=
+if p('enabled')
+  p('containers').to_json
+end
+%>
