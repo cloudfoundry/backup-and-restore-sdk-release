@@ -1,0 +1,95 @@
+name: backup-and-restore-sdk
+version: 1.12.0
+commit_hash: cf8a596
+uncommitted_changes: false
+jobs:
+- name: azure-blobstore-backup-restorer
+  version: 7a88c52a70e08e0d36a67729e45922b85743bcc7
+  fingerprint: 7a88c52a70e08e0d36a67729e45922b85743bcc7
+  sha1: 2f92075e4f53d2af3222621819786dbe6972e25b
+- name: database-backup-restorer
+  version: 1634f0b13505993a9582545451af973bfc4fd038
+  fingerprint: 1634f0b13505993a9582545451af973bfc4fd038
+  sha1: 2cdb4157cf0b97c5aa9e9ccec62c145b4106d708
+- name: gcs-blobstore-backup-restorer
+  version: a238a20eba266a4fe690e15ac1b74411aee74c4d
+  fingerprint: a238a20eba266a4fe690e15ac1b74411aee74c4d
+  sha1: 673f09cfb9d8af54f8dfb4f5f06e7308832b94f7
+- name: s3-unversioned-blobstore-backup-restorer
+  version: db5a9b1516abb5f3647af4f3eb4451a1f1a07090
+  fingerprint: db5a9b1516abb5f3647af4f3eb4451a1f1a07090
+  sha1: d1ca3568545e117599e8427cb77f61b718e17799
+- name: s3-versioned-blobstore-backup-restorer
+  version: 8c29b14b176bd3e5f4311d9809f11333e88135d4
+  fingerprint: 8c29b14b176bd3e5f4311d9809f11333e88135d4
+  sha1: 378ac1dd65b53b564676d0467bcbdc756ca8cb73
+packages:
+- name: azure-blobstore-backup-restorer
+  version: 38048238704527ce36165164010a61667e32124d
+  fingerprint: 38048238704527ce36165164010a61667e32124d
+  sha1: 60b2826135e6dd262bca3d1f2adeb05f1960c15f
+  dependencies:
+  - golang-1-linux
+- name: database-backup-restorer
+  version: ee0c918e1e03c0676ce115300a653d64dc5c3922
+  fingerprint: ee0c918e1e03c0676ce115300a653d64dc5c3922
+  sha1: 0d271d6d256f7dc156c897449f9cbbd5c7ae4b46
+  dependencies:
+  - golang-1-linux
+- name: database-backup-restorer-boost
+  version: c3aee061423c7de8e1bbe50db88f82379c54edf3
+  fingerprint: c3aee061423c7de8e1bbe50db88f82379c54edf3
+  sha1: 6696e8d06abceb1ca86aa84577eec7298c0557f2
+  dependencies: []
+- name: database-backup-restorer-mariadb
+  version: fb964c7d07a5cc5b0487d9f94c01d777c169e17f
+  fingerprint: fb964c7d07a5cc5b0487d9f94c01d777c169e17f
+  sha1: dfdf0ac73d8667f5049479b3956b8d466347ce6b
+  dependencies: []
+- name: database-backup-restorer-mysql-5.5
+  version: 949e6844e3a0da60c20ea9fb4f5fb2181fd2e3ad
+  fingerprint: 949e6844e3a0da60c20ea9fb4f5fb2181fd2e3ad
+  sha1: 5c56459e1f3327ff34e0afce99cea024e0f6b588
+  dependencies: []
+- name: database-backup-restorer-mysql-5.6
+  version: 361ffd33a416f92bfc06aa6f5f59d966a6aaa370
+  fingerprint: 361ffd33a416f92bfc06aa6f5f59d966a6aaa370
+  sha1: 00e83633339833df26307d6349b4bac53dbed318
+  dependencies: []
+- name: database-backup-restorer-mysql-5.7
+  version: ac5d90d4308139c1b4c4b4d93a3ccb89ef291d00
+  fingerprint: ac5d90d4308139c1b4c4b4d93a3ccb89ef291d00
+  sha1: fad617d797f9699c7d6180bbca467b05da11f215
+  dependencies:
+  - database-backup-restorer-boost
+- name: database-backup-restorer-postgres-9.4
+  version: 50ddc6b14b1801de81ad82e10e9225e16ecd9f80
+  fingerprint: 50ddc6b14b1801de81ad82e10e9225e16ecd9f80
+  sha1: 98962d2d360908ece827e3326207a37302925475
+  dependencies: []
+- name: database-backup-restorer-postgres-9.6
+  version: 961ed6bd5de46eed10acabb0be02127e4e8d85f2
+  fingerprint: 961ed6bd5de46eed10acabb0be02127e4e8d85f2
+  sha1: b328ad5f5053e30844b42c6a6e8d07eaf7bb6b1a
+  dependencies: []
+- name: gcs-blobstore-backup-restorer
+  version: 91aa6231ec644d742b1970850d5402f990fc9e44
+  fingerprint: 91aa6231ec644d742b1970850d5402f990fc9e44
+  sha1: fd1fa6f26e111e4c62e51814471cf1f92d142b3c
+  dependencies:
+  - golang-1-linux
+- name: golang-1-linux
+  version: c921dc1e1831da5a2dc61cb8945e372c1410c05882ed00965cba367991495f5d
+  fingerprint: c921dc1e1831da5a2dc61cb8945e372c1410c05882ed00965cba367991495f5d
+  sha1: sha256:5949e464c19b842cf864ffbf0f4e5f216872a92a2f5284861be5ba6ab931e01d
+  dependencies: []
+- name: s3-blobstore-backup-restorer
+  version: 66d67332c502b0740258e4364a6227e1dc3e2af4
+  fingerprint: 66d67332c502b0740258e4364a6227e1dc3e2af4
+  sha1: d07310b1a652389e5b9d8bf609c5a589e4ce5614
+  dependencies:
+  - golang-1-linux
+license:
+  version: c30ccf6b7c6010431b580aeee0904286237e3298
+  fingerprint: c30ccf6b7c6010431b580aeee0904286237e3298
+  sha1: 8839ce59bbe7679377e316bb7639aa59bec6eea7
