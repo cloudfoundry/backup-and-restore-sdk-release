@@ -3,7 +3,6 @@ package gcs
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"cloud.google.com/go/storage"
@@ -19,13 +18,9 @@ const readWriteScope = "https://www.googleapis.com/auth/devstorage.read_write"
 type Bucket interface {
 	Name() string
 	ListBlobs(prefix string) ([]Blob, error)
-	ListBackups() ([]string, error)
-	CopyBlobWithinBucket(src string, dst string) error
 	CopyBlobToBucket(bucket Bucket, src string, dst string) error
 	CopyBlobsToBucket(bucket Bucket, src string) error
 	DeleteBlob(name string) error
-	MarkBackupComplete(prefix string) error
-	IsBackupComplete(prefix string) (bool, error)
 }
 
 type SDKBucket struct {
@@ -81,38 +76,6 @@ func (b SDKBucket) ListBlobs(prefix string) ([]Blob, error) {
 	return blobs, nil
 }
 
-func (b SDKBucket) ListBackups() ([]string, error) {
-	var dirs []string
-
-	storageQuery := &storage.Query{
-		Delimiter: "/",
-	}
-	objectsIterator := b.handle.Objects(b.ctx, storageQuery)
-	for {
-		objectAttributes, err := objectsIterator.Next()
-		if err != nil {
-			if err == iterator.Done {
-				break
-			}
-
-			return nil, err
-		}
-
-		dir := strings.TrimSuffix(objectAttributes.Prefix, "/")
-		regex := regexp.MustCompile(`^\d{4}(_\d{2}){5}$`)
-
-		if regex.MatchString(dir) {
-			dirs = append(dirs, dir)
-		}
-	}
-
-	return dirs, nil
-}
-
-func (b SDKBucket) CopyBlobWithinBucket(srcBlob, dstBlob string) error {
-	return b.CopyBlobToBucket(b, srcBlob, dstBlob)
-}
-
 func (b SDKBucket) CopyBlobToBucket(dstBucket Bucket, srcBlob, dstBlob string) error {
 	if dstBucket == nil {
 		return errors.New("destination bucket does not exist")
@@ -139,10 +102,6 @@ func (b SDKBucket) CopyBlobsToBucket(dstBucket Bucket, srcPrefix string) error {
 	}
 
 	for _, blob := range blobs {
-		if blob.IsBackupComplete() {
-			continue
-		}
-
 		destinationName := strings.TrimPrefix(blob.Name(), srcPrefix+blobNameDelimiter)
 
 		err = b.CopyBlobToBucket(dstBucket, blob.Name(), destinationName)
@@ -156,35 +115,4 @@ func (b SDKBucket) CopyBlobsToBucket(dstBucket Bucket, srcPrefix string) error {
 
 func (b SDKBucket) DeleteBlob(blob string) error {
 	return b.client.Bucket(b.Name()).Object(blob).Delete(b.ctx)
-}
-
-func (b SDKBucket) MarkBackupComplete(prefix string) error {
-	blob := NewBackupCompleteBlob(prefix)
-	writer := b.client.Bucket(b.Name()).Object(blob.Name()).NewWriter(b.ctx)
-
-	_, err := writer.Write([]byte{})
-	if err != nil {
-		return fmt.Errorf("failed creating backup complete blob: %s", err)
-	}
-
-	err = writer.Close()
-	if err != nil {
-		return fmt.Errorf("failed creating backup complete blob: %s", err)
-	}
-
-	return nil
-}
-
-func (b SDKBucket) IsBackupComplete(prefix string) (bool, error) {
-	blob := NewBackupCompleteBlob(prefix)
-	_, err := b.handle.Object(blob.Name()).Attrs(b.ctx)
-	if err != nil {
-		if err == storage.ErrObjectNotExist {
-			return false, nil
-		}
-
-		return false, fmt.Errorf("failed checking backup complete blob: %s", err)
-	}
-
-	return true, nil
 }

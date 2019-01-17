@@ -24,7 +24,6 @@ var _ = Describe("Bucket", func() {
 			Expect(buckets).To(HaveLen(1))
 			Expect(buckets["droplets"].LiveBucket.Name()).To(Equal("droplets-bucket"))
 			Expect(buckets["droplets"].BackupBucket.Name()).To(Equal("backup-droplets-bucket"))
-			Expect(buckets["droplets"].BackupFinder).NotTo(BeNil())
 		})
 
 		Context("when providing invalid service account key", func() {
@@ -86,100 +85,6 @@ var _ = Describe("Bucket", func() {
 				Expect(err).NotTo(HaveOccurred())
 				_, err = bucketPair["droplets"].LiveBucket.ListBlobs("")
 				Expect(err).To(MatchError("storage: bucket doesn't exist"))
-			})
-		})
-	})
-
-	Describe("ListBackups", func() {
-		var (
-			bucketName string
-			bucket     gcs.Bucket
-			err        error
-		)
-
-		BeforeEach(func() {
-			bucketName = CreateBucketWithTimestampedName("list-directories")
-
-			bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		AfterEach(func() {
-			DeleteBucket(bucketName)
-		})
-
-		Context("when the bucket only contains backups", func() {
-			It("returns the list of backups in lexical order", func() {
-				thirdBackup := "2006_03_03_03_03_03"
-				UploadFileWithDir(bucketName, fmt.Sprintf("%s/baz/foo/bar", thirdBackup), "some-blob", "")
-
-				firstBackup := "2006_01_01_01_01_01"
-				UploadFileWithDir(bucketName, fmt.Sprintf("%s/foo/bar/baz", firstBackup), "some-blob", "")
-
-				secondBackup := "2006_02_02_02_02_02"
-				UploadFileWithDir(bucketName, fmt.Sprintf("%s/foo/bar/baz", secondBackup), "some-blob", "")
-
-				backups, err := bucket.ListBackups()
-
-				Expect(err).NotTo(HaveOccurred())
-				Expect(backups).To(Equal([]string{firstBackup, secondBackup, thirdBackup}))
-			})
-		})
-
-		Context("when the bucket contains backups and other objects", func() {
-			It("only returns the backups", func() {
-				backup := "2006_01_02_15_04_05"
-				UploadFileWithDir(bucketName, fmt.Sprintf("%s/foo/bar/baz", backup), "some-blob", "")
-				UploadFileWithDir(bucketName, "baz/foo/bar", "some-different-blob", "")
-				UploadFile(bucketName, "some-top-level-blob", "")
-
-				backups, err := bucket.ListBackups()
-
-				Expect(err).NotTo(HaveOccurred())
-				Expect(backups).To(ConsistOf(backup))
-			})
-		})
-
-		Context("when the bucket does not exist", func() {
-			It("returns an error", func() {
-				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), "idontexist")
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err := bucket.ListBackups()
-
-				Expect(err).To(HaveOccurred())
-			})
-		})
-	})
-
-	Describe("CopyBlobWithinBucket", func() {
-		var bucketName string
-		var bucket gcs.Bucket
-		var err error
-
-		AfterEach(func() {
-			DeleteBucket(bucketName)
-		})
-
-		Context("copying an existing file", func() {
-			BeforeEach(func() {
-				bucketName = CreateBucketWithTimestampedName("list_blobs")
-				UploadFile(bucketName, "file1", "file-content")
-
-				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("copies the blob to the specified location", func() {
-				err := bucket.CopyBlobWithinBucket("file1", "copydir/file1")
-				Expect(err).NotTo(HaveOccurred())
-
-				blobs, err := bucket.ListBlobs("")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(blobs).To(ConsistOf(
-					gcs.NewBlob("file1"),
-					gcs.NewBlob("copydir/file1"),
-				))
 			})
 		})
 	})
@@ -285,7 +190,6 @@ var _ = Describe("Bucket", func() {
 			UploadFile(dstBucketName, "alreadyInDstBucket", "file-content")
 			UploadFileWithDir(srcBucketName, "sourcePath", "file1", "file-content1")
 			UploadFileWithDir(srcBucketName, "sourcePath", "file2", "file-content2")
-			UploadFileWithDir(srcBucketName, "sourcePath", gcs.NewBackupCompleteBlob("sourcePath").Resource(), "")
 
 			srcBucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), srcBucketName)
 			Expect(err).NotTo(HaveOccurred())
@@ -313,15 +217,6 @@ var _ = Describe("Bucket", func() {
 				gcs.NewBlob("file2"),
 				gcs.NewBlob("alreadyInDstBucket"),
 			))
-		})
-
-		It("skips copying backup complete blobs to the destination", func() {
-			err := srcBucket.CopyBlobsToBucket(dstBucket, "sourcePath")
-			Expect(err).NotTo(HaveOccurred())
-
-			blobs, err := dstBucket.ListBlobs("")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(blobs).NotTo(ContainElement(gcs.NewBackupCompleteBlob("")))
 		})
 
 		It("returns an error if the destination bucket does not exist", func() {
@@ -394,98 +289,4 @@ var _ = Describe("Bucket", func() {
 		})
 	})
 
-	Describe("MarkBackupComplete", func() {
-		var (
-			bucketName string
-			bucket     gcs.Bucket
-			err        error
-		)
-
-		BeforeEach(func() {
-			bucketName = CreateBucketWithTimestampedName("backup-complete")
-
-			bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		AfterEach(func() {
-			DeleteBucket(bucketName)
-		})
-
-		Context("when creating the blob succeeds", func() {
-			It("creates the blob correctly", func() {
-				err := bucket.MarkBackupComplete("test-create-backup-complete")
-
-				Expect(err).NotTo(HaveOccurred())
-				blobs, err := bucket.ListBlobs("")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(blobs).To(ConsistOf(
-					gcs.NewBlob("test-create-backup-complete/backup_complete"),
-				))
-			})
-		})
-
-		Context("when creating the blob fails", func() {
-			It("returns the correct error", func() {
-				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), "iamnotabucket")
-				Expect(err).NotTo(HaveOccurred())
-
-				err := bucket.MarkBackupComplete("test-create-backup-complete")
-
-				Expect(err).To(MatchError(ContainSubstring("failed creating backup complete blob")))
-			})
-		})
-	})
-
-	Describe("IsBackupComplete", func() {
-		const prefix = "droplets"
-
-		var (
-			bucketName string
-			bucket     gcs.Bucket
-			err        error
-		)
-
-		BeforeEach(func() {
-			bucketName = CreateBucketWithTimestampedName("is-backup-complete")
-
-			bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), bucketName)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		AfterEach(func() {
-			DeleteBucket(bucketName)
-		})
-
-		Context("when the directory contains the backup complete blob", func() {
-			It("returns true", func() {
-				UploadFileWithDir(bucketName, prefix, "backup_complete", "")
-
-				isCompleteBackup, err := bucket.IsBackupComplete(prefix)
-
-				Expect(err).NotTo(HaveOccurred())
-				Expect(isCompleteBackup).To(BeTrue())
-			})
-		})
-
-		Context("when the directory does not contain the backup complete blob", func() {
-			It("returns true", func() {
-				isCompleteBackup, err := bucket.IsBackupComplete(prefix)
-
-				Expect(err).NotTo(HaveOccurred())
-				Expect(isCompleteBackup).To(BeFalse())
-			})
-		})
-
-		Context("when the request fails", func() {
-			It("returns an error", func() {
-				bucket, err = gcs.NewSDKBucket(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), "")
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err := bucket.IsBackupComplete("foobar")
-
-				Expect(err).To(MatchError(ContainSubstring("failed checking backup complete blob")))
-			})
-		})
-	})
 })
