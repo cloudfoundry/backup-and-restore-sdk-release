@@ -3,6 +3,8 @@ package gcs_test
 import (
 	"errors"
 
+	"github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -29,8 +31,9 @@ var _ = Describe("Backuper", func() {
 
 		backuper = gcs.NewBackuper(map[string]gcs.BucketPair{
 			bucketId: {
-				LiveBucket:   liveBucket,
-				BackupBucket: backupBucket,
+				LiveBucket:        liveBucket,
+				BackupBucket:      backupBucket,
+				ExecutionStrategy: executor.NewSerialExecutor(),
 			},
 		})
 	})
@@ -41,10 +44,10 @@ var _ = Describe("Backuper", func() {
 				liveBucket.ListBlobsReturns(nil, errors.New("cannot list live blobs"))
 			})
 
-			It("it fails", func() {
+			It("it fails with the correct error", func() {
 				_, err := backuper.Backup()
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("cannot list live blobs"))
+				Expect(err.Error()).To(ContainSubstring("cannot list live blobs"))
 			})
 		})
 
@@ -57,20 +60,19 @@ var _ = Describe("Backuper", func() {
 				liveBucket.CopyBlobToBucketReturns(errors.New("cannot copy blob"))
 			})
 
-			It("it fails", func() {
+			It("it fails with the correct error", func() {
 				_, err := backuper.Backup()
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("cannot copy blob"))
+				Expect(err.Error()).To(ContainSubstring("cannot copy blob"))
 			})
 		})
 
-		Context("and I run backup", func() {
+		Context("and it successfully runs backup", func() {
 			BeforeEach(func() {
 				liveBucket.ListBlobsReturns([]gcs.Blob{
 					gcs.NewBlob(blob1),
 					gcs.NewBlob(blob2),
 				}, nil)
-
 			})
 
 			It("tries to copy across the blobs in live bucket to backup bucket", func() {
@@ -79,12 +81,12 @@ var _ = Describe("Backuper", func() {
 
 				Expect(liveBucket.CopyBlobToBucketCallCount()).To(Equal(2))
 				_, blob1Name, _ := liveBucket.CopyBlobToBucketArgsForCall(0)
-				Expect(blob1Name).To(Equal(blob1))
 				_, blob2Name, _ := liveBucket.CopyBlobToBucketArgsForCall(1)
-				Expect(blob2Name).To(Equal(blob2))
+				argsForCalls := []string{blob1Name, blob2Name}
+				Expect(argsForCalls).To(ConsistOf(blob1, blob2))
 			})
 
-			It("returns a map of valid BucketBackup", func() {
+			It("returns a valid BucketBackup map", func() {
 				backupBucketDir, err := backuper.Backup()
 				Expect(err).NotTo(HaveOccurred())
 

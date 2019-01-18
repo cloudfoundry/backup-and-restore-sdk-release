@@ -1,13 +1,16 @@
 package gcs
 
+import "github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor"
+
 type BucketPair struct {
-	LiveBucket   Bucket
-	BackupBucket Bucket
+	LiveBucket        Bucket
+	BackupBucket      Bucket
+	ExecutionStrategy executor.Executor
 }
 
 func BuildBucketPairs(gcpServiceAccountKey string, config map[string]Config) (map[string]BucketPair, error) {
 	buckets := map[string]BucketPair{}
-
+	exe := executor.NewSerialExecutor()
 	for bucketID, bucketConfig := range config {
 		bucket, err := NewSDKBucket(gcpServiceAccountKey, bucketConfig.BucketName)
 		if err != nil {
@@ -20,8 +23,9 @@ func BuildBucketPairs(gcpServiceAccountKey string, config map[string]Config) (ma
 		}
 
 		buckets[bucketID] = BucketPair{
-			LiveBucket:   bucket,
-			BackupBucket: backupBucket,
+			LiveBucket:        bucket,
+			BackupBucket:      backupBucket,
+			ExecutionStrategy: exe,
 		}
 	}
 

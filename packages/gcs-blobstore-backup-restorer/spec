@@ -16,6 +16,7 @@ files:
 - github.com/cloudfoundry-incubator/vendor/cloud.google.com/go/internal/trace/*.go
 - github.com/cloudfoundry-incubator/vendor/cloud.google.com/go/internal/version/*.go
 - github.com/cloudfoundry-incubator/vendor/cloud.google.com/go/storage/*.go
+- github.com/cloudfoundry-incubator/vendor/github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor/*.go
 - github.com/cloudfoundry-incubator/vendor/github.com/golang/protobuf/proto/*.go
 - github.com/cloudfoundry-incubator/vendor/github.com/golang/protobuf/protoc-gen-go/descriptor/*.go
 - github.com/cloudfoundry-incubator/vendor/github.com/golang/protobuf/ptypes/*.go
