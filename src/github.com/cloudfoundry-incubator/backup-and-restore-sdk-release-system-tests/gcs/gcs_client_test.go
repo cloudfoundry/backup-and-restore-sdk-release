@@ -68,12 +68,12 @@ func (c GCSClient) WriteNSizeBlobToBucket(bucket string, blobName string, size i
 	blobsDir, err := ioutil.TempDir("", "testdir")
 	Expect(err).NotTo(HaveOccurred())
 	fileToCopy := fmt.Sprintf("%s/%s", blobsDir, blobName)
-
+	gigabyte := 1024 * 1024 * 1024
 	MustRunSuccessfully(
 		"dd",
 		"if=/dev/zero",
 		fmt.Sprintf("of=%s", fileToCopy),
-		"bs=1g",
+		fmt.Sprintf("bs=%d", gigabyte),
 		fmt.Sprintf("count=%d", size),
 	)
 
