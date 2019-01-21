@@ -2,6 +2,8 @@ package gcs_test
 
 import (
 	"io/ioutil"
+	"strconv"
+	"time"
 
 	"github.com/onsi/gomega/gexec"
 
@@ -22,6 +24,20 @@ func (c GCSClient) WriteBlobToBucket(bucket, blobName, body string) {
 	MustRunSuccessfully("gsutil", "cp", file.Name(), fmt.Sprintf("gs://%s/%s", bucket, blobName))
 }
 
+func (c GCSClient) WriteNBlobsToBucket(bucket string, blobName string, blobBody string, n int) {
+	blobsDir, err := ioutil.TempDir("", "testdir")
+	Expect(err).NotTo(HaveOccurred())
+	for i := 0; i < n; i++ {
+		timestampedName := blobName + strconv.FormatInt(time.Now().Unix(), 10)
+		file, err := ioutil.TempFile(blobsDir, fmt.Sprintf(timestampedName, i))
+		Expect(err).NotTo(HaveOccurred())
+		_, err = file.WriteString(fmt.Sprintf(blobBody, i))
+		Expect(err).NotTo(HaveOccurred())
+	}
+
+	MustRunSuccessfully("gsutil", "-m", "cp", "-r", blobsDir+"/*", fmt.Sprintf("gs://%s", bucket))
+}
+
 func (c GCSClient) ReadBlobFromBucket(bucket, blobName string) string {
 	file, err := ioutil.TempFile("", "bbr-sdk-gcs-system-tests")
 	Expect(err).NotTo(HaveOccurred())
@@ -39,7 +55,7 @@ func (c GCSClient) DeleteBlobInBucket(bucket, blobName string) {
 }
 
 func (c GCSClient) DeleteAllBlobInBucket(bucket string) {
-	session := Run("gsutil", "rm", "-r", fmt.Sprintf("gs://%s", bucket))
+	session := Run("gsutil", "-m", "rm", "-r", fmt.Sprintf("gs://%s", bucket))
 	Eventually(session).Should(gexec.Exit())
 }
 
@@ -47,4 +63,20 @@ func (c GCSClient) ListDirsFromBucket(bucket string) string {
 	session := Run("gsutil", "ls", fmt.Sprintf("gs://%s/", bucket))
 	Eventually(session).Should(gexec.Exit(0))
 	return string(session.Out.Contents())
+}
+func (c GCSClient) WriteNSizeBlobToBucket(bucket string, blobName string, size int) {
+	blobsDir, err := ioutil.TempDir("", "testdir")
+	Expect(err).NotTo(HaveOccurred())
+	fileToCopy := fmt.Sprintf("%s/%s", blobsDir, blobName)
+
+	MustRunSuccessfully(
+		"dd",
+		"if=/dev/zero",
+		fmt.Sprintf("of=%s", fileToCopy),
+		"bs=1g",
+		fmt.Sprintf("count=%d", size),
+	)
+
+	MustRunSuccessfully("gsutil", "-o", "GSUtil:parallel_composite_upload_threshold=150M", "cp", fileToCopy, fmt.Sprintf("gs://%s/%s", bucket, blobName))
+
 }
