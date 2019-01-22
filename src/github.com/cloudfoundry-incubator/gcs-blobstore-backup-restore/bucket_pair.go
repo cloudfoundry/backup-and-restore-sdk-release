@@ -10,7 +10,8 @@ type BucketPair struct {
 
 func BuildBucketPairs(gcpServiceAccountKey string, config map[string]Config) (map[string]BucketPair, error) {
 	buckets := map[string]BucketPair{}
-	exe := executor.NewSerialExecutor()
+	exe := executor.NewParallelExecutor()
+	exe.SetMaxInFlight(200)
 	for bucketID, bucketConfig := range config {
 		bucket, err := NewSDKBucket(gcpServiceAccountKey, bucketConfig.BucketName)
 		if err != nil {
