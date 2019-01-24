@@ -47,7 +47,7 @@ func (i *JobInstance) Run(command string) *gexec.Session {
 
 func (i *JobInstance) RunSuccessfully(command string) {
 	session := i.Run(command)
-	Expect(session).To(Exit(0), string(session.Err.Contents()))
+	Eventually(session).Should(Exit(0), string(session.Err.Contents()))
 }
 
 func (i *JobInstance) Download(remotePath, localPath string) *gexec.Session {

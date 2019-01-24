@@ -64,6 +64,13 @@ func (c GCSClient) ListDirsFromBucket(bucket string) string {
 	Eventually(session).Should(gexec.Exit(0))
 	return string(session.Out.Contents())
 }
+
+func (c GCSClient) ListBlobsFromBucket(bucket string) string {
+	session := Run("gsutil", "ls", fmt.Sprintf("gs://%s/**/*", bucket))
+	Eventually(session).Should(gexec.Exit(0))
+	return string(session.Out.Contents())
+}
+
 func (c GCSClient) WriteNSizeBlobToBucket(bucket string, blobName string, size int) {
 	blobsDir, err := ioutil.TempDir("", "testdir")
 	Expect(err).NotTo(HaveOccurred())

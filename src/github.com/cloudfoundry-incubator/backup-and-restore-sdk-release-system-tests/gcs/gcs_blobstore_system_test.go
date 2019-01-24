@@ -21,37 +21,98 @@ var (
 )
 
 var _ = Describe("GCS Blobstore System Tests", func() {
-	BeforeEach(func() {
-		bucket = MustHaveEnv("GCS_BUCKET_NAME")
-		backupBucket = MustHaveEnv("GCS_BACKUP_BUCKET_NAME")
-		instance = JobInstance{
-			Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
-			Name:       "gcs-backuper",
-			Index:      "0",
-		}
-
-		instanceArtifactDirPath = "/var/vcap/store/gcs-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
-		instance.RunSuccessfully("sudo mkdir -p " + instanceArtifactDirPath)
+	AfterEach(func() {
+		gcsClient.DeleteAllBlobInBucket(fmt.Sprintf(bucket + "/*"))
+		gcsClient.DeleteAllBlobInBucket(fmt.Sprintf(backupBucket + "/*"))
 	})
 
-	Describe("Backup and bpm is enabled", func() {
-		AfterEach(func() {
-			gcsClient.DeleteAllBlobInBucket(fmt.Sprintf(bucket + "/*"))
-			gcsClient.DeleteAllBlobInBucket(fmt.Sprintf(backupBucket + "/*"))
+	Context("When backing up a large blobstore", func() {
+		BeforeEach(func() {
+			bucket = MustHaveEnv("GCS_BUCKET_NAME")
+			backupBucket = MustHaveEnv("GCS_BACKUP_BUCKET_NAME")
+			instance = JobInstance{
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "gcs-backuper",
+				Index:      "0",
+			}
+
+			instanceArtifactDirPath = "/var/vcap/store/gcs-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
+			instance.RunSuccessfully("sudo mkdir -p " + instanceArtifactDirPath)
 		})
-		Context("there is large number files in the bucket", func() {
-			numberOfBlobs := 2000
-			BeforeEach(func() {
-				gcsClient.WriteNBlobsToBucket(bucket, "test_file_%d_", "TEST_BLOB_%d", numberOfBlobs)
+
+		Context("bpm is enabled", func() {
+			Context("there is large number files in the bucket", func() {
+				numberOfBlobs := 2000
+				BeforeEach(func() {
+					gcsClient.WriteNBlobsToBucket(bucket, "test_file_%d_", "TEST_BLOB_%d", numberOfBlobs)
+				})
+				runTestWithBlobs(numberOfBlobs)
 			})
-			runTestWithBlobs(numberOfBlobs)
+
+			Context("there is large file in the bucket", func() {
+				sizeOfBlob := 10
+				BeforeEach(func() {
+					gcsClient.WriteNSizeBlobToBucket(bucket, "test_file_0_", sizeOfBlob)
+				})
+				runTestWithBlobs(1)
+			})
 		})
-		Context("there is large file in the bucket", func() {
-			sizeOfBlob := 10
-			BeforeEach(func() {
-				gcsClient.WriteNSizeBlobToBucket(bucket, "test_file_0_", sizeOfBlob)
+
+	})
+
+	Context("When backing up multiple buckets", func() {
+		Context("there are two buckets configured to have the same live and backup bucket", func() {
+			It("successfully backups without doubling the artifact size", func() {
+				bucket = MustHaveEnv("GCS_BUCKET_NAME")
+				backupBucket = MustHaveEnv("GCS_BACKUP_BUCKET_NAME")
+				instance = JobInstance{
+					Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+					Name:       "gcs-backuper-multiple-buckets-same-config",
+					Index:      "0",
+				}
+
+				gcsClient.WriteBlobToBucket(bucket, "foo", "bar")
+
+				instanceArtifactDirPath = "/var/vcap/store/gcs-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
+				instance.RunSuccessfully("sudo mkdir -p " + instanceArtifactDirPath)
+
+				By("successfully running a backup", func() {
+					instance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
+						" /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/backup")
+				})
+
+				By("not duplicating files inside the backup bucket", func() {
+					backupBucketBlobsList := gcsClient.ListBlobsFromBucket(backupBucket)
+					backupBucketBlobs := strings.Split(strings.TrimSpace(backupBucketBlobsList), "\n")
+					Expect(backupBucketBlobs).To(HaveLen(1))
+					Expect(backupBucketBlobs[0]).To(ContainSubstring("foo"))
+
+				})
+
+				By("generating a complete backup artifact", func() {
+					session := instance.Run(fmt.Sprintf("cat %s/%s", instanceArtifactDirPath, "blobstore.json"))
+					Expect(session).Should(gexec.Exit(0))
+					fileContents := string(session.Out.Contents())
+
+					Expect(fileContents).To(MatchRegexp("\"(droplets-buildpacks|buildpacks-droplets)\":{"))
+					Expect(fileContents).To(ContainSubstring("\"bucket_name\":\"" + backupBucket + "\""))
+					Expect(fileContents).To(MatchRegexp(
+						"\"path\":\"\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}\\/(droplets-buildpacks|buildpacks-droplets)\""))
+				})
+
+				By("restoring from a backup artifact", func() {
+					gcsClient.DeleteBlobInBucket(bucket, "**/foo")
+
+					instance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
+						" /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/restore")
+
+					backupBucketBlobsList := gcsClient.ListBlobsFromBucket(backupBucket)
+					backupBucketBlobs := strings.Split(strings.TrimSpace(backupBucketBlobsList), "\n")
+					Expect(backupBucketBlobs).To(HaveLen(1))
+					Expect(backupBucketBlobs[0]).To(ContainSubstring("foo"))
+
+				})
 			})
-			runTestWithBlobs(1)
 		})
 	})
 

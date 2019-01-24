@@ -1,6 +1,8 @@
 package gcs
 
-import "github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor"
+import (
+	"github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor"
+)
 
 type BucketPair struct {
 	LiveBucket        Bucket
@@ -12,7 +14,10 @@ func BuildBucketPairs(gcpServiceAccountKey string, config map[string]Config) (ma
 	buckets := map[string]BucketPair{}
 	exe := executor.NewParallelExecutor()
 	exe.SetMaxInFlight(200)
-	for bucketID, bucketConfig := range config {
+
+	filteredConfig := filterConfig(config)
+
+	for bucketPairName, bucketConfig := range filteredConfig {
 		bucket, err := NewSDKBucket(gcpServiceAccountKey, bucketConfig.BucketName)
 		if err != nil {
 			return nil, err
@@ -23,7 +28,7 @@ func BuildBucketPairs(gcpServiceAccountKey string, config map[string]Config) (ma
 			return nil, err
 		}
 
-		buckets[bucketID] = BucketPair{
+		buckets[bucketPairName] = BucketPair{
 			LiveBucket:        bucket,
 			BackupBucket:      backupBucket,
 			ExecutionStrategy: exe,
@@ -31,4 +36,28 @@ func BuildBucketPairs(gcpServiceAccountKey string, config map[string]Config) (ma
 	}
 
 	return buckets, nil
+}
+
+func filterConfig(originalConfig map[string]Config) map[string]Config {
+	filteredConfig := make(map[string]Config)
+
+	for name, config := range originalConfig {
+		key := findKeyWithConfig(filteredConfig, config)
+		if key == "" {
+			filteredConfig[name] = config
+		} else {
+			filteredConfig[name+"-"+key] = config
+			delete(filteredConfig, key)
+		}
+	}
+	return filteredConfig
+}
+
+func findKeyWithConfig(configs map[string]Config, expectedConfig Config) string {
+	for name, config := range configs {
+		if config == expectedConfig {
+			return name
+		}
+	}
+	return ""
 }

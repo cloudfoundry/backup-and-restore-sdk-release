@@ -26,18 +26,44 @@ var _ = Describe("Bucket", func() {
 			Expect(buckets["droplets"].BackupBucket.Name()).To(Equal("backup-droplets-bucket"))
 		})
 
-		Context("when providing invalid service account key", func() {
-			It("returns an error", func() {
-				config := map[string]gcs.Config{
-					"droplets": {
-						BucketName:       "droplets-bucket",
-						BackupBucketName: "backup-droplets-bucket",
-					},
-				}
+		It("builds bucket pairs without duplicate configs", func() {
+			config := map[string]gcs.Config{
+				"droplets": {
+					BucketName:       "bucket",
+					BackupBucketName: "backup-bucket",
+				},
+				"buildpacks": {
+					BucketName:       "bucket",
+					BackupBucketName: "backup-bucket",
+				},
+			}
 
-				_, err := gcs.BuildBucketPairs("not-valid-json", config)
-				Expect(err).To(HaveOccurred())
-			})
+			buckets, err := gcs.BuildBucketPairs(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(buckets).To(HaveLen(1))
+
+			//cannot guarantee order of naming
+			key := "buildpacks-droplets"
+			_, ok := buckets[key]
+			if !ok {
+				key = "droplets-buildpacks"
+			}
+
+			Expect(buckets[key].LiveBucket.Name()).To(Equal("bucket"))
+			Expect(buckets[key].BackupBucket.Name()).To(Equal("backup-bucket"))
+		})
+
+		It("when providing invalid service account key it returns an error", func() {
+			config := map[string]gcs.Config{
+				"droplets": {
+					BucketName:       "droplets-bucket",
+					BackupBucketName: "backup-droplets-bucket",
+				},
+			}
+
+			_, err := gcs.BuildBucketPairs("not-valid-json", config)
+			Expect(err).To(HaveOccurred())
 		})
 	})
 
