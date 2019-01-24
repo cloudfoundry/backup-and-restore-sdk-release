@@ -35,7 +35,7 @@ func (c GCSClient) WriteNBlobsToBucket(bucket string, blobName string, blobBody 
 		Expect(err).NotTo(HaveOccurred())
 	}
 
-	MustRunSuccessfully("gsutil", "-m", "cp", "-r", blobsDir+"/*", fmt.Sprintf("gs://%s", bucket))
+	MustRunSuccessfully("gsutil", "-m", "-q", "cp", "-r", blobsDir+"/*", fmt.Sprintf("gs://%s", bucket))
 }
 
 func (c GCSClient) ReadBlobFromBucket(bucket, blobName string) string {
@@ -55,7 +55,7 @@ func (c GCSClient) DeleteBlobInBucket(bucket, blobName string) {
 }
 
 func (c GCSClient) DeleteAllBlobInBucket(bucket string) {
-	session := Run("gsutil", "-m", "rm", "-r", fmt.Sprintf("gs://%s", bucket))
+	session := Run("gsutil", "-m", "-q", "rm", "-r", fmt.Sprintf("gs://%s", bucket))
 	Eventually(session).Should(gexec.Exit())
 }
 
