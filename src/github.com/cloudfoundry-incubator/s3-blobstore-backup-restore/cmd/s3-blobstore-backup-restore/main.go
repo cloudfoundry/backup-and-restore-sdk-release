@@ -28,12 +28,12 @@ func main() {
 		exitWithError(err.Error())
 	}
 
-	var runner Runner
 	config, err := ioutil.ReadFile(commandFlags.ConfigPath)
 	if err != nil {
 		exitWithError("Failed to read config: %s", err.Error())
 	}
 
+	var runner Runner
 	if commandFlags.Versioned {
 		var bucketsConfig map[string]BucketConfig
 		err = json.Unmarshal(config, &bucketsConfig)
@@ -54,7 +54,7 @@ func main() {
 			runner = versioned.NewBackuper(buckets, artifact)
 		}
 	} else {
-		var bucketsConfig map[string]BucketConfigWithBackupBucket
+		var bucketsConfig map[string]UnversionedBucketConfig
 		err = json.Unmarshal(config, &bucketsConfig)
 		if err != nil {
 			exitWithError("Failed to parse config: %s", err.Error())
@@ -116,7 +116,7 @@ func makeBuckets(config map[string]BucketConfig) (map[string]s3.VersionedBucket,
 	return buckets, nil
 }
 
-func makeBucketPairs(config map[string]BucketConfigWithBackupBucket) (map[string]unversioned.BucketPair, error) {
+func makeBucketPairs(config map[string]UnversionedBucketConfig) (map[string]unversioned.BucketPair, error) {
 	var buckets = map[string]unversioned.BucketPair{}
 
 	for identifier, bucketConfig := range config {
@@ -166,14 +166,14 @@ type BucketConfig struct {
 	UseIAMProfile      bool   `json:"use_iam_profile"`
 }
 
-type BackupBucket struct {
+type BackupBucketConfig struct {
 	Name   string `json:"name"`
 	Region string `json:"region"`
 }
 
-type BucketConfigWithBackupBucket struct {
+type UnversionedBucketConfig struct {
 	BucketConfig
-	Backup BackupBucket `json:"backup"`
+	Backup BackupBucketConfig `json:"backup"`
 }
 
 func parseFlags() (CommandFlags, error) {
