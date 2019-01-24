@@ -81,7 +81,7 @@ func (i *JobInstance) runBosh(args ...string) *gexec.Session {
 		"--client=" + MustHaveEnv("BOSH_CLIENT"),
 		"--client-secret=" + MustHaveEnv("BOSH_CLIENT_SECRET"),
 	}, args...)
-	command := exec.Command("bosh-cli", combinedArgs...)
+	command := exec.Command("bosh", combinedArgs...)
 
 	session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
