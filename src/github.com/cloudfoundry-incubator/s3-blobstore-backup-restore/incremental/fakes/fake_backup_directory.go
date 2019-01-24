@@ -17,6 +17,17 @@ type FakeBackupDirectory struct {
 	pathReturnsOnCall map[int]struct {
 		result1 string
 	}
+	ListBlobsStub        func() ([]incremental.Blob, error)
+	listBlobsMutex       sync.RWMutex
+	listBlobsArgsForCall []struct{}
+	listBlobsReturns     struct {
+		result1 []incremental.Blob
+		result2 error
+	}
+	listBlobsReturnsOnCall map[int]struct {
+		result1 []incremental.Blob
+		result2 error
+	}
 	IsCompleteStub        func() (bool, error)
 	isCompleteMutex       sync.RWMutex
 	isCompleteArgsForCall []struct{}
@@ -79,6 +90,49 @@ func (fake *FakeBackupDirectory) PathReturnsOnCall(i int, result1 string) {
 	fake.pathReturnsOnCall[i] = struct {
 		result1 string
 	}{result1}
+}
+
+func (fake *FakeBackupDirectory) ListBlobs() ([]incremental.Blob, error) {
+	fake.listBlobsMutex.Lock()
+	ret, specificReturn := fake.listBlobsReturnsOnCall[len(fake.listBlobsArgsForCall)]
+	fake.listBlobsArgsForCall = append(fake.listBlobsArgsForCall, struct{}{})
+	fake.recordInvocation("ListBlobs", []interface{}{})
+	fake.listBlobsMutex.Unlock()
+	if fake.ListBlobsStub != nil {
+		return fake.ListBlobsStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.listBlobsReturns.result1, fake.listBlobsReturns.result2
+}
+
+func (fake *FakeBackupDirectory) ListBlobsCallCount() int {
+	fake.listBlobsMutex.RLock()
+	defer fake.listBlobsMutex.RUnlock()
+	return len(fake.listBlobsArgsForCall)
+}
+
+func (fake *FakeBackupDirectory) ListBlobsReturns(result1 []incremental.Blob, result2 error) {
+	fake.ListBlobsStub = nil
+	fake.listBlobsReturns = struct {
+		result1 []incremental.Blob
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeBackupDirectory) ListBlobsReturnsOnCall(i int, result1 []incremental.Blob, result2 error) {
+	fake.ListBlobsStub = nil
+	if fake.listBlobsReturnsOnCall == nil {
+		fake.listBlobsReturnsOnCall = make(map[int]struct {
+			result1 []incremental.Blob
+			result2 error
+		})
+	}
+	fake.listBlobsReturnsOnCall[i] = struct {
+		result1 []incremental.Blob
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeBackupDirectory) IsComplete() (bool, error) {
@@ -169,6 +223,8 @@ func (fake *FakeBackupDirectory) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.pathMutex.RLock()
 	defer fake.pathMutex.RUnlock()
+	fake.listBlobsMutex.RLock()
+	defer fake.listBlobsMutex.RUnlock()
 	fake.isCompleteMutex.RLock()
 	defer fake.isCompleteMutex.RUnlock()
 	fake.markCompleteMutex.RLock()

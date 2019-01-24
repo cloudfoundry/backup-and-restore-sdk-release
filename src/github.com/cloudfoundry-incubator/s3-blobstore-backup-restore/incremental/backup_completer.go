@@ -31,6 +31,7 @@ type Blob interface {
 //go:generate counterfeiter -o fakes/fake_backup_directory.go . BackupDirectory
 type BackupDirectory interface {
 	Path() string
+	ListBlobs() ([]Blob, error)
 	IsComplete() (bool, error)
 	MarkComplete() error
 }
