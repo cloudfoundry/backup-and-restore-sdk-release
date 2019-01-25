@@ -31,7 +31,7 @@ var _ = Describe("BackupStarter", func() {
 		It("returns an error", func() {
 			backupBucket := new(fakes.FakeBucket)
 			backupFinder := new(fakes.FakeBackupFinder)
-			backupFinder.FindReturns(nil, errors.New("fake error"))
+			backupFinder.FindReturns(incremental.BackupDirectory{}, errors.New("fake error"))
 			starter := incremental.BackupStarter{
 				BucketPair: incremental.BucketPair{
 					BackupBucket: backupBucket,

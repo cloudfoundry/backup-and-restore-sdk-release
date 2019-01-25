@@ -17,10 +17,12 @@ type FakeBucket struct {
 	nameReturnsOnCall map[int]struct {
 		result1 string
 	}
-	ListBlobsStub        func() ([]incremental.Blob, error)
+	ListBlobsStub        func(path string) ([]incremental.Blob, error)
 	listBlobsMutex       sync.RWMutex
-	listBlobsArgsForCall []struct{}
-	listBlobsReturns     struct {
+	listBlobsArgsForCall []struct {
+		path string
+	}
+	listBlobsReturns struct {
 		result1 []incremental.Blob
 		result2 error
 	}
@@ -63,6 +65,31 @@ type FakeBucket struct {
 	}
 	copyBlobToBucketReturnsOnCall map[int]struct {
 		result1 error
+	}
+	UploadBlobStub        func(path, contents string) error
+	uploadBlobMutex       sync.RWMutex
+	uploadBlobArgsForCall []struct {
+		path     string
+		contents string
+	}
+	uploadBlobReturns struct {
+		result1 error
+	}
+	uploadBlobReturnsOnCall map[int]struct {
+		result1 error
+	}
+	HasBlobStub        func(path string) (bool, error)
+	hasBlobMutex       sync.RWMutex
+	hasBlobArgsForCall []struct {
+		path string
+	}
+	hasBlobReturns struct {
+		result1 bool
+		result2 error
+	}
+	hasBlobReturnsOnCall map[int]struct {
+		result1 bool
+		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -108,14 +135,16 @@ func (fake *FakeBucket) NameReturnsOnCall(i int, result1 string) {
 	}{result1}
 }
 
-func (fake *FakeBucket) ListBlobs() ([]incremental.Blob, error) {
+func (fake *FakeBucket) ListBlobs(path string) ([]incremental.Blob, error) {
 	fake.listBlobsMutex.Lock()
 	ret, specificReturn := fake.listBlobsReturnsOnCall[len(fake.listBlobsArgsForCall)]
-	fake.listBlobsArgsForCall = append(fake.listBlobsArgsForCall, struct{}{})
-	fake.recordInvocation("ListBlobs", []interface{}{})
+	fake.listBlobsArgsForCall = append(fake.listBlobsArgsForCall, struct {
+		path string
+	}{path})
+	fake.recordInvocation("ListBlobs", []interface{}{path})
 	fake.listBlobsMutex.Unlock()
 	if fake.ListBlobsStub != nil {
-		return fake.ListBlobsStub()
+		return fake.ListBlobsStub(path)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -127,6 +156,12 @@ func (fake *FakeBucket) ListBlobsCallCount() int {
 	fake.listBlobsMutex.RLock()
 	defer fake.listBlobsMutex.RUnlock()
 	return len(fake.listBlobsArgsForCall)
+}
+
+func (fake *FakeBucket) ListBlobsArgsForCall(i int) string {
+	fake.listBlobsMutex.RLock()
+	defer fake.listBlobsMutex.RUnlock()
+	return fake.listBlobsArgsForCall[i].path
 }
 
 func (fake *FakeBucket) ListBlobsReturns(result1 []incremental.Blob, result2 error) {
@@ -293,6 +328,106 @@ func (fake *FakeBucket) CopyBlobToBucketReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeBucket) UploadBlob(path string, contents string) error {
+	fake.uploadBlobMutex.Lock()
+	ret, specificReturn := fake.uploadBlobReturnsOnCall[len(fake.uploadBlobArgsForCall)]
+	fake.uploadBlobArgsForCall = append(fake.uploadBlobArgsForCall, struct {
+		path     string
+		contents string
+	}{path, contents})
+	fake.recordInvocation("UploadBlob", []interface{}{path, contents})
+	fake.uploadBlobMutex.Unlock()
+	if fake.UploadBlobStub != nil {
+		return fake.UploadBlobStub(path, contents)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.uploadBlobReturns.result1
+}
+
+func (fake *FakeBucket) UploadBlobCallCount() int {
+	fake.uploadBlobMutex.RLock()
+	defer fake.uploadBlobMutex.RUnlock()
+	return len(fake.uploadBlobArgsForCall)
+}
+
+func (fake *FakeBucket) UploadBlobArgsForCall(i int) (string, string) {
+	fake.uploadBlobMutex.RLock()
+	defer fake.uploadBlobMutex.RUnlock()
+	return fake.uploadBlobArgsForCall[i].path, fake.uploadBlobArgsForCall[i].contents
+}
+
+func (fake *FakeBucket) UploadBlobReturns(result1 error) {
+	fake.UploadBlobStub = nil
+	fake.uploadBlobReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBucket) UploadBlobReturnsOnCall(i int, result1 error) {
+	fake.UploadBlobStub = nil
+	if fake.uploadBlobReturnsOnCall == nil {
+		fake.uploadBlobReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.uploadBlobReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBucket) HasBlob(path string) (bool, error) {
+	fake.hasBlobMutex.Lock()
+	ret, specificReturn := fake.hasBlobReturnsOnCall[len(fake.hasBlobArgsForCall)]
+	fake.hasBlobArgsForCall = append(fake.hasBlobArgsForCall, struct {
+		path string
+	}{path})
+	fake.recordInvocation("HasBlob", []interface{}{path})
+	fake.hasBlobMutex.Unlock()
+	if fake.HasBlobStub != nil {
+		return fake.HasBlobStub(path)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.hasBlobReturns.result1, fake.hasBlobReturns.result2
+}
+
+func (fake *FakeBucket) HasBlobCallCount() int {
+	fake.hasBlobMutex.RLock()
+	defer fake.hasBlobMutex.RUnlock()
+	return len(fake.hasBlobArgsForCall)
+}
+
+func (fake *FakeBucket) HasBlobArgsForCall(i int) string {
+	fake.hasBlobMutex.RLock()
+	defer fake.hasBlobMutex.RUnlock()
+	return fake.hasBlobArgsForCall[i].path
+}
+
+func (fake *FakeBucket) HasBlobReturns(result1 bool, result2 error) {
+	fake.HasBlobStub = nil
+	fake.hasBlobReturns = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeBucket) HasBlobReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.HasBlobStub = nil
+	if fake.hasBlobReturnsOnCall == nil {
+		fake.hasBlobReturnsOnCall = make(map[int]struct {
+			result1 bool
+			result2 error
+		})
+	}
+	fake.hasBlobReturnsOnCall[i] = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -306,6 +441,10 @@ func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	defer fake.copyBlobWithinBucketMutex.RUnlock()
 	fake.copyBlobToBucketMutex.RLock()
 	defer fake.copyBlobToBucketMutex.RUnlock()
+	fake.uploadBlobMutex.RLock()
+	defer fake.uploadBlobMutex.RUnlock()
+	fake.hasBlobMutex.RLock()
+	defer fake.hasBlobMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

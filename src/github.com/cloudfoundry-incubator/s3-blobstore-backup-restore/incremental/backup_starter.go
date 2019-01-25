@@ -7,6 +7,11 @@ type BackupFinder interface {
 	Find() (BackupDirectory, error)
 }
 
+type BucketPair struct {
+	LiveBucket   Bucket
+	BackupBucket Bucket
+}
+
 type BackupStarter struct {
 	BucketPair   BucketPair
 	BackupFinder BackupFinder

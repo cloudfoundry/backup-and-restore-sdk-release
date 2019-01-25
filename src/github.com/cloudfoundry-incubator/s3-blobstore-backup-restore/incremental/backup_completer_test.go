@@ -13,26 +13,32 @@ var _ = Describe("BackupCompleter", func() {
 	Context("when there is two blobs to copy", func() {
 		var (
 			bucket            *fakes.FakeBucket
-			dir               *fakes.FakeBackupDirectory
-			blob1             *fakes.FakeBlob
-			blob2             *fakes.FakeBlob
+			dir               incremental.BackupDirectory
+			blob1             incremental.BackedUpBlob
+			blob2             incremental.BackedUpBlob
 			backupsToComplete map[string]incremental.BackupToComplete
 		)
 
 		BeforeEach(func() {
 			bucket = new(fakes.FakeBucket)
-			dir = new(fakes.FakeBackupDirectory)
-			dir.PathReturns("timestamp")
-			blob1 = new(fakes.FakeBlob)
-			blob2 = new(fakes.FakeBlob)
-			blob1.NameReturns("previous_timestamp/bucket_id/f0/fd/blob1/uuid")
-			blob2.NameReturns("previous_timestamp/bucket_id/f0/bucket_id/blob2/uuid")
+			dir = incremental.BackupDirectory{
+				Path:   "timestamp/bucket_id",
+				Bucket: bucket,
+			}
+			blob1 = incremental.BackedUpBlob{
+				Path:                "previous_timestamp/bucket_id/f0/fd/blob1/uuid",
+				BackupDirectoryPath: "previous_timestamp/bucket_id",
+			}
+			blob2 = incremental.BackedUpBlob{
+				Path:                "previous_timestamp/bucket_id/f0/bucket_id/blob2/uuid",
+				BackupDirectoryPath: "previous_timestamp/bucket_id",
+			}
 
 			backupsToComplete = map[string]incremental.BackupToComplete{
 				"bucket_id": {
 					BackupBucket:    bucket,
 					BackupDirectory: dir,
-					BlobsToCopy:     []incremental.Blob{blob1, blob2},
+					BlobsToCopy:     []incremental.BackedUpBlob{blob1, blob2},
 				},
 			}
 		})
@@ -62,7 +68,7 @@ var _ = Describe("BackupCompleter", func() {
 			err := completer.Run()
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(dir.MarkCompleteCallCount()).To(Equal(1))
+			Expect(bucket.UploadBlobCallCount()).To(Equal(1))
 		})
 
 		Context("and a copy fails", func() {
@@ -83,7 +89,7 @@ var _ = Describe("BackupCompleter", func() {
 
 		Context("and a mark complete fails", func() {
 			It("returns an error", func() {
-				dir.MarkCompleteReturns(errors.New("fake error"))
+				bucket.UploadBlobReturns(errors.New("fake error"))
 				completer := incremental.BackupCompleter{
 					BackupsToComplete: backupsToComplete,
 				}
@@ -98,10 +104,12 @@ var _ = Describe("BackupCompleter", func() {
 		})
 	})
 
-	Context("when there are no backup directories", func() {
-		It("no-ops", func() {
+	Context("when there are no blobs to copy", func() {
+		It("marks the backup directory complete", func() {
 			bucket := new(fakes.FakeBucket)
-			dir := new(fakes.FakeBackupDirectory)
+			dir := incremental.BackupDirectory{
+				Bucket: bucket,
+			}
 			backupsToComplete := map[string]incremental.BackupToComplete{
 				"bucket_id": {
 					BackupBucket:    bucket,
@@ -117,6 +125,20 @@ var _ = Describe("BackupCompleter", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(bucket.CopyBlobWithinBucketCallCount()).To(BeZero())
+			Expect(bucket.UploadBlobCallCount()).To(Equal(1))
+		})
+	})
+
+	Context("when there are no backups to complete", func() {
+		It("no-ops", func() {
+			backupsToComplete := map[string]incremental.BackupToComplete{}
+			completer := incremental.BackupCompleter{
+				BackupsToComplete: backupsToComplete,
+			}
+
+			err := completer.Run()
+
+			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 })

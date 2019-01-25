@@ -8,55 +8,55 @@ import (
 )
 
 type FakeBlob struct {
-	NameStub        func() string
-	nameMutex       sync.RWMutex
-	nameArgsForCall []struct{}
-	nameReturns     struct {
+	PathStub        func() string
+	pathMutex       sync.RWMutex
+	pathArgsForCall []struct{}
+	pathReturns     struct {
 		result1 string
 	}
-	nameReturnsOnCall map[int]struct {
+	pathReturnsOnCall map[int]struct {
 		result1 string
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeBlob) Name() string {
-	fake.nameMutex.Lock()
-	ret, specificReturn := fake.nameReturnsOnCall[len(fake.nameArgsForCall)]
-	fake.nameArgsForCall = append(fake.nameArgsForCall, struct{}{})
-	fake.recordInvocation("Name", []interface{}{})
-	fake.nameMutex.Unlock()
-	if fake.NameStub != nil {
-		return fake.NameStub()
+func (fake *FakeBlob) Path() string {
+	fake.pathMutex.Lock()
+	ret, specificReturn := fake.pathReturnsOnCall[len(fake.pathArgsForCall)]
+	fake.pathArgsForCall = append(fake.pathArgsForCall, struct{}{})
+	fake.recordInvocation("Path", []interface{}{})
+	fake.pathMutex.Unlock()
+	if fake.PathStub != nil {
+		return fake.PathStub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.nameReturns.result1
+	return fake.pathReturns.result1
 }
 
-func (fake *FakeBlob) NameCallCount() int {
-	fake.nameMutex.RLock()
-	defer fake.nameMutex.RUnlock()
-	return len(fake.nameArgsForCall)
+func (fake *FakeBlob) PathCallCount() int {
+	fake.pathMutex.RLock()
+	defer fake.pathMutex.RUnlock()
+	return len(fake.pathArgsForCall)
 }
 
-func (fake *FakeBlob) NameReturns(result1 string) {
-	fake.NameStub = nil
-	fake.nameReturns = struct {
+func (fake *FakeBlob) PathReturns(result1 string) {
+	fake.PathStub = nil
+	fake.pathReturns = struct {
 		result1 string
 	}{result1}
 }
 
-func (fake *FakeBlob) NameReturnsOnCall(i int, result1 string) {
-	fake.NameStub = nil
-	if fake.nameReturnsOnCall == nil {
-		fake.nameReturnsOnCall = make(map[int]struct {
+func (fake *FakeBlob) PathReturnsOnCall(i int, result1 string) {
+	fake.PathStub = nil
+	if fake.pathReturnsOnCall == nil {
+		fake.pathReturnsOnCall = make(map[int]struct {
 			result1 string
 		})
 	}
-	fake.nameReturnsOnCall[i] = struct {
+	fake.pathReturnsOnCall[i] = struct {
 		result1 string
 	}{result1}
 }
@@ -64,8 +64,8 @@ func (fake *FakeBlob) NameReturnsOnCall(i int, result1 string) {
 func (fake *FakeBlob) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.nameMutex.RLock()
-	defer fake.nameMutex.RUnlock()
+	fake.pathMutex.RLock()
+	defer fake.pathMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
