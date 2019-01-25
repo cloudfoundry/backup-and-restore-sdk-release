@@ -1,6 +1,9 @@
 package gcs
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor"
 )
 
@@ -15,7 +18,10 @@ func BuildBucketPairs(gcpServiceAccountKey string, config map[string]Config) (ma
 	exe := executor.NewParallelExecutor()
 	exe.SetMaxInFlight(200)
 
-	filteredConfig := filterConfig(config)
+	filteredConfig, err := filterConfig(config)
+	if err != nil {
+		return nil, err
+	}
 
 	for bucketPairName, bucketConfig := range filteredConfig {
 		bucket, err := NewSDKBucket(gcpServiceAccountKey, bucketConfig.BucketName)
@@ -38,19 +44,31 @@ func BuildBucketPairs(gcpServiceAccountKey string, config map[string]Config) (ma
 	return buckets, nil
 }
 
-func filterConfig(originalConfig map[string]Config) map[string]Config {
+func filterConfig(originalConfig map[string]Config) (map[string]Config, error) {
 	filteredConfig := make(map[string]Config)
 
 	for name, config := range originalConfig {
 		key := findKeyWithConfig(filteredConfig, config)
+		errorMessage := "cannot use reserved bucket pair name: %s"
 		if key == "" {
+			_, exists := filteredConfig[name]
+			if exists {
+				return nil, errors.New(fmt.Sprintf(errorMessage, name))
+			}
 			filteredConfig[name] = config
+
 		} else {
-			filteredConfig[name+"-"+key] = config
+			mergedKeyName := name + "-" + key
+			_, exists := filteredConfig[mergedKeyName]
+			if exists {
+				return nil, errors.New(fmt.Sprintf(errorMessage, mergedKeyName))
+			}
+			filteredConfig[mergedKeyName] = config
+
 			delete(filteredConfig, key)
 		}
 	}
-	return filteredConfig
+	return filteredConfig, nil
 }
 
 func findKeyWithConfig(configs map[string]Config, expectedConfig Config) string {
