@@ -2,13 +2,9 @@ package incremental
 
 import (
 	"fmt"
-	"strings"
 )
 
-const (
-	blobDelimiter  = "/"
-	backupComplete = "backup_complete"
-)
+const backupComplete = "backup_complete"
 
 type BackupDirectory struct {
 	Path   string
@@ -51,5 +47,5 @@ func (b BackupDirectory) MarkComplete() error {
 }
 
 func (b BackupDirectory) backupCompletePath() string {
-	return strings.Join([]string{b.Path, backupComplete}, blobDelimiter)
+	return joinBlobPath(b.Path, backupComplete)
 }

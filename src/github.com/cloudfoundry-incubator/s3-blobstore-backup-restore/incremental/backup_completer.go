@@ -2,7 +2,6 @@ package incremental
 
 import (
 	"fmt"
-	"strings"
 )
 
 type BackupToComplete struct {
@@ -18,7 +17,7 @@ type BackupCompleter struct {
 func (b BackupCompleter) Run() error {
 	for _, backupToComplete := range b.BackupsToComplete {
 		for _, blob := range backupToComplete.BlobsToCopy {
-			dst := strings.Join([]string{backupToComplete.BackupDirectory.Path, blob.LiveBlobPath()}, blobDelimiter)
+			dst := joinBlobPath(backupToComplete.BackupDirectory.Path, blob.LiveBlobPath())
 
 			err := backupToComplete.BackupBucket.CopyBlobWithinBucket(blob.Path, dst)
 			if err != nil {
