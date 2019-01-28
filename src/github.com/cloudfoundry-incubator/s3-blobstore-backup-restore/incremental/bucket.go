@@ -9,6 +9,7 @@ type Bucket interface {
 	CopyBlobToBucket(bucket Bucket, src, dst string) error
 	UploadBlob(path, contents string) error
 	HasBlob(path string) (bool, error)
+	IsBackupComplete(prefix string) (bool, error)
 }
 
 //go:generate counterfeiter -o fakes/fake_blob.go . Blob
