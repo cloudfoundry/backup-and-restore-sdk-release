@@ -9,23 +9,23 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("BackupDirectoryFinder", func() {
+var _ = Describe("Finder", func() {
 	Describe("ListBlobs", func() {
 		var bucket *fakes.FakeBucket
-		var finder *incremental.BackupDirectoryFinder
+		var finder *incremental.Finder
 		var blobs []incremental.BackedUpBlob
 		var err error
 
 		BeforeEach(func() {
 			bucket = new(fakes.FakeBucket)
-			finder = &incremental.BackupDirectoryFinder{
+			finder = &incremental.Finder{
 				ID:     "bucket_id",
 				Bucket: bucket,
 			}
 		})
 
 		JustBeforeEach(func() {
-			blobs, err = finder.ListBlobs("bucket_id")
+			blobs, err = finder.ListBlobs()
 		})
 
 		Context("when there are no backup directories", func() {

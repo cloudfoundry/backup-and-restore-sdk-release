@@ -5,12 +5,17 @@ import (
 	"sort"
 )
 
-type BackupDirectoryFinder struct {
+//go:generate counterfeiter -o fakes/fake_backup_directory_finder.go . BackupDirectoryFinder
+type BackupDirectoryFinder interface {
+	ListBlobs() ([]BackedUpBlob, error)
+}
+
+type Finder struct {
 	ID     string
 	Bucket Bucket
 }
 
-func (b BackupDirectoryFinder) ListBlobs(bucketID string) ([]BackedUpBlob, error) {
+func (b Finder) ListBlobs() ([]BackedUpBlob, error) {
 	dirs, err := b.Bucket.ListDirectories()
 	if err != nil {
 		return nil, err
@@ -55,7 +60,7 @@ func (b BackupDirectoryFinder) ListBlobs(bucketID string) ([]BackedUpBlob, error
 	return backedUpBlobs, nil
 }
 
-func (b BackupDirectoryFinder) findLastCompleteBackup(backupDirectories []string) (string, error) {
+func (b Finder) findLastCompleteBackup(backupDirectories []string) (string, error) {
 	sort.Strings(backupDirectories)
 	for _, dir := range backupDirectories {
 		isComplete, err := b.Bucket.IsBackupComplete(dir)
