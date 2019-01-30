@@ -21,16 +21,18 @@ type Clock interface {
 }
 
 type BackupStarter struct {
-	BackupsToStart map[string]BackupsToStart
-	clock          Clock
-	artifact       Artifact
+	BackupsToStart        map[string]BackupsToStart
+	clock                 Clock
+	artifact              Artifact
+	existingBlobsArtifact Artifact
 }
 
-func NewBackupStarter(backupsToStart map[string]BackupsToStart, clock Clock, artifact Artifact) BackupStarter {
+func NewBackupStarter(backupsToStart map[string]BackupsToStart, clock Clock, artifact, existingBlobsArtifact Artifact) BackupStarter {
 	return BackupStarter{
-		BackupsToStart: backupsToStart,
-		clock:          clock,
-		artifact:       artifact,
+		BackupsToStart:        backupsToStart,
+		clock:                 clock,
+		artifact:              artifact,
+		existingBlobsArtifact: existingBlobsArtifact,
 	}
 }
 
@@ -38,6 +40,7 @@ func (b BackupStarter) Run() error {
 	timestamp := b.clock.Now()
 
 	bucketBackups := map[string]BucketBackup{}
+	existingBucketBackups := map[string]BucketBackup{}
 
 	for bucketID, backupToStart := range b.BackupsToStart {
 		backupDstPath := fmt.Sprintf("%s/%s", timestamp, bucketID)
@@ -55,7 +58,7 @@ func (b BackupStarter) Run() error {
 		}
 
 		// copy new live blobs to the new backup directory
-		err = backupToStart.BucketPair.copyNewLiveBlobsToBackup(backedUpBlobs, liveBlobs, backupDstPath)
+		existingBlobs, err := backupToStart.BucketPair.copyNewLiveBlobsToBackup(backedUpBlobs, liveBlobs, backupDstPath)
 		if err != nil {
 			return fmt.Errorf("failed to copy blobs during backup: %s", err)
 		}
@@ -70,6 +73,19 @@ func (b BackupStarter) Run() error {
 			Blobs:               blobs,
 			BackupDirectoryPath: backupDstPath,
 		}
+
+		if len(existingBlobs) != 0 {
+			backedUpblobs := []string{}
+			for _, blob := range existingBlobs {
+				backedUpblobs = append(backedUpblobs, blob.Path)
+			}
+
+			existingBucketBackups[bucketID] = BucketBackup{
+				BucketName:          backupToStart.BucketPair.BackupBucket.Name(),
+				Blobs:               backedUpblobs,
+				BackupDirectoryPath: existingBlobs[0].BackupDirectoryPath,
+			}
+		}
 	}
 
 	// write the backup artifact for restore
@@ -79,27 +95,36 @@ func (b BackupStarter) Run() error {
 	}
 
 	// write the backup directory and list of previously backed up blobs for backup completer
+	err = b.existingBlobsArtifact.Write(existingBucketBackups)
+	if err != nil {
+		return fmt.Errorf("failed to write existing blobs artifact: %s", err)
+	}
 
 	return nil
 }
 
-func (b BucketPair) copyNewLiveBlobsToBackup(backedUpBlobs []BackedUpBlob, liveBlobs []Blob, backupDstPath string) error {
-	backedUpBlobsMap := map[string]bool{}
+func (b BucketPair) copyNewLiveBlobsToBackup(backedUpBlobs []BackedUpBlob, liveBlobs []Blob, backupDstPath string) ([]BackedUpBlob, error) {
+	existingBlobs := []BackedUpBlob{}
+	backedUpBlobsMap := map[string]BackedUpBlob{}
 
 	for _, backedUpBlob := range backedUpBlobs {
-		backedUpBlobsMap[backedUpBlob.LiveBlobPath()] = true
+		backedUpBlobsMap[backedUpBlob.LiveBlobPath()] = backedUpBlob
 	}
 
 	for _, blob := range liveBlobs {
-		_, exists := backedUpBlobsMap[blob.Path()]
+		backedUpBlob, exists := backedUpBlobsMap[blob.Path()]
 
 		if !exists {
 			path := filepath.Join(backupDstPath, blob.Path())
 			err := b.LiveBucket.CopyBlobToBucket(b.BackupBucket, blob.Path(), path)
 			if err != nil {
-				return err
+				return nil, err
 			}
+		} else {
+			existingBlobs = append(existingBlobs, backedUpBlob)
 		}
+
 	}
-	return nil
+
+	return existingBlobs, nil
 }
