@@ -13,19 +13,23 @@ import (
 
 var _ = Describe("BackupStarter", func() {
 	var (
-		clock        *fakes.FakeClock
-		backupBucket *fakes.FakeBucket
-		liveBucket   *fakes.FakeBucket
-		liveBlob1    *fakes.FakeBlob
-		liveBlob2    *fakes.FakeBlob
-		liveBlob3    *fakes.FakeBlob
+		clock                 *fakes.FakeClock
+		backupBucket          *fakes.FakeBucket
+		liveBucket            *fakes.FakeBucket
+		liveBlob1             *fakes.FakeBlob
+		liveBlob2             *fakes.FakeBlob
+		liveBlob3             *fakes.FakeBlob
+		artifact              *fakes.FakeArtifact
+		backupDirectoryFinder *fakes.FakeBackupDirectoryFinder
 	)
 
 	BeforeEach(func() {
 		clock = new(fakes.FakeClock)
 		clock.NowReturns("2000_01_02_03_04_05")
 		backupBucket = new(fakes.FakeBucket)
+		backupBucket.NameReturns("backup-bucket")
 		liveBucket = new(fakes.FakeBucket)
+		artifact = new(fakes.FakeArtifact)
 
 		liveBlob1 = new(fakes.FakeBlob)
 		liveBlob1.PathReturns("f0/fd/blob1/uuid")
@@ -33,11 +37,11 @@ var _ = Describe("BackupStarter", func() {
 		liveBlob2.PathReturns("f0/fd/blob2/uuid")
 		liveBlob3 = new(fakes.FakeBlob)
 		liveBlob3.PathReturns("f0/fd/blob3/uuid")
+
+		backupDirectoryFinder = new(fakes.FakeBackupDirectoryFinder)
 	})
 
 	It("finds the blobs from the last complete backup", func() {
-
-		backupDirectoryFinder := new(fakes.FakeBackupDirectoryFinder)
 		starter := incremental.NewBackupStarter(
 			map[string]incremental.BackupsToStart{
 				"bucket_id": {
@@ -49,6 +53,7 @@ var _ = Describe("BackupStarter", func() {
 				},
 			},
 			clock,
+			artifact,
 		)
 
 		err := starter.Run()
@@ -58,8 +63,6 @@ var _ = Describe("BackupStarter", func() {
 	})
 
 	It("finds the blobs in the live bucket", func() {
-
-		backupDirectoryFinder := new(fakes.FakeBackupDirectoryFinder)
 		backupDirectoryFinder.ListBlobsReturns(nil, nil)
 		liveBucket.ListBlobsReturns(nil, nil)
 
@@ -74,6 +77,7 @@ var _ = Describe("BackupStarter", func() {
 				},
 			},
 			clock,
+			artifact,
 		)
 
 		err := starter.Run()
@@ -85,7 +89,6 @@ var _ = Describe("BackupStarter", func() {
 
 	Context("when there are no previous complete backups", func() {
 		It("copies all the live blobs to the new backup directory", func() {
-			backupDirectoryFinder := new(fakes.FakeBackupDirectoryFinder)
 			backupDirectoryFinder.ListBlobsReturns(nil, nil)
 
 			liveBlobs := []incremental.Blob{liveBlob1, liveBlob2, liveBlob3}
@@ -102,6 +105,7 @@ var _ = Describe("BackupStarter", func() {
 					},
 				},
 				clock,
+				artifact,
 			)
 
 			err := starter.Run()
@@ -139,7 +143,6 @@ var _ = Describe("BackupStarter", func() {
 				BackupDirectoryPath: "2000_01_01_01_01_01/bucket_id",
 			}
 
-			backupDirectoryFinder := new(fakes.FakeBackupDirectoryFinder)
 			backupDirectoryFinder.ListBlobsReturns([]incremental.BackedUpBlob{backedUpBlob1, backedUpBlob2}, nil)
 
 			liveBucket.ListBlobsReturns([]incremental.Blob{liveBlob1, liveBlob2, liveBlob3}, nil)
@@ -155,6 +158,7 @@ var _ = Describe("BackupStarter", func() {
 					},
 				},
 				clock,
+				artifact,
 			)
 
 			err := starter.Run()
@@ -173,7 +177,6 @@ var _ = Describe("BackupStarter", func() {
 
 		Context("and the copying a blob from live bucket to backup bucket fails", func() {
 			It("returns an error", func() {
-				backupDirectoryFinder := new(fakes.FakeBackupDirectoryFinder)
 				backupDirectoryFinder.ListBlobsReturns(nil, nil)
 
 				liveBucket.ListBlobsReturns([]incremental.Blob{liveBlob1}, nil)
@@ -190,6 +193,7 @@ var _ = Describe("BackupStarter", func() {
 						},
 					},
 					clock,
+					artifact,
 				)
 
 				err := starter.Run()
@@ -204,7 +208,6 @@ var _ = Describe("BackupStarter", func() {
 
 	Context("and finding the last backup fails", func() {
 		It("returns an error", func() {
-			backupDirectoryFinder := new(fakes.FakeBackupDirectoryFinder)
 			backupDirectoryFinder.ListBlobsReturns(nil, errors.New("fake error"))
 			starter := incremental.NewBackupStarter(
 				map[string]incremental.BackupsToStart{
@@ -216,6 +219,7 @@ var _ = Describe("BackupStarter", func() {
 					},
 				},
 				clock,
+				artifact,
 			)
 
 			err := starter.Run()
@@ -229,7 +233,6 @@ var _ = Describe("BackupStarter", func() {
 
 	Context("and listing the blobs from the live bucket", func() {
 		It("returns an error", func() {
-			backupDirectoryFinder := new(fakes.FakeBackupDirectoryFinder)
 			backupDirectoryFinder.ListBlobsReturns(nil, nil)
 			liveBucket.ListBlobsReturns(nil, fmt.Errorf("mayhem"))
 
@@ -244,6 +247,7 @@ var _ = Describe("BackupStarter", func() {
 					},
 				},
 				clock,
+				artifact,
 			)
 
 			err := starter.Run()
@@ -254,6 +258,77 @@ var _ = Describe("BackupStarter", func() {
 				ContainSubstring("failed to start backup"),
 				ContainSubstring("mayhem"),
 			)))
+		})
+	})
+
+	It("writes the backup artifact", func() {
+		backupDirectoryFinder.ListBlobsReturns(nil, nil)
+
+		liveBlobs := []incremental.Blob{liveBlob1, liveBlob2}
+		liveBucket.ListBlobsReturns(liveBlobs, nil)
+
+		starter := incremental.NewBackupStarter(
+			map[string]incremental.BackupsToStart{
+				"bucket_id": {
+					BucketPair: incremental.BucketPair{
+						LiveBucket:   liveBucket,
+						BackupBucket: backupBucket,
+					},
+					BackupDirectoryFinder: backupDirectoryFinder,
+				},
+			},
+			clock,
+			artifact,
+		)
+
+		err := starter.Run()
+
+		Expect(err).NotTo(HaveOccurred())
+		Expect(backupDirectoryFinder.ListBlobsCallCount()).To(Equal(1))
+		Expect(liveBucket.ListBlobsCallCount()).To(Equal(1))
+		Expect(liveBucket.CopyBlobToBucketCallCount()).To(Equal(2))
+		Expect(artifact.WriteCallCount()).To(Equal(1))
+		Expect(artifact.WriteArgsForCall(0)).To(Equal(map[string]incremental.BucketBackup{
+			"bucket_id": {
+				BucketName: "backup-bucket",
+				Blobs: []string{
+					"2000_01_02_03_04_05/bucket_id/f0/fd/blob1/uuid",
+					"2000_01_02_03_04_05/bucket_id/f0/fd/blob2/uuid",
+				},
+				BackupDirectoryPath: "2000_01_02_03_04_05/bucket_id",
+			},
+		}))
+	})
+
+	Context("when the artifact fails to write", func() {
+		It("returns an error", func() {
+			backupDirectoryFinder.ListBlobsReturns(nil, nil)
+
+			liveBlobs := []incremental.Blob{liveBlob1, liveBlob2}
+			liveBucket.ListBlobsReturns(liveBlobs, nil)
+
+			artifact.WriteReturns(errors.New("artifact no"))
+			starter := incremental.NewBackupStarter(
+				map[string]incremental.BackupsToStart{
+					"bucket_id": {
+						BucketPair: incremental.BucketPair{
+							LiveBucket:   liveBucket,
+							BackupBucket: backupBucket,
+						},
+						BackupDirectoryFinder: backupDirectoryFinder,
+					},
+				},
+				clock,
+				artifact,
+			)
+
+			err := starter.Run()
+
+			Expect(err).To(MatchError(SatisfyAll(
+				ContainSubstring("failed to write artifact"),
+				ContainSubstring("artifact no"),
+			)))
+
 		})
 	})
 })

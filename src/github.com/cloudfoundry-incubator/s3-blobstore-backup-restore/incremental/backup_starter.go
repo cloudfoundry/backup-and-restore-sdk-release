@@ -23,17 +23,21 @@ type Clock interface {
 type BackupStarter struct {
 	BackupsToStart map[string]BackupsToStart
 	clock          Clock
+	artifact       Artifact
 }
 
-func NewBackupStarter(backupsToStart map[string]BackupsToStart, clock Clock) BackupStarter {
+func NewBackupStarter(backupsToStart map[string]BackupsToStart, clock Clock, artifact Artifact) BackupStarter {
 	return BackupStarter{
 		BackupsToStart: backupsToStart,
 		clock:          clock,
+		artifact:       artifact,
 	}
 }
 
 func (b BackupStarter) Run() error {
 	timestamp := b.clock.Now()
+
+	bucketBackups := map[string]BucketBackup{}
 
 	for bucketID, backupToStart := range b.BackupsToStart {
 		backupDstPath := fmt.Sprintf("%s/%s", timestamp, bucketID)
@@ -55,9 +59,24 @@ func (b BackupStarter) Run() error {
 		if err != nil {
 			return fmt.Errorf("failed to copy blobs during backup: %s", err)
 		}
+
+		blobs := []string{}
+		for _, blob := range liveBlobs {
+			blobs = append(blobs, filepath.Join(backupDstPath, blob.Path()))
+		}
+
+		bucketBackups[bucketID] = BucketBackup{
+			BucketName:          backupToStart.BucketPair.BackupBucket.Name(),
+			Blobs:               blobs,
+			BackupDirectoryPath: backupDstPath,
+		}
 	}
 
 	// write the backup artifact for restore
+	err := b.artifact.Write(bucketBackups)
+	if err != nil {
+		return fmt.Errorf("failed to write artifact: %s", err)
+	}
 
 	// write the backup directory and list of previously backed up blobs for backup completer
 
