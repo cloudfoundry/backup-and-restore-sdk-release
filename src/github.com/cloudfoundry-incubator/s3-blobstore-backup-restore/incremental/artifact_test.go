@@ -19,7 +19,7 @@ var _ = Describe("Artifact", func() {
 
 	})
 
-	It("writes the artifact", func() {
+	It("writes the backupArtifact", func() {
 		artifact := incremental.NewArtifact(artifactFile.Name())
 
 		err := artifact.Write(map[string]incremental.BucketBackup{

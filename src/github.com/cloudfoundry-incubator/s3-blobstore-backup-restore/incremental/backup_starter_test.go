@@ -171,7 +171,7 @@ var _ = Describe("BackupStarter", func() {
 			}))
 		})
 
-		It("writes the backup artifact", func() {
+		It("writes the backup backupArtifact", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(backupDirectoryFinder.ListBlobsCallCount()).To(Equal(1))
 			Expect(liveBucket.ListBlobsCallCount()).To(Equal(1))
@@ -213,7 +213,7 @@ var _ = Describe("BackupStarter", func() {
 
 			It("returns an error", func() {
 				Expect(err).To(MatchError(SatisfyAll(
-					ContainSubstring("failed to write existing blobs artifact"),
+					ContainSubstring("failed to write existing blobs backupArtifact"),
 					ContainSubstring("fake error"),
 				)))
 
@@ -233,14 +233,14 @@ var _ = Describe("BackupStarter", func() {
 			})
 		})
 
-		Context("and when the artifact fails to write", func() {
+		Context("and when the backupArtifact fails to write", func() {
 			BeforeEach(func() {
-				artifact.WriteReturns(errors.New("artifact no"))
+				artifact.WriteReturns(errors.New("backupArtifact no"))
 			})
 			It("returns an error", func() {
 				Expect(err).To(MatchError(SatisfyAll(
-					ContainSubstring("failed to write artifact"),
-					ContainSubstring("artifact no"),
+					ContainSubstring("failed to write backupArtifact"),
+					ContainSubstring("backupArtifact no"),
 				)))
 
 			})
