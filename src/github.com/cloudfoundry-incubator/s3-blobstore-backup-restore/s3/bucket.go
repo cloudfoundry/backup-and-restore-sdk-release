@@ -91,7 +91,7 @@ func (bucket Bucket) ListFiles(subfolder string) ([]string, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to list files from bucket %s: %s", bucket.name, err)
+		return nil, fmt.Errorf("failed to list blobs from bucket %s: %s", bucket.name, err)
 	}
 
 	if subfolder != "" {
@@ -103,8 +103,8 @@ func (bucket Bucket) ListFiles(subfolder string) ([]string, error) {
 	return files, nil
 }
 
-func (bucket Bucket) ListBlobs(subfolder string) ([]Blob, error) {
-	paths, err := bucket.ListFiles(subfolder)
+func (bucket Bucket) ListBlobs(prefix string) ([]Blob, error) {
+	paths, err := bucket.ListFiles(prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -115,6 +115,27 @@ func (bucket Bucket) ListBlobs(subfolder string) ([]Blob, error) {
 	}
 
 	return blobs, err
+}
+
+func (bucket Bucket) ListDirectories() ([]string, error) {
+	var dirs []string
+	err := bucket.s3Client.ListObjectsPages(&s3.ListObjectsInput{
+		Bucket:    aws.String(bucket.name),
+		Prefix:    aws.String(""),
+		Delimiter: aws.String(blobDelimiter),
+	}, func(output *s3.ListObjectsOutput, lastPage bool) bool {
+		for _, value := range output.CommonPrefixes {
+			dirs = append(dirs, strings.TrimSuffix(*value.Prefix, blobDelimiter))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to list directories from bucket %s: %s", bucket.name, err)
+	}
+
+	return dirs, nil
 }
 
 func (bucket Bucket) ListVersions() ([]Version, error) {

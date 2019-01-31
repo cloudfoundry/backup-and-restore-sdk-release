@@ -22,9 +22,13 @@ var _ = Describe("IncrementalBucket", func() {
 		creds = s3.AccessKey{Id: TestAWSAccessKeyID, Secret: TestAWSSecretAccessKey}
 
 		liveBucketName = setUpUnversionedBucket(liveRegion, awsEndpoint, creds)
-		uploadFile(liveBucketName, awsEndpoint, "path1/file1", "FILE1", creds)
-		uploadFile(liveBucketName, awsEndpoint, "live/location/leaf/node", "CONTENTS", creds)
-		uploadFile(liveBucketName, awsEndpoint, "path2/file2", "FILE2", creds)
+		uploadFile(liveBucketName, awsEndpoint, "path1/blob1", "", creds)
+		uploadFile(liveBucketName, awsEndpoint, "live/location/leaf/node", "", creds)
+		uploadFile(liveBucketName, awsEndpoint, "path2/blob2", "", creds)
+
+		var err error
+		bucketObjectUnderTest, err = s3.NewBucket(liveBucketName, liveRegion, awsEndpoint, creds, false)
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	AfterEach(func() {
@@ -39,22 +43,16 @@ var _ = Describe("IncrementalBucket", func() {
 	//})
 
 	Describe("ListBlobs", func() {
-		BeforeEach(func() {
-			var err error
-			bucketObjectUnderTest, err = s3.NewBucket(liveBucketName, liveRegion, awsEndpoint, creds, false)
-			Expect(err).NotTo(HaveOccurred())
-		})
+		Context("without a prefix", func() {
+			It("lists all the blobs in the bucket", func() {
+				blobs, err := bucketObjectUnderTest.ListBlobs("")
 
-		Context("When I ask for a list of all the files in the bucket", func() {
-			It("should list all the files", func() {
-				files, err := bucketObjectUnderTest.ListBlobs("")
-
-				blob1 := s3.NewBlob("path1/file1")
+				blob1 := s3.NewBlob("path1/blob1")
 				blob2 := s3.NewBlob("live/location/leaf/node")
-				blob3 := s3.NewBlob("path2/file2")
+				blob3 := s3.NewBlob("path2/blob2")
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(files).To(ConsistOf(blob1, blob2, blob3))
+				Expect(blobs).To(ConsistOf(blob1, blob2, blob3))
 			})
 
 			Context("when s3 list-objects errors", func() {
@@ -64,29 +62,55 @@ var _ = Describe("IncrementalBucket", func() {
 
 					_, err = bucketObjectUnderTest.ListBlobs("")
 
-					Expect(err).To(MatchError(ContainSubstring("failed to list files from bucket does-not-exist")))
+					Expect(err).To(MatchError(ContainSubstring("failed to list blobs from bucket does-not-exist")))
 				})
 			})
 
-			Context("when the bucket has a lot of files", func() {
+			Context("when the bucket has a lot of blobs", func() {
 				It("works", func() {
 					bucketObjectUnderTest, err := s3.NewBucket("sdk-unversioned-big-bucket-integration-test", liveRegion, awsEndpoint, creds, false)
 					Expect(err).NotTo(HaveOccurred())
 
-					files, err := bucketObjectUnderTest.ListBlobs("")
+					blobs, err := bucketObjectUnderTest.ListBlobs("")
 
 					Expect(err).NotTo(HaveOccurred())
-					Expect(len(files)).To(Equal(2001))
+					Expect(len(blobs)).To(Equal(2001))
 				})
 			})
 		})
 
-		Context("When I ask for a list of files in a directory", func() {
-			It("should list all the files in the directory", func() {
-				files, err := bucketObjectUnderTest.ListBlobs("live/location")
+		Context("with a prefix", func() {
+			It("lists all the blobs in the directory", func() {
+				blobs, err := bucketObjectUnderTest.ListBlobs("live/location")
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(files).To(ConsistOf(s3.NewBlob("leaf/node")))
+				Expect(blobs).To(ConsistOf(s3.NewBlob("leaf/node")))
+			})
+		})
+	})
+
+	Describe("ListDirectories", func() {
+		Context("when there are several directories", func() {
+			BeforeEach(func() {
+				uploadFile(liveBucketName, awsEndpoint, "path1/another-blob", "", creds)
+				uploadFile(liveBucketName, awsEndpoint, "top-level-blob", "", creds)
+			})
+
+			It("lists the top-level directories", func() {
+				dirs, err := bucketObjectUnderTest.ListDirectories()
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(dirs).To(ConsistOf("path1", "live", "path2"))
+			})
+		})
+
+		Context("when s3 list-objects errors", func() {
+			It("errors", func() {
+				bucketObjectUnderTest, err := s3.NewBucket("does-not-exist", liveRegion, awsEndpoint, creds, false)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = bucketObjectUnderTest.ListDirectories()
+				Expect(err).To(MatchError(ContainSubstring("failed to list directories from bucket does-not-exist")))
 			})
 		})
 	})

@@ -143,7 +143,7 @@ func RunUnversionedBucketTests(liveRegion, backupRegion, endpoint, accessKey, se
 				})
 
 				It("errors", func() {
-					Expect(err).To(MatchError(ContainSubstring("failed to list files from bucket does-not-exist")))
+					Expect(err).To(MatchError(ContainSubstring("failed to list blobs from bucket does-not-exist")))
 				})
 
 			})
