@@ -103,6 +103,20 @@ func (bucket Bucket) ListFiles(subfolder string) ([]string, error) {
 	return files, nil
 }
 
+func (bucket Bucket) ListBlobs(subfolder string) ([]Blob, error) {
+	paths, err := bucket.ListFiles(subfolder)
+	if err != nil {
+		return nil, err
+	}
+
+	var blobs []Blob
+	for _, path := range paths {
+		blobs = append(blobs, NewBlob(path))
+	}
+
+	return blobs, err
+}
+
 func (bucket Bucket) ListVersions() ([]Version, error) {
 	err := bucket.CheckIfVersioned()
 	if err != nil {
