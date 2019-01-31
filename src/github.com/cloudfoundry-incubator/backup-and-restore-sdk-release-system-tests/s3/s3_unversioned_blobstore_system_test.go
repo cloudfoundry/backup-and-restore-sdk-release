@@ -185,11 +185,11 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 			localArtifact, err = ioutil.TempFile("", "blobstore-")
 			Expect(err).NotTo(HaveOccurred())
 
-			region = MustHaveEnv("S3-UNVERSIONED-LARGE-NUMBER-OF-FILES-BUCKET-REGION")
-			bucket = MustHaveEnv("S3-UNVERSIONED-LARGE-NUMBER-OF-FILES-BUCKET-NAME")
+			region = MustHaveEnv("S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BUCKET_REGION")
+			bucket = MustHaveEnv("S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BUCKET_NAME")
 
-			backupRegion = MustHaveEnv("S3-UNVERSIONED-LARGE-NUMBER-OF-FILES-BACKUP-BUCKET-REGION")
-			backupBucket = MustHaveEnv("S3-UNVERSIONED-LARGE-NUMBER-OF-FILES-BACKUP-BUCKET-NAME")
+			backupRegion = MustHaveEnv("S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BACKUP_BUCKET_REGION")
+			backupBucket = MustHaveEnv("S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BACKUP_BUCKET_NAME")
 
 			DeleteAllFilesFromBucket(backupRegion, backupBucket)
 
