@@ -14,9 +14,9 @@ var _ = Describe("IncrementalBucket", func() {
 	)
 
 	var (
-		liveBucketName        string
-		bucketObjectUnderTest s3.Bucket
-		creds                 s3.AccessKey
+		liveBucketName string
+		liveBucket     s3.Bucket
+		creds          s3.AccessKey
 	)
 
 	BeforeEach(func() {
@@ -28,7 +28,7 @@ var _ = Describe("IncrementalBucket", func() {
 		uploadFile(liveBucketName, awsEndpoint, "path2/blob2", "", creds)
 
 		var err error
-		bucketObjectUnderTest, err = s3.NewBucket(liveBucketName, liveRegion, awsEndpoint, creds, false)
+		liveBucket, err = s3.NewBucket(liveBucketName, liveRegion, awsEndpoint, creds, false)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -46,7 +46,7 @@ var _ = Describe("IncrementalBucket", func() {
 	Describe("ListBlobs", func() {
 		Context("without a prefix", func() {
 			It("lists all the blobs in the bucket", func() {
-				blobs, err := bucketObjectUnderTest.ListBlobs("")
+				blobs, err := liveBucket.ListBlobs("")
 
 				blob1 := s3.NewBlob("path1/blob1")
 				blob2 := s3.NewBlob("live/location/leaf/node")
@@ -82,7 +82,7 @@ var _ = Describe("IncrementalBucket", func() {
 
 		Context("with a prefix", func() {
 			It("lists all the blobs in the directory", func() {
-				blobs, err := bucketObjectUnderTest.ListBlobs("live/location")
+				blobs, err := liveBucket.ListBlobs("live/location")
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(ConsistOf(s3.NewBlob("leaf/node")))
@@ -98,7 +98,7 @@ var _ = Describe("IncrementalBucket", func() {
 			})
 
 			It("lists the top-level directories", func() {
-				dirs, err := bucketObjectUnderTest.ListDirectories()
+				dirs, err := liveBucket.ListDirectories()
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(dirs).To(ConsistOf("path1", "live", "path2"))
@@ -122,7 +122,7 @@ var _ = Describe("IncrementalBucket", func() {
 			copyPath := "path1/blob1-copy"
 			Expect(blobs).NotTo(ContainElement(copyPath))
 
-			err := bucketObjectUnderTest.CopyBlobWithinBucket("path1/blob1", copyPath)
+			err := liveBucket.CopyBlobWithinBucket("path1/blob1", copyPath)
 
 			Expect(err).NotTo(HaveOccurred())
 			actualContents := getFileContents(liveBucketName, awsEndpoint, copyPath, creds)
@@ -131,7 +131,7 @@ var _ = Describe("IncrementalBucket", func() {
 
 		Context("when the blob does not exist", func() {
 			It("errors", func() {
-				err := bucketObjectUnderTest.CopyBlobWithinBucket("does-not-exist", "copy-of-does-not-exist")
+				err := liveBucket.CopyBlobWithinBucket("does-not-exist", "copy-of-does-not-exist")
 
 				Expect(err).To(MatchError(ContainSubstring("failed to retrieve head object output")))
 			})
@@ -160,7 +160,7 @@ var _ = Describe("IncrementalBucket", func() {
 		It("copies the blob", func() {
 			blobPath := "path1/blob1"
 
-			err := backupBucket.CopyBlobFromBucket(bucketObjectUnderTest, blobPath, blobPath)
+			err := backupBucket.CopyBlobFromBucket(liveBucket, blobPath, blobPath)
 
 			Expect(err).NotTo(HaveOccurred())
 			actualContents := getFileContents(backupBucketName, awsEndpoint, blobPath, creds)
@@ -169,9 +169,33 @@ var _ = Describe("IncrementalBucket", func() {
 
 		Context("when the blob does not exist", func() {
 			It("errors", func() {
-				err := backupBucket.CopyBlobFromBucket(bucketObjectUnderTest, "does-not-exist", "copy-of-does-not-exist")
+				err := backupBucket.CopyBlobFromBucket(liveBucket, "does-not-exist", "copy-of-does-not-exist")
 
 				Expect(err).To(MatchError(ContainSubstring("failed to retrieve head object output")))
+			})
+		})
+	})
+
+	Describe("UploadBlob", func() {
+		It("uploads the blob", func() {
+			blobPath := "some/blob"
+
+			err := liveBucket.UploadBlob(blobPath, "blob contents")
+
+			Expect(err).NotTo(HaveOccurred())
+			actualContents := getFileContents(liveBucketName, awsEndpoint, blobPath, creds)
+			Expect(actualContents).To(Equal("blob contents"))
+		})
+
+		Context("when the bucket does not exist", func() {
+			It("errors", func() {
+				blobPath := "some/blob"
+				bucket, err := s3.NewBucket("does-not-exist", liveRegion, awsEndpoint, creds, false)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = bucket.UploadBlob(blobPath, "blob contents")
+
+				Expect(err).To(MatchError(ContainSubstring("failed to upload blob")))
 			})
 		})
 	})

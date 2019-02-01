@@ -194,7 +194,16 @@ func (b Bucket) CopyBlobFromBucket(sourceBucket incremental.Bucket, src, dst str
 	return b.copyVersion(src, "null", dst, srcBucket.name, srcBucket.regionName)
 }
 
-func (b Bucket) UploadBlob(path, contents string) error {
+func (b Bucket) UploadBlob(key, contents string) error {
+	_, err := b.s3Client.PutObject(&s3.PutObjectInput{
+		Bucket: aws.String(b.name),
+		Key:    aws.String(key),
+		Body:   strings.NewReader(contents),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to upload blob '%s': %s", key, err)
+	}
+
 	return nil
 }
 
