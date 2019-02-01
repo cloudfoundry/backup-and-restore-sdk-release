@@ -34,17 +34,26 @@ func (b Finder) ListBlobs() ([]BackedUpBlob, error) {
 		return nil, nil
 	}
 
-	lastComplete, err := b.findLastCompleteBackup(filteredDirs)
+	sort.Sort(sort.Reverse(sort.StringSlice(filteredDirs)))
+
+	var backupDirs []BackupDirectory
+	for _, filteredDir := range filteredDirs {
+		backupDirs = append(backupDirs, BackupDirectory{
+			Path:   joinBlobPath(filteredDir, b.ID),
+			Bucket: b.Bucket,
+		})
+	}
+
+	lastCompleteBackupDir, err := b.findLastCompleteBackup(backupDirs)
 	if err != nil {
 		return nil, err
 	}
 
-	if lastComplete == "" {
+	if lastCompleteBackupDir == nil {
 		return nil, nil
 	}
 
-	backupDirPath := joinBlobPath(lastComplete, b.ID)
-	blobs, err := b.Bucket.ListBlobs(backupDirPath)
+	blobs, err := b.Bucket.ListBlobs(lastCompleteBackupDir.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -53,25 +62,24 @@ func (b Finder) ListBlobs() ([]BackedUpBlob, error) {
 	for _, blob := range blobs {
 		backedUpBlobs = append(backedUpBlobs, BackedUpBlob{
 			Path:                blob.Path(),
-			BackupDirectoryPath: backupDirPath,
+			BackupDirectoryPath: lastCompleteBackupDir.Path,
 		})
 	}
 
 	return backedUpBlobs, nil
 }
 
-func (b Finder) findLastCompleteBackup(backupDirectories []string) (string, error) {
-	sort.Strings(backupDirectories)
-	for _, dir := range backupDirectories {
-		isComplete, err := b.Bucket.IsBackupComplete(dir)
+func (b Finder) findLastCompleteBackup(dirs []BackupDirectory) (*BackupDirectory, error) {
+	for _, dir := range dirs {
+		isComplete, err := dir.IsComplete()
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 
 		if isComplete {
-			return dir, nil
+			return &dir, nil
 		}
 	}
 
-	return "", nil
+	return nil, nil
 }

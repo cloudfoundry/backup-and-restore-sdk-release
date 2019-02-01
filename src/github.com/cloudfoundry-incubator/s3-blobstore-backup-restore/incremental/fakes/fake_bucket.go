@@ -91,19 +91,6 @@ type FakeBucket struct {
 		result1 bool
 		result2 error
 	}
-	IsBackupCompleteStub        func(prefix string) (bool, error)
-	isBackupCompleteMutex       sync.RWMutex
-	isBackupCompleteArgsForCall []struct {
-		prefix string
-	}
-	isBackupCompleteReturns struct {
-		result1 bool
-		result2 error
-	}
-	isBackupCompleteReturnsOnCall map[int]struct {
-		result1 bool
-		result2 error
-	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -441,57 +428,6 @@ func (fake *FakeBucket) HasBlobReturnsOnCall(i int, result1 bool, result2 error)
 	}{result1, result2}
 }
 
-func (fake *FakeBucket) IsBackupComplete(prefix string) (bool, error) {
-	fake.isBackupCompleteMutex.Lock()
-	ret, specificReturn := fake.isBackupCompleteReturnsOnCall[len(fake.isBackupCompleteArgsForCall)]
-	fake.isBackupCompleteArgsForCall = append(fake.isBackupCompleteArgsForCall, struct {
-		prefix string
-	}{prefix})
-	fake.recordInvocation("IsBackupComplete", []interface{}{prefix})
-	fake.isBackupCompleteMutex.Unlock()
-	if fake.IsBackupCompleteStub != nil {
-		return fake.IsBackupCompleteStub(prefix)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.isBackupCompleteReturns.result1, fake.isBackupCompleteReturns.result2
-}
-
-func (fake *FakeBucket) IsBackupCompleteCallCount() int {
-	fake.isBackupCompleteMutex.RLock()
-	defer fake.isBackupCompleteMutex.RUnlock()
-	return len(fake.isBackupCompleteArgsForCall)
-}
-
-func (fake *FakeBucket) IsBackupCompleteArgsForCall(i int) string {
-	fake.isBackupCompleteMutex.RLock()
-	defer fake.isBackupCompleteMutex.RUnlock()
-	return fake.isBackupCompleteArgsForCall[i].prefix
-}
-
-func (fake *FakeBucket) IsBackupCompleteReturns(result1 bool, result2 error) {
-	fake.IsBackupCompleteStub = nil
-	fake.isBackupCompleteReturns = struct {
-		result1 bool
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeBucket) IsBackupCompleteReturnsOnCall(i int, result1 bool, result2 error) {
-	fake.IsBackupCompleteStub = nil
-	if fake.isBackupCompleteReturnsOnCall == nil {
-		fake.isBackupCompleteReturnsOnCall = make(map[int]struct {
-			result1 bool
-			result2 error
-		})
-	}
-	fake.isBackupCompleteReturnsOnCall[i] = struct {
-		result1 bool
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -509,8 +445,6 @@ func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	defer fake.uploadBlobMutex.RUnlock()
 	fake.hasBlobMutex.RLock()
 	defer fake.hasBlobMutex.RUnlock()
-	fake.isBackupCompleteMutex.RLock()
-	defer fake.isBackupCompleteMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

@@ -225,10 +225,6 @@ func (b Bucket) HasBlob(key string) (bool, error) {
 	return true, nil
 }
 
-func (b Bucket) IsBackupComplete(prefix string) (bool, error) {
-	return false, nil
-}
-
 func (b Bucket) CopyObject(originSuffix, originPrefix, destinationPrefix, originBucketName, originBucketRegion string) error {
 	blobKey := strings.Join([]string{originPrefix, originSuffix}, blobDelimiter)
 	destinationKey := strings.Join([]string{destinationPrefix, originSuffix}, blobDelimiter)
