@@ -77,19 +77,19 @@ var _ = Describe("BackupStarter", func() {
 			Expect(backupDirectoryFinder.ListBlobsCallCount()).To(Equal(1))
 			Expect(liveBucket.ListBlobsCallCount()).To(Equal(1))
 
-			Expect(liveBucket.CopyBlobToBucketCallCount()).To(Equal(3))
-			backupBucketArg, liveBlobPath, blobDst := liveBucket.CopyBlobToBucketArgsForCall(0)
-			Expect(backupBucketArg).To(Equal(backupBucket))
+			Expect(backupBucket.CopyBlobFromBucketCallCount()).To(Equal(3))
+			actualBucket, liveBlobPath, blobDst := backupBucket.CopyBlobFromBucketArgsForCall(0)
+			Expect(actualBucket).To(Equal(liveBucket))
 			Expect(liveBlobPath).To(Equal("f0/fd/blob1/uuid"))
 			Expect(blobDst).To(Equal("2000_01_02_03_04_05/bucket_id/f0/fd/blob1/uuid"))
 
-			backupBucketArg, liveBlobPath2, blobDst2 := liveBucket.CopyBlobToBucketArgsForCall(1)
-			Expect(backupBucketArg).To(Equal(backupBucket))
+			actualBucket, liveBlobPath2, blobDst2 := backupBucket.CopyBlobFromBucketArgsForCall(1)
+			Expect(actualBucket).To(Equal(liveBucket))
 			Expect(liveBlobPath2).To(Equal("f0/fd/blob2/uuid"))
 			Expect(blobDst2).To(Equal("2000_01_02_03_04_05/bucket_id/f0/fd/blob2/uuid"))
 
-			backupBucketArg, liveBlobPath3, blobDst3 := liveBucket.CopyBlobToBucketArgsForCall(2)
-			Expect(backupBucketArg).To(Equal(backupBucket))
+			actualBucket, liveBlobPath3, blobDst3 := backupBucket.CopyBlobFromBucketArgsForCall(2)
+			Expect(actualBucket).To(Equal(liveBucket))
 			Expect(liveBlobPath3).To(Equal("f0/fd/blob3/uuid"))
 			Expect(blobDst3).To(Equal("2000_01_02_03_04_05/bucket_id/f0/fd/blob3/uuid"))
 		})
@@ -131,10 +131,10 @@ var _ = Describe("BackupStarter", func() {
 			Expect(backupDirectoryFinder.ListBlobsCallCount()).To(Equal(1))
 			Expect(liveBucket.ListBlobsCallCount()).To(Equal(1))
 
-			Expect(liveBucket.CopyBlobToBucketCallCount()).To(Equal(1))
+			Expect(backupBucket.CopyBlobFromBucketCallCount()).To(Equal(1))
 
-			backupBucketArg, liveBlobPath, blobDst := liveBucket.CopyBlobToBucketArgsForCall(0)
-			Expect(backupBucketArg).To(Equal(backupBucket))
+			actualBucket, liveBlobPath, blobDst := backupBucket.CopyBlobFromBucketArgsForCall(0)
+			Expect(actualBucket).To(Equal(liveBucket))
 			Expect(liveBlobPath).To(Equal("f0/fd/blob3/uuid"))
 			Expect(blobDst).To(Equal("2000_01_02_03_04_05/bucket_id/f0/fd/blob3/uuid"))
 		})
@@ -144,7 +144,7 @@ var _ = Describe("BackupStarter", func() {
 			Expect(backupDirectoryFinder.ListBlobsCallCount()).To(Equal(1))
 			Expect(liveBucket.ListBlobsCallCount()).To(Equal(1))
 
-			Expect(liveBucket.CopyBlobToBucketCallCount()).To(Equal(1))
+			Expect(backupBucket.CopyBlobFromBucketCallCount()).To(Equal(1))
 			Expect(artifact.WriteCallCount()).To(Equal(1))
 			Expect(artifact.WriteArgsForCall(0)).To(Equal(map[string]incremental.BucketBackup{
 				"bucket_id": {
@@ -175,7 +175,7 @@ var _ = Describe("BackupStarter", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(backupDirectoryFinder.ListBlobsCallCount()).To(Equal(1))
 			Expect(liveBucket.ListBlobsCallCount()).To(Equal(1))
-			Expect(liveBucket.CopyBlobToBucketCallCount()).To(Equal(1))
+			Expect(backupBucket.CopyBlobFromBucketCallCount()).To(Equal(1))
 			Expect(artifact.WriteCallCount()).To(Equal(1))
 			Expect(artifact.WriteArgsForCall(0)).To(Equal(map[string]incremental.BucketBackup{
 				"bucket_id": {
@@ -195,7 +195,7 @@ var _ = Describe("BackupStarter", func() {
 				backupDirectoryFinder.ListBlobsReturns(nil, nil)
 
 				liveBucket.ListBlobsReturns([]incremental.Blob{liveBlob1}, nil)
-				liveBucket.CopyBlobToBucketReturns(errors.New("oups"))
+				backupBucket.CopyBlobFromBucketReturns(errors.New("oups"))
 			})
 
 			It("returns an error", func() {

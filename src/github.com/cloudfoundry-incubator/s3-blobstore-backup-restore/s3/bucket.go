@@ -5,6 +5,8 @@ import (
 	"math"
 	"sort"
 
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
+
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -103,13 +105,13 @@ func (b Bucket) ListFiles(subfolder string) ([]string, error) {
 	return files, nil
 }
 
-func (b Bucket) ListBlobs(prefix string) ([]Blob, error) {
+func (b Bucket) ListBlobs(prefix string) ([]incremental.Blob, error) {
 	paths, err := b.ListFiles(prefix)
 	if err != nil {
 		return nil, err
 	}
 
-	var blobs []Blob
+	var blobs []incremental.Blob
 	for _, path := range paths {
 		blobs = append(blobs, NewBlob(path))
 	}
@@ -187,6 +189,23 @@ func (b Bucket) CopyBlobWithinBucket(src, dst string) error {
 	return b.copyVersion(src, "null", dst, b.name, b.regionName)
 }
 
+func (b Bucket) CopyBlobFromBucket(sourceBucket incremental.Bucket, src, dst string) error {
+	srcBucket := sourceBucket.(Bucket)
+	return b.copyVersion(src, "null", dst, srcBucket.name, srcBucket.regionName)
+}
+
+func (b Bucket) UploadBlob(path, contents string) error {
+	return nil
+}
+
+func (b Bucket) HasBlob(path string) (bool, error) {
+	return false, nil
+}
+
+func (b Bucket) IsBackupComplete(prefix string) (bool, error) {
+	return false, nil
+}
+
 func (b Bucket) CopyObject(originSuffix, originPrefix, destinationPrefix, originBucketName, originBucketRegion string) error {
 	blobKey := strings.Join([]string{originPrefix, originSuffix}, blobDelimiter)
 	destinationKey := strings.Join([]string{destinationPrefix, originSuffix}, blobDelimiter)
@@ -200,10 +219,10 @@ func (b Bucket) CopyObject(originSuffix, originPrefix, destinationPrefix, origin
 	)
 }
 
-func (b Bucket) CopyVersion(blobKey, versionId, originBucketName, originBucketRegion string) error {
+func (b Bucket) CopyVersion(blobKey, versionID, originBucketName, originBucketRegion string) error {
 	return b.copyVersion(
 		blobKey,
-		versionId,
+		versionID,
 		blobKey,
 		originBucketName,
 		originBucketRegion,
@@ -218,8 +237,6 @@ func (b Bucket) copyVersion(blobKey, versionID, destinationKey, originBucketName
 
 	copySource := blobDelimiter + originBucketName + blobDelimiter + blobKey + "?versionId=" + versionID
 	copySource = strings.Replace(copySource, blobDelimiter+blobDelimiter, blobDelimiter, -1)
-
-	fmt.Println("copySource:", copySource)
 
 	if sizeInMbs(blobSize) <= 1024 {
 		return b.copyVersionWithSingleRequest(copySource, destinationKey)

@@ -53,17 +53,17 @@ type FakeBucket struct {
 	copyBlobWithinBucketReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CopyBlobToBucketStub        func(bucket incremental.Bucket, src, dst string) error
-	copyBlobToBucketMutex       sync.RWMutex
-	copyBlobToBucketArgsForCall []struct {
+	CopyBlobFromBucketStub        func(bucket incremental.Bucket, src, dst string) error
+	copyBlobFromBucketMutex       sync.RWMutex
+	copyBlobFromBucketArgsForCall []struct {
 		bucket incremental.Bucket
 		src    string
 		dst    string
 	}
-	copyBlobToBucketReturns struct {
+	copyBlobFromBucketReturns struct {
 		result1 error
 	}
-	copyBlobToBucketReturnsOnCall map[int]struct {
+	copyBlobFromBucketReturnsOnCall map[int]struct {
 		result1 error
 	}
 	UploadBlobStub        func(path, contents string) error
@@ -291,52 +291,52 @@ func (fake *FakeBucket) CopyBlobWithinBucketReturnsOnCall(i int, result1 error) 
 	}{result1}
 }
 
-func (fake *FakeBucket) CopyBlobToBucket(bucket incremental.Bucket, src string, dst string) error {
-	fake.copyBlobToBucketMutex.Lock()
-	ret, specificReturn := fake.copyBlobToBucketReturnsOnCall[len(fake.copyBlobToBucketArgsForCall)]
-	fake.copyBlobToBucketArgsForCall = append(fake.copyBlobToBucketArgsForCall, struct {
+func (fake *FakeBucket) CopyBlobFromBucket(bucket incremental.Bucket, src string, dst string) error {
+	fake.copyBlobFromBucketMutex.Lock()
+	ret, specificReturn := fake.copyBlobFromBucketReturnsOnCall[len(fake.copyBlobFromBucketArgsForCall)]
+	fake.copyBlobFromBucketArgsForCall = append(fake.copyBlobFromBucketArgsForCall, struct {
 		bucket incremental.Bucket
 		src    string
 		dst    string
 	}{bucket, src, dst})
-	fake.recordInvocation("CopyBlobToBucket", []interface{}{bucket, src, dst})
-	fake.copyBlobToBucketMutex.Unlock()
-	if fake.CopyBlobToBucketStub != nil {
-		return fake.CopyBlobToBucketStub(bucket, src, dst)
+	fake.recordInvocation("CopyBlobFromBucket", []interface{}{bucket, src, dst})
+	fake.copyBlobFromBucketMutex.Unlock()
+	if fake.CopyBlobFromBucketStub != nil {
+		return fake.CopyBlobFromBucketStub(bucket, src, dst)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.copyBlobToBucketReturns.result1
+	return fake.copyBlobFromBucketReturns.result1
 }
 
-func (fake *FakeBucket) CopyBlobToBucketCallCount() int {
-	fake.copyBlobToBucketMutex.RLock()
-	defer fake.copyBlobToBucketMutex.RUnlock()
-	return len(fake.copyBlobToBucketArgsForCall)
+func (fake *FakeBucket) CopyBlobFromBucketCallCount() int {
+	fake.copyBlobFromBucketMutex.RLock()
+	defer fake.copyBlobFromBucketMutex.RUnlock()
+	return len(fake.copyBlobFromBucketArgsForCall)
 }
 
-func (fake *FakeBucket) CopyBlobToBucketArgsForCall(i int) (incremental.Bucket, string, string) {
-	fake.copyBlobToBucketMutex.RLock()
-	defer fake.copyBlobToBucketMutex.RUnlock()
-	return fake.copyBlobToBucketArgsForCall[i].bucket, fake.copyBlobToBucketArgsForCall[i].src, fake.copyBlobToBucketArgsForCall[i].dst
+func (fake *FakeBucket) CopyBlobFromBucketArgsForCall(i int) (incremental.Bucket, string, string) {
+	fake.copyBlobFromBucketMutex.RLock()
+	defer fake.copyBlobFromBucketMutex.RUnlock()
+	return fake.copyBlobFromBucketArgsForCall[i].bucket, fake.copyBlobFromBucketArgsForCall[i].src, fake.copyBlobFromBucketArgsForCall[i].dst
 }
 
-func (fake *FakeBucket) CopyBlobToBucketReturns(result1 error) {
-	fake.CopyBlobToBucketStub = nil
-	fake.copyBlobToBucketReturns = struct {
+func (fake *FakeBucket) CopyBlobFromBucketReturns(result1 error) {
+	fake.CopyBlobFromBucketStub = nil
+	fake.copyBlobFromBucketReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeBucket) CopyBlobToBucketReturnsOnCall(i int, result1 error) {
-	fake.CopyBlobToBucketStub = nil
-	if fake.copyBlobToBucketReturnsOnCall == nil {
-		fake.copyBlobToBucketReturnsOnCall = make(map[int]struct {
+func (fake *FakeBucket) CopyBlobFromBucketReturnsOnCall(i int, result1 error) {
+	fake.CopyBlobFromBucketStub = nil
+	if fake.copyBlobFromBucketReturnsOnCall == nil {
+		fake.copyBlobFromBucketReturnsOnCall = make(map[int]struct {
 			result1 error
 		})
 	}
-	fake.copyBlobToBucketReturnsOnCall[i] = struct {
+	fake.copyBlobFromBucketReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -503,8 +503,8 @@ func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	defer fake.listDirectoriesMutex.RUnlock()
 	fake.copyBlobWithinBucketMutex.RLock()
 	defer fake.copyBlobWithinBucketMutex.RUnlock()
-	fake.copyBlobToBucketMutex.RLock()
-	defer fake.copyBlobToBucketMutex.RUnlock()
+	fake.copyBlobFromBucketMutex.RLock()
+	defer fake.copyBlobFromBucketMutex.RUnlock()
 	fake.uploadBlobMutex.RLock()
 	defer fake.uploadBlobMutex.RUnlock()
 	fake.hasBlobMutex.RLock()

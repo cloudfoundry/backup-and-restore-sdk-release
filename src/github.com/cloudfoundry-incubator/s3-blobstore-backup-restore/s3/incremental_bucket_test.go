@@ -8,8 +8,9 @@ import (
 
 var _ = Describe("IncrementalBucket", func() {
 	const (
-		liveRegion  = "eu-west-1"
-		awsEndpoint = ""
+		liveRegion   = "eu-west-1"
+		backupRegion = "eu-central-1"
+		awsEndpoint  = ""
 	)
 
 	var (
@@ -126,6 +127,52 @@ var _ = Describe("IncrementalBucket", func() {
 			Expect(err).NotTo(HaveOccurred())
 			actualContents := getFileContents(liveBucketName, awsEndpoint, copyPath, creds)
 			Expect(actualContents).To(Equal("blob1-content"))
+		})
+
+		Context("when the blob does not exist", func() {
+			It("errors", func() {
+				err := bucketObjectUnderTest.CopyBlobWithinBucket("does-not-exist", "copy-of-does-not-exist")
+
+				Expect(err).To(MatchError(ContainSubstring("failed to retrieve head object output")))
+			})
+		})
+	})
+
+	Describe("CopyBlobFromBucket", func() {
+		var (
+			backupBucketName string
+			backupBucket     s3.Bucket
+		)
+
+		BeforeEach(func() {
+			creds = s3.AccessKey{Id: TestAWSAccessKeyID, Secret: TestAWSSecretAccessKey}
+			backupBucketName = setUpUnversionedBucket(backupRegion, awsEndpoint, creds)
+			var err error
+			backupBucket, err = s3.NewBucket(backupBucketName, backupRegion, awsEndpoint, creds, false)
+
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			tearDownBucket(backupBucketName, awsEndpoint, creds)
+		})
+
+		It("copies the blob", func() {
+			blobPath := "path1/blob1"
+
+			err := backupBucket.CopyBlobFromBucket(bucketObjectUnderTest, blobPath, blobPath)
+
+			Expect(err).NotTo(HaveOccurred())
+			actualContents := getFileContents(backupBucketName, awsEndpoint, blobPath, creds)
+			Expect(actualContents).To(Equal("blob1-content"))
+		})
+
+		Context("when the blob does not exist", func() {
+			It("errors", func() {
+				err := backupBucket.CopyBlobFromBucket(bucketObjectUnderTest, "does-not-exist", "copy-of-does-not-exist")
+
+				Expect(err).To(MatchError(ContainSubstring("failed to retrieve head object output")))
+			})
 		})
 	})
 })
