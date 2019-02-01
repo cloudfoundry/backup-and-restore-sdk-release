@@ -5,6 +5,8 @@ import (
 	"math"
 	"sort"
 
+	"github.com/aws/aws-sdk-go/aws/awserr"
+
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
 
 	"strings"
@@ -207,8 +209,20 @@ func (b Bucket) UploadBlob(key, contents string) error {
 	return nil
 }
 
-func (b Bucket) HasBlob(path string) (bool, error) {
-	return false, nil
+func (b Bucket) HasBlob(key string) (bool, error) {
+	_, err := b.s3Client.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(b.name),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		awsErr, ok := err.(awserr.Error)
+		if ok && awsErr.Code() == s3.ErrCodeNoSuchKey {
+			return false, nil
+		}
+		return false, fmt.Errorf("failed to check if blob exists '%s': %s", key, err)
+	}
+
+	return true, nil
 }
 
 func (b Bucket) IsBackupComplete(prefix string) (bool, error) {

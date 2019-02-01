@@ -36,13 +36,6 @@ var _ = Describe("IncrementalBucket", func() {
 		tearDownBucket(liveBucketName, awsEndpoint, creds)
 	})
 
-	//It("implements the incremental bucket interface", func() {
-	//	bucket, err := s3.NewBucket("", "", "", s3.AccessKey{}, false)
-	//	Expect(err).NotTo(HaveOccurred())
-	//
-	//	_ = incremental.BucketPair{BackupBucket: bucket}
-	//})
-
 	Describe("ListBlobs", func() {
 		Context("without a prefix", func() {
 			It("lists all the blobs in the bucket", func() {
@@ -189,13 +182,42 @@ var _ = Describe("IncrementalBucket", func() {
 
 		Context("when the bucket does not exist", func() {
 			It("errors", func() {
-				blobPath := "some/blob"
 				bucket, err := s3.NewBucket("does-not-exist", liveRegion, awsEndpoint, creds, false)
 				Expect(err).NotTo(HaveOccurred())
 
-				err = bucket.UploadBlob(blobPath, "blob contents")
+				err = bucket.UploadBlob("some/blob", "blob contents")
 
 				Expect(err).To(MatchError(ContainSubstring("failed to upload blob")))
+			})
+		})
+	})
+
+	Describe("HasBlob", func() {
+		Context("when the blob exists", func() {
+			It("returns true", func() {
+				exists, err := liveBucket.HasBlob("path1/blob1")
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(exists).To(BeTrue())
+			})
+		})
+
+		Context("when the blob does not exist", func() {
+			It("returns false", func() {
+				exists, err := liveBucket.HasBlob("does-not-exist-blob")
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(exists).To(BeFalse())
+			})
+		})
+
+		Context("when the bucket does not exist", func() {
+			It("errors", func() {
+				bucket, err := s3.NewBucket("does-not-exist", liveRegion, awsEndpoint, creds, false)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = bucket.HasBlob("does-not-exist-blob")
+
+				Expect(err).To(MatchError(ContainSubstring("failed to check if blob exists")))
 			})
 		})
 	})
