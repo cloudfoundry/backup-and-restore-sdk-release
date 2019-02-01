@@ -22,7 +22,7 @@ var _ = Describe("IncrementalBucket", func() {
 		creds = s3.AccessKey{Id: TestAWSAccessKeyID, Secret: TestAWSSecretAccessKey}
 
 		liveBucketName = setUpUnversionedBucket(liveRegion, awsEndpoint, creds)
-		uploadFile(liveBucketName, awsEndpoint, "path1/blob1", "", creds)
+		uploadFile(liveBucketName, awsEndpoint, "path1/blob1", "blob1-content", creds)
 		uploadFile(liveBucketName, awsEndpoint, "live/location/leaf/node", "", creds)
 		uploadFile(liveBucketName, awsEndpoint, "path2/blob2", "", creds)
 
@@ -112,6 +112,20 @@ var _ = Describe("IncrementalBucket", func() {
 				_, err = bucketObjectUnderTest.ListDirectories()
 				Expect(err).To(MatchError(ContainSubstring("failed to list directories from bucket does-not-exist")))
 			})
+		})
+	})
+
+	Describe("CopyBlobWithinBucket", func() {
+		It("copies the blob", func() {
+			blobs := listFiles(liveBucketName, awsEndpoint, creds)
+			copyPath := "path1/blob1-copy"
+			Expect(blobs).NotTo(ContainElement(copyPath))
+
+			err := bucketObjectUnderTest.CopyBlobWithinBucket("path1/blob1", copyPath)
+
+			Expect(err).NotTo(HaveOccurred())
+			actualContents := getFileContents(liveBucketName, awsEndpoint, copyPath, creds)
+			Expect(actualContents).To(Equal("blob1-content"))
 		})
 	})
 })

@@ -69,18 +69,18 @@ func NewBucket(bucketName, bucketRegion, endpoint string, accessKey AccessKey, u
 	}, nil
 }
 
-func (bucket Bucket) Name() string {
-	return bucket.name
+func (b Bucket) Name() string {
+	return b.name
 }
 
-func (bucket Bucket) RegionName() string {
-	return bucket.regionName
+func (b Bucket) RegionName() string {
+	return b.regionName
 }
 
-func (bucket Bucket) ListFiles(subfolder string) ([]string, error) {
+func (b Bucket) ListFiles(subfolder string) ([]string, error) {
 	var files []string
-	err := bucket.s3Client.ListObjectsPages(&s3.ListObjectsInput{
-		Bucket: aws.String(bucket.name),
+	err := b.s3Client.ListObjectsPages(&s3.ListObjectsInput{
+		Bucket: aws.String(b.name),
 		Prefix: aws.String(subfolder),
 	}, func(output *s3.ListObjectsOutput, lastPage bool) bool {
 		for _, value := range output.Contents {
@@ -91,20 +91,20 @@ func (bucket Bucket) ListFiles(subfolder string) ([]string, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to list blobs from bucket %s: %s", bucket.name, err)
+		return nil, fmt.Errorf("failed to list blobs from bucket %s: %s", b.name, err)
 	}
 
 	if subfolder != "" {
 		for index, fileLocation := range files {
-			files[index] = strings.Replace(fileLocation, subfolder+"/", "", 1)
+			files[index] = strings.Replace(fileLocation, subfolder+blobDelimiter, "", 1)
 		}
 	}
 
 	return files, nil
 }
 
-func (bucket Bucket) ListBlobs(prefix string) ([]Blob, error) {
-	paths, err := bucket.ListFiles(prefix)
+func (b Bucket) ListBlobs(prefix string) ([]Blob, error) {
+	paths, err := b.ListFiles(prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -117,10 +117,10 @@ func (bucket Bucket) ListBlobs(prefix string) ([]Blob, error) {
 	return blobs, err
 }
 
-func (bucket Bucket) ListDirectories() ([]string, error) {
+func (b Bucket) ListDirectories() ([]string, error) {
 	var dirs []string
-	err := bucket.s3Client.ListObjectsPages(&s3.ListObjectsInput{
-		Bucket:    aws.String(bucket.name),
+	err := b.s3Client.ListObjectsPages(&s3.ListObjectsInput{
+		Bucket:    aws.String(b.name),
 		Prefix:    aws.String(""),
 		Delimiter: aws.String(blobDelimiter),
 	}, func(output *s3.ListObjectsOutput, lastPage bool) bool {
@@ -132,21 +132,21 @@ func (bucket Bucket) ListDirectories() ([]string, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to list directories from bucket %s: %s", bucket.name, err)
+		return nil, fmt.Errorf("failed to list directories from bucket %s: %s", b.name, err)
 	}
 
 	return dirs, nil
 }
 
-func (bucket Bucket) ListVersions() ([]Version, error) {
-	err := bucket.CheckIfVersioned()
+func (b Bucket) ListVersions() ([]Version, error) {
+	err := b.CheckIfVersioned()
 	if err != nil {
 		return nil, err
 	}
 
 	var versions []Version
-	err = bucket.s3Client.ListObjectVersionsPages(&s3.ListObjectVersionsInput{
-		Bucket: aws.String(bucket.name),
+	err = b.s3Client.ListObjectVersionsPages(&s3.ListObjectVersionsInput{
+		Bucket: aws.String(b.name),
 	}, func(output *s3.ListObjectVersionsOutput, lastPage bool) bool {
 		for _, v := range output.Versions {
 			version := Version{
@@ -161,76 +161,83 @@ func (bucket Bucket) ListVersions() ([]Version, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve versions from bucket %s: %s", bucket.name, err)
+		return nil, fmt.Errorf("failed to retrieve versions from b %s: %s", b.name, err)
 	}
 
 	return versions, nil
 }
 
-func (bucket Bucket) CheckIfVersioned() error {
-	output, err := bucket.s3Client.GetBucketVersioning(&s3.GetBucketVersioningInput{
-		Bucket: &bucket.name,
+func (b Bucket) CheckIfVersioned() error {
+	output, err := b.s3Client.GetBucketVersioning(&s3.GetBucketVersioningInput{
+		Bucket: &b.name,
 	})
 
 	if err != nil {
-		return fmt.Errorf("could not check if bucket %s is versioned: %s", bucket.name, err)
+		return fmt.Errorf("could not check if bucket %s is versioned: %s", b.name, err)
 	}
 
 	if output == nil || output.Status == nil || *output.Status != "Enabled" {
-		return fmt.Errorf("bucket %s is not versioned", bucket.name)
+		return fmt.Errorf("b %s is not versioned", b.name)
 	}
 
 	return nil
 }
 
-func (bucket Bucket) CopyObject(blobKey, originPath, destinationPath, originBucketName, originBucketRegion string) error {
-	return bucket.copyVersion(
+func (b Bucket) CopyBlobWithinBucket(src, dst string) error {
+	return b.copyVersion(src, "null", dst, b.name, b.regionName)
+}
+
+func (b Bucket) CopyObject(originSuffix, originPrefix, destinationPrefix, originBucketName, originBucketRegion string) error {
+	blobKey := strings.Join([]string{originPrefix, originSuffix}, blobDelimiter)
+	destinationKey := strings.Join([]string{destinationPrefix, originSuffix}, blobDelimiter)
+
+	return b.copyVersion(
 		blobKey,
 		"null",
-		originPath,
-		destinationPath,
+		destinationKey,
 		originBucketName,
 		originBucketRegion,
 	)
 }
 
-func (bucket Bucket) CopyVersion(blobKey, versionId, originBucketName, originBucketRegion string) error {
-	return bucket.copyVersion(
+func (b Bucket) CopyVersion(blobKey, versionId, originBucketName, originBucketRegion string) error {
+	return b.copyVersion(
 		blobKey,
 		versionId,
-		"",
-		"",
+		blobKey,
 		originBucketName,
 		originBucketRegion,
 	)
 }
 
-func (bucket Bucket) copyVersion(blobKey, versionId, originPath, destinationPath, originBucketName, originBucketRegion string) error {
-	blobSize, err := bucket.getBlobSize(originBucketName, originBucketRegion, originPath, blobKey, versionId)
+func (b Bucket) copyVersion(blobKey, versionID, destinationKey, originBucketName, originBucketRegion string) error {
+	blobSize, err := b.getBlobSize(originBucketName, originBucketRegion, blobKey, versionID)
 	if err != nil {
 		return err
 	}
 
-	copySourceString := fmt.Sprintf("/%s/%s/%s?versionId=%s", originBucketName, originPath, blobKey, versionId)
-	copySourceString = strings.Replace(copySourceString, "//", "/", -1)
+	copySource := blobDelimiter + originBucketName + blobDelimiter + blobKey + "?versionId=" + versionID
+	copySource = strings.Replace(copySource, blobDelimiter+blobDelimiter, blobDelimiter, -1)
+
+	fmt.Println("copySource:", copySource)
 
 	if sizeInMbs(blobSize) <= 1024 {
-		return bucket.copyVersionWithSingleRequest(originBucketName, blobKey, copySourceString, destinationPath)
+		return b.copyVersionWithSingleRequest(copySource, destinationKey)
 	} else {
-		return bucket.copyVersionWithMultipart(originBucketName, blobKey, copySourceString, destinationPath, blobSize)
+		return b.copyVersionWithMultipart(copySource, destinationKey, blobSize)
 	}
 }
 
-func (bucket Bucket) getBlobSize(bucketName, bucketRegion, originPath, blobKey, versionId string) (int64, error) {
-	s3Client, err := newS3Client(bucketRegion, bucket.endpoint, bucket.accessKey, bucket.useIAMProfile)
+func (b Bucket) getBlobSize(bucketName, bucketRegion, blobKey, versionID string) (int64, error) {
+	s3Client, err := newS3Client(bucketRegion, b.endpoint, b.accessKey, b.useIAMProfile)
 	if err != nil {
 		return 0, err
 	}
 
 	headObjectOutput, err := s3Client.HeadObject(&s3.HeadObjectInput{
 		Bucket:    aws.String(bucketName),
-		Key:       aws.String(fmt.Sprintf("%s/%s", originPath, blobKey)),
-		VersionId: aws.String(versionId),
+		Key:       aws.String(blobKey),
+		VersionId: aws.String(versionID),
 	})
 
 	if err != nil {
@@ -244,10 +251,9 @@ func sizeInMbs(sizeInBytes int64) int64 {
 	return sizeInBytes / (1024 * 1024)
 }
 
-func (bucket Bucket) copyVersionWithSingleRequest(sourceBucketName, blobKey, copySourceString, destinationPath string) error {
-	destinationKey := fmt.Sprintf("%s/%s", destinationPath, blobKey)
-	_, err := bucket.s3Client.CopyObject(&s3.CopyObjectInput{
-		Bucket:     aws.String(bucket.Name()),
+func (b Bucket) copyVersionWithSingleRequest(copySourceString, destinationKey string) error {
+	_, err := b.s3Client.CopyObject(&s3.CopyObjectInput{
+		Bucket:     aws.String(b.name),
 		Key:        aws.String(destinationKey),
 		CopySource: aws.String(copySourceString),
 	})
@@ -259,17 +265,10 @@ type partUploadOutput struct {
 	err           error
 }
 
-func (bucket Bucket) copyVersionWithMultipart(sourceBucketName, blobKey, copySourceString, destinationPath string, blobSize int64) error {
-	var destinationKey string
-	if destinationPath != "" {
-		destinationKey = fmt.Sprintf("%s/%s", destinationPath, blobKey)
-	} else {
-		destinationKey = blobKey
-	}
-
-	createOutput, err := bucket.s3Client.CreateMultipartUpload(
+func (b Bucket) copyVersionWithMultipart(copySourceString, destinationKey string, blobSize int64) error {
+	createOutput, err := b.s3Client.CreateMultipartUpload(
 		&s3.CreateMultipartUploadInput{
-			Bucket: aws.String(bucket.Name()),
+			Bucket: aws.String(b.Name()),
 			Key:    aws.String(destinationKey),
 		},
 	)
@@ -286,8 +285,8 @@ func (bucket Bucket) copyVersionWithMultipart(sourceBucketName, blobKey, copySou
 		partStart := (partNumber - 1) * partSize
 		partEnd := int64(math.Min(float64(partNumber*partSize-1), float64(blobSize-1)))
 
-		copyPartOutput, err := bucket.s3Client.UploadPartCopy(&s3.UploadPartCopyInput{
-			Bucket:          aws.String(bucket.Name()),
+		copyPartOutput, err := b.s3Client.UploadPartCopy(&s3.UploadPartCopyInput{
+			Bucket:          aws.String(b.Name()),
 			Key:             aws.String(destinationKey),
 			UploadId:        aws.String(*createOutput.UploadId),
 			CopySource:      aws.String(copySourceString),
@@ -306,8 +305,8 @@ func (bucket Bucket) copyVersionWithMultipart(sourceBucketName, blobKey, copySou
 	}
 
 	if len(errors) != 0 {
-		_, err := bucket.s3Client.AbortMultipartUpload(&s3.AbortMultipartUploadInput{
-			Bucket:   aws.String(bucket.Name()),
+		_, err := b.s3Client.AbortMultipartUpload(&s3.AbortMultipartUploadInput{
+			Bucket:   aws.String(b.Name()),
 			Key:      aws.String(destinationKey),
 			UploadId: createOutput.UploadId,
 		})
@@ -323,8 +322,8 @@ func (bucket Bucket) copyVersionWithMultipart(sourceBucketName, blobKey, copySou
 		return *parts[i].PartNumber < *parts[j].PartNumber
 	})
 
-	_, err = bucket.s3Client.CompleteMultipartUpload(&s3.CompleteMultipartUploadInput{
-		Bucket:   aws.String(bucket.Name()),
+	_, err = b.s3Client.CompleteMultipartUpload(&s3.CompleteMultipartUploadInput{
+		Bucket:   aws.String(b.Name()),
 		Key:      aws.String(destinationKey),
 		UploadId: createOutput.UploadId,
 		MultipartUpload: &s3.CompletedMultipartUpload{
