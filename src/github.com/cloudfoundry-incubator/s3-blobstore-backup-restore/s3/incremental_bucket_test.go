@@ -7,12 +7,18 @@ import (
 )
 
 var _ = Describe("IncrementalBucket", func() {
-	const (
-		liveRegion   = "eu-west-1"
-		backupRegion = "eu-central-1"
-		awsEndpoint  = ""
-	)
+	Describe("AWS S3 buckets", func() {
+		RunIncrementalBucketContractTests(
+			"eu-west-1",
+			"eu-central-1",
+			"",
+			TestAWSAccessKeyID,
+			TestAWSSecretAccessKey,
+		)
+	})
+})
 
+func RunIncrementalBucketContractTests(liveRegion, backupRegion, awsEndpoint, accessKey, secretKey string) {
 	var (
 		liveBucketName string
 		liveBucket     s3.Bucket
@@ -20,7 +26,7 @@ var _ = Describe("IncrementalBucket", func() {
 	)
 
 	BeforeEach(func() {
-		creds = s3.AccessKey{Id: TestAWSAccessKeyID, Secret: TestAWSSecretAccessKey}
+		creds = s3.AccessKey{Id: accessKey, Secret: secretKey}
 
 		liveBucketName = setUpUnversionedBucket(liveRegion, awsEndpoint, creds)
 		uploadFile(liveBucketName, awsEndpoint, "path1/blob1", "blob1-content", creds)
@@ -221,4 +227,4 @@ var _ = Describe("IncrementalBucket", func() {
 			})
 		})
 	})
-})
+}
