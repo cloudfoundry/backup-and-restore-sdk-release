@@ -16,6 +16,16 @@ var _ = Describe("IncrementalBucket", func() {
 			TestAWSSecretAccessKey,
 		)
 	})
+
+	Describe("ECS S3-compatible buckets", func() {
+		RunIncrementalBucketContractTests(
+			"eu-west-1",
+			"us-west-1",
+			"https://object.ecstestdrive.com",
+			TestECSAccessKeyID,
+			TestECSSecretAccessKey,
+		)
+	})
 })
 
 func RunIncrementalBucketContractTests(liveRegion, backupRegion, awsEndpoint, accessKey, secretKey string) {
@@ -144,7 +154,7 @@ func RunIncrementalBucketContractTests(liveRegion, backupRegion, awsEndpoint, ac
 		)
 
 		BeforeEach(func() {
-			creds = s3.AccessKey{Id: TestAWSAccessKeyID, Secret: TestAWSSecretAccessKey}
+			creds = s3.AccessKey{Id: accessKey, Secret: secretKey}
 			backupBucketName = setUpUnversionedBucket(backupRegion, awsEndpoint, creds)
 			var err error
 			backupBucket, err = s3.NewBucket(backupBucketName, backupRegion, awsEndpoint, creds, false)
