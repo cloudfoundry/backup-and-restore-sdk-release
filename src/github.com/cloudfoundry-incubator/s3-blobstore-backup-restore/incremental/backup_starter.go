@@ -52,7 +52,7 @@ func (b BackupStarter) Run() error {
 			return fmt.Errorf("failed to start backup: %s", err)
 		}
 
-		liveBlobs, err := backupToStart.BucketPair.LiveBucket.ListBlobs(bucketID)
+		liveBlobs, err := backupToStart.BucketPair.LiveBucket.ListBlobs("")
 		if err != nil {
 			return fmt.Errorf("failed to start backup: %s", err)
 		}

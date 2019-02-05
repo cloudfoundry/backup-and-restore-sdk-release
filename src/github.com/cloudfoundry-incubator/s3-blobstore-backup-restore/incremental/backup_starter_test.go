@@ -76,6 +76,7 @@ var _ = Describe("BackupStarter", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(backupDirectoryFinder.ListBlobsCallCount()).To(Equal(1))
 			Expect(liveBucket.ListBlobsCallCount()).To(Equal(1))
+			Expect(liveBucket.ListBlobsArgsForCall(0)).To(Equal(""))
 
 			Expect(backupBucket.CopyBlobFromBucketCallCount()).To(Equal(3))
 			actualBucket, liveBlobPath, blobDst, _ := backupBucket.CopyBlobFromBucketArgsForCall(0)
