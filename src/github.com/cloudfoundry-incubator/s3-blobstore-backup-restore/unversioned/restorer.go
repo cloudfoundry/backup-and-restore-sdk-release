@@ -1,13 +1,17 @@
 package unversioned
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
+)
 
 type Restorer struct {
-	bucketPairs map[string]BucketPair
-	artifact    Artifact
+	bucketPairs map[string]RestoreBucketPair
+	artifact    incremental.Artifact
 }
 
-func NewRestorer(bucketPairs map[string]BucketPair, artifact Artifact) Restorer {
+func NewRestorer(bucketPairs map[string]RestoreBucketPair, artifact incremental.Artifact) Restorer {
 	return Restorer{
 		bucketPairs: bucketPairs,
 		artifact:    artifact,
@@ -15,29 +19,31 @@ func NewRestorer(bucketPairs map[string]BucketPair, artifact Artifact) Restorer 
 }
 
 func (b Restorer) Run() error {
-	backupBucketAddresses, err := b.artifact.Load()
+	bucketBackups, err := b.artifact.Load()
 	if err != nil {
 		return err
 	}
 
-	for key, _ := range backupBucketAddresses {
+	for key := range bucketBackups {
 		_, exists := b.bucketPairs[key]
 		if !exists {
 			return fmt.Errorf(
-				"bucket %s is not mentioned in the restore config but is present in the artifact",
+				"restore config does not mention bucket: %s, but is present in the artifact",
 				key,
 			)
 		}
 	}
 
 	for key, pair := range b.bucketPairs {
-		address, exists := backupBucketAddresses[key]
+		bucketBackup, exists := bucketBackups[key]
 		if !exists {
 			return fmt.Errorf("cannot restore bucket %s, not found in backup artifact", key)
 		}
-		if !address.EmptyBackup {
-			err = pair.Restore(address.Path)
+
+		if len(bucketBackup.Blobs) != 0 {
+			err = pair.Restore(bucketBackup)
 		}
+
 		if err != nil {
 			return err
 		}

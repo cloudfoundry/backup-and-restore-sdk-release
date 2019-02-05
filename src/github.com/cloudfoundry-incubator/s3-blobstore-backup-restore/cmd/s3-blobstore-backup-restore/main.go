@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/unversioned"
+
 	"encoding/json"
 	"io/ioutil"
 
@@ -15,7 +17,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/unversioned"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/versioned"
 )
 
@@ -64,14 +65,13 @@ func main() {
 		switch {
 		case commandFlags.IsRestore:
 			{
-				artifact := unversioned.NewFileArtifact(commandFlags.ArtifactFilePath)
-
-				bucketPairs, err := makeBucketPairs(bucketsConfig)
+				incrementalArtifact := incremental.NewArtifact(commandFlags.ArtifactFilePath)
+				restoreBucketPairs, err := makeRestoreBucketPairs(bucketsConfig, incrementalArtifact)
 				if err != nil {
 					exitWithError(fmt.Sprintf("Failed to establish session: %s", err.Error()))
 				}
 
-				runner = unversioned.NewRestorer(bucketPairs, artifact)
+				runner = unversioned.NewRestorer(restoreBucketPairs, incrementalArtifact)
 			}
 		case commandFlags.UnversionedCompleter:
 			{
@@ -232,8 +232,9 @@ func makeIncrementalBackupsToComplete(config map[string]UnversionedBucketConfig,
 	return backupsToComplete, nil
 }
 
-func makeBucketPairs(config map[string]UnversionedBucketConfig) (map[string]unversioned.BucketPair, error) {
-	var buckets = map[string]unversioned.BucketPair{}
+func makeRestoreBucketPairs(config map[string]UnversionedBucketConfig, artifact incremental.Artifact) (map[string]unversioned.RestoreBucketPair, error) {
+	var buckets = map[string]unversioned.RestoreBucketPair{}
+	bucketBackups, _ := artifact.Load()
 
 	for identifier, bucketConfig := range config {
 		liveBucket, err := s3.NewBucket(
@@ -251,8 +252,8 @@ func makeBucketPairs(config map[string]UnversionedBucketConfig) (map[string]unve
 		}
 
 		backupBucket, err := s3.NewBucket(
-			bucketConfig.Backup.Name,
-			bucketConfig.Backup.Region,
+			bucketBackups[bucketConfig.Backup.Name].BucketName,
+			bucketBackups[bucketConfig.Backup.Name].BucketRegion,
 			bucketConfig.Endpoint,
 			s3.AccessKey{
 				Id:     bucketConfig.AwsAccessKeyId,
@@ -264,7 +265,7 @@ func makeBucketPairs(config map[string]UnversionedBucketConfig) (map[string]unve
 			return nil, err
 		}
 
-		buckets[identifier] = unversioned.NewS3BucketPair(
+		buckets[identifier] = unversioned.NewRestoreBucketPair(
 			liveBucket,
 			backupBucket,
 		)

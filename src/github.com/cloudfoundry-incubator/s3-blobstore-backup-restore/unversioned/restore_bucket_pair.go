@@ -1,9 +1,9 @@
-package incremental
+package unversioned
 
 import (
 	"fmt"
 
-	"strings"
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
 
 	"errors"
 
@@ -11,12 +11,12 @@ import (
 )
 
 type RestoreBucketPair struct {
-	destinationLiveBucket Bucket
-	sourceBackupBucket    Bucket
+	destinationLiveBucket incremental.Bucket
+	sourceBackupBucket    incremental.Bucket
 	executionStrategy     executor.ParallelExecutor
 }
 
-func NewRestoreBucketPair(liveBucket, backupBucket Bucket) RestoreBucketPair {
+func NewRestoreBucketPair(liveBucket, backupBucket incremental.Bucket) RestoreBucketPair {
 	exe := executor.NewParallelExecutor()
 	exe.SetMaxInFlight(200)
 	return RestoreBucketPair{
@@ -26,19 +26,10 @@ func NewRestoreBucketPair(liveBucket, backupBucket Bucket) RestoreBucketPair {
 	}
 }
 
-type ExecutableBackup struct {
-	file         string
-	backupAction func(string) error
-}
-
-func (e ExecutableBackup) Execute() error {
-	return e.backupAction(e.file)
-}
-
-func (p RestoreBucketPair) Restore(bucketBackup BucketBackup) error {
+func (p RestoreBucketPair) Restore(bucketBackup incremental.BucketBackup) error {
 	var executables []executor.Executable
 	for _, blob := range bucketBackup.Blobs {
-		backedUpBlob := BackedUpBlob{
+		backedUpBlob := incremental.BackedUpBlob{
 			Path:                blob,
 			BackupDirectoryPath: bucketBackup.BackupDirectoryPath,
 		}
@@ -68,12 +59,4 @@ func (p RestoreBucketPair) CheckValidity() error {
 	}
 
 	return nil
-}
-
-func formatErrors(contextString string, errors []error) error {
-	errorStrings := make([]string, len(errors))
-	for i, err := range errors {
-		errorStrings[i] = err.Error()
-	}
-	return fmt.Errorf("%s:\n%s", contextString, strings.Join(errorStrings, "\n"))
 }
