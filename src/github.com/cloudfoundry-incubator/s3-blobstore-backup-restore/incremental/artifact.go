@@ -57,3 +57,19 @@ func (a artifact) Load() (map[string]BucketBackup, error) {
 
 	return backup, nil
 }
+
+func (a artifact) Load() (map[string]BucketBackup, error) {
+	content, err := ioutil.ReadFile(a.path)
+	if err != nil {
+		return nil, err
+	}
+
+	bucketBackups := new(map[string]BucketBackup)
+
+	err = json.Unmarshal(content, &bucketBackups)
+	if err != nil {
+		return nil, err
+	}
+
+	return *bucketBackups, nil
+}

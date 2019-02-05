@@ -25,6 +25,59 @@ var _ = Describe("Artifact", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
+	Context("when the backup artifact files exists", func() {
+		It("loads the backupArtifact", func() {
+			body := `{
+			"bucket_id": {
+				"bucket_name": "backup-bucket",
+				"backup_directory_path": "2000_01_02_03_04_05/bucket_id",
+				"blobs": ["2000_01_02_03_04_05/bucket_id/f0/fd/blob1/uuid", "2000_01_02_03_04_05/bucket_id/f0/fd/blob2/uuid"]
+			}
+		}`
+
+			err := ioutil.WriteFile(artifactFile.Name(), []byte(body), 644)
+			Expect(err).NotTo(HaveOccurred())
+
+			artifact := incremental.NewArtifact(artifactFile.Name())
+			bucketBackup, err := artifact.Load()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(bucketBackup).To(Equal(map[string]incremental.BucketBackup{
+				"bucket_id": {
+					BucketName: "backup-bucket",
+					Blobs: []string{
+						"2000_01_02_03_04_05/bucket_id/f0/fd/blob1/uuid",
+						"2000_01_02_03_04_05/bucket_id/f0/fd/blob2/uuid",
+					},
+					BackupDirectoryPath: "2000_01_02_03_04_05/bucket_id",
+				},
+			}))
+		})
+	})
+
+	Context("when the back artifact file does not exist", func() {
+		It("errors", func() {
+			artifact := incremental.NewArtifact("does-not-exist-file")
+
+			_, err := artifact.Load()
+
+			Expect(err).To(MatchError(ContainSubstring("no such file or directory")))
+		})
+	})
+
+	Context("when the back artifact file is not valid json", func() {
+		It("errors", func() {
+			err := ioutil.WriteFile(artifactFile.Name(), []byte("not-valid-json"), 644)
+			Expect(err).NotTo(HaveOccurred())
+
+			artifact := incremental.NewArtifact(artifactFile.Name())
+
+			_, err = artifact.Load()
+
+			Expect(err).To(MatchError(ContainSubstring("invalid character")))
+		})
+	})
+
 	It("writes the backupArtifact", func() {
 		artifact = incremental.NewArtifact(artifactFile.Name())
 
