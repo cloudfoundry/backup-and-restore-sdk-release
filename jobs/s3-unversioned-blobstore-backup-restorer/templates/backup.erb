@@ -6,7 +6,15 @@ set -eu
 backup() {
   /var/vcap/packages/s3-blobstore-backup-restorer/bin/s3-blobstore-backup-restore \
     --backup \
-    --unversioned \
+    --unversioned-backup-starter \
+    --existing-backup-blobs-artifact "${BBR_ARTIFACT_DIRECTORY}/existing-backup-blobs.json" \
+    --config /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/config/buckets.json \
+    --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
+
+  /var/vcap/packages/s3-blobstore-backup-restorer/bin/s3-blobstore-backup-restore \
+    --backup \
+    --unversioned-backup-completer \
+    --existing-backup-blobs-artifact "${BBR_ARTIFACT_DIRECTORY}/existing-backup-blobs.json" \
     --config /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/config/buckets.json \
     --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
 }
