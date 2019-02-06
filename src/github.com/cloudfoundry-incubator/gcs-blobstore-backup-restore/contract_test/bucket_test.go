@@ -26,32 +26,6 @@ var _ = Describe("Bucket", func() {
 			Expect(buckets["droplets"].BackupBucket.Name()).To(Equal("backup-droplets-bucket"))
 		})
 
-		It("errors when a bucket pair has the same name as a deduplicated bucket pair", func() {
-			config := map[string]gcs.Config{
-				"droplets": {
-					BucketName:       "bucket",
-					BackupBucketName: "backup-bucket",
-				},
-				"buildpacks": {
-					BucketName:       "bucket",
-					BackupBucketName: "backup-bucket",
-				},
-				"buildpacks-droplets": {
-					BucketName:       "some-other",
-					BackupBucketName: "backup-bucket",
-				},
-				"droplets-buildpacks": {
-					BucketName:       "some-other-other",
-					BackupBucketName: "backup-bucket",
-				},
-			}
-
-			_, err := gcs.BuildBucketPairs(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp("cannot use reserved bucket pair name: (droplets-buildpacks|buildpacks-droplets)"))
-
-		})
-
 		It("builds bucket pairs without duplicate configs", func() {
 			config := map[string]gcs.Config{
 				"droplets": {
