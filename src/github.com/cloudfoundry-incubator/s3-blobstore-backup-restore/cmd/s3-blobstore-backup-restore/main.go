@@ -30,7 +30,7 @@ func main() {
 
 	config, err := ioutil.ReadFile(commandFlags.ConfigPath)
 	if err != nil {
-		exitWithError(fmt.Sprintf("Failed to read config: %s", err.Error()))
+		exitWithError("Failed to read config: %s", err.Error())
 	}
 
 	var runner Runner
@@ -38,12 +38,12 @@ func main() {
 		var bucketsConfig map[string]BucketConfig
 		err = json.Unmarshal(config, &bucketsConfig)
 		if err != nil {
-			exitWithError(fmt.Sprintf("Failed to parse config: %s", err.Error()))
+			exitWithError("Failed to parse config: %s", err.Error())
 		}
 
 		buckets, err := makeBuckets(bucketsConfig)
 		if err != nil {
-			exitWithError(fmt.Sprintf("Failed to establish session: %s", err.Error()))
+			exitWithError("Failed to establish session: %s", err.Error())
 		}
 
 		artifact := versioned.NewFileArtifact(commandFlags.ArtifactFilePath)
@@ -57,12 +57,12 @@ func main() {
 		var bucketsConfig map[string]UnversionedBucketConfig
 		err = json.Unmarshal(config, &bucketsConfig)
 		if err != nil {
-			exitWithError(fmt.Sprintf("Failed to parse config: %s", err.Error()))
+			exitWithError("Failed to parse config: %s", err.Error())
 		}
 
 		bucketPairs, err := makeBucketPairs(bucketsConfig)
 		if err != nil {
-			exitWithError(fmt.Sprintf("Failed to establish session: %s", err.Error()))
+			exitWithError("Failed to establish session: %s", err.Error())
 		}
 
 		artifact := unversioned.NewFileArtifact(commandFlags.ArtifactFilePath)
@@ -181,9 +181,7 @@ func parseFlags() (CommandFlags, error) {
 	var backupAction = flag.Bool("backup", false, "Run blobstore backup")
 	var restoreAction = flag.Bool("restore", false, "Run blobstore restore")
 	var artifactFilePath = flag.String("artifact-file", "", "Path to the artifact file")
-	var existingBackupBlobsArtifactFilePath = flag.String("existing-backup-blobs-artifact", "", "Path to the existing backup blobs artifact file")
-	var unversionedBackupStarter = flag.Bool("unversioned-backup-starter", false, "Run backup starter for unversioned buckets")
-	var unversionedBackupCompleter = flag.Bool("unversioned-backup-completer", false, "Run backup completer for unversioned buckets")
+	var unversionedFlag = flag.Bool("unversioned", false, "Indicates targeted buckets are unversioned")
 
 	flag.Parse()
 
@@ -203,27 +201,17 @@ func parseFlags() (CommandFlags, error) {
 		return CommandFlags{}, errors.New("missing --artifact-file flag")
 	}
 
-	if *unversionedBackupStarter && *unversionedBackupCompleter {
-		return CommandFlags{}, errors.New("at most one of: --unversioned-backup-starter or --unversioned-backup-completer can be provided")
-	}
-
-	if *backupAction && (*unversionedBackupStarter || *unversionedBackupCompleter) && *existingBackupBlobsArtifactFilePath == "" {
-		return CommandFlags{}, errors.New("missing --existing-backup-blobs-artifact")
-	}
-
 	return CommandFlags{
-		ConfigPath:           *configFilePath,
-		IsRestore:            *restoreAction,
-		ArtifactFilePath:     *artifactFilePath,
-		Versioned:            !*unversionedBackupStarter && !*unversionedBackupCompleter,
-		UnversionedCompleter: *unversionedBackupCompleter,
+		ConfigPath:       *configFilePath,
+		IsRestore:        *restoreAction,
+		ArtifactFilePath: *artifactFilePath,
+		Versioned:        !*unversionedFlag,
 	}, nil
 }
 
 type CommandFlags struct {
-	ConfigPath           string
-	IsRestore            bool
-	ArtifactFilePath     string
-	Versioned            bool
-	UnversionedCompleter bool
+	ConfigPath       string
+	IsRestore        bool
+	ArtifactFilePath string
+	Versioned        bool
 }
