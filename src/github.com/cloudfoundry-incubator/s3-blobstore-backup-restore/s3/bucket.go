@@ -44,7 +44,7 @@ type Version struct {
 type UnversionedBucket interface {
 	Name() string
 	RegionName() string
-	CopyObject(key, originPath, destinationPath, originBucketName, originBucketRegion string) error
+	CopyObject(blobKey, originPath, destinationPath, originBucketName, originBucketRegion string) error
 	ListFiles(path string) ([]string, error)
 }
 
@@ -77,7 +77,7 @@ func (b Bucket) Name() string {
 	return b.name
 }
 
-func (b Bucket) RegionName() string {
+func (b Bucket) Region() string {
 	return b.regionName
 }
 
@@ -191,7 +191,7 @@ func (b Bucket) CopyBlobWithinBucket(src, dst string) error {
 	return b.copyVersion(src, "null", dst, b.name, b.regionName)
 }
 
-func (b Bucket) CopyBlobFromBucket(sourceBucket incremental.Bucket, src, dst string) error {
+func (b Bucket) CopyBlobFromBucket(sourceBucket incremental.Bucket, src, dst, region string) error {
 	srcBucket := sourceBucket.(Bucket)
 	return b.copyVersion(src, "null", dst, srcBucket.name, srcBucket.regionName)
 }

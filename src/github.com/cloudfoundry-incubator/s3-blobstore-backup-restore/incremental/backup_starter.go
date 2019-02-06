@@ -104,7 +104,8 @@ func generateReuseableBlobsArtifact(reuseableBlobs []BackedUpBlob, bucketName st
 		}
 
 		return BucketBackup{
-			BucketName:          bucketName,
+			BucketName: bucketName,
+
 			Blobs:               backedUpblobs,
 			BackupDirectoryPath: reuseableBlobs[0].BackupDirectoryPath,
 		}
@@ -126,7 +127,7 @@ func (b BucketPair) copyNewLiveBlobsToBackup(backedUpBlobs []BackedUpBlob, liveB
 
 		if !exists {
 			dstBlobPath := joinBlobPath(backupDstPath, liveBlob.Path())
-			err := b.BackupBucket.CopyBlobFromBucket(b.LiveBucket, liveBlob.Path(), dstBlobPath)
+			err := b.BackupBucket.CopyBlobFromBucket(b.LiveBucket, liveBlob.Path(), dstBlobPath, "")
 			if err != nil {
 				return nil, err
 			}
