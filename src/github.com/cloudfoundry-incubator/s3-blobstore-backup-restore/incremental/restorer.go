@@ -20,11 +20,11 @@ func (b Restorer) Run() error {
 		return err
 	}
 
-	for key, _ := range bucketBackups {
+	for key := range bucketBackups {
 		_, exists := b.bucketPairs[key]
 		if !exists {
 			return fmt.Errorf(
-				"bucket %s is not mentioned in the restore config but is present in the artifact",
+				"restore config does not mention bucket: %s, but is present in the artifact",
 				key,
 			)
 		}

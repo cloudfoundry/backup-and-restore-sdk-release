@@ -10,25 +10,19 @@ import (
 	"github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor"
 )
 
-//go:generate counterfeiter -o fakes/fake_restore_bucket_pair.go . RestoreBucketPair
-type RestoreBucketPair interface {
-	CheckValidity() error
-	Restore(bucketBackup BucketBackup) error
+type RestoreBucketPair struct {
+	destinationLiveBucket Bucket
+	sourceBackupBucket    Bucket
+	executionStrategy     executor.ParallelExecutor
 }
 
-type IncrementalBucketPair struct {
-	liveBucket        Bucket
-	backupBucket      Bucket
-	executionStrategy executor.ParallelExecutor
-}
-
-func NewIncrementalBucketPair(liveBucket, backupBucket Bucket) IncrementalBucketPair {
+func NewRestoreBucketPair(liveBucket, backupBucket Bucket) RestoreBucketPair {
 	exe := executor.NewParallelExecutor()
 	exe.SetMaxInFlight(200)
-	return IncrementalBucketPair{
-		liveBucket:        liveBucket,
-		backupBucket:      backupBucket,
-		executionStrategy: exe,
+	return RestoreBucketPair{
+		destinationLiveBucket: liveBucket,
+		sourceBackupBucket:    backupBucket,
+		executionStrategy:     exe,
 	}
 }
 
@@ -41,25 +35,26 @@ func (e ExecutableBackup) Execute() error {
 	return e.backupAction(e.file)
 }
 
-func (p IncrementalBucketPair) Restore(bucketBackup BucketBackup) error {
+func (p RestoreBucketPair) Restore(bucketBackup BucketBackup) error {
 	var executables []executor.Executable
 	for _, blob := range bucketBackup.Blobs {
+		backedUpBlob := BackedUpBlob{
+			Path:                blob,
+			BackupDirectoryPath: bucketBackup.BackupDirectoryPath,
+		}
 		executables = append(executables, ExecutableBackup{file: blob, backupAction: func(blobKey string) error {
-			// NEEDS WORK
-			//return p.liveBucket.CopyBlobFromBucket(
-			//	bucketBackup.BackupDirectoryPath + blobKey,
-			//	"",
-			//	bucketBackup.BucketRegion,
-			//	)
-			//)
-			return nil
+			return p.destinationLiveBucket.CopyBlobFromBucket(
+				p.sourceBackupBucket,
+				backedUpBlob.Path,
+				backedUpBlob.LiveBlobPath(),
+			)
 		}})
 	}
 
 	errs := p.executionStrategy.Run([][]executor.Executable{executables})
 	if len(errs) != 0 {
 		return formatErrors(
-			fmt.Sprintf("failed to restore bucket %s", p.liveBucket.Name()),
+			fmt.Sprintf("failed to restore bucket %s", p.destinationLiveBucket.Name()),
 			errs,
 		)
 	}
@@ -67,8 +62,8 @@ func (p IncrementalBucketPair) Restore(bucketBackup BucketBackup) error {
 	return nil
 }
 
-func (p IncrementalBucketPair) CheckValidity() error {
-	if p.liveBucket.Name() == p.backupBucket.Name() {
+func (p RestoreBucketPair) CheckValidity() error {
+	if p.destinationLiveBucket.Name() == p.sourceBackupBucket.Name() {
 		return errors.New("live bucket and backup bucket cannot be the same")
 	}
 
@@ -80,5 +75,5 @@ func formatErrors(contextString string, errors []error) error {
 	for i, err := range errors {
 		errorStrings[i] = err.Error()
 	}
-	return fmt.Errorf("%s: %s", contextString, strings.Join(errorStrings, "\n"))
+	return fmt.Errorf("%s:\n%s", contextString, strings.Join(errorStrings, "\n"))
 }

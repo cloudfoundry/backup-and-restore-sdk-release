@@ -49,27 +49,11 @@ func (a artifact) Load() (map[string]BucketBackup, error) {
 		return nil, fmt.Errorf("could not read backup file: %s", err.Error())
 	}
 
-	var backup map[string]BucketBackup
-	err = json.Unmarshal(bytes, &backup)
+	var bucketBackups map[string]BucketBackup
+	err = json.Unmarshal(bytes, &bucketBackups)
 	if err != nil {
 		return nil, fmt.Errorf("backup file has an invalid format: %s", err.Error())
 	}
 
-	return backup, nil
-}
-
-func (a artifact) Load() (map[string]BucketBackup, error) {
-	content, err := ioutil.ReadFile(a.path)
-	if err != nil {
-		return nil, err
-	}
-
-	bucketBackups := new(map[string]BucketBackup)
-
-	err = json.Unmarshal(content, &bucketBackups)
-	if err != nil {
-		return nil, err
-	}
-
-	return *bucketBackups, nil
+	return bucketBackups, nil
 }

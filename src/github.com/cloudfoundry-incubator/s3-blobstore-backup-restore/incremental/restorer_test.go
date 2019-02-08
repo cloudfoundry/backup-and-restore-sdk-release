@@ -12,12 +12,14 @@ import (
 
 var _ = Describe("Restorer", func() {
 	var (
-		dropletsBucketPair *fakes.FakeRestoreBucketPair
-		packagesBucketPair *fakes.FakeRestoreBucketPair
-
-		bucketPairs map[string]RestoreBucketPair
-
-		artifact *fakes.FakeArtifact
+		destinationLiveDropletsBucket *fakes.FakeBucket
+		sourceBackupDropletsBucket    *fakes.FakeBucket
+		destinationLivePackagesBucket *fakes.FakeBucket
+		sourceBackupPackagesBucket    *fakes.FakeBucket
+		dropletsBucketPair            RestoreBucketPair
+		packagesBucketPair            RestoreBucketPair
+		bucketPairs                   map[string]RestoreBucketPair
+		artifact                      *fakes.FakeArtifact
 
 		err error
 
@@ -27,22 +29,27 @@ var _ = Describe("Restorer", func() {
 	)
 
 	BeforeEach(func() {
-		dropletsBucketPair = new(fakes.FakeRestoreBucketPair)
-		packagesBucketPair = new(fakes.FakeRestoreBucketPair)
+		destinationLiveDropletsBucket = new(fakes.FakeBucket)
+		sourceBackupDropletsBucket = new(fakes.FakeBucket)
+		destinationLivePackagesBucket = new(fakes.FakeBucket)
+		sourceBackupPackagesBucket = new(fakes.FakeBucket)
+
+		dropletsBucketPair = NewRestoreBucketPair(destinationLiveDropletsBucket, sourceBackupDropletsBucket)
+		packagesBucketPair = NewRestoreBucketPair(destinationLivePackagesBucket, sourceBackupPackagesBucket)
 
 		artifact = new(fakes.FakeArtifact)
 		bucketBackups = map[string]BucketBackup{
 			"droplets": {
 				BucketName:          "artifact_backup_droplet_bucket",
 				BucketRegion:        "artifact_backup_droplet_region",
-				Blobs:               []string{"my_key", "another_key"},
+				Blobs:               []string{"timestamp/droplets/my_droplet1", "timestamp/droplets/my_droplet2"},
 				BackupDirectoryPath: "timestamp/droplets",
 			},
 			"packages": {
 				BucketName:          "artifact_backup_package_bucket",
 				BucketRegion:        "artifact_backup_package_region",
-				Blobs:               []string{"my_key", "another_key"},
-				BackupDirectoryPath: "timestamp2/packages",
+				Blobs:               []string{"timestamp/packages/my_package1", "timestamp/packages/my_package2"},
+				BackupDirectoryPath: "timestamp/packages",
 			},
 		}
 		artifact.LoadReturns(bucketBackups, nil)
@@ -61,27 +68,44 @@ var _ = Describe("Restorer", func() {
 
 	Context("When the artifact is valid and copying works", func() {
 		BeforeEach(func() {
-			dropletsBucketPair.RestoreReturns(nil)
-			packagesBucketPair.RestoreReturns(nil)
-
+			artifact.LoadReturns(bucketBackups, nil)
+			destinationLiveDropletsBucket.CopyBlobFromBucketReturns(nil)
+			destinationLivePackagesBucket.CopyBlobFromBucketReturns(nil)
 		})
 
 		It("restores all the bucket pairs", func() {
 			Expect(err).NotTo(HaveOccurred())
-			Expect(dropletsBucketPair.RestoreCallCount()).To(Equal(1))
-			Expect(dropletsBucketPair.RestoreArgsForCall(0)).To(Equal(bucketBackups["droplets"]))
-			Expect(packagesBucketPair.RestoreCallCount()).To(Equal(1))
-			Expect(packagesBucketPair.RestoreArgsForCall(0)).To(Equal(bucketBackups["packages"]))
+
+			srcDroplets := []string{"timestamp/droplets/my_droplet1", "timestamp/droplets/my_droplet2"}
+			dstDroplets := []string{"my_droplet1", "my_droplet2"}
+			testBucketsWithBlobs(
+				destinationLiveDropletsBucket,
+				sourceBackupDropletsBucket,
+				srcDroplets,
+				dstDroplets,
+			)
+
+			srcPackages := []string{"timestamp/packages/my_package1", "timestamp/packages/my_package2"}
+			dstPackages := []string{"my_package1", "my_package2"}
+			testBucketsWithBlobs(
+				destinationLivePackagesBucket,
+				sourceBackupPackagesBucket,
+				srcPackages,
+				dstPackages,
+			)
 		})
 	})
 
 	Context("When a bucket cannot be restored", func() {
 		BeforeEach(func() {
-			dropletsBucketPair.RestoreReturns(fmt.Errorf("restore error"))
+			destinationLiveDropletsBucket.NameReturns("dropletslivebucket")
+			destinationLiveDropletsBucket.CopyBlobFromBucketReturns(fmt.Errorf("restore error1"))
 		})
 
 		It("returns an error", func() {
-			Expect(err).To(MatchError("restore error"))
+			Expect(err.Error()).To(
+				ContainSubstring("failed to restore bucket dropletslivebucket:\nrestore error1\nrestore error1"),
+			)
 		})
 	})
 
@@ -96,16 +120,13 @@ var _ = Describe("Restorer", func() {
 	})
 
 	Context("When there is a bucket pair in the restore config that is not in the backup artifact", func() {
-		var notInArtifactPair *fakes.FakeRestoreBucketPair
 
 		BeforeEach(func() {
-			notInArtifactPair = new(fakes.FakeRestoreBucketPair)
+			notInArtifactBucket1 := new(fakes.FakeBucket)
+			notInArtifactBucket2 := new(fakes.FakeBucket)
+			notInArtifactPair := NewRestoreBucketPair(notInArtifactBucket1, notInArtifactBucket2)
 
-			bucketPairs = map[string]RestoreBucketPair{
-				"droplets":        dropletsBucketPair,
-				"packages":        packagesBucketPair,
-				"not-in-artifact": notInArtifactPair,
-			}
+			bucketPairs["not-in-artifact"] = notInArtifactPair
 			restorer = NewRestorer(bucketPairs, artifact)
 		})
 
@@ -128,46 +149,51 @@ var _ = Describe("Restorer", func() {
 					BucketName:          "artifact_backup_package_bucket",
 					BucketRegion:        "artifact_backup_package_region",
 					Blobs:               []string{},
-					BackupDirectoryPath: "timestamp2/packages",
+					BackupDirectoryPath: "timestamp/packages",
 				},
 			}
 			artifact.LoadReturns(bucketBackups, nil)
 		})
 
 		It("does not attempt to restore that pair", func() {
-			Expect(dropletsBucketPair.RestoreCallCount()).To(Equal(1))
-			Expect(packagesBucketPair.RestoreCallCount()).To(Equal(0))
+			Expect(destinationLiveDropletsBucket.CopyBlobFromBucketCallCount()).To(Equal(2))
+			Expect(destinationLivePackagesBucket.CopyBlobFromBucketCallCount()).To(Equal(0))
 		})
 	})
 
 	Context("When there is a bucket referenced in the artifact that is not in the restore config", func() {
 		BeforeEach(func() {
-			bucketBackups = map[string]BucketBackup{
-				"droplets": {
-					BucketName:          "artifact_backup_droplet_bucket",
-					BucketRegion:        "artifact_backup_droplet_region",
-					Blobs:               []string{"my_key", "another_key"},
-					BackupDirectoryPath: "timestamp/droplets",
-				},
-				"packages": {
-					BucketName:          "artifact_backup_package_bucket",
-					BucketRegion:        "artifact_backup_package_region",
-					Blobs:               []string{"my_key", "another_key"},
-					BackupDirectoryPath: "timestamp2/packages",
-				},
-				"not-in-restore-config": {
-					BucketName:          "whatever",
-					BucketRegion:        "whatever",
-					Blobs:               []string{"thing"},
-					BackupDirectoryPath: "timestamp2/not-in-restore-config",
-				},
+			bucketBackups["not-in-restore-config"] = BucketBackup{
+				BucketName:          "whatever",
+				BucketRegion:        "whatever",
+				Blobs:               []string{"timestamp/not-in-restore-config/thing"},
+				BackupDirectoryPath: "timestamp/not-in-restore-config",
 			}
 			artifact.LoadReturns(bucketBackups, nil)
 		})
 
 		It("returns an error", func() {
-			Expect(err).To(MatchError("bucket not-in-restore-config is not mentioned in the restore config" +
-				" but is present in the artifact"))
+			Expect(err).To(MatchError("restore config does not mention bucket: not-in-restore-config, but is present in the artifact"))
 		})
 	})
 })
+
+func testBucketsWithBlobs(dstLiveBucket *fakes.FakeBucket, srcBackupBucket *fakes.FakeBucket, srcBlobs, dstBlobs []string) {
+	var srcBlobSeen []string
+	var dstBlobSeen []string
+
+	Expect(dstLiveBucket.CopyBlobFromBucketCallCount()).To(Equal(2))
+
+	bucket, src, dst := dstLiveBucket.CopyBlobFromBucketArgsForCall(0)
+	Expect(bucket).To(Equal(srcBackupBucket))
+	srcBlobSeen = append(srcBlobSeen, src)
+	dstBlobSeen = append(dstBlobSeen, dst)
+
+	bucket, src, dst = dstLiveBucket.CopyBlobFromBucketArgsForCall(1)
+	Expect(bucket).To(Equal(srcBackupBucket))
+	srcBlobSeen = append(srcBlobSeen, src)
+	dstBlobSeen = append(dstBlobSeen, dst)
+
+	Expect(srcBlobSeen).To(ConsistOf(srcBlobs))
+	Expect(dstBlobSeen).To(ConsistOf(dstBlobs))
+}
