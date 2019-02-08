@@ -23,6 +23,14 @@ var _ = Describe("ParsePostgresVersion", func() {
 		}))
 	})
 
+	It("parses out 10.6 version", func() {
+		Expect(ParseVersion(
+			" PostgreSQL 10.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 5.4.0-6ubuntu1~16.04.11) 5.4.0 20160609, 64-bit"),
+		).To(Equal(version.SemanticVersion{
+			Major: "10", Minor: "6", Patch: "0",
+		}))
+	})
+
 	It("fails if the input is blank", func() {
 		_, err := ParseVersion("")
 		Expect(err).To(MatchError(`invalid postgres version: ""`))

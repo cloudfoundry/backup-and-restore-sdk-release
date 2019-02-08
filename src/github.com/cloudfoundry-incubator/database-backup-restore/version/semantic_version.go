@@ -29,7 +29,14 @@ func ParseSemVerFromString(stringVersion string) (SemanticVersion, error) {
 	r := regexp.MustCompile(`(\d+).(\d+).(\S+)`)
 	matches := r.FindSubmatch([]byte(stringVersion))
 	if matches == nil {
-		return SemanticVersion{}, fmt.Errorf(`could not parse semver: "%s"`, stringVersion)
+		r = regexp.MustCompile(`(\d+).(\S+)`) //case where patch is omitted
+		matches = r.FindSubmatch([]byte(stringVersion))
+
+		if matches == nil {
+			return SemanticVersion{}, fmt.Errorf(`could not parse semver: "%s"`, stringVersion)
+		}
+
+		matches = append(matches, []byte("0")) //patch is omitted, so we add patch 0
 	}
 
 	semVer := SemanticVersion{
