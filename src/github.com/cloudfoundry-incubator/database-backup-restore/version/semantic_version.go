@@ -26,10 +26,10 @@ func (v SemanticVersion) MinorVersionMatches(v2 SemanticVersion) bool {
 }
 
 func ParseSemVerFromString(stringVersion string) (SemanticVersion, error) {
-	r := regexp.MustCompile(`(\d+).(\d+).(\S+)`)
+	r := regexp.MustCompile(`(\d+)\.(\d+)\.(\S+)`)
 	matches := r.FindSubmatch([]byte(stringVersion))
 	if matches == nil {
-		r = regexp.MustCompile(`(\d+).(\S+)`) //case where patch is omitted
+		r = regexp.MustCompile(`(\d+)\.(\d+)`) //case where patch is omitted
 		matches = r.FindSubmatch([]byte(stringVersion))
 
 		if matches == nil {
@@ -44,6 +44,7 @@ func ParseSemVerFromString(stringVersion string) (SemanticVersion, error) {
 		Minor: string(matches[2]),
 		Patch: string(matches[3]),
 	}
+
 	return semVer, nil
 }
 

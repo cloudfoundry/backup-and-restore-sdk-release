@@ -44,6 +44,14 @@ var _ = Describe("SemanticVersion", func() {
 				Patch: "0",
 			}))
 		})
+
+		It("it defaults the patch to 0 if the string is only made of 2 parts", func() {
+			Expect(ParseSemVerFromString("1.2 some-other-stuff")).To(Equal(SemanticVersion{
+				Major: "1",
+				Minor: "2",
+				Patch: "0",
+			}))
+		})
 	})
 
 	Describe("MinorVersionMatches", func() {
