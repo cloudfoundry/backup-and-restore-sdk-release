@@ -14,21 +14,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
----
-name: database-backup-restorer
+set -e
 
-templates:
-  backup: bin/backup
-  restore: bin/restore
+POSTGRES_VERSION=10.6
 
-packages:
-- database-backup-restorer
-- database-backup-restorer-postgres-9.4
-- database-backup-restorer-postgres-9.6
-- database-backup-restorer-postgres-10.6
-- database-backup-restorer-mariadb
-- database-backup-restorer-mysql-5.5
-- database-backup-restorer-mysql-5.6
-- database-backup-restorer-mysql-5.7
+tar xzf postgres/postgresql-${POSTGRES_VERSION}.tar.gz
 
-properties: {}
+pushd postgresql-${POSTGRES_VERSION}
+  ./configure --prefix=${BOSH_INSTALL_TARGET} --with-openssl
+
+  pushd src/bin/pg_config
+    make
+    make install
+  popd
+
+  cp -LR src/include ${BOSH_INSTALL_TARGET}
+
+  pushd src/interfaces/libpq
+    make
+    make install
+  popd
+
+  pushd src
+    make
+    make install
+  popd
+
+  pushd contrib
+    make
+    make install
+  popd
+popd
