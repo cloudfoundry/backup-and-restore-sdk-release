@@ -71,9 +71,9 @@ var _ = Describe("Restorer", func() {
 			dropletsBucket.CopyVersionReturns(nil)
 			buildpacksBucket.CopyVersionReturns(nil)
 			packagesBucket.CopyVersionReturns(nil)
-			dropletsBucket.RegionNameReturns("destination_droplets_region")
-			buildpacksBucket.RegionNameReturns("destination_buildpacks_region")
-			packagesBucket.RegionNameReturns("destination_packages_region")
+			dropletsBucket.RegionReturns("destination_droplets_region")
+			buildpacksBucket.RegionReturns("destination_buildpacks_region")
+			packagesBucket.RegionReturns("destination_packages_region")
 		})
 
 		It("restores a backup from one region to a new foundation in a different region", func() {

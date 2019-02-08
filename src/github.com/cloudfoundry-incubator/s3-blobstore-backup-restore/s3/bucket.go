@@ -43,7 +43,7 @@ type Version struct {
 //go:generate counterfeiter -o fakes/fake_unversioned_bucket.go . UnversionedBucket
 type UnversionedBucket interface {
 	Name() string
-	RegionName() string
+	Region() string
 	CopyObject(blobKey, originPath, destinationPath, originBucketName, originBucketRegion string) error
 	ListFiles(path string) ([]string, error)
 }
@@ -51,7 +51,7 @@ type UnversionedBucket interface {
 //go:generate counterfeiter -o fakes/fake_versioned_bucket.go . VersionedBucket
 type VersionedBucket interface {
 	Name() string
-	RegionName() string
+	Region() string
 	CopyVersion(blobKey, versionId, originBucketName, originBucketRegion string) error
 	ListVersions() ([]Version, error)
 	CheckIfVersioned() error
@@ -191,7 +191,7 @@ func (b Bucket) CopyBlobWithinBucket(src, dst string) error {
 	return b.copyVersion(src, "null", dst, b.name, b.regionName)
 }
 
-func (b Bucket) CopyBlobFromBucket(sourceBucket incremental.Bucket, src, dst, region string) error {
+func (b Bucket) CopyBlobFromBucket(sourceBucket incremental.Bucket, src, dst string) error {
 	srcBucket := sourceBucket.(Bucket)
 	return b.copyVersion(src, "null", dst, srcBucket.name, srcBucket.regionName)
 }

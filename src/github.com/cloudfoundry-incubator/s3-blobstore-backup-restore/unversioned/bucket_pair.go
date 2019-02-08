@@ -1,11 +1,10 @@
 package unversioned
 
 import (
+	"errors"
 	"fmt"
 
 	"strings"
-
-	"errors"
 
 	"github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
@@ -45,7 +44,7 @@ func (p S3BucketPair) Backup(backupLocation string) (BackupBucketAddress, error)
 	var executables []executor.Executable
 	for _, file := range files {
 		executables = append(executables, ExecutableBackup{file: file, backupAction: func(file string) error {
-			return p.backupBucket.CopyObject(file, "", backupLocation, p.liveBucket.Name(), p.liveBucket.RegionName())
+			return p.backupBucket.CopyObject(file, "", backupLocation, p.liveBucket.Name(), p.liveBucket.Region())
 		}})
 	}
 
@@ -59,7 +58,7 @@ func (p S3BucketPair) Backup(backupLocation string) (BackupBucketAddress, error)
 
 	return BackupBucketAddress{
 		BucketName:   p.backupBucket.Name(),
-		BucketRegion: p.backupBucket.RegionName(),
+		BucketRegion: p.backupBucket.Region(),
 		Path:         backupLocation,
 		EmptyBackup:  len(files) == 0,
 	}, nil
@@ -87,7 +86,7 @@ func (p S3BucketPair) Restore(backupLocation string) error {
 	var executables []executor.Executable
 	for _, file := range files {
 		executables = append(executables, ExecutableBackup{file: file, backupAction: func(file string) error {
-			return p.liveBucket.CopyObject(file, backupLocation, "", p.backupBucket.Name(), p.backupBucket.RegionName())
+			return p.liveBucket.CopyObject(file, backupLocation, "", p.backupBucket.Name(), p.backupBucket.Region())
 		}})
 	}
 

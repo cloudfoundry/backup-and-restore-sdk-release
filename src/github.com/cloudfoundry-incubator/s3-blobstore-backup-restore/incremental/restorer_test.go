@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	. "github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
-
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental/fakes"
 
 	. "github.com/onsi/ginkgo"

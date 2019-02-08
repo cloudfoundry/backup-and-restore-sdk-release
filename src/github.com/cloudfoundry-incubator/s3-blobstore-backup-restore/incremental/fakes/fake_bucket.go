@@ -62,13 +62,12 @@ type FakeBucket struct {
 	copyBlobWithinBucketReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CopyBlobFromBucketStub        func(bucket incremental.Bucket, src, dst, region string) error
+	CopyBlobFromBucketStub        func(bucket incremental.Bucket, src, dst string) error
 	copyBlobFromBucketMutex       sync.RWMutex
 	copyBlobFromBucketArgsForCall []struct {
 		bucket incremental.Bucket
 		src    string
 		dst    string
-		region string
 	}
 	copyBlobFromBucketReturns struct {
 		result1 error
@@ -328,19 +327,18 @@ func (fake *FakeBucket) CopyBlobWithinBucketReturnsOnCall(i int, result1 error) 
 	}{result1}
 }
 
-func (fake *FakeBucket) CopyBlobFromBucket(bucket incremental.Bucket, src string, dst string, region string) error {
+func (fake *FakeBucket) CopyBlobFromBucket(bucket incremental.Bucket, src string, dst string) error {
 	fake.copyBlobFromBucketMutex.Lock()
 	ret, specificReturn := fake.copyBlobFromBucketReturnsOnCall[len(fake.copyBlobFromBucketArgsForCall)]
 	fake.copyBlobFromBucketArgsForCall = append(fake.copyBlobFromBucketArgsForCall, struct {
 		bucket incremental.Bucket
 		src    string
 		dst    string
-		region string
-	}{bucket, src, dst, region})
-	fake.recordInvocation("CopyBlobFromBucket", []interface{}{bucket, src, dst, region})
+	}{bucket, src, dst})
+	fake.recordInvocation("CopyBlobFromBucket", []interface{}{bucket, src, dst})
 	fake.copyBlobFromBucketMutex.Unlock()
 	if fake.CopyBlobFromBucketStub != nil {
-		return fake.CopyBlobFromBucketStub(bucket, src, dst, region)
+		return fake.CopyBlobFromBucketStub(bucket, src, dst)
 	}
 	if specificReturn {
 		return ret.result1
@@ -354,10 +352,10 @@ func (fake *FakeBucket) CopyBlobFromBucketCallCount() int {
 	return len(fake.copyBlobFromBucketArgsForCall)
 }
 
-func (fake *FakeBucket) CopyBlobFromBucketArgsForCall(i int) (incremental.Bucket, string, string, string) {
+func (fake *FakeBucket) CopyBlobFromBucketArgsForCall(i int) (incremental.Bucket, string, string) {
 	fake.copyBlobFromBucketMutex.RLock()
 	defer fake.copyBlobFromBucketMutex.RUnlock()
-	return fake.copyBlobFromBucketArgsForCall[i].bucket, fake.copyBlobFromBucketArgsForCall[i].src, fake.copyBlobFromBucketArgsForCall[i].dst, fake.copyBlobFromBucketArgsForCall[i].region
+	return fake.copyBlobFromBucketArgsForCall[i].bucket, fake.copyBlobFromBucketArgsForCall[i].src, fake.copyBlobFromBucketArgsForCall[i].dst
 }
 
 func (fake *FakeBucket) CopyBlobFromBucketReturns(result1 error) {

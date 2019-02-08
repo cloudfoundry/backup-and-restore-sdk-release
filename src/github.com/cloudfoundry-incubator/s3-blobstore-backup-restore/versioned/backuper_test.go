@@ -44,7 +44,7 @@ var _ = Describe("Backuper", func() {
 	Context("when the buckets have data", func() {
 		BeforeEach(func() {
 			dropletsBucket.NameReturns("my_droplets_bucket")
-			dropletsBucket.RegionNameReturns("my_droplets_region")
+			dropletsBucket.RegionReturns("my_droplets_region")
 			dropletsBucket.ListVersionsReturns([]s3.Version{
 				{Key: "one", Id: "11", IsLatest: false},
 				{Key: "one", Id: "12", IsLatest: false},
@@ -54,14 +54,14 @@ var _ = Describe("Backuper", func() {
 			}, nil)
 
 			buildpacksBucket.NameReturns("my_buildpacks_bucket")
-			buildpacksBucket.RegionNameReturns("my_buildpacks_region")
+			buildpacksBucket.RegionReturns("my_buildpacks_region")
 			buildpacksBucket.ListVersionsReturns([]s3.Version{
 				{Key: "three", Id: "31", IsLatest: false},
 				{Key: "three", Id: "32", IsLatest: true},
 			}, nil)
 
 			packagesBucket.NameReturns("my_packages_bucket")
-			packagesBucket.RegionNameReturns("my_packages_region")
+			packagesBucket.RegionReturns("my_packages_region")
 			packagesBucket.ListVersionsReturns([]s3.Version{
 				{Key: "four", Id: "41", IsLatest: false},
 				{Key: "four", Id: "43", IsLatest: true},

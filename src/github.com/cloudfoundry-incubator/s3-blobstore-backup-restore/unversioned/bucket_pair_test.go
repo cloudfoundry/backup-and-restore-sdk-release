@@ -25,9 +25,9 @@ var _ = Describe("BucketPair", func() {
 		bucketPair = unversioned.NewS3BucketPair(liveBucket, backupBucket)
 
 		liveBucket.NameReturns("liveBucket")
-		liveBucket.RegionNameReturns("liveBucketRegion")
+		liveBucket.RegionReturns("liveBucketRegion")
 		backupBucket.NameReturns("backupBucket")
-		backupBucket.RegionNameReturns("backupBucketRegion")
+		backupBucket.RegionReturns("backupBucketRegion")
 	})
 
 	Describe("Backup", func() {
@@ -158,14 +158,14 @@ var _ = Describe("BucketPair", func() {
 				Expect(originPath).To(Equal("2015-12-13-05-06-07/my_bucket"))
 				Expect(destinationPath).To(Equal(""))
 				Expect(originBucketName).To(Equal(backupBucket.Name()))
-				Expect(originBucketRegion).To(Equal(backupBucket.RegionName()))
+				Expect(originBucketRegion).To(Equal(backupBucket.Region()))
 				keys = append(keys, key)
 
 				key, originPath, destinationPath, originBucketName, originBucketRegion = liveBucket.CopyObjectArgsForCall(1)
 				Expect(originPath).To(Equal("2015-12-13-05-06-07/my_bucket"))
 				Expect(destinationPath).To(Equal(""))
 				Expect(originBucketName).To(Equal(backupBucket.Name()))
-				Expect(originBucketRegion).To(Equal(backupBucket.RegionName()))
+				Expect(originBucketRegion).To(Equal(backupBucket.Region()))
 				keys = append(keys, key)
 
 				Expect(keys).To(ConsistOf("my_key", "another_key"))

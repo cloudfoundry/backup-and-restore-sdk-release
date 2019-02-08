@@ -1,8 +1,6 @@
 package incremental
 
-import (
-	"fmt"
-)
+import "fmt"
 
 type Restorer struct {
 	bucketPairs map[string]RestoreBucketPair

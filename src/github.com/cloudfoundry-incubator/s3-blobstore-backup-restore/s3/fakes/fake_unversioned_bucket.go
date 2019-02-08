@@ -17,19 +17,19 @@ type FakeUnversionedBucket struct {
 	nameReturnsOnCall map[int]struct {
 		result1 string
 	}
-	RegionNameStub        func() string
-	regionNameMutex       sync.RWMutex
-	regionNameArgsForCall []struct{}
-	regionNameReturns     struct {
+	RegionStub        func() string
+	regionMutex       sync.RWMutex
+	regionArgsForCall []struct{}
+	regionReturns     struct {
 		result1 string
 	}
-	regionNameReturnsOnCall map[int]struct {
+	regionReturnsOnCall map[int]struct {
 		result1 string
 	}
-	CopyObjectStub        func(key, originPath, destinationPath, originBucketName, originBucketRegion string) error
+	CopyObjectStub        func(blobKey, originPath, destinationPath, originBucketName, originBucketRegion string) error
 	copyObjectMutex       sync.RWMutex
 	copyObjectArgsForCall []struct {
-		key                string
+		blobKey            string
 		originPath         string
 		destinationPath    string
 		originBucketName   string
@@ -62,7 +62,7 @@ func (fake *FakeUnversionedBucket) Name() string {
 	fake.nameMutex.Lock()
 	ret, specificReturn := fake.nameReturnsOnCall[len(fake.nameArgsForCall)]
 	fake.nameArgsForCall = append(fake.nameArgsForCall, struct{}{})
-	fake.recordInvocation("name", []interface{}{})
+	fake.recordInvocation("Name", []interface{}{})
 	fake.nameMutex.Unlock()
 	if fake.NameStub != nil {
 		return fake.NameStub()
@@ -98,60 +98,60 @@ func (fake *FakeUnversionedBucket) NameReturnsOnCall(i int, result1 string) {
 	}{result1}
 }
 
-func (fake *FakeUnversionedBucket) RegionName() string {
-	fake.regionNameMutex.Lock()
-	ret, specificReturn := fake.regionNameReturnsOnCall[len(fake.regionNameArgsForCall)]
-	fake.regionNameArgsForCall = append(fake.regionNameArgsForCall, struct{}{})
-	fake.recordInvocation("RegionName", []interface{}{})
-	fake.regionNameMutex.Unlock()
-	if fake.RegionNameStub != nil {
-		return fake.RegionNameStub()
+func (fake *FakeUnversionedBucket) Region() string {
+	fake.regionMutex.Lock()
+	ret, specificReturn := fake.regionReturnsOnCall[len(fake.regionArgsForCall)]
+	fake.regionArgsForCall = append(fake.regionArgsForCall, struct{}{})
+	fake.recordInvocation("Region", []interface{}{})
+	fake.regionMutex.Unlock()
+	if fake.RegionStub != nil {
+		return fake.RegionStub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.regionNameReturns.result1
+	return fake.regionReturns.result1
 }
 
-func (fake *FakeUnversionedBucket) RegionNameCallCount() int {
-	fake.regionNameMutex.RLock()
-	defer fake.regionNameMutex.RUnlock()
-	return len(fake.regionNameArgsForCall)
+func (fake *FakeUnversionedBucket) RegionCallCount() int {
+	fake.regionMutex.RLock()
+	defer fake.regionMutex.RUnlock()
+	return len(fake.regionArgsForCall)
 }
 
-func (fake *FakeUnversionedBucket) RegionNameReturns(result1 string) {
-	fake.RegionNameStub = nil
-	fake.regionNameReturns = struct {
+func (fake *FakeUnversionedBucket) RegionReturns(result1 string) {
+	fake.RegionStub = nil
+	fake.regionReturns = struct {
 		result1 string
 	}{result1}
 }
 
-func (fake *FakeUnversionedBucket) RegionNameReturnsOnCall(i int, result1 string) {
-	fake.RegionNameStub = nil
-	if fake.regionNameReturnsOnCall == nil {
-		fake.regionNameReturnsOnCall = make(map[int]struct {
+func (fake *FakeUnversionedBucket) RegionReturnsOnCall(i int, result1 string) {
+	fake.RegionStub = nil
+	if fake.regionReturnsOnCall == nil {
+		fake.regionReturnsOnCall = make(map[int]struct {
 			result1 string
 		})
 	}
-	fake.regionNameReturnsOnCall[i] = struct {
+	fake.regionReturnsOnCall[i] = struct {
 		result1 string
 	}{result1}
 }
 
-func (fake *FakeUnversionedBucket) CopyObject(key string, originPath string, destinationPath string, originBucketName string, originBucketRegion string) error {
+func (fake *FakeUnversionedBucket) CopyObject(blobKey string, originPath string, destinationPath string, originBucketName string, originBucketRegion string) error {
 	fake.copyObjectMutex.Lock()
 	ret, specificReturn := fake.copyObjectReturnsOnCall[len(fake.copyObjectArgsForCall)]
 	fake.copyObjectArgsForCall = append(fake.copyObjectArgsForCall, struct {
-		key                string
+		blobKey            string
 		originPath         string
 		destinationPath    string
 		originBucketName   string
 		originBucketRegion string
-	}{key, originPath, destinationPath, originBucketName, originBucketRegion})
-	fake.recordInvocation("CopyObject", []interface{}{key, originPath, destinationPath, originBucketName, originBucketRegion})
+	}{blobKey, originPath, destinationPath, originBucketName, originBucketRegion})
+	fake.recordInvocation("CopyObject", []interface{}{blobKey, originPath, destinationPath, originBucketName, originBucketRegion})
 	fake.copyObjectMutex.Unlock()
 	if fake.CopyObjectStub != nil {
-		return fake.CopyObjectStub(key, originPath, destinationPath, originBucketName, originBucketRegion)
+		return fake.CopyObjectStub(blobKey, originPath, destinationPath, originBucketName, originBucketRegion)
 	}
 	if specificReturn {
 		return ret.result1
@@ -168,7 +168,7 @@ func (fake *FakeUnversionedBucket) CopyObjectCallCount() int {
 func (fake *FakeUnversionedBucket) CopyObjectArgsForCall(i int) (string, string, string, string, string) {
 	fake.copyObjectMutex.RLock()
 	defer fake.copyObjectMutex.RUnlock()
-	return fake.copyObjectArgsForCall[i].key, fake.copyObjectArgsForCall[i].originPath, fake.copyObjectArgsForCall[i].destinationPath, fake.copyObjectArgsForCall[i].originBucketName, fake.copyObjectArgsForCall[i].originBucketRegion
+	return fake.copyObjectArgsForCall[i].blobKey, fake.copyObjectArgsForCall[i].originPath, fake.copyObjectArgsForCall[i].destinationPath, fake.copyObjectArgsForCall[i].originBucketName, fake.copyObjectArgsForCall[i].originBucketRegion
 }
 
 func (fake *FakeUnversionedBucket) CopyObjectReturns(result1 error) {
@@ -246,8 +246,8 @@ func (fake *FakeUnversionedBucket) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.nameMutex.RLock()
 	defer fake.nameMutex.RUnlock()
-	fake.regionNameMutex.RLock()
-	defer fake.regionNameMutex.RUnlock()
+	fake.regionMutex.RLock()
+	defer fake.regionMutex.RUnlock()
 	fake.copyObjectMutex.RLock()
 	defer fake.copyObjectMutex.RUnlock()
 	fake.listFilesMutex.RLock()

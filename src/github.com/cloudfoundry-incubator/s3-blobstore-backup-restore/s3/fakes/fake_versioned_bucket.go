@@ -17,13 +17,13 @@ type FakeVersionedBucket struct {
 	nameReturnsOnCall map[int]struct {
 		result1 string
 	}
-	RegionNameStub        func() string
-	regionNameMutex       sync.RWMutex
-	regionNameArgsForCall []struct{}
-	regionNameReturns     struct {
+	RegionStub        func() string
+	regionMutex       sync.RWMutex
+	regionArgsForCall []struct{}
+	regionReturns     struct {
 		result1 string
 	}
-	regionNameReturnsOnCall map[int]struct {
+	regionReturnsOnCall map[int]struct {
 		result1 string
 	}
 	CopyVersionStub        func(blobKey, versionId, originBucketName, originBucketRegion string) error
@@ -68,7 +68,7 @@ func (fake *FakeVersionedBucket) Name() string {
 	fake.nameMutex.Lock()
 	ret, specificReturn := fake.nameReturnsOnCall[len(fake.nameArgsForCall)]
 	fake.nameArgsForCall = append(fake.nameArgsForCall, struct{}{})
-	fake.recordInvocation("name", []interface{}{})
+	fake.recordInvocation("Name", []interface{}{})
 	fake.nameMutex.Unlock()
 	if fake.NameStub != nil {
 		return fake.NameStub()
@@ -104,42 +104,42 @@ func (fake *FakeVersionedBucket) NameReturnsOnCall(i int, result1 string) {
 	}{result1}
 }
 
-func (fake *FakeVersionedBucket) RegionName() string {
-	fake.regionNameMutex.Lock()
-	ret, specificReturn := fake.regionNameReturnsOnCall[len(fake.regionNameArgsForCall)]
-	fake.regionNameArgsForCall = append(fake.regionNameArgsForCall, struct{}{})
-	fake.recordInvocation("RegionName", []interface{}{})
-	fake.regionNameMutex.Unlock()
-	if fake.RegionNameStub != nil {
-		return fake.RegionNameStub()
+func (fake *FakeVersionedBucket) Region() string {
+	fake.regionMutex.Lock()
+	ret, specificReturn := fake.regionReturnsOnCall[len(fake.regionArgsForCall)]
+	fake.regionArgsForCall = append(fake.regionArgsForCall, struct{}{})
+	fake.recordInvocation("Region", []interface{}{})
+	fake.regionMutex.Unlock()
+	if fake.RegionStub != nil {
+		return fake.RegionStub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.regionNameReturns.result1
+	return fake.regionReturns.result1
 }
 
-func (fake *FakeVersionedBucket) RegionNameCallCount() int {
-	fake.regionNameMutex.RLock()
-	defer fake.regionNameMutex.RUnlock()
-	return len(fake.regionNameArgsForCall)
+func (fake *FakeVersionedBucket) RegionCallCount() int {
+	fake.regionMutex.RLock()
+	defer fake.regionMutex.RUnlock()
+	return len(fake.regionArgsForCall)
 }
 
-func (fake *FakeVersionedBucket) RegionNameReturns(result1 string) {
-	fake.RegionNameStub = nil
-	fake.regionNameReturns = struct {
+func (fake *FakeVersionedBucket) RegionReturns(result1 string) {
+	fake.RegionStub = nil
+	fake.regionReturns = struct {
 		result1 string
 	}{result1}
 }
 
-func (fake *FakeVersionedBucket) RegionNameReturnsOnCall(i int, result1 string) {
-	fake.RegionNameStub = nil
-	if fake.regionNameReturnsOnCall == nil {
-		fake.regionNameReturnsOnCall = make(map[int]struct {
+func (fake *FakeVersionedBucket) RegionReturnsOnCall(i int, result1 string) {
+	fake.RegionStub = nil
+	if fake.regionReturnsOnCall == nil {
+		fake.regionReturnsOnCall = make(map[int]struct {
 			result1 string
 		})
 	}
-	fake.regionNameReturnsOnCall[i] = struct {
+	fake.regionReturnsOnCall[i] = struct {
 		result1 string
 	}{result1}
 }
@@ -283,8 +283,8 @@ func (fake *FakeVersionedBucket) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.nameMutex.RLock()
 	defer fake.nameMutex.RUnlock()
-	fake.regionNameMutex.RLock()
-	defer fake.regionNameMutex.RUnlock()
+	fake.regionMutex.RLock()
+	defer fake.regionMutex.RUnlock()
 	fake.copyVersionMutex.RLock()
 	defer fake.copyVersionMutex.RUnlock()
 	fake.listVersionsMutex.RLock()

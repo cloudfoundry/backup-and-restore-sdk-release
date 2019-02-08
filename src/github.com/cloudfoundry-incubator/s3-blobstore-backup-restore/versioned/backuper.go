@@ -34,7 +34,7 @@ func (b Backuper) Run() error {
 
 		bucketSnapshots[identifier] = BucketSnapshot{
 			BucketName: bucketToBackup.Name(),
-			RegionName: bucketToBackup.RegionName(),
+			RegionName: bucketToBackup.Region(),
 			Versions:   latestVersions,
 		}
 	}
