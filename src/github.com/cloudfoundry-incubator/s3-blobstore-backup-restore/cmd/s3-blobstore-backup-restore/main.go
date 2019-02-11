@@ -299,6 +299,7 @@ func parseFlags() (CommandFlags, error) {
 	var restoreAction = flag.Bool("restore", false, "Run blobstore restore")
 	var artifactFilePath = flag.String("artifact-file", "", "Path to the artifact file")
 	var existingBackupBlobsArtifactFilePath = flag.String("existing-backup-blobs-artifact", "", "Path to the existing backup blobs artifact file")
+	var unversionedRestore = flag.Bool("unversioned", false, "Indicates targeted buckets are unversioned for restore")
 	var unversionedBackupStarter = flag.Bool("unversioned-backup-starter", false, "Run backup starter for unversioned buckets")
 	var unversionedBackupCompleter = flag.Bool("unversioned-backup-completer", false, "Run backup completer for unversioned buckets")
 
@@ -333,7 +334,7 @@ func parseFlags() (CommandFlags, error) {
 		IsRestore:                           *restoreAction,
 		ArtifactFilePath:                    *artifactFilePath,
 		ExistingBackupBlobsArtifactFilePath: *existingBackupBlobsArtifactFilePath,
-		Versioned:                           !*unversionedBackupStarter && !*unversionedBackupCompleter,
+		Versioned:                           !*unversionedBackupStarter && !*unversionedBackupCompleter && !*unversionedRestore,
 		UnversionedCompleter:                *unversionedBackupCompleter,
 	}, nil
 }
