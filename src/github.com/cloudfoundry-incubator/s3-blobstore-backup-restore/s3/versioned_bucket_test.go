@@ -184,7 +184,7 @@ var _ = Describe("VersionedBucket", func() {
 		)
 	})
 
-	Describe("ECS S3-compatible bucket", func() {
+	XDescribe("ECS S3-compatible bucket", func() {
 		RunVersionedBucketTests(
 			"eu-west-1",
 			"us-east-1",

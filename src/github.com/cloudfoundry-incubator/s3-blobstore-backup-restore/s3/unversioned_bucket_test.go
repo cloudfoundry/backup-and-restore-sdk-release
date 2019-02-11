@@ -17,7 +17,7 @@ var _ = Describe("UnversionedBucket", func() {
 		)
 	})
 
-	Describe("ECS S3-compatible buckets", func() {
+	XDescribe("ECS S3-compatible buckets", func() {
 		RunUnversionedBucketTests(
 			"eu-west-1",
 			"us-west-1",
@@ -35,7 +35,7 @@ var _ = Describe("UnversionedBucket", func() {
 			"large-blob-test-bucket-unversioned")
 	})
 
-	Describe("ECS S3-compatible buckets large file test", func() {
+	XDescribe("ECS S3-compatible buckets large file test", func() {
 		RunLargeFileTest(
 			"eu-west-1",
 			"https://object.ecstestdrive.com",
