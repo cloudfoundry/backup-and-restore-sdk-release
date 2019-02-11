@@ -67,6 +67,7 @@ func (b BackupStarter) Run() error {
 		reusableBucketBackups[bucketID] = generateReuseableBlobsArtifact(
 			reuseableBlobsArtifact,
 			backupToStart.BucketPair.BackupBucket.Name(),
+			backupToStart.BucketPair.BackupBucket.Region(),
 		)
 	}
 
@@ -93,10 +94,11 @@ func generateBackupArtifact(liveBlobs []Blob, dir BackupDirectory) BucketBackup 
 		BucketName:          dir.Bucket.Name(),
 		Blobs:               blobs,
 		BackupDirectoryPath: dir.Path,
+		BucketRegion:        dir.Bucket.Region(),
 	}
 }
 
-func generateReuseableBlobsArtifact(reuseableBlobs []BackedUpBlob, bucketName string) BucketBackup {
+func generateReuseableBlobsArtifact(reuseableBlobs []BackedUpBlob, bucketName, region string) BucketBackup {
 	if len(reuseableBlobs) != 0 {
 		var backedUpblobs []string
 		for _, blob := range reuseableBlobs {
@@ -104,8 +106,8 @@ func generateReuseableBlobsArtifact(reuseableBlobs []BackedUpBlob, bucketName st
 		}
 
 		return BucketBackup{
-			BucketName: bucketName,
-
+			BucketName:          bucketName,
+			BucketRegion:        region,
 			Blobs:               backedUpblobs,
 			BackupDirectoryPath: reuseableBlobs[0].BackupDirectoryPath,
 		}

@@ -31,6 +31,7 @@ var _ = Describe("BackupStarter", func() {
 		clock.NowReturns("2000_01_02_03_04_05")
 		backupBucket = new(fakes.FakeBucket)
 		backupBucket.NameReturns("backup-bucket")
+		backupBucket.RegionReturns("us-east-1")
 		liveBucket = new(fakes.FakeBucket)
 		artifact = new(fakes.FakeArtifact)
 		existingBlobsArtifact = new(fakes.FakeArtifact)
@@ -156,6 +157,7 @@ var _ = Describe("BackupStarter", func() {
 						"2000_01_02_03_04_05/bucket_id/f0/fd/blob3/uuid",
 					},
 					BackupDirectoryPath: "2000_01_02_03_04_05/bucket_id",
+					BucketRegion:        "us-east-1",
 				},
 			}))
 
@@ -168,6 +170,7 @@ var _ = Describe("BackupStarter", func() {
 						"2000_01_01_01_01_01/bucket_id/f0/fd/blob2/uuid",
 					},
 					BackupDirectoryPath: "2000_01_01_01_01_01/bucket_id",
+					BucketRegion:        "us-east-1",
 				},
 			}))
 		})
@@ -187,6 +190,7 @@ var _ = Describe("BackupStarter", func() {
 						"2000_01_02_03_04_05/bucket_id/f0/fd/blob3/uuid",
 					},
 					BackupDirectoryPath: "2000_01_02_03_04_05/bucket_id",
+					BucketRegion:        "us-east-1",
 				},
 			}))
 		})
