@@ -32,7 +32,7 @@ func main() {
 
 	config, err := ioutil.ReadFile(commandFlags.ConfigPath)
 	if err != nil {
-		exitWithError(fmt.Sprintf("Failed to read config: %s", err.Error()))
+		exitWithError("Failed to read config: %s", err.Error())
 	}
 
 	var runner Runner
@@ -40,12 +40,12 @@ func main() {
 		var bucketsConfig map[string]BucketConfig
 		err = json.Unmarshal(config, &bucketsConfig)
 		if err != nil {
-			exitWithError(fmt.Sprintf("Failed to parse config: %s", err.Error()))
+			exitWithError("Failed to parse config: %s", err.Error())
 		}
 
 		buckets, err := makeBuckets(bucketsConfig)
 		if err != nil {
-			exitWithError(fmt.Sprintf("Failed to establish session: %s", err.Error()))
+			exitWithError("Failed to establish session: %s", err.Error())
 		}
 
 		artifact := versioned.NewFileArtifact(commandFlags.ArtifactFilePath)
@@ -59,7 +59,7 @@ func main() {
 		var bucketsConfig map[string]UnversionedBucketConfig
 		err = json.Unmarshal(config, &bucketsConfig)
 		if err != nil {
-			exitWithError(fmt.Sprintf("Failed to parse config: %s", err.Error()))
+			exitWithError("Failed to parse config: %s", err.Error())
 		}
 
 		switch {
@@ -318,14 +318,6 @@ func parseFlags() (CommandFlags, error) {
 
 	if *artifactFilePath == "" {
 		return CommandFlags{}, errors.New("missing --artifact-file flag")
-	}
-
-	if *unversionedBackupStarter && *unversionedBackupCompleter {
-		return CommandFlags{}, errors.New("at most one of: --unversioned-backup-starter or --unversioned-backup-completer can be provided")
-	}
-
-	if *backupAction && (*unversionedBackupStarter || *unversionedBackupCompleter) && *existingBackupBlobsArtifactFilePath == "" {
-		return CommandFlags{}, errors.New("missing --existing-backup-blobs-artifact")
 	}
 
 	return CommandFlags{

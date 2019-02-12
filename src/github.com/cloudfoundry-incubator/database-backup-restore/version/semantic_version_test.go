@@ -35,9 +35,22 @@ var _ = Describe("SemanticVersion", func() {
 			}))
 		})
 
-		It("fails if string has 2 parts", func() {
-			_, err := ParseSemVerFromString("1.2")
-			Expect(err).To(MatchError(`could not parse semver: "1.2"`))
+		It("it defaults the patch to 0 if the string is only made of 2 parts", func() {
+			ver, err := ParseSemVerFromString("1.2")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ver).To(Equal(SemanticVersion{
+				Major: "1",
+				Minor: "2",
+				Patch: "0",
+			}))
+		})
+
+		It("it defaults the patch to 0 if the string is only made of 2 parts", func() {
+			Expect(ParseSemVerFromString("1.2 some-other-stuff")).To(Equal(SemanticVersion{
+				Major: "1",
+				Minor: "2",
+				Patch: "0",
+			}))
 		})
 	})
 
