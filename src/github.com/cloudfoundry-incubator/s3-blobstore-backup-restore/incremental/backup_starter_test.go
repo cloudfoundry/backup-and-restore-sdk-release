@@ -71,6 +71,21 @@ var _ = Describe("BackupStarter", func() {
 
 			liveBlobs := []incremental.Blob{liveBlob1, liveBlob2, liveBlob3}
 			liveBucket.ListBlobsReturns(liveBlobs, nil)
+
+			backupBucket.CopyBlobFromBucketStub = func(bucket incremental.Bucket, src, dst string) error {
+				Expect(bucket).To(Equal(liveBucket))
+				switch src {
+				case "f0/fd/blob1/uuid":
+					Expect(dst).To(Equal("2000_01_02_03_04_05/bucket_id/f0/fd/blob1/uuid"))
+				case "f0/fd/blob2/uuid":
+					Expect(dst).To(Equal("2000_01_02_03_04_05/bucket_id/f0/fd/blob2/uuid"))
+				case "f0/fd/blob3/uuid":
+					Expect(dst).To(Equal("2000_01_02_03_04_05/bucket_id/f0/fd/blob3/uuid"))
+				default:
+					Fail(fmt.Sprintf("CopyBlobFromBucket unexpected src: %s, with dst: %s, bucket: %s", src, dst, bucket))
+				}
+				return nil
+			}
 		})
 
 		It("copies all the live blobs to the new backup directory", func() {
@@ -80,20 +95,6 @@ var _ = Describe("BackupStarter", func() {
 			Expect(liveBucket.ListBlobsArgsForCall(0)).To(Equal(""))
 
 			Expect(backupBucket.CopyBlobFromBucketCallCount()).To(Equal(3))
-			actualBucket, liveBlobPath, blobDst := backupBucket.CopyBlobFromBucketArgsForCall(0)
-			Expect(actualBucket).To(Equal(liveBucket))
-			Expect(liveBlobPath).To(Equal("f0/fd/blob1/uuid"))
-			Expect(blobDst).To(Equal("2000_01_02_03_04_05/bucket_id/f0/fd/blob1/uuid"))
-
-			actualBucket, liveBlobPath2, blobDst2 := backupBucket.CopyBlobFromBucketArgsForCall(1)
-			Expect(actualBucket).To(Equal(liveBucket))
-			Expect(liveBlobPath2).To(Equal("f0/fd/blob2/uuid"))
-			Expect(blobDst2).To(Equal("2000_01_02_03_04_05/bucket_id/f0/fd/blob2/uuid"))
-
-			actualBucket, liveBlobPath3, blobDst3 := backupBucket.CopyBlobFromBucketArgsForCall(2)
-			Expect(actualBucket).To(Equal(liveBucket))
-			Expect(liveBlobPath3).To(Equal("f0/fd/blob3/uuid"))
-			Expect(blobDst3).To(Equal("2000_01_02_03_04_05/bucket_id/f0/fd/blob3/uuid"))
 		})
 
 		Context("and listing the blobs from the live bucket fails", func() {
@@ -199,14 +200,16 @@ var _ = Describe("BackupStarter", func() {
 			BeforeEach(func() {
 				backupDirectoryFinder.ListBlobsReturns(nil, nil)
 
-				liveBucket.ListBlobsReturns([]incremental.Blob{liveBlob1}, nil)
-				backupBucket.CopyBlobFromBucketReturns(errors.New("oups"))
+				liveBucket.ListBlobsReturns([]incremental.Blob{liveBlob1, liveBlob2}, nil)
+				backupBucket.CopyBlobFromBucketReturnsOnCall(0, errors.New("some copy error"))
+				backupBucket.CopyBlobFromBucketReturnsOnCall(1, errors.New("another copy error"))
 			})
 
 			It("returns an error", func() {
 				Expect(err).To(MatchError(SatisfyAll(
 					ContainSubstring("failed to copy blobs during backup"),
-					ContainSubstring("oups"),
+					ContainSubstring("some copy error"),
+					ContainSubstring("another copy error"),
 				)))
 			})
 		})

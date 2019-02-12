@@ -2,6 +2,8 @@ package incremental
 
 import (
 	"fmt"
+
+	"github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor"
 )
 
 type BucketPair struct {
@@ -116,27 +118,50 @@ func generateReuseableBlobsArtifact(reuseableBlobs []BackedUpBlob, bucketName, r
 	return BucketBackup{}
 }
 
-func (b BucketPair) copyNewLiveBlobsToBackup(backedUpBlobs []BackedUpBlob, liveBlobs []Blob, backupDstPath string) ([]BackedUpBlob, error) {
-	var existingBlobs []BackedUpBlob
-	backedUpBlobsMap := map[string]BackedUpBlob{}
-
+func (b BucketPair) copyNewLiveBlobsToBackup(backedUpBlobs []BackedUpBlob, liveBlobs []Blob, backupDirPath string) ([]BackedUpBlob, error) {
+	backedUpBlobsMap := make(map[string]BackedUpBlob)
 	for _, backedUpBlob := range backedUpBlobs {
 		backedUpBlobsMap[backedUpBlob.LiveBlobPath()] = backedUpBlob
 	}
 
+	var (
+		executables   []executor.Executable
+		existingBlobs []BackedUpBlob
+	)
 	for _, liveBlob := range liveBlobs {
 		backedUpBlob, exists := backedUpBlobsMap[liveBlob.Path()]
 
 		if !exists {
-			dstBlobPath := joinBlobPath(backupDstPath, liveBlob.Path())
-			err := b.BackupBucket.CopyBlobFromBucket(b.LiveBucket, liveBlob.Path(), dstBlobPath)
-			if err != nil {
-				return nil, err
+			executable := copyBlobFromBucketExecutable{
+				src:       liveBlob.Path(),
+				dst:       joinBlobPath(backupDirPath, liveBlob.Path()),
+				srcBucket: b.LiveBucket,
+				dstBucket: b.BackupBucket,
 			}
+			executables = append(executables, executable)
 		} else {
 			existingBlobs = append(existingBlobs, backedUpBlob)
 		}
 	}
 
+	e := executor.NewParallelExecutor()
+	e.SetMaxInFlight(200)
+
+	errs := e.Run([][]executor.Executable{executables})
+	if len(errs) != 0 {
+		return nil, formatExecutorErrors("failing copying blobs in parallel", errs)
+	}
+
 	return existingBlobs, nil
+}
+
+type copyBlobFromBucketExecutable struct {
+	src       string
+	dst       string
+	dstBucket Bucket
+	srcBucket Bucket
+}
+
+func (e copyBlobFromBucketExecutable) Execute() error {
+	return e.dstBucket.CopyBlobFromBucket(e.srcBucket, e.src, e.dst)
 }
