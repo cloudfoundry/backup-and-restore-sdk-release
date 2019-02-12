@@ -163,8 +163,11 @@ func DeleteFileFromBucket(region, bucket, key string) string {
 }
 
 func DeleteAllFilesFromBucket(region, bucket string) {
-	files := ListFilesFromBucket(region, bucket)
-	for _, file := range files {
-		DeleteFileFromBucket(region, bucket, file)
-	}
+	runAwsCommandOnBucketSuccessfully(
+		"--region", region,
+		"s3",
+		"rm",
+		"--recursive",
+		fmt.Sprintf("s3://%s", bucket),
+	)
 }
