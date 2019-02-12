@@ -180,7 +180,6 @@ func makeIncrementalBackupsToStart(config map[string]UnversionedBucketConfig) (m
 		buckets[identifier] = incremental.BackupsToStart{
 			BucketPair: bucketPair,
 			BackupDirectoryFinder: incremental.Finder{
-				ID:     identifier,
 				Bucket: backupBucket,
 			},
 		}

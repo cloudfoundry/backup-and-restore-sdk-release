@@ -11,13 +11,13 @@ import (
 
 var _ = Describe("Finder", func() {
 	Describe("ListBlobs", func() {
+		const bucketID = "bucket_id"
 		var bucket *fakes.FakeBucket
 		var finder incremental.Finder
 
 		BeforeEach(func() {
 			bucket = new(fakes.FakeBucket)
 			finder = incremental.Finder{
-				ID:     "bucket_id",
 				Bucket: bucket,
 			}
 		})
@@ -28,7 +28,7 @@ var _ = Describe("Finder", func() {
 			})
 
 			It("returns an empty list", func() {
-				blobs, err := finder.ListBlobs()
+				blobs, err := finder.ListBlobs(bucketID)
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(BeEmpty())
@@ -41,7 +41,7 @@ var _ = Describe("Finder", func() {
 				bucket.ListDirectoriesReturns([]string{"2000_01_02_01_01_01"}, nil)
 				bucket.HasBlobReturns(false, nil)
 
-				blobs, err := finder.ListBlobs()
+				blobs, err := finder.ListBlobs(bucketID)
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(BeEmpty())
@@ -60,7 +60,7 @@ var _ = Describe("Finder", func() {
 			})
 
 			It("returns the list of blobs therein", func() {
-				blobs, err := finder.ListBlobs()
+				blobs, err := finder.ListBlobs(bucketID)
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(bucket.ListDirectoriesCallCount()).To(Equal(1))
@@ -77,7 +77,7 @@ var _ = Describe("Finder", func() {
 				It("returns an error", func() {
 					bucket.ListBlobsReturns(nil, fmt.Errorf("fail to list"))
 
-					_, err := finder.ListBlobs()
+					_, err := finder.ListBlobs(bucketID)
 
 					Expect(err).To(MatchError("fail to list"))
 				})
@@ -102,7 +102,7 @@ var _ = Describe("Finder", func() {
 				bucket.HasBlobReturnsOnCall(1, false, nil)
 				bucket.HasBlobReturnsOnCall(2, true, nil)
 
-				blobs, err := finder.ListBlobs()
+				blobs, err := finder.ListBlobs(bucketID)
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(bucket.ListBlobsArgsForCall(0)).To(Equal("2000_01_01_01_01_01/bucket_id"))
@@ -116,7 +116,7 @@ var _ = Describe("Finder", func() {
 				It("returns an error", func() {
 					bucket.HasBlobReturns(false, fmt.Errorf("no go"))
 
-					_, err := finder.ListBlobs()
+					_, err := finder.ListBlobs(bucketID)
 
 					Expect(err).To(MatchError(ContainSubstring("no go")))
 				})
@@ -127,7 +127,7 @@ var _ = Describe("Finder", func() {
 			It("returns an error", func() {
 				bucket.ListDirectoriesReturns(nil, fmt.Errorf("oups"))
 
-				_, err := finder.ListBlobs()
+				_, err := finder.ListBlobs(bucketID)
 
 				Expect(err).To(MatchError("oups"))
 			})
