@@ -42,7 +42,7 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 	var localArtifact *os.File
 	var backuperInstance JobInstance
 
-	FContext("when bpm is not enabled", func() {
+	Context("when bpm is not enabled", func() {
 		BeforeEach(func() {
 			var err error
 			localArtifact, err = ioutil.TempFile("", "blobstore-")
@@ -77,9 +77,9 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 
 		It("backs up and restores an unversioned bucket", func() {
 			var (
-				preBackupFiles []string
-				backupFiles    []string
-				//postRestoreFiles []string
+				preBackupFiles   []string
+				backupFiles      []string
+				postRestoreFiles []string
 			)
 
 			By("backing up from the source bucket to the backup bucket", func() {
@@ -108,25 +108,24 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fileContents).To(ContainSubstring("\"my_bucket\":{"))
 				Expect(fileContents).To(ContainSubstring("\"bucket_name\":\"" + backupBucket + "\""))
-				//
-				//Expect(fileContents).To(ContainSubstring("\"bucket_region\": \"" + backupRegion + "\""))
+				Expect(fileContents).To(ContainSubstring("\"bucket_region\":\"" + backupRegion + "\""))
 				Expect(fileContents).To(MatchRegexp(
 					"\"backup_directory_path\":\"\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}\\/my_bucket\""))
 			})
-			//
-			//DeleteAllFilesFromBucket(region, bucket)
-			//Expect(ListFilesFromBucket(region, bucket)).To(HaveLen(0))
-			//WriteFileInBucket(region, bucket, "should/be/left/alone", "STILL_HERE")
-			//
-			//By("restoring from the backup bucket to the source bucket", func() {
-			//	backuperInstance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
-			//		" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/restore")
-			//
-			//	postRestoreFiles = ListFilesFromBucket(region, bucket)
-			//	Expect(postRestoreFiles).To(ConsistOf([]string{"should/be/left/alone", "original/path/to/file"}))
-			//	Expect(GetFileContentsFromBucket(region, bucket, "original/path/to/file")).To(Equal("FILE1"))
-			//	Expect(GetFileContentsFromBucket(region, bucket, "should/be/left/alone")).To(Equal("STILL_HERE"))
-			//})
+
+			DeleteAllFilesFromBucket(region, bucket)
+			Expect(ListFilesFromBucket(region, bucket)).To(HaveLen(0))
+			WriteFileInBucket(region, bucket, "should/be/left/alone", "STILL_HERE")
+
+			By("restoring from the backup bucket to the source bucket", func() {
+				backuperInstance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
+					" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/restore")
+
+				postRestoreFiles = ListFilesFromBucket(region, bucket)
+				Expect(postRestoreFiles).To(ConsistOf([]string{"should/be/left/alone", "original/path/to/file"}))
+				Expect(GetFileContentsFromBucket(region, bucket, "original/path/to/file")).To(Equal("FILE1"))
+				Expect(GetFileContentsFromBucket(region, bucket, "should/be/left/alone")).To(Equal("STILL_HERE"))
+			})
 		})
 	})
 

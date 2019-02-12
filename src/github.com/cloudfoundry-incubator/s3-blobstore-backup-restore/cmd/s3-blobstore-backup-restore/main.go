@@ -252,8 +252,8 @@ func makeRestoreBucketPairs(config map[string]UnversionedBucketConfig, artifact 
 		}
 
 		backupBucket, err := s3.NewBucket(
-			bucketBackups[bucketConfig.Backup.Name].BucketName,
-			bucketBackups[bucketConfig.Backup.Name].BucketRegion,
+			bucketBackups[identifier].BucketName,
+			bucketBackups[identifier].BucketRegion,
 			bucketConfig.Endpoint,
 			s3.AccessKey{
 				Id:     bucketConfig.AwsAccessKeyId,
