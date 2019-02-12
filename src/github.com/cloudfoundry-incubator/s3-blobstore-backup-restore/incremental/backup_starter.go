@@ -11,7 +11,7 @@ type BucketPair struct {
 	BackupBucket Bucket
 }
 
-type BackupsToStart struct {
+type BackupToStart struct {
 	BucketPair            BucketPair
 	BackupDirectoryFinder BackupDirectoryFinder
 }
@@ -22,13 +22,13 @@ type Clock interface {
 }
 
 type BackupStarter struct {
-	BackupsToStart         map[string]BackupsToStart
+	BackupsToStart         map[string]BackupToStart
 	clock                  Clock
 	backupArtifact         Artifact
 	reuseableBlobsArtifact Artifact
 }
 
-func NewBackupStarter(backupsToStart map[string]BackupsToStart, clock Clock, backupArtifact, reuseableBlobsArtifact Artifact) BackupStarter {
+func NewBackupStarter(backupsToStart map[string]BackupToStart, clock Clock, backupArtifact, reuseableBlobsArtifact Artifact) BackupStarter {
 	return BackupStarter{
 		BackupsToStart:         backupsToStart,
 		clock:                  clock,

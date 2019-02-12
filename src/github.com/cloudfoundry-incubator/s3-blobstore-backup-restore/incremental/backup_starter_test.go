@@ -46,7 +46,7 @@ var _ = Describe("BackupStarter", func() {
 		backupDirectoryFinder = new(fakes.FakeBackupDirectoryFinder)
 
 		starter = incremental.NewBackupStarter(
-			map[string]incremental.BackupsToStart{
+			map[string]incremental.BackupToStart{
 				"bucket_id": {
 					BucketPair: incremental.BucketPair{
 						BackupBucket: backupBucket,

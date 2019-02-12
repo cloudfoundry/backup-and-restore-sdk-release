@@ -140,8 +140,8 @@ func makeBuckets(config map[string]BucketConfig) (map[string]s3.VersionedBucket,
 	return buckets, nil
 }
 
-func makeIncrementalBackupsToStart(config map[string]UnversionedBucketConfig) (map[string]incremental.BackupsToStart, error) {
-	var buckets = map[string]incremental.BackupsToStart{}
+func makeIncrementalBackupsToStart(config map[string]UnversionedBucketConfig) (map[string]incremental.BackupToStart, error) {
+	var buckets = map[string]incremental.BackupToStart{}
 
 	for identifier, bucketConfig := range config {
 		liveBucket, err := s3.NewBucket(
@@ -177,7 +177,7 @@ func makeIncrementalBackupsToStart(config map[string]UnversionedBucketConfig) (m
 			BackupBucket: backupBucket,
 		}
 
-		buckets[identifier] = incremental.BackupsToStart{
+		buckets[identifier] = incremental.BackupToStart{
 			BucketPair: bucketPair,
 			BackupDirectoryFinder: incremental.Finder{
 				Bucket: backupBucket,
