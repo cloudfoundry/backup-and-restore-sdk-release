@@ -2,6 +2,7 @@ package incremental_test
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental/fakes"
@@ -10,7 +11,7 @@ import (
 )
 
 var _ = Describe("BackupCompleter", func() {
-	Context("when there is two blobs to copy", func() {
+	Context("when there are two blobs to copy", func() {
 		var (
 			bucket            *fakes.FakeBucket
 			dir               incremental.BackupDirectory
@@ -47,17 +48,22 @@ var _ = Describe("BackupCompleter", func() {
 			completer := incremental.BackupCompleter{
 				BackupsToComplete: backupsToComplete,
 			}
+			bucket.CopyBlobWithinBucketStub = func(src, dst string) error {
+				switch src {
+				case "previous_timestamp/bucket_id/f0/fd/blob1/uuid":
+					Expect(dst).To(Equal("timestamp/bucket_id/f0/fd/blob1/uuid"))
+				case "previous_timestamp/bucket_id/f0/bucket_id/blob2/uuid":
+					Expect(dst).To(Equal("timestamp/bucket_id/f0/bucket_id/blob2/uuid"))
+				default:
+					Fail(fmt.Sprintf("CopyBlobWithinBucket called with unexpected src: %s, dst: %s", src, dst))
+				}
+				return nil
+			}
 
 			err := completer.Run()
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(bucket.CopyBlobWithinBucketCallCount()).To(Equal(2))
-			src, dst := bucket.CopyBlobWithinBucketArgsForCall(0)
-			Expect(src).To(Equal("previous_timestamp/bucket_id/f0/fd/blob1/uuid"))
-			Expect(dst).To(Equal("timestamp/bucket_id/f0/fd/blob1/uuid"))
-			src, dst = bucket.CopyBlobWithinBucketArgsForCall(1)
-			Expect(src).To(Equal("previous_timestamp/bucket_id/f0/bucket_id/blob2/uuid"))
-			Expect(dst).To(Equal("timestamp/bucket_id/f0/bucket_id/blob2/uuid"))
 		})
 
 		It("marks the backup directory complete", func() {
@@ -71,9 +77,10 @@ var _ = Describe("BackupCompleter", func() {
 			Expect(bucket.UploadBlobCallCount()).To(Equal(1))
 		})
 
-		Context("and a copy fails", func() {
+		Context("and copy fails for both", func() {
 			It("returns an error", func() {
-				bucket.CopyBlobWithinBucketReturns(errors.New("fake error"))
+				bucket.CopyBlobWithinBucketReturnsOnCall(0, errors.New("some fake error"))
+				bucket.CopyBlobWithinBucketReturnsOnCall(1, errors.New("another fake error"))
 				completer := incremental.BackupCompleter{
 					BackupsToComplete: backupsToComplete,
 				}
@@ -82,7 +89,8 @@ var _ = Describe("BackupCompleter", func() {
 
 				Expect(err).To(MatchError(SatisfyAll(
 					ContainSubstring("failed to complete backup"),
-					ContainSubstring("fake error"),
+					ContainSubstring("some fake error"),
+					ContainSubstring("another fake error"),
 				)))
 			})
 		})
