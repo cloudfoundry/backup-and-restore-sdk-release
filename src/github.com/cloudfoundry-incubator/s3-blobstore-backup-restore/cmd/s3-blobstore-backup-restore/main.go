@@ -18,7 +18,6 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/versioned"
 )
 
@@ -39,13 +38,13 @@ func main() {
 
 	var runner Runner
 	if commandFlags.Versioned {
-		var bucketsConfig map[string]BucketConfig
+		var bucketsConfig map[string]config.BucketConfig
 		err = json.Unmarshal(rawConfig, &bucketsConfig)
 		if err != nil {
 			exitWithError("Failed to parse config: %s", err.Error())
 		}
 
-		buckets, err := makeBuckets(bucketsConfig)
+		buckets, err := config.BuildVersionedBuckets(bucketsConfig)
 		if err != nil {
 			exitWithError("Failed to establish session: %s", err.Error())
 		}
@@ -68,7 +67,7 @@ func main() {
 		case commandFlags.IsRestore:
 			{
 				incrementalArtifact := incremental.NewArtifact(commandFlags.ArtifactFilePath)
-				restoreBucketPairs, err := makeRestoreBucketPairs(bucketsConfig, incrementalArtifact)
+				restoreBucketPairs, err := config.BuildRestoreBucketPairs(bucketsConfig, incrementalArtifact)
 				if err != nil {
 					exitWithError(fmt.Sprintf("Failed to establish session: %s", err.Error()))
 				}
@@ -116,39 +115,6 @@ func (c clock) Now() string {
 func exitWithError(a ...interface{}) {
 	fmt.Fprintln(os.Stderr, a...)
 	os.Exit(1)
-}
-
-func makeBuckets(config map[string]BucketConfig) (map[string]s3.VersionedBucket, error) {
-	var buckets = map[string]s3.VersionedBucket{}
-
-	for identifier, bucketConfig := range config {
-		s3Bucket, err := s3.NewBucket(
-			bucketConfig.Name,
-			bucketConfig.Region,
-			bucketConfig.Endpoint,
-			s3.AccessKey{
-				Id:     bucketConfig.AwsAccessKeyId,
-				Secret: bucketConfig.AwsSecretAccessKey,
-			},
-			bucketConfig.UseIAMProfile,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		buckets[identifier] = s3Bucket
-	}
-
-	return buckets, nil
-}
-
-type BucketConfig struct {
-	Name               string `json:"name"`
-	Region             string `json:"region"`
-	AwsAccessKeyId     string `json:"aws_access_key_id"`
-	AwsSecretAccessKey string `json:"aws_secret_access_key"`
-	Endpoint           string `json:"endpoint"`
-	UseIAMProfile      bool   `json:"use_iam_profile"`
 }
 
 func parseFlags() (CommandFlags, error) {

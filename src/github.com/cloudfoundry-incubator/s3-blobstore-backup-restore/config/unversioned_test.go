@@ -166,8 +166,9 @@ var _ = Describe("Unversioned", func() {
 				existingBlobsArtifact,
 			)
 
-			Expect(err).To(MatchError(
-				"failed to find bucket identifier 'bucket1' in buckets config",
+			Expect(err).To(Or(
+				MatchError("failed to find bucket identifier 'bucket1' in buckets config"),
+				MatchError("failed to find bucket identifier 'bucket2' in buckets config"),
 			))
 		})
 	})
