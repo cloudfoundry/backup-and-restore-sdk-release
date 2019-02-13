@@ -21,7 +21,7 @@ releases:
 - name: backup-and-restore-sdk
   version: latest
 - name: minio
-  version: latest
+  version: v2019-02-06T21-16-36Z
   url: https://bosh.io/d/github.com/minio/minio-boshrelease
 - name: os-conf
   version: latest
