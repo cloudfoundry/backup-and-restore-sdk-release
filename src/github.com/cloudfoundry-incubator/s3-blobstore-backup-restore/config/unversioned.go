@@ -67,12 +67,12 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig) (map[string
 
 func BuildBackupsToComplete(
 	configs map[string]UnversionedBucketConfig,
-	backupArtifact incremental.Artifact,
+	artifact incremental.Artifact,
 	existingBlobsArtifact incremental.Artifact,
 ) (map[string]incremental.BackupToComplete, error) {
 	backupsToComplete := map[string]incremental.BackupToComplete{}
 
-	bucketBackups, err := backupArtifact.Load()
+	bucketBackups, err := artifact.Load()
 	if err != nil {
 		return nil, err
 	}

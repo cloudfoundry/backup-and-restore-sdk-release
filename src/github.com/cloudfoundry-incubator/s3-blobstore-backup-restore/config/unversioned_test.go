@@ -61,16 +61,16 @@ var _ = Describe("Unversioned", func() {
 	})
 
 	Context("BuildBackupsToComplete", func() {
-		var backupArtifact *fakes.FakeArtifact
+		var artifact *fakes.FakeArtifact
 		var existingBlobsArtifact *fakes.FakeArtifact
 
 		BeforeEach(func() {
-			backupArtifact = new(fakes.FakeArtifact)
+			artifact = new(fakes.FakeArtifact)
 			existingBlobsArtifact = new(fakes.FakeArtifact)
 		})
 
 		It("builds backups to complete from a config", func() {
-			backupArtifact.LoadReturns(map[string]incremental.BucketBackup{
+			artifact.LoadReturns(map[string]incremental.BucketBackup{
 				"bucket1": {
 					BucketName:          "backup-name1",
 					BucketRegion:        "backup-region1",
@@ -101,13 +101,13 @@ var _ = Describe("Unversioned", func() {
 
 			backupsToComplete, err := config.BuildBackupsToComplete(
 				configs,
-				backupArtifact,
+				artifact,
 				existingBlobsArtifact,
 			)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(backupsToComplete).To(HaveLen(2))
-			Expect(backupArtifact.LoadCallCount()).To(Equal(1))
+			Expect(artifact.LoadCallCount()).To(Equal(1))
 			Expect(existingBlobsArtifact.LoadCallCount()).To(Equal(1))
 			for _, n := range []string{"1", "2"} {
 				Expect(backupsToComplete).To(HaveKey("bucket" + n))
@@ -133,11 +133,11 @@ var _ = Describe("Unversioned", func() {
 		})
 
 		It("returns error when it cannot load backup artifact", func() {
-			backupArtifact.LoadReturns(nil, errors.New("fake load error"))
+			artifact.LoadReturns(nil, errors.New("fake load error"))
 
 			_, err := config.BuildBackupsToComplete(
 				configs,
-				backupArtifact,
+				artifact,
 				existingBlobsArtifact,
 			)
 
@@ -149,7 +149,7 @@ var _ = Describe("Unversioned", func() {
 
 			_, err := config.BuildBackupsToComplete(
 				configs,
-				backupArtifact,
+				artifact,
 				existingBlobsArtifact,
 			)
 
@@ -157,12 +157,12 @@ var _ = Describe("Unversioned", func() {
 		})
 
 		It("returns error when a configured bucketID is not in the existing blobs artifact", func() {
-			backupArtifact.LoadReturns(map[string]incremental.BucketBackup{}, nil)
+			artifact.LoadReturns(map[string]incremental.BucketBackup{}, nil)
 			existingBlobsArtifact.LoadReturns(map[string]incremental.BucketBackup{}, nil)
 
 			_, err := config.BuildBackupsToComplete(
 				configs,
-				backupArtifact,
+				artifact,
 				existingBlobsArtifact,
 			)
 
@@ -174,14 +174,14 @@ var _ = Describe("Unversioned", func() {
 	})
 
 	Context("BuildRestoreBucketPairs", func() {
-		var backupArtifact *fakes.FakeArtifact
+		var artifact *fakes.FakeArtifact
 
 		BeforeEach(func() {
-			backupArtifact = new(fakes.FakeArtifact)
+			artifact = new(fakes.FakeArtifact)
 		})
 
 		It("builds restore bucket pairs from a config and a backup artifact", func() {
-			backupArtifact.LoadReturns(map[string]incremental.BucketBackup{
+			artifact.LoadReturns(map[string]incremental.BucketBackup{
 				"bucket1": {
 					BucketName:          "backup-name1",
 					BucketRegion:        "backup-region1",
@@ -194,7 +194,7 @@ var _ = Describe("Unversioned", func() {
 				},
 			}, nil)
 
-			restoreBucketPairs, err := config.BuildRestoreBucketPairs(configs, backupArtifact)
+			restoreBucketPairs, err := config.BuildRestoreBucketPairs(configs, artifact)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(restoreBucketPairs).To(HaveLen(2))
@@ -204,9 +204,9 @@ var _ = Describe("Unversioned", func() {
 		})
 
 		It("returns error when it cannot load backup artifact", func() {
-			backupArtifact.LoadReturns(nil, errors.New("fake load error"))
+			artifact.LoadReturns(nil, errors.New("fake load error"))
 
-			_, err := config.BuildRestoreBucketPairs(configs, backupArtifact)
+			_, err := config.BuildRestoreBucketPairs(configs, artifact)
 
 			Expect(err).To(MatchError(ContainSubstring("fake load error")))
 		})
