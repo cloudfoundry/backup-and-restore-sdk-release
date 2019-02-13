@@ -142,48 +142,6 @@ func makeBuckets(config map[string]BucketConfig) (map[string]s3.VersionedBucket,
 	return buckets, nil
 }
 
-func makeRestoreBucketPairs(config map[string]config.UnversionedBucketConfig, artifact incremental.Artifact) (map[string]unversioned.RestoreBucketPair, error) {
-	var buckets = map[string]unversioned.RestoreBucketPair{}
-	bucketBackups, _ := artifact.Load()
-
-	for identifier, bucketConfig := range config {
-		liveBucket, err := s3.NewBucket(
-			bucketConfig.Name,
-			bucketConfig.Region,
-			bucketConfig.Endpoint,
-			s3.AccessKey{
-				Id:     bucketConfig.AwsAccessKeyId,
-				Secret: bucketConfig.AwsSecretAccessKey,
-			},
-			bucketConfig.UseIAMProfile,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		backupBucket, err := s3.NewBucket(
-			bucketBackups[identifier].BucketName,
-			bucketBackups[identifier].BucketRegion,
-			bucketConfig.Endpoint,
-			s3.AccessKey{
-				Id:     bucketConfig.AwsAccessKeyId,
-				Secret: bucketConfig.AwsSecretAccessKey,
-			},
-			bucketConfig.UseIAMProfile,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		buckets[identifier] = unversioned.NewRestoreBucketPair(
-			liveBucket,
-			backupBucket,
-		)
-	}
-
-	return buckets, nil
-}
-
 type BucketConfig struct {
 	Name               string `json:"name"`
 	Region             string `json:"region"`

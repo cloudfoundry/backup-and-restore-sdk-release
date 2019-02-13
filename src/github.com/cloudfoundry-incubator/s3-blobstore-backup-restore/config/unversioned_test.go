@@ -171,4 +171,43 @@ var _ = Describe("Unversioned", func() {
 			))
 		})
 	})
+
+	Context("BuildRestoreBucketPairs", func() {
+		var backupArtifact *fakes.FakeArtifact
+
+		BeforeEach(func() {
+			backupArtifact = new(fakes.FakeArtifact)
+		})
+
+		It("builds restore bucket pairs from a config and a backup artifact", func() {
+			backupArtifact.LoadReturns(map[string]incremental.BucketBackup{
+				"bucket1": {
+					BucketName:          "backup-name1",
+					BucketRegion:        "backup-region1",
+					BackupDirectoryPath: "new-backup-dir1",
+				},
+				"bucket2": {
+					BucketName:          "backup-name2",
+					BucketRegion:        "backup-region2",
+					BackupDirectoryPath: "new-backup-dir2",
+				},
+			}, nil)
+
+			restoreBucketPairs, err := config.BuildRestoreBucketPairs(configs, backupArtifact)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(restoreBucketPairs).To(HaveLen(2))
+			for _, n := range []string{"1", "2"} {
+				Expect(restoreBucketPairs).To(HaveKey("bucket" + n))
+			}
+		})
+
+		It("returns error when it cannot load backup artifact", func() {
+			backupArtifact.LoadReturns(nil, errors.New("fake load error"))
+
+			_, err := config.BuildRestoreBucketPairs(configs, backupArtifact)
+
+			Expect(err).To(MatchError(ContainSubstring("fake load error")))
+		})
+	})
 })

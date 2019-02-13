@@ -3,6 +3,8 @@ package config
 import (
 	"fmt"
 
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/unversioned"
+
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
 )
@@ -128,4 +130,53 @@ func BuildBackupsToComplete(
 	}
 
 	return backupsToComplete, nil
+}
+
+func BuildRestoreBucketPairs(
+	configs map[string]UnversionedBucketConfig,
+	artifact incremental.Artifact,
+) (map[string]unversioned.RestoreBucketPair, error) {
+	buckets := map[string]unversioned.RestoreBucketPair{}
+
+	bucketBackups, err := artifact.Load()
+	if err != nil {
+		return nil, err
+	}
+
+	for bucketID, config := range configs {
+		liveBucket, err := s3.NewBucket(
+			config.Name,
+			config.Region,
+			config.Endpoint,
+			s3.AccessKey{
+				Id:     config.AwsAccessKeyId,
+				Secret: config.AwsSecretAccessKey,
+			},
+			config.UseIAMProfile,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		backupBucket, err := s3.NewBucket(
+			bucketBackups[bucketID].BucketName,
+			bucketBackups[bucketID].BucketRegion,
+			config.Endpoint,
+			s3.AccessKey{
+				Id:     config.AwsAccessKeyId,
+				Secret: config.AwsSecretAccessKey,
+			},
+			config.UseIAMProfile,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		buckets[bucketID] = unversioned.NewRestoreBucketPair(
+			liveBucket,
+			backupBucket,
+		)
+	}
+
+	return buckets, nil
 }
