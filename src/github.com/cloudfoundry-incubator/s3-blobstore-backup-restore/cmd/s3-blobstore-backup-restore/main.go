@@ -79,7 +79,7 @@ func main() {
 			{
 				existingBackupBlobsArtifact := incremental.NewArtifact(commandFlags.ExistingBackupBlobsArtifactFilePath)
 				backupArtifact := incremental.NewArtifact(commandFlags.ArtifactFilePath)
-				backupsToComplete, err := makeIncrementalBackupsToComplete(bucketsConfig, backupArtifact, existingBackupBlobsArtifact)
+				backupsToComplete, err := config.BuildBackupsToComplete(bucketsConfig, backupArtifact, existingBackupBlobsArtifact)
 				if err != nil {
 					exitWithError(fmt.Sprintf("Failed to deserialise incremental backups to complete: %s", err.Error()))
 				}
@@ -89,7 +89,7 @@ func main() {
 			}
 		default:
 			{
-				backupsToStart, err := config.BuildIncrementalBackupsToStart(bucketsConfig)
+				backupsToStart, err := config.BuildBackupsToStart(bucketsConfig)
 				if err != nil {
 					exitWithError(fmt.Sprintf("Failed to deserialise incremental backups to start: %s", err.Error()))
 				}
@@ -140,49 +140,6 @@ func makeBuckets(config map[string]BucketConfig) (map[string]s3.VersionedBucket,
 	}
 
 	return buckets, nil
-}
-
-func makeIncrementalBackupsToComplete(config map[string]config.UnversionedBucketConfig, backupArtifact, existingBlobsArtifact incremental.Artifact) (map[string]incremental.BackupToComplete, error) {
-	var backupsToComplete = map[string]incremental.BackupToComplete{}
-
-	existingBucketBackups, _ := existingBlobsArtifact.Load()
-	bucketBackups, _ := backupArtifact.Load()
-
-	for identifier, bucketConfig := range config {
-		existingBucketBackup := existingBucketBackups[identifier]
-		bucketBackup := bucketBackups[identifier]
-
-		backupBucket, err := s3.NewBucket(
-			bucketBackup.BucketName,
-			bucketConfig.Backup.Region,
-			bucketConfig.Endpoint,
-			s3.AccessKey{
-				Id:     bucketConfig.AwsAccessKeyId,
-				Secret: bucketConfig.AwsSecretAccessKey,
-			},
-			bucketConfig.UseIAMProfile,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		var blobsToCopy []incremental.BackedUpBlob
-
-		for _, blobPath := range existingBucketBackup.Blobs {
-			blobsToCopy = append(blobsToCopy, incremental.BackedUpBlob{Path: blobPath, BackupDirectoryPath: existingBucketBackup.BackupDirectoryPath})
-		}
-
-		backupsToComplete[identifier] = incremental.BackupToComplete{
-			BackupBucket: backupBucket,
-			BackupDirectory: incremental.BackupDirectory{
-				Path:   bucketBackup.BackupDirectoryPath,
-				Bucket: backupBucket,
-			},
-			BlobsToCopy: blobsToCopy,
-		}
-	}
-
-	return backupsToComplete, nil
 }
 
 func makeRestoreBucketPairs(config map[string]config.UnversionedBucketConfig, artifact incremental.Artifact) (map[string]unversioned.RestoreBucketPair, error) {
