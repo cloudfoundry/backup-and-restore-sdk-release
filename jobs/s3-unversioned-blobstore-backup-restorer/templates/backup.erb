@@ -7,14 +7,14 @@ backup() {
   /var/vcap/packages/s3-blobstore-backup-restorer/bin/s3-blobstore-backup-restore \
     --backup \
     --unversioned-backup-starter \
-    --existing-backup-blobs-artifact "${BBR_ARTIFACT_DIRECTORY}/existing-backup-blobs.json" \
+    --existing-backup-blobs-artifact "/var/vcap/store/s3-blobstore-backup-restore/existing-backup-blobs.json" \
     --config /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/config/buckets.json \
     --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
 
   /var/vcap/packages/s3-blobstore-backup-restorer/bin/s3-blobstore-backup-restore \
     --backup \
     --unversioned-backup-completer \
-    --existing-backup-blobs-artifact "${BBR_ARTIFACT_DIRECTORY}/existing-backup-blobs.json" \
+    --existing-backup-blobs-artifact "/var/vcap/store/s3-blobstore-backup-restore/existing-backup-blobs.json" \
     --config /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/config/buckets.json \
     --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
 }
