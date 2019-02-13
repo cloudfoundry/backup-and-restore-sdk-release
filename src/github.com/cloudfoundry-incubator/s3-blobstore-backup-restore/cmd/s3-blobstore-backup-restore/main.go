@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/config"
+
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/unversioned"
 
 	"encoding/json"
@@ -30,7 +32,7 @@ func main() {
 		exitWithError(err.Error())
 	}
 
-	config, err := ioutil.ReadFile(commandFlags.ConfigPath)
+	rawConfig, err := ioutil.ReadFile(commandFlags.ConfigPath)
 	if err != nil {
 		exitWithError("Failed to read config: %s", err.Error())
 	}
@@ -38,7 +40,7 @@ func main() {
 	var runner Runner
 	if commandFlags.Versioned {
 		var bucketsConfig map[string]BucketConfig
-		err = json.Unmarshal(config, &bucketsConfig)
+		err = json.Unmarshal(rawConfig, &bucketsConfig)
 		if err != nil {
 			exitWithError("Failed to parse config: %s", err.Error())
 		}
@@ -56,8 +58,8 @@ func main() {
 			runner = versioned.NewBackuper(buckets, artifact)
 		}
 	} else {
-		var bucketsConfig map[string]UnversionedBucketConfig
-		err = json.Unmarshal(config, &bucketsConfig)
+		var bucketsConfig map[string]config.UnversionedBucketConfig
+		err = json.Unmarshal(rawConfig, &bucketsConfig)
 		if err != nil {
 			exitWithError("Failed to parse config: %s", err.Error())
 		}
@@ -87,7 +89,7 @@ func main() {
 			}
 		default:
 			{
-				backupsToStart, err := makeIncrementalBackupsToStart(bucketsConfig)
+				backupsToStart, err := config.BuildIncrementalBackupsToStart(bucketsConfig)
 				if err != nil {
 					exitWithError(fmt.Sprintf("Failed to deserialise incremental backups to start: %s", err.Error()))
 				}
@@ -140,55 +142,7 @@ func makeBuckets(config map[string]BucketConfig) (map[string]s3.VersionedBucket,
 	return buckets, nil
 }
 
-func makeIncrementalBackupsToStart(config map[string]UnversionedBucketConfig) (map[string]incremental.BackupToStart, error) {
-	var buckets = map[string]incremental.BackupToStart{}
-
-	for identifier, bucketConfig := range config {
-		liveBucket, err := s3.NewBucket(
-			bucketConfig.Name,
-			bucketConfig.Region,
-			bucketConfig.Endpoint,
-			s3.AccessKey{
-				Id:     bucketConfig.AwsAccessKeyId,
-				Secret: bucketConfig.AwsSecretAccessKey,
-			},
-			bucketConfig.UseIAMProfile,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		backupBucket, err := s3.NewBucket(
-			bucketConfig.Backup.Name,
-			bucketConfig.Backup.Region,
-			bucketConfig.Endpoint,
-			s3.AccessKey{
-				Id:     bucketConfig.AwsAccessKeyId,
-				Secret: bucketConfig.AwsSecretAccessKey,
-			},
-			bucketConfig.UseIAMProfile,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		bucketPair := incremental.BucketPair{
-			LiveBucket:   liveBucket,
-			BackupBucket: backupBucket,
-		}
-
-		buckets[identifier] = incremental.BackupToStart{
-			BucketPair: bucketPair,
-			BackupDirectoryFinder: incremental.Finder{
-				Bucket: backupBucket,
-			},
-		}
-	}
-
-	return buckets, nil
-}
-
-func makeIncrementalBackupsToComplete(config map[string]UnversionedBucketConfig, backupArtifact, existingBlobsArtifact incremental.Artifact) (map[string]incremental.BackupToComplete, error) {
+func makeIncrementalBackupsToComplete(config map[string]config.UnversionedBucketConfig, backupArtifact, existingBlobsArtifact incremental.Artifact) (map[string]incremental.BackupToComplete, error) {
 	var backupsToComplete = map[string]incremental.BackupToComplete{}
 
 	existingBucketBackups, _ := existingBlobsArtifact.Load()
@@ -231,7 +185,7 @@ func makeIncrementalBackupsToComplete(config map[string]UnversionedBucketConfig,
 	return backupsToComplete, nil
 }
 
-func makeRestoreBucketPairs(config map[string]UnversionedBucketConfig, artifact incremental.Artifact) (map[string]unversioned.RestoreBucketPair, error) {
+func makeRestoreBucketPairs(config map[string]config.UnversionedBucketConfig, artifact incremental.Artifact) (map[string]unversioned.RestoreBucketPair, error) {
 	var buckets = map[string]unversioned.RestoreBucketPair{}
 	bucketBackups, _ := artifact.Load()
 
@@ -280,16 +234,6 @@ type BucketConfig struct {
 	AwsSecretAccessKey string `json:"aws_secret_access_key"`
 	Endpoint           string `json:"endpoint"`
 	UseIAMProfile      bool   `json:"use_iam_profile"`
-}
-
-type BackupBucketConfig struct {
-	Name   string `json:"name"`
-	Region string `json:"region"`
-}
-
-type UnversionedBucketConfig struct {
-	BucketConfig
-	Backup BackupBucketConfig `json:"backup"`
 }
 
 func parseFlags() (CommandFlags, error) {
