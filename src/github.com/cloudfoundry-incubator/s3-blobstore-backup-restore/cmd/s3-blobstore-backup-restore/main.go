@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/config"
 
@@ -15,29 +16,42 @@ import (
 
 	"fmt"
 
-	"time"
-
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/versioned"
 )
+
+type CommandFlags struct {
+	ConfigPath                          string
+	IsRestore                           bool
+	ArtifactFilePath                    string
+	ExistingBackupBlobsArtifactFilePath string
+	Versioned                           bool
+	UnversionedCompleter                bool
+}
 
 type Runner interface {
 	Run() error
 }
 
+type clock struct{}
+
+func (c clock) Now() string {
+	return time.Now().Format("2006_01_02_15_04_05")
+}
+
 func main() {
-	commandFlags, err := parseFlags()
+	flags, err := parseFlags()
 	if err != nil {
 		exitWithError(err.Error())
 	}
 
-	rawConfig, err := ioutil.ReadFile(commandFlags.ConfigPath)
+	rawConfig, err := ioutil.ReadFile(flags.ConfigPath)
 	if err != nil {
 		exitWithError("Failed to read config: %s", err.Error())
 	}
 
 	var runner Runner
-	if commandFlags.Versioned {
+	if flags.Versioned {
 		var bucketsConfig map[string]config.BucketConfig
 		err = json.Unmarshal(rawConfig, &bucketsConfig)
 		if err != nil {
@@ -49,9 +63,9 @@ func main() {
 			exitWithError("Failed to establish session: %s", err.Error())
 		}
 
-		artifact := versioned.NewFileArtifact(commandFlags.ArtifactFilePath)
+		artifact := versioned.NewFileArtifact(flags.ArtifactFilePath)
 
-		if commandFlags.IsRestore {
+		if flags.IsRestore {
 			runner = versioned.NewRestorer(buckets, artifact)
 		} else {
 			runner = versioned.NewBackuper(buckets, artifact)
@@ -64,20 +78,20 @@ func main() {
 		}
 
 		switch {
-		case commandFlags.IsRestore:
+		case flags.IsRestore:
 			{
-				incrementalArtifact := incremental.NewArtifact(commandFlags.ArtifactFilePath)
-				restoreBucketPairs, err := config.BuildRestoreBucketPairs(bucketsConfig, incrementalArtifact)
+				backupArtifact := incremental.NewArtifact(flags.ArtifactFilePath)
+				restoreBucketPairs, err := config.BuildRestoreBucketPairs(bucketsConfig, backupArtifact)
 				if err != nil {
 					exitWithError(fmt.Sprintf("Failed to establish session: %s", err.Error()))
 				}
 
-				runner = unversioned.NewRestorer(restoreBucketPairs, incrementalArtifact)
+				runner = unversioned.NewRestorer(restoreBucketPairs, backupArtifact)
 			}
-		case commandFlags.UnversionedCompleter:
+		case flags.UnversionedCompleter:
 			{
-				existingBackupBlobsArtifact := incremental.NewArtifact(commandFlags.ExistingBackupBlobsArtifactFilePath)
-				backupArtifact := incremental.NewArtifact(commandFlags.ArtifactFilePath)
+				existingBackupBlobsArtifact := incremental.NewArtifact(flags.ExistingBackupBlobsArtifactFilePath)
+				backupArtifact := incremental.NewArtifact(flags.ArtifactFilePath)
 				backupsToComplete, err := config.BuildBackupsToComplete(bucketsConfig, backupArtifact, existingBackupBlobsArtifact)
 				if err != nil {
 					exitWithError(fmt.Sprintf("Failed to deserialise incremental backups to complete: %s", err.Error()))
@@ -92,8 +106,8 @@ func main() {
 				if err != nil {
 					exitWithError(fmt.Sprintf("Failed to deserialise incremental backups to start: %s", err.Error()))
 				}
-				backupArtifact := incremental.NewArtifact(commandFlags.ArtifactFilePath)
-				existingBackupBlobsArtifact := incremental.NewArtifact(commandFlags.ExistingBackupBlobsArtifactFilePath)
+				backupArtifact := incremental.NewArtifact(flags.ArtifactFilePath)
+				existingBackupBlobsArtifact := incremental.NewArtifact(flags.ExistingBackupBlobsArtifactFilePath)
 				runner = incremental.NewBackupStarter(backupsToStart, clock{}, backupArtifact, existingBackupBlobsArtifact)
 			}
 		}
@@ -103,13 +117,6 @@ func main() {
 	if err != nil {
 		exitWithError(err.Error())
 	}
-}
-
-type clock struct {
-}
-
-func (c clock) Now() string {
-	return time.Now().Format("2006_01_02_15_04_05")
 }
 
 func exitWithError(a ...interface{}) {
@@ -153,13 +160,4 @@ func parseFlags() (CommandFlags, error) {
 		Versioned:                           !*unversionedBackupStarter && !*unversionedBackupCompleter && !*unversionedRestore,
 		UnversionedCompleter:                *unversionedBackupCompleter,
 	}, nil
-}
-
-type CommandFlags struct {
-	ConfigPath                          string
-	IsRestore                           bool
-	ArtifactFilePath                    string
-	ExistingBackupBlobsArtifactFilePath string
-	Versioned                           bool
-	UnversionedCompleter                bool
 }
