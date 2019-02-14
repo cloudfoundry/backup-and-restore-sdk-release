@@ -1,9 +1,8 @@
-package unversioned_test
+package incremental_test
 
 import (
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental/fakes"
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/unversioned"
 
 	"fmt"
 
@@ -15,7 +14,7 @@ var _ = Describe("BucketPair", func() {
 	var (
 		liveBucket           *fakes.FakeBucket
 		backupBucket         *fakes.FakeBucket
-		bucketPair           unversioned.RestoreBucketPair
+		bucketPair           incremental.RestoreBucketPair
 		bucketBackup         incremental.BucketBackup
 		err                  error
 		configLiveBucket     string
@@ -32,7 +31,7 @@ var _ = Describe("BucketPair", func() {
 
 		liveBucket = new(fakes.FakeBucket)
 		backupBucket = new(fakes.FakeBucket)
-		bucketPair = unversioned.NewRestoreBucketPair(liveBucket, backupBucket)
+		bucketPair = incremental.NewRestoreBucketPair(liveBucket, backupBucket)
 
 		liveBucket.NameReturns(configLiveBucket)
 		liveBucket.RegionReturns(configLiveRegion)
@@ -87,13 +86,13 @@ var _ = Describe("BucketPair", func() {
 	Describe("CheckValidity", func() {
 		Context("when the live bucket and the backup bucket are not the same", func() {
 			It("returns nil", func() {
-				Expect(unversioned.NewRestoreBucketPair(liveBucket, backupBucket).CheckValidity()).To(BeNil())
+				Expect(incremental.NewRestoreBucketPair(liveBucket, backupBucket).CheckValidity()).To(BeNil())
 			})
 		})
 
 		Context("when the live bucket and the backup bucket are the same", func() {
 			It("returns an error", func() {
-				Expect(unversioned.NewRestoreBucketPair(liveBucket, liveBucket).CheckValidity()).To(MatchError("live bucket and backup bucket cannot be the same"))
+				Expect(incremental.NewRestoreBucketPair(liveBucket, liveBucket).CheckValidity()).To(MatchError("live bucket and backup bucket cannot be the same"))
 			})
 		})
 	})
