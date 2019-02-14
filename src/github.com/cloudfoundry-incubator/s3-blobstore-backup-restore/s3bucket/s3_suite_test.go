@@ -1,4 +1,4 @@
-package s3_test
+package s3bucket_test
 
 import (
 	. "github.com/cloudfoundry-incubator/backup-and-restore-sdk-release-system-tests"

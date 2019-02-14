@@ -1,9 +1,10 @@
-package s3_test
+package s3bucket_test
 
 import (
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -28,17 +29,35 @@ var _ = Describe("IncrementalBucket", func() {
 			TestECSSecretAccessKey,
 		)
 	})
+
+	Describe("AWS S3 large file test", func() {
+		RunLargeFileTest(
+			"eu-west-1", "",
+			TestAWSAccessKeyID,
+			TestAWSSecretAccessKey,
+			"large-blob-test-bucket-unversioned")
+	})
+
+	XDescribe("ECS S3-compatible buckets large file test", func() {
+		RunLargeFileTest(
+			"eu-west-1",
+			"https://object.ecstestdrive.com",
+			TestECSAccessKeyID,
+			TestECSSecretAccessKey,
+			"sdk-unversioned-big-file-unit-test",
+		)
+	})
 })
 
 func RunIncrementalBucketContractTests(liveRegion, backupRegion, awsEndpoint, accessKey, secretKey string) {
 	var (
 		liveBucketName string
-		liveBucket     s3.Bucket
-		creds          s3.AccessKey
+		liveBucket     s3bucket.Bucket
+		creds          s3bucket.AccessKey
 	)
 
 	BeforeEach(func() {
-		creds = s3.AccessKey{Id: accessKey, Secret: secretKey}
+		creds = s3bucket.AccessKey{Id: accessKey, Secret: secretKey}
 
 		liveBucketName = setUpUnversionedBucket(liveRegion, awsEndpoint, creds)
 		uploadFile(liveBucketName, awsEndpoint, "path1/blob1", "blob1-content", creds)
@@ -46,7 +65,7 @@ func RunIncrementalBucketContractTests(liveRegion, backupRegion, awsEndpoint, ac
 		uploadFile(liveBucketName, awsEndpoint, "path2/blob2", "", creds)
 
 		var err error
-		liveBucket, err = s3.NewBucket(liveBucketName, liveRegion, awsEndpoint, creds, false)
+		liveBucket, err = s3bucket.NewBucket(liveBucketName, liveRegion, awsEndpoint, creds, false)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -59,9 +78,9 @@ func RunIncrementalBucketContractTests(liveRegion, backupRegion, awsEndpoint, ac
 			It("lists all the blobs in the bucket", func() {
 				blobs, err := liveBucket.ListBlobs("")
 
-				blob1 := s3.NewBlob("path1/blob1")
-				blob2 := s3.NewBlob("live/location/leaf/node")
-				blob3 := s3.NewBlob("path2/blob2")
+				blob1 := s3bucket.NewBlob("path1/blob1")
+				blob2 := s3bucket.NewBlob("live/location/leaf/node")
+				blob3 := s3bucket.NewBlob("path2/blob2")
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(blobs).To(ConsistOf(blob1, blob2, blob3))
@@ -69,7 +88,7 @@ func RunIncrementalBucketContractTests(liveRegion, backupRegion, awsEndpoint, ac
 
 			Context("when s3 list-objects errors", func() {
 				It("errors", func() {
-					bucketObjectUnderTest, err := s3.NewBucket("does-not-exist", liveRegion, awsEndpoint, creds, false)
+					bucketObjectUnderTest, err := s3bucket.NewBucket("does-not-exist", liveRegion, awsEndpoint, creds, false)
 					Expect(err).NotTo(HaveOccurred())
 
 					_, err = bucketObjectUnderTest.ListBlobs("")
@@ -80,7 +99,7 @@ func RunIncrementalBucketContractTests(liveRegion, backupRegion, awsEndpoint, ac
 
 			Context("when the bucket has a lot of blobs", func() {
 				It("works", func() {
-					bucketObjectUnderTest, err := s3.NewBucket("sdk-unversioned-big-bucket-integration-test", liveRegion, awsEndpoint, creds, false)
+					bucketObjectUnderTest, err := s3bucket.NewBucket("sdk-unversioned-big-bucket-integration-test", liveRegion, awsEndpoint, creds, false)
 					Expect(err).NotTo(HaveOccurred())
 
 					blobs, err := bucketObjectUnderTest.ListBlobs("")
@@ -96,7 +115,7 @@ func RunIncrementalBucketContractTests(liveRegion, backupRegion, awsEndpoint, ac
 				blobs, err := liveBucket.ListBlobs("live/location")
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(blobs).To(ConsistOf(s3.NewBlob("leaf/node")))
+				Expect(blobs).To(ConsistOf(s3bucket.NewBlob("leaf/node")))
 			})
 		})
 	})
@@ -118,7 +137,7 @@ func RunIncrementalBucketContractTests(liveRegion, backupRegion, awsEndpoint, ac
 
 		Context("when s3 list-objects errors", func() {
 			It("errors", func() {
-				bucketObjectUnderTest, err := s3.NewBucket("does-not-exist", liveRegion, awsEndpoint, creds, false)
+				bucketObjectUnderTest, err := s3bucket.NewBucket("does-not-exist", liveRegion, awsEndpoint, creds, false)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = bucketObjectUnderTest.ListDirectories()
@@ -154,14 +173,14 @@ func RunIncrementalBucketContractTests(liveRegion, backupRegion, awsEndpoint, ac
 	Describe("CopyBlobFromBucket", func() {
 		var (
 			backupBucketName string
-			backupBucket     s3.Bucket
+			backupBucket     s3bucket.Bucket
 		)
 
 		BeforeEach(func() {
-			creds = s3.AccessKey{Id: accessKey, Secret: secretKey}
+			creds = s3bucket.AccessKey{Id: accessKey, Secret: secretKey}
 			backupBucketName = setUpUnversionedBucket(backupRegion, awsEndpoint, creds)
 			var err error
-			backupBucket, err = s3.NewBucket(backupBucketName, backupRegion, awsEndpoint, creds, false)
+			backupBucket, err = s3bucket.NewBucket(backupBucketName, backupRegion, awsEndpoint, creds, false)
 
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -204,7 +223,7 @@ func RunIncrementalBucketContractTests(liveRegion, backupRegion, awsEndpoint, ac
 
 		Context("when the bucket does not exist", func() {
 			It("errors", func() {
-				bucket, err := s3.NewBucket("does-not-exist", liveRegion, awsEndpoint, creds, false)
+				bucket, err := s3bucket.NewBucket("does-not-exist", liveRegion, awsEndpoint, creds, false)
 				Expect(err).NotTo(HaveOccurred())
 
 				err = bucket.UploadBlob("some/blob", "blob contents")
@@ -235,12 +254,53 @@ func RunIncrementalBucketContractTests(liveRegion, backupRegion, awsEndpoint, ac
 
 		Context("when the bucket does not exist", func() {
 			It("errors", func() {
-				bucket, err := s3.NewBucket("does-not-exist", liveRegion, awsEndpoint, creds, false)
+				bucket, err := s3bucket.NewBucket("does-not-exist", liveRegion, awsEndpoint, creds, false)
 				Expect(err).NotTo(HaveOccurred())
 				_, err = bucket.HasBlob("does-not-exist-blob")
 
 				Expect(err).To(MatchError(ContainSubstring("failed to check if blob exists")))
 			})
 		})
+	})
+}
+
+func RunLargeFileTest(region, endpoint, accessKey, secretKey, preExistingBigFileBucketName string) {
+	var (
+		creds      s3bucket.AccessKey
+		bucketName string
+	)
+
+	BeforeEach(func() {
+		creds = s3bucket.AccessKey{
+			Id:     accessKey,
+			Secret: secretKey,
+		}
+
+		bucketName = setUpUnversionedBucket("eu-west-1", endpoint, creds)
+	})
+
+	AfterEach(func() {
+		tearDownBucket(bucketName, endpoint, creds)
+	})
+
+	It("works", func() {
+		bucket, err := s3bucket.NewBucket(bucketName, region, endpoint, creds, false)
+		Expect(err).NotTo(HaveOccurred())
+
+		srcBucket, err := s3bucket.NewBucket(preExistingBigFileBucketName, region, endpoint, creds, false)
+		Expect(err).NotTo(HaveOccurred())
+
+		err = bucket.CopyBlobFromBucket(srcBucket, "big_file", "path/to/file")
+
+		By("succeeding")
+		Expect(err).NotTo(HaveOccurred())
+
+		By("copying the large file")
+		Expect(listFiles(bucketName, endpoint, creds)).To(ConsistOf("path/to/file/big_file"))
+
+		By("not corrupting the large file")
+		Expect(
+			shasum(downloadFileToTmp(bucketName, endpoint, "path/to/file/big_file", creds))).To(
+			Equal("91d50642dd930e9542c39d36f0516d45f4e1af0d"))
 	})
 }

@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
 )
 
 type FakeVersionedBucket struct {
@@ -40,15 +40,15 @@ type FakeVersionedBucket struct {
 	copyVersionReturnsOnCall map[int]struct {
 		result1 error
 	}
-	ListVersionsStub        func() ([]s3.Version, error)
+	ListVersionsStub        func() ([]s3bucket.Version, error)
 	listVersionsMutex       sync.RWMutex
 	listVersionsArgsForCall []struct{}
 	listVersionsReturns     struct {
-		result1 []s3.Version
+		result1 []s3bucket.Version
 		result2 error
 	}
 	listVersionsReturnsOnCall map[int]struct {
-		result1 []s3.Version
+		result1 []s3bucket.Version
 		result2 error
 	}
 	CheckIfVersionedStub        func() error
@@ -195,7 +195,7 @@ func (fake *FakeVersionedBucket) CopyVersionReturnsOnCall(i int, result1 error) 
 	}{result1}
 }
 
-func (fake *FakeVersionedBucket) ListVersions() ([]s3.Version, error) {
+func (fake *FakeVersionedBucket) ListVersions() ([]s3bucket.Version, error) {
 	fake.listVersionsMutex.Lock()
 	ret, specificReturn := fake.listVersionsReturnsOnCall[len(fake.listVersionsArgsForCall)]
 	fake.listVersionsArgsForCall = append(fake.listVersionsArgsForCall, struct{}{})
@@ -216,24 +216,24 @@ func (fake *FakeVersionedBucket) ListVersionsCallCount() int {
 	return len(fake.listVersionsArgsForCall)
 }
 
-func (fake *FakeVersionedBucket) ListVersionsReturns(result1 []s3.Version, result2 error) {
+func (fake *FakeVersionedBucket) ListVersionsReturns(result1 []s3bucket.Version, result2 error) {
 	fake.ListVersionsStub = nil
 	fake.listVersionsReturns = struct {
-		result1 []s3.Version
+		result1 []s3bucket.Version
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeVersionedBucket) ListVersionsReturnsOnCall(i int, result1 []s3.Version, result2 error) {
+func (fake *FakeVersionedBucket) ListVersionsReturnsOnCall(i int, result1 []s3bucket.Version, result2 error) {
 	fake.ListVersionsStub = nil
 	if fake.listVersionsReturnsOnCall == nil {
 		fake.listVersionsReturnsOnCall = make(map[int]struct {
-			result1 []s3.Version
+			result1 []s3bucket.Version
 			result2 error
 		})
 	}
 	fake.listVersionsReturnsOnCall[i] = struct {
-		result1 []s3.Version
+		result1 []s3bucket.Version
 		result2 error
 	}{result1, result2}
 }
@@ -310,4 +310,4 @@ func (fake *FakeVersionedBucket) recordInvocation(key string, args []interface{}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ s3.VersionedBucket = new(FakeVersionedBucket)
+var _ s3bucket.VersionedBucket = new(FakeVersionedBucket)

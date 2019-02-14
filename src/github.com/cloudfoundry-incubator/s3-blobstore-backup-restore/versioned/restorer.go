@@ -3,15 +3,15 @@ package versioned
 import (
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
 )
 
 type Restorer struct {
-	destinationBuckets map[string]s3.VersionedBucket
+	destinationBuckets map[string]s3bucket.VersionedBucket
 	sourceArtifact     Artifact
 }
 
-func NewRestorer(destinationBuckets map[string]s3.VersionedBucket, sourceArtifact Artifact) Restorer {
+func NewRestorer(destinationBuckets map[string]s3bucket.VersionedBucket, sourceArtifact Artifact) Restorer {
 	return Restorer{destinationBuckets: destinationBuckets, sourceArtifact: sourceArtifact}
 }
 

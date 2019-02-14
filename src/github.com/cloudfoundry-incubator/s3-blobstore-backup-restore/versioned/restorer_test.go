@@ -3,10 +3,10 @@ package versioned_test
 import (
 	"errors"
 
-	s3fakes "github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3/fakes"
+	s3fakes "github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket/fakes"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/versioned/fakes"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/versioned"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -30,7 +30,7 @@ var _ = Describe("Restorer", func() {
 
 		artifact = new(fakes.FakeArtifact)
 
-		restorer = versioned.NewRestorer(map[string]s3.VersionedBucket{
+		restorer = versioned.NewRestorer(map[string]s3bucket.VersionedBucket{
 			"droplets":   dropletsBucket,
 			"buildpacks": buildpacksBucket,
 			"packages":   packagesBucket,
@@ -196,7 +196,7 @@ var _ = Describe("Restorer", func() {
 				},
 			}, nil)
 
-			restorer = versioned.NewRestorer(map[string]s3.VersionedBucket{
+			restorer = versioned.NewRestorer(map[string]s3bucket.VersionedBucket{
 				"droplets":   dropletsBucket,
 				"buildpacks": buildpacksBucket,
 				"packages":   packagesBucket,
@@ -229,7 +229,7 @@ var _ = Describe("Restorer", func() {
 				},
 			}, nil)
 
-			restorer = versioned.NewRestorer(map[string]s3.VersionedBucket{
+			restorer = versioned.NewRestorer(map[string]s3bucket.VersionedBucket{
 				"droplets": dropletsBucket,
 			}, artifact)
 		})

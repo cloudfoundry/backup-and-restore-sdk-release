@@ -6,8 +6,8 @@ import (
 
 	"errors"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
-	s3fakes "github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3/fakes"
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
+	s3fakes "github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket/fakes"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/versioned"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/versioned/fakes"
 )
@@ -30,7 +30,7 @@ var _ = Describe("Backuper", func() {
 
 		artifact = new(fakes.FakeArtifact)
 
-		backuper = versioned.NewBackuper(map[string]s3.VersionedBucket{
+		backuper = versioned.NewBackuper(map[string]s3bucket.VersionedBucket{
 			"droplets":   dropletsBucket,
 			"buildpacks": buildpacksBucket,
 			"packages":   packagesBucket,
@@ -45,7 +45,7 @@ var _ = Describe("Backuper", func() {
 		BeforeEach(func() {
 			dropletsBucket.NameReturns("my_droplets_bucket")
 			dropletsBucket.RegionReturns("my_droplets_region")
-			dropletsBucket.ListVersionsReturns([]s3.Version{
+			dropletsBucket.ListVersionsReturns([]s3bucket.Version{
 				{Key: "one", Id: "11", IsLatest: false},
 				{Key: "one", Id: "12", IsLatest: false},
 				{Key: "one", Id: "13", IsLatest: true},
@@ -55,14 +55,14 @@ var _ = Describe("Backuper", func() {
 
 			buildpacksBucket.NameReturns("my_buildpacks_bucket")
 			buildpacksBucket.RegionReturns("my_buildpacks_region")
-			buildpacksBucket.ListVersionsReturns([]s3.Version{
+			buildpacksBucket.ListVersionsReturns([]s3bucket.Version{
 				{Key: "three", Id: "31", IsLatest: false},
 				{Key: "three", Id: "32", IsLatest: true},
 			}, nil)
 
 			packagesBucket.NameReturns("my_packages_bucket")
 			packagesBucket.RegionReturns("my_packages_region")
-			packagesBucket.ListVersionsReturns([]s3.Version{
+			packagesBucket.ListVersionsReturns([]s3bucket.Version{
 				{Key: "four", Id: "41", IsLatest: false},
 				{Key: "four", Id: "43", IsLatest: true},
 				{Key: "four", Id: "42", IsLatest: false},
@@ -99,13 +99,13 @@ var _ = Describe("Backuper", func() {
 
 	Context("when retrieving the versions from the buckets fails", func() {
 		BeforeEach(func() {
-			dropletsBucket.ListVersionsReturns([]s3.Version{}, nil)
+			dropletsBucket.ListVersionsReturns([]s3bucket.Version{}, nil)
 			dropletsBucket.NameReturns("my_droplets_bucket")
 
-			buildpacksBucket.ListVersionsReturns([]s3.Version{}, errors.New("failed to retrieve versions"))
+			buildpacksBucket.ListVersionsReturns([]s3bucket.Version{}, errors.New("failed to retrieve versions"))
 			buildpacksBucket.NameReturns("my_buildpacks_bucket")
 
-			packagesBucket.ListVersionsReturns([]s3.Version{}, nil)
+			packagesBucket.ListVersionsReturns([]s3bucket.Version{}, nil)
 			packagesBucket.NameReturns("my_packages_bucket")
 		})
 
@@ -117,7 +117,7 @@ var _ = Describe("Backuper", func() {
 	Context("when there is a `null` VersionId", func() {
 		Context("when it's a latest version", func() {
 			BeforeEach(func() {
-				packagesBucket.ListVersionsReturns([]s3.Version{
+				packagesBucket.ListVersionsReturns([]s3bucket.Version{
 					{Key: "one", Id: "11", IsLatest: true},
 					{Key: "one", Id: "12", IsLatest: false},
 					{Key: "two", Id: "null", IsLatest: true},
@@ -133,7 +133,7 @@ var _ = Describe("Backuper", func() {
 
 		Context("when it's not a latest version", func() {
 			BeforeEach(func() {
-				packagesBucket.ListVersionsReturns([]s3.Version{
+				packagesBucket.ListVersionsReturns([]s3bucket.Version{
 					{Key: "one", Id: "11", IsLatest: true},
 					{Key: "one", Id: "12", IsLatest: false},
 					{Key: "two", Id: "21", IsLatest: true},
@@ -150,13 +150,13 @@ var _ = Describe("Backuper", func() {
 
 	Context("when storing the versions in the artifact fails", func() {
 		BeforeEach(func() {
-			dropletsBucket.ListVersionsReturns([]s3.Version{}, nil)
+			dropletsBucket.ListVersionsReturns([]s3bucket.Version{}, nil)
 			dropletsBucket.NameReturns("my_droplets_bucket")
 
-			buildpacksBucket.ListVersionsReturns([]s3.Version{}, nil)
+			buildpacksBucket.ListVersionsReturns([]s3bucket.Version{}, nil)
 			buildpacksBucket.NameReturns("my_buildpacks_bucket")
 
-			packagesBucket.ListVersionsReturns([]s3.Version{}, nil)
+			packagesBucket.ListVersionsReturns([]s3bucket.Version{}, nil)
 			packagesBucket.NameReturns("my_packages_bucket")
 
 			artifact.SaveReturns(errors.New("failed to save the versions artifact"))

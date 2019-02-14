@@ -1,4 +1,4 @@
-package s3
+package s3bucket
 
 import (
 	"fmt"
@@ -42,14 +42,6 @@ type Version struct {
 	IsLatest bool
 }
 
-//go:generate counterfeiter -o fakes/fake_unversioned_bucket.go . UnversionedBucket
-type UnversionedBucket interface {
-	Name() string
-	Region() string
-	CopyObject(blobKey, originPath, destinationPath, originBucketName, originBucketRegion string) error
-	ListFiles(path string) ([]string, error)
-}
-
 //go:generate counterfeiter -o fakes/fake_versioned_bucket.go . VersionedBucket
 type VersionedBucket interface {
 	Name() string
@@ -83,7 +75,7 @@ func (b Bucket) Region() string {
 	return b.regionName
 }
 
-func (b Bucket) ListFiles(subfolder string) ([]string, error) {
+func (b Bucket) listFiles(subfolder string) ([]string, error) {
 	var files []string
 	err := b.s3Client.ListObjectsPages(&s3.ListObjectsInput{
 		Bucket: aws.String(b.name),
@@ -110,7 +102,7 @@ func (b Bucket) ListFiles(subfolder string) ([]string, error) {
 }
 
 func (b Bucket) ListBlobs(prefix string) ([]incremental.Blob, error) {
-	paths, err := b.ListFiles(prefix)
+	paths, err := b.listFiles(prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -227,19 +219,6 @@ func (b Bucket) HasBlob(key string) (bool, error) {
 	return true, nil
 }
 
-func (b Bucket) CopyObject(originSuffix, originPrefix, destinationPrefix, originBucketName, originBucketRegion string) error {
-	blobKey := blobpath.Join(originPrefix, originSuffix)
-	destinationKey := blobpath.Join(destinationPrefix, originSuffix)
-
-	return b.copyVersion(
-		blobKey,
-		"null",
-		destinationKey,
-		originBucketName,
-		originBucketRegion,
-	)
-}
-
 func (b Bucket) CopyVersion(blobKey, versionID, originBucketName, originBucketRegion string) error {
 	return b.copyVersion(
 		blobKey,
@@ -296,11 +275,6 @@ func (b Bucket) copyVersionWithSingleRequest(copySourceString, destinationKey st
 		CopySource: aws.String(copySourceString),
 	})
 	return err
-}
-
-type partUploadOutput struct {
-	completedPart *s3.CompletedPart
-	err           error
 }
 
 func (b Bucket) copyVersionWithMultipart(copySourceString, destinationKey string, blobSize int64) error {

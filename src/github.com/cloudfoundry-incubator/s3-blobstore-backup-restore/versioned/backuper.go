@@ -3,15 +3,15 @@ package versioned
 import (
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
 )
 
 type Backuper struct {
-	sourceBuckets       map[string]s3.VersionedBucket
+	sourceBuckets       map[string]s3bucket.VersionedBucket
 	destinationArtifact Artifact
 }
 
-func NewBackuper(sourceBuckets map[string]s3.VersionedBucket, destinationArtifact Artifact) Backuper {
+func NewBackuper(sourceBuckets map[string]s3bucket.VersionedBucket, destinationArtifact Artifact) Backuper {
 	return Backuper{
 		sourceBuckets:       sourceBuckets,
 		destinationArtifact: destinationArtifact,
@@ -51,7 +51,7 @@ func containsNullVersion(latestVersions []BlobVersion) bool {
 	return false
 }
 
-func filterLatest(versions []s3.Version) []BlobVersion {
+func filterLatest(versions []s3bucket.Version) []BlobVersion {
 	var filteredVersions []BlobVersion
 	for _, version := range versions {
 		if version.IsLatest {

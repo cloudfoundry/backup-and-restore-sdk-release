@@ -1,4 +1,4 @@
-package s3
+package s3bucket
 
 type Blob struct {
 	path string

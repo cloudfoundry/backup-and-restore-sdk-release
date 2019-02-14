@@ -1,13 +1,13 @@
-package s3_test
+package s3bucket_test
 
 import (
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("VersionedBucket", func() {
-	var bucketObjectUnderTest s3.VersionedBucket
+	var bucketObjectUnderTest s3bucket.VersionedBucket
 	var err error
 
 	RunVersionedBucketTests := func(mainRegion, secondaryRegion, endpoint, accessKey, secretKey string) {
@@ -18,7 +18,7 @@ var _ = Describe("VersionedBucket", func() {
 		var thirdVersionOfFile1 string
 		var firstVersionOfFile2 string
 
-		var creds = s3.AccessKey{
+		var creds = s3bucket.AccessKey{
 			Id:     accessKey,
 			Secret: secretKey,
 		}
@@ -32,7 +32,7 @@ var _ = Describe("VersionedBucket", func() {
 			firstVersionOfFile2 = uploadFile(bucketName, endpoint, "test-2", "2-A", creds)
 			deleteFile(bucketName, endpoint, "test-2", creds)
 
-			bucketObjectUnderTest, err = s3.NewBucket(bucketName, mainRegion, endpoint, creds, false)
+			bucketObjectUnderTest, err = s3bucket.NewBucket(bucketName, mainRegion, endpoint, creds, false)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -41,7 +41,7 @@ var _ = Describe("VersionedBucket", func() {
 		})
 
 		Describe("ListVersions", func() {
-			var versions []s3.Version
+			var versions []s3bucket.Version
 
 			JustBeforeEach(func() {
 				versions, err = bucketObjectUnderTest.ListVersions()
@@ -51,21 +51,21 @@ var _ = Describe("VersionedBucket", func() {
 				It("returns a list of all versions in the bucket", func() {
 					Expect(err).NotTo(HaveOccurred())
 					Expect(versions).To(ConsistOf(
-						s3.Version{Id: firstVersionOfFile1, Key: "test-1", IsLatest: false},
-						s3.Version{Id: secondVersionOfFile1, Key: "test-1", IsLatest: false},
-						s3.Version{Id: thirdVersionOfFile1, Key: "test-1", IsLatest: true},
-						s3.Version{Id: firstVersionOfFile2, Key: "test-2", IsLatest: false},
+						s3bucket.Version{Id: firstVersionOfFile1, Key: "test-1", IsLatest: false},
+						s3bucket.Version{Id: secondVersionOfFile1, Key: "test-1", IsLatest: false},
+						s3bucket.Version{Id: thirdVersionOfFile1, Key: "test-1", IsLatest: true},
+						s3bucket.Version{Id: firstVersionOfFile2, Key: "test-2", IsLatest: false},
 					))
 				})
 			})
 
 			Context("when the bucket can't be reached", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest, err = s3.NewBucket(
+					bucketObjectUnderTest, err = s3bucket.NewBucket(
 						bucketName,
 						mainRegion,
 						endpoint,
-						s3.AccessKey{Id: "NOT RIGHT", Secret: "NOT RIGHT"},
+						s3bucket.AccessKey{Id: "NOT RIGHT", Secret: "NOT RIGHT"},
 						false,
 					)
 					Expect(err).NotTo(HaveOccurred())
@@ -84,7 +84,7 @@ var _ = Describe("VersionedBucket", func() {
 					unversionedBucketName = setUpUnversionedBucket(mainRegion, endpoint, creds)
 					uploadFile(unversionedBucketName, endpoint, "unversioned-test", "UNVERSIONED-TEST", creds)
 
-					bucketObjectUnderTest, err = s3.NewBucket(unversionedBucketName, mainRegion, endpoint, creds, false)
+					bucketObjectUnderTest, err = s3bucket.NewBucket(unversionedBucketName, mainRegion, endpoint, creds, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -100,7 +100,7 @@ var _ = Describe("VersionedBucket", func() {
 
 			Context("when the bucket has a lot of files", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest, err = s3.NewBucket("sdk-big-bucket-integration-test", mainRegion, endpoint, creds, false)
+					bucketObjectUnderTest, err = s3bucket.NewBucket("sdk-big-bucket-integration-test", mainRegion, endpoint, creds, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -127,7 +127,7 @@ var _ = Describe("VersionedBucket", func() {
 
 			Context("when putting versions fails", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest, err = s3.NewBucket(bucketName, mainRegion, endpoint, s3.AccessKey{}, false)
+					bucketObjectUnderTest, err = s3bucket.NewBucket(bucketName, mainRegion, endpoint, s3bucket.AccessKey{}, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -204,13 +204,13 @@ var _ = Describe("VersionedBucket", func() {
 			bucketName = "bbr-integration-test-bucket-empty"
 			endpoint = ""
 
-			creds := s3.AccessKey{
+			creds := s3bucket.AccessKey{
 				Id:     TestAWSAccessKeyID,
 				Secret: TestAWSSecretAccessKey,
 			}
 
 			clearOutVersionedBucket(bucketName, endpoint, creds)
-			bucketObjectUnderTest, err = s3.NewBucket(bucketName, region, endpoint, creds, false)
+			bucketObjectUnderTest, err = s3bucket.NewBucket(bucketName, region, endpoint, creds, false)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -226,20 +226,20 @@ var _ = Describe("VersionedBucket", func() {
 		var destinationBucketName string
 		var region string
 		var endpoint string
-		var creds s3.AccessKey
+		var creds s3bucket.AccessKey
 
 		BeforeEach(func() {
 			region = "eu-west-1"
 			endpoint = ""
 
-			creds = s3.AccessKey{
+			creds = s3bucket.AccessKey{
 				Id:     TestAWSAccessKeyID,
 				Secret: TestAWSSecretAccessKey,
 			}
 
 			destinationBucketName = setUpVersionedBucket(region, endpoint, creds)
 
-			bucketObjectUnderTest, err = s3.NewBucket(destinationBucketName, region, endpoint, creds, false)
+			bucketObjectUnderTest, err = s3bucket.NewBucket(destinationBucketName, region, endpoint, creds, false)
 			Expect(err).NotTo(HaveOccurred())
 		})
 

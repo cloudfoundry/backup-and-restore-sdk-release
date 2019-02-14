@@ -6,7 +6,7 @@ import (
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/blobpath"
 
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
 )
 
 type UnversionedBucketConfig struct {
@@ -23,11 +23,11 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig) (map[string
 	backupsToStart := make(map[string]incremental.BackupToStart)
 
 	for bucketID, config := range configs {
-		liveBucket, err := s3.NewBucket(
+		liveBucket, err := s3bucket.NewBucket(
 			config.Name,
 			config.Region,
 			config.Endpoint,
-			s3.AccessKey{
+			s3bucket.AccessKey{
 				Id:     config.AwsAccessKeyId,
 				Secret: config.AwsSecretAccessKey,
 			},
@@ -37,11 +37,11 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig) (map[string
 			return nil, err
 		}
 
-		backupBucket, err := s3.NewBucket(
+		backupBucket, err := s3bucket.NewBucket(
 			config.Backup.Name,
 			config.Backup.Region,
 			config.Endpoint,
-			s3.AccessKey{
+			s3bucket.AccessKey{
 				Id:     config.AwsAccessKeyId,
 				Secret: config.AwsSecretAccessKey,
 			},
@@ -83,11 +83,11 @@ func BuildBackupsToComplete(
 	}
 
 	for bucketID, config := range configs {
-		backupBucket, err := s3.NewBucket(
+		backupBucket, err := s3bucket.NewBucket(
 			config.Backup.Name,
 			config.Backup.Region,
 			config.Endpoint,
-			s3.AccessKey{
+			s3bucket.AccessKey{
 				Id:     config.AwsAccessKeyId,
 				Secret: config.AwsSecretAccessKey,
 			},
@@ -135,11 +135,11 @@ func BuildRestoreBucketPairs(
 	}
 
 	for bucketID, config := range configs {
-		liveBucket, err := s3.NewBucket(
+		liveBucket, err := s3bucket.NewBucket(
 			config.Name,
 			config.Region,
 			config.Endpoint,
-			s3.AccessKey{
+			s3bucket.AccessKey{
 				Id:     config.AwsAccessKeyId,
 				Secret: config.AwsSecretAccessKey,
 			},
@@ -149,11 +149,11 @@ func BuildRestoreBucketPairs(
 			return nil, err
 		}
 
-		backupBucket, err := s3.NewBucket(
+		backupBucket, err := s3bucket.NewBucket(
 			bucketBackups[bucketID].BucketName,
 			bucketBackups[bucketID].BucketRegion,
 			config.Endpoint,
-			s3.AccessKey{
+			s3bucket.AccessKey{
 				Id:     config.AwsAccessKeyId,
 				Secret: config.AwsSecretAccessKey,
 			},
