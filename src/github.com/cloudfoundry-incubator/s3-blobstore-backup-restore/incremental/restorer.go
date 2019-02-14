@@ -3,24 +3,22 @@ package incremental
 import (
 	"fmt"
 
-	"errors"
-
 	"github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor"
 )
 
-type RestoreBucketPair struct {
+type Restorer struct {
 	liveBucket   Bucket
 	backupBucket Bucket
 }
 
-func NewRestoreBucketPair(liveBucket, backupBucket Bucket) RestoreBucketPair {
-	return RestoreBucketPair{
+func NewRestorer(liveBucket, backupBucket Bucket) Restorer {
+	return Restorer{
 		liveBucket:   liveBucket,
 		backupBucket: backupBucket,
 	}
 }
 
-func (p RestoreBucketPair) Restore(bucketBackup BucketBackup) error {
+func (p Restorer) Restore(bucketBackup BucketBackup) error {
 	var executables []executor.Executable
 	for _, blob := range bucketBackup.Blobs {
 		backedUpBlob := BackedUpBlob{
@@ -45,14 +43,6 @@ func (p RestoreBucketPair) Restore(bucketBackup BucketBackup) error {
 			fmt.Sprintf("failed to restore bucket %s", p.liveBucket.Name()),
 			errs,
 		)
-	}
-
-	return nil
-}
-
-func (p RestoreBucketPair) CheckValidity() error {
-	if p.liveBucket.Name() == p.backupBucket.Name() {
-		return errors.New("live bucket and backup bucket cannot be the same")
 	}
 
 	return nil

@@ -126,8 +126,8 @@ func BuildBackupsToComplete(
 func BuildRestoreBucketPairs(
 	configs map[string]UnversionedBucketConfig,
 	artifact incremental.Artifact,
-) (map[string]incremental.RestoreBucketPair, error) {
-	buckets := map[string]incremental.RestoreBucketPair{}
+) (map[string]incremental.Restorer, error) {
+	buckets := map[string]incremental.Restorer{}
 
 	bucketBackups, err := artifact.Load()
 	if err != nil {
@@ -163,7 +163,7 @@ func BuildRestoreBucketPairs(
 			return nil, err
 		}
 
-		buckets[bucketID] = incremental.NewRestoreBucketPair(
+		buckets[bucketID] = incremental.NewRestorer(
 			liveBucket,
 			backupBucket,
 		)
