@@ -5,6 +5,8 @@ import (
 
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/blobpath"
 
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/unversioned"
+
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
 )
@@ -126,8 +128,8 @@ func BuildBackupsToComplete(
 func BuildRestoreBucketPairs(
 	configs map[string]UnversionedBucketConfig,
 	artifact incremental.Artifact,
-) (map[string]incremental.RestoreBucketPair, error) {
-	buckets := map[string]incremental.RestoreBucketPair{}
+) (map[string]unversioned.RestoreBucketPair, error) {
+	buckets := map[string]unversioned.RestoreBucketPair{}
 
 	bucketBackups, err := artifact.Load()
 	if err != nil {
@@ -163,7 +165,7 @@ func BuildRestoreBucketPairs(
 			return nil, err
 		}
 
-		buckets[bucketID] = incremental.NewRestoreBucketPair(
+		buckets[bucketID] = unversioned.NewRestoreBucketPair(
 			liveBucket,
 			backupBucket,
 		)
