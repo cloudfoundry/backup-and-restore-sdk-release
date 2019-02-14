@@ -1,6 +1,8 @@
 package s3_test
 
 import (
+	"fmt"
+
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -142,7 +144,9 @@ func RunIncrementalBucketContractTests(liveRegion, backupRegion, awsEndpoint, ac
 			It("errors", func() {
 				err := liveBucket.CopyBlobWithinBucket("does-not-exist", "copy-of-does-not-exist")
 
-				Expect(err).To(MatchError(ContainSubstring("failed to retrieve head object output")))
+				Expect(err).To(MatchError(
+					ContainSubstring(fmt.Sprintf("failed to get blob size for blob 'does-not-exist' in bucket '%s'", liveBucketName)),
+				))
 			})
 		})
 	})
@@ -180,7 +184,9 @@ func RunIncrementalBucketContractTests(liveRegion, backupRegion, awsEndpoint, ac
 			It("errors", func() {
 				err := backupBucket.CopyBlobFromBucket(liveBucket, "does-not-exist", "copy-of-does-not-exist")
 
-				Expect(err).To(MatchError(ContainSubstring("failed to retrieve head object output")))
+				Expect(err).To(MatchError(
+					ContainSubstring(fmt.Sprintf("failed to get blob size for blob 'does-not-exist' in bucket '%s'", liveBucketName)),
+				))
 			})
 		})
 	})

@@ -121,11 +121,11 @@ var _ = Describe("Unversioned", func() {
 
 				Expect(backupsToComplete["bucket"+n].BlobsToCopy).To(ConsistOf(
 					incremental.BackedUpBlob{
-						Path:                "blob-path1",
+						Path:                "existing-backup-dir" + n + "/blob-path1",
 						BackupDirectoryPath: "existing-backup-dir" + n,
 					},
 					incremental.BackedUpBlob{
-						Path:                "blob-path2",
+						Path:                "existing-backup-dir" + n + "/blob-path2",
 						BackupDirectoryPath: "existing-backup-dir" + n,
 					},
 				))

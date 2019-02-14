@@ -1,8 +1,8 @@
 package incremental
 
-import "strings"
-
-const blobDelimiter = "/"
+import (
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/blobpath"
+)
 
 type BackedUpBlob struct {
 	Path                string
@@ -10,9 +10,9 @@ type BackedUpBlob struct {
 }
 
 func (b BackedUpBlob) LiveBlobPath() string {
-	return strings.TrimPrefix(b.Path, b.BackupDirectoryPath+blobDelimiter)
+	return blobpath.TrimPrefix(b.Path, b.BackupDirectoryPath)
 }
 
 func joinBlobPath(prefix, suffix string) string {
-	return strings.Join([]string{prefix, suffix}, blobDelimiter)
+	return blobpath.Join(prefix, suffix)
 }

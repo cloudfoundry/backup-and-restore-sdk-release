@@ -8,6 +8,7 @@ dependencies:
 
 files:
 - github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/cmd/s3-blobstore-backup-restore/*.go
+- github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/blobpath/*.go
 - github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/config/*.go
 - github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental/*.go
 - github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3/*.go

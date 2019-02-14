@@ -5,6 +5,8 @@ import (
 	"math"
 	"sort"
 
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/blobpath"
+
 	"github.com/aws/aws-sdk-go/aws/awserr"
 
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
@@ -100,7 +102,7 @@ func (b Bucket) ListFiles(subfolder string) ([]string, error) {
 
 	if subfolder != "" {
 		for index, fileLocation := range files {
-			files[index] = strings.Replace(fileLocation, subfolder+blobDelimiter, "", 1)
+			files[index] = strings.Replace(fileLocation, subfolder+blobpath.Delimiter, "", 1)
 		}
 	}
 
@@ -126,10 +128,10 @@ func (b Bucket) ListDirectories() ([]string, error) {
 	err := b.s3Client.ListObjectsPages(&s3.ListObjectsInput{
 		Bucket:    aws.String(b.name),
 		Prefix:    aws.String(""),
-		Delimiter: aws.String(blobDelimiter),
+		Delimiter: aws.String(blobpath.Delimiter),
 	}, func(output *s3.ListObjectsOutput, lastPage bool) bool {
 		for _, value := range output.CommonPrefixes {
-			dirs = append(dirs, strings.TrimSuffix(*value.Prefix, blobDelimiter))
+			dirs = append(dirs, blobpath.TrimTrailingDelimiter(*value.Prefix))
 		}
 
 		return !lastPage
@@ -226,8 +228,8 @@ func (b Bucket) HasBlob(key string) (bool, error) {
 }
 
 func (b Bucket) CopyObject(originSuffix, originPrefix, destinationPrefix, originBucketName, originBucketRegion string) error {
-	blobKey := strings.Join([]string{originPrefix, originSuffix}, blobDelimiter)
-	destinationKey := strings.Join([]string{destinationPrefix, originSuffix}, blobDelimiter)
+	blobKey := blobpath.Join(originPrefix, originSuffix)
+	destinationKey := blobpath.Join(destinationPrefix, originSuffix)
 
 	return b.copyVersion(
 		blobKey,
@@ -254,8 +256,8 @@ func (b Bucket) copyVersion(blobKey, versionID, destinationKey, originBucketName
 		return err
 	}
 
-	copySource := blobDelimiter + originBucketName + blobDelimiter + blobKey + "?versionId=" + versionID
-	copySource = strings.Replace(copySource, blobDelimiter+blobDelimiter, blobDelimiter, -1)
+	copySource := blobpath.Delimiter + originBucketName + blobpath.Delimiter + blobKey + "?versionId=" + versionID
+	copySource = strings.Replace(copySource, blobpath.Delimiter+blobpath.Delimiter, blobpath.Delimiter, -1)
 
 	if sizeInMbs(blobSize) <= 1024 {
 		return b.copyVersionWithSingleRequest(copySource, destinationKey)
@@ -277,7 +279,7 @@ func (b Bucket) getBlobSize(bucketName, bucketRegion, blobKey, versionID string)
 	})
 
 	if err != nil {
-		return 0, fmt.Errorf("failed to retrieve head object output: %s", err)
+		return 0, fmt.Errorf("failed to get blob size for blob '%s' in bucket '%s': %s", blobKey, bucketName, err)
 	}
 
 	return *headObjectOutput.ContentLength, nil
