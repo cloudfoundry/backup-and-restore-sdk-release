@@ -1,9 +1,7 @@
-package unversioned
+package incremental
 
 import (
 	"fmt"
-
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
 
 	"errors"
 
@@ -11,12 +9,12 @@ import (
 )
 
 type RestoreBucketPair struct {
-	destinationLiveBucket incremental.Bucket
-	sourceBackupBucket    incremental.Bucket
+	destinationLiveBucket Bucket
+	sourceBackupBucket    Bucket
 	executionStrategy     executor.ParallelExecutor
 }
 
-func NewRestoreBucketPair(liveBucket, backupBucket incremental.Bucket) RestoreBucketPair {
+func NewRestoreBucketPair(liveBucket, backupBucket Bucket) RestoreBucketPair {
 	exe := executor.NewParallelExecutor()
 	exe.SetMaxInFlight(200)
 	return RestoreBucketPair{
@@ -26,25 +24,24 @@ func NewRestoreBucketPair(liveBucket, backupBucket incremental.Bucket) RestoreBu
 	}
 }
 
-func (p RestoreBucketPair) Restore(bucketBackup incremental.BucketBackup) error {
+func (p RestoreBucketPair) Restore(bucketBackup BucketBackup) error {
 	var executables []executor.Executable
 	for _, blob := range bucketBackup.Blobs {
-		backedUpBlob := incremental.BackedUpBlob{
+		backedUpBlob := BackedUpBlob{
 			Path:                blob,
 			BackupDirectoryPath: bucketBackup.BackupDirectoryPath,
 		}
-		executables = append(executables, ExecutableBackup{file: blob, backupAction: func(blobKey string) error {
-			return p.destinationLiveBucket.CopyBlobFromBucket(
-				p.sourceBackupBucket,
-				backedUpBlob.Path,
-				backedUpBlob.LiveBlobPath(),
-			)
-		}})
+		executables = append(executables, copyBlobFromBucketExecutable{
+			src:       backedUpBlob.Path,
+			dst:       backedUpBlob.LiveBlobPath(),
+			srcBucket: p.sourceBackupBucket,
+			dstBucket: p.destinationLiveBucket,
+		})
 	}
 
 	errs := p.executionStrategy.Run([][]executor.Executable{executables})
 	if len(errs) != 0 {
-		return formatErrors(
+		return formatExecutorErrors(
 			fmt.Sprintf("failed to restore bucket %s", p.destinationLiveBucket.Name()),
 			errs,
 		)

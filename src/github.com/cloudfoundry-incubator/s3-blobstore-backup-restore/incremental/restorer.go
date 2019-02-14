@@ -1,17 +1,15 @@
-package unversioned
+package incremental
 
 import (
 	"fmt"
-
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
 )
 
 type Restorer struct {
 	bucketPairs map[string]RestoreBucketPair
-	artifact    incremental.Artifact
+	artifact    Artifact
 }
 
-func NewRestorer(bucketPairs map[string]RestoreBucketPair, artifact incremental.Artifact) Restorer {
+func NewRestorer(bucketPairs map[string]RestoreBucketPair, artifact Artifact) Restorer {
 	return Restorer{
 		bucketPairs: bucketPairs,
 		artifact:    artifact,

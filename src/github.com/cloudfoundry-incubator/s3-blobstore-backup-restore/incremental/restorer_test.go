@@ -1,11 +1,9 @@
-package unversioned_test
+package incremental_test
 
 import (
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/unversioned"
-
-	. "github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental/fakes"
 
 	. "github.com/onsi/ginkgo"
@@ -18,16 +16,16 @@ var _ = Describe("Restorer", func() {
 		sourceBackupDropletsBucket    *fakes.FakeBucket
 		destinationLivePackagesBucket *fakes.FakeBucket
 		sourceBackupPackagesBucket    *fakes.FakeBucket
-		dropletsBucketPair            unversioned.RestoreBucketPair
-		packagesBucketPair            unversioned.RestoreBucketPair
-		bucketPairs                   map[string]unversioned.RestoreBucketPair
+		dropletsBucketPair            incremental.RestoreBucketPair
+		packagesBucketPair            incremental.RestoreBucketPair
+		bucketPairs                   map[string]incremental.RestoreBucketPair
 		artifact                      *fakes.FakeArtifact
 
 		err error
 
-		restorer unversioned.Restorer
+		restorer incremental.Restorer
 
-		bucketBackups map[string]BucketBackup
+		bucketBackups map[string]incremental.BucketBackup
 	)
 
 	BeforeEach(func() {
@@ -36,11 +34,11 @@ var _ = Describe("Restorer", func() {
 		destinationLivePackagesBucket = new(fakes.FakeBucket)
 		sourceBackupPackagesBucket = new(fakes.FakeBucket)
 
-		dropletsBucketPair = unversioned.NewRestoreBucketPair(destinationLiveDropletsBucket, sourceBackupDropletsBucket)
-		packagesBucketPair = unversioned.NewRestoreBucketPair(destinationLivePackagesBucket, sourceBackupPackagesBucket)
+		dropletsBucketPair = incremental.NewRestoreBucketPair(destinationLiveDropletsBucket, sourceBackupDropletsBucket)
+		packagesBucketPair = incremental.NewRestoreBucketPair(destinationLivePackagesBucket, sourceBackupPackagesBucket)
 
 		artifact = new(fakes.FakeArtifact)
-		bucketBackups = map[string]BucketBackup{
+		bucketBackups = map[string]incremental.BucketBackup{
 			"droplets": {
 				BucketName:          "artifact_backup_droplet_bucket",
 				BucketRegion:        "artifact_backup_droplet_region",
@@ -56,12 +54,12 @@ var _ = Describe("Restorer", func() {
 		}
 		artifact.LoadReturns(bucketBackups, nil)
 
-		bucketPairs = map[string]unversioned.RestoreBucketPair{
+		bucketPairs = map[string]incremental.RestoreBucketPair{
 			"droplets": dropletsBucketPair,
 			"packages": packagesBucketPair,
 		}
 
-		restorer = unversioned.NewRestorer(bucketPairs, artifact)
+		restorer = incremental.NewRestorer(bucketPairs, artifact)
 	})
 
 	JustBeforeEach(func() {
@@ -126,10 +124,10 @@ var _ = Describe("Restorer", func() {
 		BeforeEach(func() {
 			notInArtifactBucket1 := new(fakes.FakeBucket)
 			notInArtifactBucket2 := new(fakes.FakeBucket)
-			notInArtifactPair := unversioned.NewRestoreBucketPair(notInArtifactBucket1, notInArtifactBucket2)
+			notInArtifactPair := incremental.NewRestoreBucketPair(notInArtifactBucket1, notInArtifactBucket2)
 
 			bucketPairs["not-in-artifact"] = notInArtifactPair
-			restorer = unversioned.NewRestorer(bucketPairs, artifact)
+			restorer = incremental.NewRestorer(bucketPairs, artifact)
 		})
 
 		It("returns an error", func() {
@@ -140,7 +138,7 @@ var _ = Describe("Restorer", func() {
 	Context("When there is a bucket pair that is recorded to have been empty on backup", func() {
 
 		BeforeEach(func() {
-			bucketBackups = map[string]BucketBackup{
+			bucketBackups = map[string]incremental.BucketBackup{
 				"droplets": {
 					BucketName:          "artifact_backup_droplet_bucket",
 					BucketRegion:        "artifact_backup_droplet_region",
@@ -165,7 +163,7 @@ var _ = Describe("Restorer", func() {
 
 	Context("When there is a bucket referenced in the artifact that is not in the restore config", func() {
 		BeforeEach(func() {
-			bucketBackups["not-in-restore-config"] = BucketBackup{
+			bucketBackups["not-in-restore-config"] = incremental.BucketBackup{
 				BucketName:          "whatever",
 				BucketRegion:        "whatever",
 				Blobs:               []string{"timestamp/not-in-restore-config/thing"},

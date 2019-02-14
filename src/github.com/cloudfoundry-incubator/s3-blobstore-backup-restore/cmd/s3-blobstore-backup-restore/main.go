@@ -6,8 +6,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/config"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/unversioned"
-
 	"encoding/json"
 	"io/ioutil"
 
@@ -86,7 +84,7 @@ func main() {
 					exitWithError(fmt.Sprintf("Failed to establish session: %s", err.Error()))
 				}
 
-				runner = unversioned.NewRestorer(restoreBucketPairs, backupArtifact)
+				runner = incremental.NewRestorer(restoreBucketPairs, backupArtifact)
 			}
 		case flags.UnversionedCompleter:
 			{
