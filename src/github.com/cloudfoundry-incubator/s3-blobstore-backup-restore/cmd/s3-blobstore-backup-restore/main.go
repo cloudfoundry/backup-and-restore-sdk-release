@@ -1,7 +1,7 @@
 package main
 
 import (
-	"os"
+	"log"
 	"time"
 
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/config"
@@ -40,12 +40,12 @@ func (c clock) Now() string {
 func main() {
 	flags, err := parseFlags()
 	if err != nil {
-		exitWithError(err.Error())
+		exitWithError("Failed to parse flags", err)
 	}
 
 	rawConfig, err := ioutil.ReadFile(flags.ConfigPath)
 	if err != nil {
-		exitWithError("Failed to read config: %s", err.Error())
+		exitWithError("Failed to read config", err)
 	}
 
 	var runner Runner
@@ -53,12 +53,12 @@ func main() {
 		var bucketsConfig map[string]config.BucketConfig
 		err = json.Unmarshal(rawConfig, &bucketsConfig)
 		if err != nil {
-			exitWithError("Failed to parse config: %s", err.Error())
+			exitWithError("Failed to parse config", err)
 		}
 
 		buckets, err := config.BuildVersionedBuckets(bucketsConfig)
 		if err != nil {
-			exitWithError("Failed to establish session: %s", err.Error())
+			exitWithError("Failed to establish build versioned buckets", err)
 		}
 
 		artifact := versioned.NewFileArtifact(flags.ArtifactFilePath)
@@ -72,7 +72,7 @@ func main() {
 		var bucketsConfig map[string]config.UnversionedBucketConfig
 		err = json.Unmarshal(rawConfig, &bucketsConfig)
 		if err != nil {
-			exitWithError("Failed to parse config: %s", err.Error())
+			exitWithError("Failed to parse config", err)
 		}
 
 		switch {
@@ -81,7 +81,7 @@ func main() {
 				backupArtifact := incremental.NewArtifact(flags.ArtifactFilePath)
 				restoreBucketPairs, err := config.BuildRestoreBucketPairs(bucketsConfig, backupArtifact)
 				if err != nil {
-					exitWithError(fmt.Sprintf("Failed to establish session: %s", err.Error()))
+					exitWithError("Failed to build restore bucket pairs", err)
 				}
 
 				runner = incremental.NewRestorer(restoreBucketPairs, backupArtifact)
@@ -92,7 +92,7 @@ func main() {
 				backupArtifact := incremental.NewArtifact(flags.ArtifactFilePath)
 				backupsToComplete, err := config.BuildBackupsToComplete(bucketsConfig, backupArtifact, existingBackupBlobsArtifact)
 				if err != nil {
-					exitWithError(fmt.Sprintf("Failed to deserialise incremental backups to complete: %s", err.Error()))
+					exitWithError("Failed to build backups to complete", err)
 				}
 				runner = incremental.BackupCompleter{
 					BackupsToComplete: backupsToComplete,
@@ -102,7 +102,7 @@ func main() {
 			{
 				backupsToStart, err := config.BuildBackupsToStart(bucketsConfig)
 				if err != nil {
-					exitWithError(fmt.Sprintf("Failed to deserialise incremental backups to start: %s", err.Error()))
+					exitWithError("Failed to build backups to start", err)
 				}
 				backupArtifact := incremental.NewArtifact(flags.ArtifactFilePath)
 				existingBackupBlobsArtifact := incremental.NewArtifact(flags.ExistingBackupBlobsArtifactFilePath)
@@ -113,13 +113,12 @@ func main() {
 
 	err = runner.Run()
 	if err != nil {
-		exitWithError(err.Error())
+		exitWithError("Failed to run", err)
 	}
 }
 
-func exitWithError(a ...interface{}) {
-	fmt.Fprintln(os.Stderr, a...)
-	os.Exit(1)
+func exitWithError(context string, err error) {
+	log.Fatal(fmt.Sprintf("%s: %s", context, err))
 }
 
 func parseFlags() (CommandFlags, error) {
@@ -148,6 +147,14 @@ func parseFlags() (CommandFlags, error) {
 
 	if *artifactFilePath == "" {
 		return CommandFlags{}, errors.New("missing --artifact-file flag")
+	}
+
+	if *unversionedBackupCompleter && *unversionedBackupStarter {
+		return CommandFlags{}, errors.New("at most one of: --unversioned-backup-starter or --unversioned-backup-completer can be provided")
+	}
+
+	if (*unversionedBackupCompleter || *unversionedBackupStarter) && *existingBackupBlobsArtifactFilePath == "" {
+		return CommandFlags{}, errors.New("missing --existing-backup-blobs-artifact")
 	}
 
 	return CommandFlags{
