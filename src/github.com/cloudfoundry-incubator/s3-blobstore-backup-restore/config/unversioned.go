@@ -105,15 +105,15 @@ func BuildBackupsToComplete(
 		var blobsToCopy []incremental.BackedUpBlob
 		for _, path := range existingBucketBackup.Blobs {
 			blobsToCopy = append(blobsToCopy, incremental.BackedUpBlob{
-				Path:                blobpath.Join(existingBucketBackup.BackupDirectoryPath, path),
-				BackupDirectoryPath: existingBucketBackup.BackupDirectoryPath,
+				Path:                blobpath.Join(existingBucketBackup.SrcBackupDirectoryPath, path),
+				BackupDirectoryPath: existingBucketBackup.SrcBackupDirectoryPath,
 			})
 		}
 
 		backupsToComplete[bucketID] = incremental.BackupToComplete{
 			BackupBucket: backupBucket,
 			BackupDirectory: incremental.BackupDirectory{
-				Path:   bucketBackups[bucketID].BackupDirectoryPath,
+				Path:   bucketBackups[bucketID].SrcBackupDirectoryPath,
 				Bucket: backupBucket,
 			},
 			BlobsToCopy: blobsToCopy,

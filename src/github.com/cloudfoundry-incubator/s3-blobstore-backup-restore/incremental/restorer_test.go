@@ -25,7 +25,7 @@ var _ = Describe("Restorer", func() {
 
 		restorer incremental.Restorer
 
-		bucketBackups map[string]incremental.BucketBackup
+		bucketBackups map[string]incremental.Backup
 	)
 
 	BeforeEach(func() {
@@ -38,18 +38,18 @@ var _ = Describe("Restorer", func() {
 		packagesBucketPair = incremental.NewRestoreBucketPair(destinationLivePackagesBucket, sourceBackupPackagesBucket)
 
 		artifact = new(fakes.FakeArtifact)
-		bucketBackups = map[string]incremental.BucketBackup{
+		bucketBackups = map[string]incremental.Backup{
 			"droplets": {
-				BucketName:          "artifact_backup_droplet_bucket",
-				BucketRegion:        "artifact_backup_droplet_region",
-				Blobs:               []string{"timestamp/droplets/my_droplet1", "timestamp/droplets/my_droplet2"},
-				BackupDirectoryPath: "timestamp/droplets",
+				BucketName:   "artifact_backup_droplet_bucket",
+				BucketRegion: "artifact_backup_droplet_region",
+				Blobs:        []string{"timestamp/droplets/my_droplet1", "timestamp/droplets/my_droplet2"},
+				SrcBackupDirectoryPath: "timestamp/droplets",
 			},
 			"packages": {
-				BucketName:          "artifact_backup_package_bucket",
-				BucketRegion:        "artifact_backup_package_region",
-				Blobs:               []string{"timestamp/packages/my_package1", "timestamp/packages/my_package2"},
-				BackupDirectoryPath: "timestamp/packages",
+				BucketName:   "artifact_backup_package_bucket",
+				BucketRegion: "artifact_backup_package_region",
+				Blobs:        []string{"timestamp/packages/my_package1", "timestamp/packages/my_package2"},
+				SrcBackupDirectoryPath: "timestamp/packages",
 			},
 		}
 		artifact.LoadReturns(bucketBackups, nil)
@@ -138,18 +138,18 @@ var _ = Describe("Restorer", func() {
 	Context("When there is a bucket pair that is recorded to have been empty on backup", func() {
 
 		BeforeEach(func() {
-			bucketBackups = map[string]incremental.BucketBackup{
+			bucketBackups = map[string]incremental.Backup{
 				"droplets": {
-					BucketName:          "artifact_backup_droplet_bucket",
-					BucketRegion:        "artifact_backup_droplet_region",
-					Blobs:               []string{"my_key", "another_key"},
-					BackupDirectoryPath: "timestamp/droplets",
+					BucketName:   "artifact_backup_droplet_bucket",
+					BucketRegion: "artifact_backup_droplet_region",
+					Blobs:        []string{"my_key", "another_key"},
+					SrcBackupDirectoryPath: "timestamp/droplets",
 				},
 				"packages": {
-					BucketName:          "artifact_backup_package_bucket",
-					BucketRegion:        "artifact_backup_package_region",
-					Blobs:               []string{},
-					BackupDirectoryPath: "timestamp/packages",
+					BucketName:   "artifact_backup_package_bucket",
+					BucketRegion: "artifact_backup_package_region",
+					Blobs:        []string{},
+					SrcBackupDirectoryPath: "timestamp/packages",
 				},
 			}
 			artifact.LoadReturns(bucketBackups, nil)
@@ -163,11 +163,11 @@ var _ = Describe("Restorer", func() {
 
 	Context("When there is a bucket referenced in the artifact that is not in the restore config", func() {
 		BeforeEach(func() {
-			bucketBackups["not-in-restore-config"] = incremental.BucketBackup{
-				BucketName:          "whatever",
-				BucketRegion:        "whatever",
-				Blobs:               []string{"timestamp/not-in-restore-config/thing"},
-				BackupDirectoryPath: "timestamp/not-in-restore-config",
+			bucketBackups["not-in-restore-config"] = incremental.Backup{
+				BucketName:   "whatever",
+				BucketRegion: "whatever",
+				Blobs:        []string{"timestamp/not-in-restore-config/thing"},
+				SrcBackupDirectoryPath: "timestamp/not-in-restore-config",
 			}
 			artifact.LoadReturns(bucketBackups, nil)
 		})

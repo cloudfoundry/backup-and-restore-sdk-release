@@ -110,7 +110,7 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 				Expect(fileContents).To(ContainSubstring("\"bucket_name\":\"" + backupBucket + "\""))
 				Expect(fileContents).To(ContainSubstring("\"bucket_region\":\"" + backupRegion + "\""))
 				Expect(fileContents).To(MatchRegexp(
-					"\"backup_directory_path\":\"\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}\\/my_bucket\""))
+					"\"src_backup_directory_path\":\"\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}\\/my_bucket\""))
 			})
 
 			DeleteAllFilesFromBucket(region, bucket)
@@ -171,7 +171,7 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 					Expect(fileContents).To(ContainSubstring("\"bucket_name\":\"" + backupBucket + "\""))
 					Expect(fileContents).To(ContainSubstring("\"bucket_region\":\"" + backupRegion + "\""))
 					Expect(fileContents).To(MatchRegexp(
-						"\"backup_directory_path\":\"\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}\\/my_bucket\""))
+						"\"src_backup_directory_path\":\"\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}\\/my_bucket\""))
 				})
 
 				DeleteAllFilesFromBucket(region, bucket)

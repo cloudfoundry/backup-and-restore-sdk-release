@@ -8,10 +8,10 @@ import (
 )
 
 type FakeArtifact struct {
-	WriteStub        func(map[string]incremental.BucketBackup) error
+	WriteStub        func(map[string]incremental.Backup) error
 	writeMutex       sync.RWMutex
 	writeArgsForCall []struct {
-		arg1 map[string]incremental.BucketBackup
+		arg1 map[string]incremental.Backup
 	}
 	writeReturns struct {
 		result1 error
@@ -19,26 +19,26 @@ type FakeArtifact struct {
 	writeReturnsOnCall map[int]struct {
 		result1 error
 	}
-	LoadStub        func() (map[string]incremental.BucketBackup, error)
+	LoadStub        func() (map[string]incremental.Backup, error)
 	loadMutex       sync.RWMutex
 	loadArgsForCall []struct{}
 	loadReturns     struct {
-		result1 map[string]incremental.BucketBackup
+		result1 map[string]incremental.Backup
 		result2 error
 	}
 	loadReturnsOnCall map[int]struct {
-		result1 map[string]incremental.BucketBackup
+		result1 map[string]incremental.Backup
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeArtifact) Write(arg1 map[string]incremental.BucketBackup) error {
+func (fake *FakeArtifact) Write(arg1 map[string]incremental.Backup) error {
 	fake.writeMutex.Lock()
 	ret, specificReturn := fake.writeReturnsOnCall[len(fake.writeArgsForCall)]
 	fake.writeArgsForCall = append(fake.writeArgsForCall, struct {
-		arg1 map[string]incremental.BucketBackup
+		arg1 map[string]incremental.Backup
 	}{arg1})
 	fake.recordInvocation("Write", []interface{}{arg1})
 	fake.writeMutex.Unlock()
@@ -57,7 +57,7 @@ func (fake *FakeArtifact) WriteCallCount() int {
 	return len(fake.writeArgsForCall)
 }
 
-func (fake *FakeArtifact) WriteArgsForCall(i int) map[string]incremental.BucketBackup {
+func (fake *FakeArtifact) WriteArgsForCall(i int) map[string]incremental.Backup {
 	fake.writeMutex.RLock()
 	defer fake.writeMutex.RUnlock()
 	return fake.writeArgsForCall[i].arg1
@@ -82,7 +82,7 @@ func (fake *FakeArtifact) WriteReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeArtifact) Load() (map[string]incremental.BucketBackup, error) {
+func (fake *FakeArtifact) Load() (map[string]incremental.Backup, error) {
 	fake.loadMutex.Lock()
 	ret, specificReturn := fake.loadReturnsOnCall[len(fake.loadArgsForCall)]
 	fake.loadArgsForCall = append(fake.loadArgsForCall, struct{}{})
@@ -103,24 +103,24 @@ func (fake *FakeArtifact) LoadCallCount() int {
 	return len(fake.loadArgsForCall)
 }
 
-func (fake *FakeArtifact) LoadReturns(result1 map[string]incremental.BucketBackup, result2 error) {
+func (fake *FakeArtifact) LoadReturns(result1 map[string]incremental.Backup, result2 error) {
 	fake.LoadStub = nil
 	fake.loadReturns = struct {
-		result1 map[string]incremental.BucketBackup
+		result1 map[string]incremental.Backup
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeArtifact) LoadReturnsOnCall(i int, result1 map[string]incremental.BucketBackup, result2 error) {
+func (fake *FakeArtifact) LoadReturnsOnCall(i int, result1 map[string]incremental.Backup, result2 error) {
 	fake.LoadStub = nil
 	if fake.loadReturnsOnCall == nil {
 		fake.loadReturnsOnCall = make(map[int]struct {
-			result1 map[string]incremental.BucketBackup
+			result1 map[string]incremental.Backup
 			result2 error
 		})
 	}
 	fake.loadReturnsOnCall[i] = struct {
-		result1 map[string]incremental.BucketBackup
+		result1 map[string]incremental.Backup
 		result2 error
 	}{result1, result2}
 }

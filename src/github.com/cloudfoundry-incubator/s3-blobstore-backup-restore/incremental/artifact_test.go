@@ -30,7 +30,7 @@ var _ = Describe("Artifact", func() {
 			body := `{
 			"bucket_id": {
 				"bucket_name": "backup-bucket",
-				"backup_directory_path": "2000_01_02_03_04_05/bucket_id",
+				"src_backup_directory_path": "2000_01_02_03_04_05/bucket_id",
 				"blobs": ["2000_01_02_03_04_05/bucket_id/f0/fd/blob1/uuid", "2000_01_02_03_04_05/bucket_id/f0/fd/blob2/uuid"]
 			}
 		}`
@@ -42,14 +42,14 @@ var _ = Describe("Artifact", func() {
 			bucketBackup, err := artifact.Load()
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(bucketBackup).To(Equal(map[string]incremental.BucketBackup{
+			Expect(bucketBackup).To(Equal(map[string]incremental.Backup{
 				"bucket_id": {
 					BucketName: "backup-bucket",
 					Blobs: []string{
 						"2000_01_02_03_04_05/bucket_id/f0/fd/blob1/uuid",
 						"2000_01_02_03_04_05/bucket_id/f0/fd/blob2/uuid",
 					},
-					BackupDirectoryPath: "2000_01_02_03_04_05/bucket_id",
+					SrcBackupDirectoryPath: "2000_01_02_03_04_05/bucket_id",
 				},
 			}))
 		})
@@ -81,7 +81,7 @@ var _ = Describe("Artifact", func() {
 	It("writes the backupArtifact", func() {
 		artifact = incremental.NewArtifact(artifactFile.Name())
 
-		backup := map[string]incremental.BucketBackup{
+		backup := map[string]incremental.Backup{
 			"bucket_id": {
 				BucketName:   "backup-bucket",
 				BucketRegion: "backup-bucket-region",
@@ -89,7 +89,7 @@ var _ = Describe("Artifact", func() {
 					"2000_01_02_03_04_05/bucket_id/f0/fd/blob1/uuid",
 					"2000_01_02_03_04_05/bucket_id/f0/fd/blob2/uuid",
 				},
-				BackupDirectoryPath: "2000_01_02_03_04_05/bucket_id",
+				SrcBackupDirectoryPath: "2000_01_02_03_04_05/bucket_id",
 			},
 		}
 		err := artifact.Write(backup)
@@ -101,7 +101,7 @@ var _ = Describe("Artifact", func() {
 			"bucket_id": {
 				"bucket_name": "backup-bucket",
 				"bucket_region": "backup-bucket-region",
-				"backup_directory_path": "2000_01_02_03_04_05/bucket_id",
+				"src_backup_directory_path": "2000_01_02_03_04_05/bucket_id",
 				"blobs": ["2000_01_02_03_04_05/bucket_id/f0/fd/blob1/uuid", "2000_01_02_03_04_05/bucket_id/f0/fd/blob2/uuid"]
 			}
 		}`))
@@ -117,7 +117,7 @@ var _ = Describe("Artifact", func() {
 		})
 
 		It("returns an error", func() {
-			err := artifact.Write(map[string]incremental.BucketBackup{})
+			err := artifact.Write(map[string]incremental.Backup{})
 			Expect(err).To(MatchError(ContainSubstring("could not write backup file")))
 		})
 	})

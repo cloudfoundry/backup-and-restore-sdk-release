@@ -39,17 +39,17 @@ var _ = Describe("BucketPair", func() {
 	})
 
 	Describe("Restore", func() {
-		var bucketBackup incremental.BucketBackup
+		var bucketBackup incremental.Backup
 
 		BeforeEach(func() {
-			bucketBackup = incremental.BucketBackup{
+			bucketBackup = incremental.Backup{
 				BucketName:   artifactBackupBucket,
 				BucketRegion: artifactBackupRegion,
 				Blobs: []string{
 					"2015-12-13-05-06-07/my_bucket_id/livebucketpath/to/real/blob1",
 					"2015-12-13-05-06-07/my_bucket_id/livebucketpath/to/real/blob2",
 				},
-				BackupDirectoryPath: "2015-12-13-05-06-07/my_bucket_id",
+				SrcBackupDirectoryPath: "2015-12-13-05-06-07/my_bucket_id",
 			}
 		})
 

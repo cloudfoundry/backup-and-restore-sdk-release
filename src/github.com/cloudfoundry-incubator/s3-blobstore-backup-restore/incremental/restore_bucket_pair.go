@@ -20,12 +20,12 @@ func NewRestoreBucketPair(liveBucket, backupBucket Bucket) RestoreBucketPair {
 	}
 }
 
-func (p RestoreBucketPair) Restore(bucketBackup BucketBackup) error {
+func (p RestoreBucketPair) Restore(bucketBackup Backup) error {
 	var executables []executor.Executable
 	for _, blob := range bucketBackup.Blobs {
 		backedUpBlob := BackedUpBlob{
 			Path:                blob,
-			BackupDirectoryPath: bucketBackup.BackupDirectoryPath,
+			BackupDirectoryPath: bucketBackup.SrcBackupDirectoryPath,
 		}
 		executables = append(executables, copyBlobFromBucketExecutable{
 			src:       backedUpBlob.Path,

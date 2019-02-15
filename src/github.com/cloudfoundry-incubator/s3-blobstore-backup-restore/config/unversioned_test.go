@@ -70,28 +70,28 @@ var _ = Describe("Unversioned", func() {
 		})
 
 		It("builds backups to complete from a config", func() {
-			artifact.LoadReturns(map[string]incremental.BucketBackup{
+			artifact.LoadReturns(map[string]incremental.Backup{
 				"bucket1": {
-					BucketName:          "backup-name1",
-					BucketRegion:        "backup-region1",
-					BackupDirectoryPath: "new-backup-dir1",
+					BucketName:             "backup-name1",
+					BucketRegion:           "backup-region1",
+					SrcBackupDirectoryPath: "new-backup-dir1",
 				},
 				"bucket2": {
-					BucketName:          "backup-name2",
-					BucketRegion:        "backup-region2",
-					BackupDirectoryPath: "new-backup-dir2",
+					BucketName:             "backup-name2",
+					BucketRegion:           "backup-region2",
+					SrcBackupDirectoryPath: "new-backup-dir2",
 				},
 			}, nil)
-			existingBlobsArtifact.LoadReturns(map[string]incremental.BucketBackup{
+			existingBlobsArtifact.LoadReturns(map[string]incremental.Backup{
 				"bucket1": {
-					BackupDirectoryPath: "existing-backup-dir1",
+					SrcBackupDirectoryPath: "existing-backup-dir1",
 					Blobs: []string{
 						"blob-path1",
 						"blob-path2",
 					},
 				},
 				"bucket2": {
-					BackupDirectoryPath: "existing-backup-dir2",
+					SrcBackupDirectoryPath: "existing-backup-dir2",
 					Blobs: []string{
 						"blob-path1",
 						"blob-path2",
@@ -157,8 +157,8 @@ var _ = Describe("Unversioned", func() {
 		})
 
 		It("returns error when a configured bucketID is not in the existing blobs artifact", func() {
-			artifact.LoadReturns(map[string]incremental.BucketBackup{}, nil)
-			existingBlobsArtifact.LoadReturns(map[string]incremental.BucketBackup{}, nil)
+			artifact.LoadReturns(map[string]incremental.Backup{}, nil)
+			existingBlobsArtifact.LoadReturns(map[string]incremental.Backup{}, nil)
 
 			_, err := config.BuildBackupsToComplete(
 				configs,
@@ -181,16 +181,16 @@ var _ = Describe("Unversioned", func() {
 		})
 
 		It("builds restore bucket pairs from a config and a backup artifact", func() {
-			artifact.LoadReturns(map[string]incremental.BucketBackup{
+			artifact.LoadReturns(map[string]incremental.Backup{
 				"bucket1": {
-					BucketName:          "backup-name1",
-					BucketRegion:        "backup-region1",
-					BackupDirectoryPath: "new-backup-dir1",
+					BucketName:             "backup-name1",
+					BucketRegion:           "backup-region1",
+					SrcBackupDirectoryPath: "new-backup-dir1",
 				},
 				"bucket2": {
-					BucketName:          "backup-name2",
-					BucketRegion:        "backup-region2",
-					BackupDirectoryPath: "new-backup-dir2",
+					BucketName:             "backup-name2",
+					BucketRegion:           "backup-region2",
+					SrcBackupDirectoryPath: "new-backup-dir2",
 				},
 			}, nil)
 
