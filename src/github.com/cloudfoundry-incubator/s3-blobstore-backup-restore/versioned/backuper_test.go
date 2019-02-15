@@ -7,15 +7,14 @@ import (
 	"errors"
 
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
-	s3fakes "github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket/fakes"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/versioned"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/versioned/fakes"
 )
 
 var _ = Describe("Backuper", func() {
-	var dropletsBucket *s3fakes.FakeVersionedBucket
-	var buildpacksBucket *s3fakes.FakeVersionedBucket
-	var packagesBucket *s3fakes.FakeVersionedBucket
+	var dropletsBucket *fakes.FakeBucket
+	var buildpacksBucket *fakes.FakeBucket
+	var packagesBucket *fakes.FakeBucket
 
 	var artifact *fakes.FakeArtifact
 
@@ -24,13 +23,13 @@ var _ = Describe("Backuper", func() {
 	var backuper versioned.Backuper
 
 	BeforeEach(func() {
-		dropletsBucket = new(s3fakes.FakeVersionedBucket)
-		buildpacksBucket = new(s3fakes.FakeVersionedBucket)
-		packagesBucket = new(s3fakes.FakeVersionedBucket)
+		dropletsBucket = new(fakes.FakeBucket)
+		buildpacksBucket = new(fakes.FakeBucket)
+		packagesBucket = new(fakes.FakeBucket)
 
 		artifact = new(fakes.FakeArtifact)
 
-		backuper = versioned.NewBackuper(map[string]s3bucket.VersionedBucket{
+		backuper = versioned.NewBackuper(map[string]versioned.Bucket{
 			"droplets":   dropletsBucket,
 			"buildpacks": buildpacksBucket,
 			"packages":   packagesBucket,

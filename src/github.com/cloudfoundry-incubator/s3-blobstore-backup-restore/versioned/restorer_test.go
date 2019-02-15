@@ -3,19 +3,17 @@ package versioned_test
 import (
 	"errors"
 
-	s3fakes "github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket/fakes"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/versioned/fakes"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/versioned"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Restorer", func() {
-	var dropletsBucket *s3fakes.FakeVersionedBucket
-	var buildpacksBucket *s3fakes.FakeVersionedBucket
-	var packagesBucket *s3fakes.FakeVersionedBucket
+	var dropletsBucket *fakes.FakeBucket
+	var buildpacksBucket *fakes.FakeBucket
+	var packagesBucket *fakes.FakeBucket
 
 	var artifact *fakes.FakeArtifact
 
@@ -24,13 +22,13 @@ var _ = Describe("Restorer", func() {
 	var restorer versioned.Restorer
 
 	BeforeEach(func() {
-		dropletsBucket = new(s3fakes.FakeVersionedBucket)
-		buildpacksBucket = new(s3fakes.FakeVersionedBucket)
-		packagesBucket = new(s3fakes.FakeVersionedBucket)
+		dropletsBucket = new(fakes.FakeBucket)
+		buildpacksBucket = new(fakes.FakeBucket)
+		packagesBucket = new(fakes.FakeBucket)
 
 		artifact = new(fakes.FakeArtifact)
 
-		restorer = versioned.NewRestorer(map[string]s3bucket.VersionedBucket{
+		restorer = versioned.NewRestorer(map[string]versioned.Bucket{
 			"droplets":   dropletsBucket,
 			"buildpacks": buildpacksBucket,
 			"packages":   packagesBucket,
@@ -196,7 +194,7 @@ var _ = Describe("Restorer", func() {
 				},
 			}, nil)
 
-			restorer = versioned.NewRestorer(map[string]s3bucket.VersionedBucket{
+			restorer = versioned.NewRestorer(map[string]versioned.Bucket{
 				"droplets":   dropletsBucket,
 				"buildpacks": buildpacksBucket,
 				"packages":   packagesBucket,
@@ -229,7 +227,7 @@ var _ = Describe("Restorer", func() {
 				},
 			}, nil)
 
-			restorer = versioned.NewRestorer(map[string]s3bucket.VersionedBucket{
+			restorer = versioned.NewRestorer(map[string]versioned.Bucket{
 				"droplets": dropletsBucket,
 			}, artifact)
 		})

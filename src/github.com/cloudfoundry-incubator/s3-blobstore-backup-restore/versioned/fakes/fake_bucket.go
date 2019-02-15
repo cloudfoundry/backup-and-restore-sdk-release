@@ -5,9 +5,10 @@ import (
 	"sync"
 
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/versioned"
 )
 
-type FakeVersionedBucket struct {
+type FakeBucket struct {
 	NameStub        func() string
 	nameMutex       sync.RWMutex
 	nameArgsForCall []struct{}
@@ -64,7 +65,7 @@ type FakeVersionedBucket struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeVersionedBucket) Name() string {
+func (fake *FakeBucket) Name() string {
 	fake.nameMutex.Lock()
 	ret, specificReturn := fake.nameReturnsOnCall[len(fake.nameArgsForCall)]
 	fake.nameArgsForCall = append(fake.nameArgsForCall, struct{}{})
@@ -79,20 +80,20 @@ func (fake *FakeVersionedBucket) Name() string {
 	return fake.nameReturns.result1
 }
 
-func (fake *FakeVersionedBucket) NameCallCount() int {
+func (fake *FakeBucket) NameCallCount() int {
 	fake.nameMutex.RLock()
 	defer fake.nameMutex.RUnlock()
 	return len(fake.nameArgsForCall)
 }
 
-func (fake *FakeVersionedBucket) NameReturns(result1 string) {
+func (fake *FakeBucket) NameReturns(result1 string) {
 	fake.NameStub = nil
 	fake.nameReturns = struct {
 		result1 string
 	}{result1}
 }
 
-func (fake *FakeVersionedBucket) NameReturnsOnCall(i int, result1 string) {
+func (fake *FakeBucket) NameReturnsOnCall(i int, result1 string) {
 	fake.NameStub = nil
 	if fake.nameReturnsOnCall == nil {
 		fake.nameReturnsOnCall = make(map[int]struct {
@@ -104,7 +105,7 @@ func (fake *FakeVersionedBucket) NameReturnsOnCall(i int, result1 string) {
 	}{result1}
 }
 
-func (fake *FakeVersionedBucket) Region() string {
+func (fake *FakeBucket) Region() string {
 	fake.regionMutex.Lock()
 	ret, specificReturn := fake.regionReturnsOnCall[len(fake.regionArgsForCall)]
 	fake.regionArgsForCall = append(fake.regionArgsForCall, struct{}{})
@@ -119,20 +120,20 @@ func (fake *FakeVersionedBucket) Region() string {
 	return fake.regionReturns.result1
 }
 
-func (fake *FakeVersionedBucket) RegionCallCount() int {
+func (fake *FakeBucket) RegionCallCount() int {
 	fake.regionMutex.RLock()
 	defer fake.regionMutex.RUnlock()
 	return len(fake.regionArgsForCall)
 }
 
-func (fake *FakeVersionedBucket) RegionReturns(result1 string) {
+func (fake *FakeBucket) RegionReturns(result1 string) {
 	fake.RegionStub = nil
 	fake.regionReturns = struct {
 		result1 string
 	}{result1}
 }
 
-func (fake *FakeVersionedBucket) RegionReturnsOnCall(i int, result1 string) {
+func (fake *FakeBucket) RegionReturnsOnCall(i int, result1 string) {
 	fake.RegionStub = nil
 	if fake.regionReturnsOnCall == nil {
 		fake.regionReturnsOnCall = make(map[int]struct {
@@ -144,7 +145,7 @@ func (fake *FakeVersionedBucket) RegionReturnsOnCall(i int, result1 string) {
 	}{result1}
 }
 
-func (fake *FakeVersionedBucket) CopyVersion(blobKey string, versionId string, originBucketName string, originBucketRegion string) error {
+func (fake *FakeBucket) CopyVersion(blobKey string, versionId string, originBucketName string, originBucketRegion string) error {
 	fake.copyVersionMutex.Lock()
 	ret, specificReturn := fake.copyVersionReturnsOnCall[len(fake.copyVersionArgsForCall)]
 	fake.copyVersionArgsForCall = append(fake.copyVersionArgsForCall, struct {
@@ -164,26 +165,26 @@ func (fake *FakeVersionedBucket) CopyVersion(blobKey string, versionId string, o
 	return fake.copyVersionReturns.result1
 }
 
-func (fake *FakeVersionedBucket) CopyVersionCallCount() int {
+func (fake *FakeBucket) CopyVersionCallCount() int {
 	fake.copyVersionMutex.RLock()
 	defer fake.copyVersionMutex.RUnlock()
 	return len(fake.copyVersionArgsForCall)
 }
 
-func (fake *FakeVersionedBucket) CopyVersionArgsForCall(i int) (string, string, string, string) {
+func (fake *FakeBucket) CopyVersionArgsForCall(i int) (string, string, string, string) {
 	fake.copyVersionMutex.RLock()
 	defer fake.copyVersionMutex.RUnlock()
 	return fake.copyVersionArgsForCall[i].blobKey, fake.copyVersionArgsForCall[i].versionId, fake.copyVersionArgsForCall[i].originBucketName, fake.copyVersionArgsForCall[i].originBucketRegion
 }
 
-func (fake *FakeVersionedBucket) CopyVersionReturns(result1 error) {
+func (fake *FakeBucket) CopyVersionReturns(result1 error) {
 	fake.CopyVersionStub = nil
 	fake.copyVersionReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeVersionedBucket) CopyVersionReturnsOnCall(i int, result1 error) {
+func (fake *FakeBucket) CopyVersionReturnsOnCall(i int, result1 error) {
 	fake.CopyVersionStub = nil
 	if fake.copyVersionReturnsOnCall == nil {
 		fake.copyVersionReturnsOnCall = make(map[int]struct {
@@ -195,7 +196,7 @@ func (fake *FakeVersionedBucket) CopyVersionReturnsOnCall(i int, result1 error) 
 	}{result1}
 }
 
-func (fake *FakeVersionedBucket) ListVersions() ([]s3bucket.Version, error) {
+func (fake *FakeBucket) ListVersions() ([]s3bucket.Version, error) {
 	fake.listVersionsMutex.Lock()
 	ret, specificReturn := fake.listVersionsReturnsOnCall[len(fake.listVersionsArgsForCall)]
 	fake.listVersionsArgsForCall = append(fake.listVersionsArgsForCall, struct{}{})
@@ -210,13 +211,13 @@ func (fake *FakeVersionedBucket) ListVersions() ([]s3bucket.Version, error) {
 	return fake.listVersionsReturns.result1, fake.listVersionsReturns.result2
 }
 
-func (fake *FakeVersionedBucket) ListVersionsCallCount() int {
+func (fake *FakeBucket) ListVersionsCallCount() int {
 	fake.listVersionsMutex.RLock()
 	defer fake.listVersionsMutex.RUnlock()
 	return len(fake.listVersionsArgsForCall)
 }
 
-func (fake *FakeVersionedBucket) ListVersionsReturns(result1 []s3bucket.Version, result2 error) {
+func (fake *FakeBucket) ListVersionsReturns(result1 []s3bucket.Version, result2 error) {
 	fake.ListVersionsStub = nil
 	fake.listVersionsReturns = struct {
 		result1 []s3bucket.Version
@@ -224,7 +225,7 @@ func (fake *FakeVersionedBucket) ListVersionsReturns(result1 []s3bucket.Version,
 	}{result1, result2}
 }
 
-func (fake *FakeVersionedBucket) ListVersionsReturnsOnCall(i int, result1 []s3bucket.Version, result2 error) {
+func (fake *FakeBucket) ListVersionsReturnsOnCall(i int, result1 []s3bucket.Version, result2 error) {
 	fake.ListVersionsStub = nil
 	if fake.listVersionsReturnsOnCall == nil {
 		fake.listVersionsReturnsOnCall = make(map[int]struct {
@@ -238,7 +239,7 @@ func (fake *FakeVersionedBucket) ListVersionsReturnsOnCall(i int, result1 []s3bu
 	}{result1, result2}
 }
 
-func (fake *FakeVersionedBucket) CheckIfVersioned() error {
+func (fake *FakeBucket) CheckIfVersioned() error {
 	fake.checkIfVersionedMutex.Lock()
 	ret, specificReturn := fake.checkIfVersionedReturnsOnCall[len(fake.checkIfVersionedArgsForCall)]
 	fake.checkIfVersionedArgsForCall = append(fake.checkIfVersionedArgsForCall, struct{}{})
@@ -253,20 +254,20 @@ func (fake *FakeVersionedBucket) CheckIfVersioned() error {
 	return fake.checkIfVersionedReturns.result1
 }
 
-func (fake *FakeVersionedBucket) CheckIfVersionedCallCount() int {
+func (fake *FakeBucket) CheckIfVersionedCallCount() int {
 	fake.checkIfVersionedMutex.RLock()
 	defer fake.checkIfVersionedMutex.RUnlock()
 	return len(fake.checkIfVersionedArgsForCall)
 }
 
-func (fake *FakeVersionedBucket) CheckIfVersionedReturns(result1 error) {
+func (fake *FakeBucket) CheckIfVersionedReturns(result1 error) {
 	fake.CheckIfVersionedStub = nil
 	fake.checkIfVersionedReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeVersionedBucket) CheckIfVersionedReturnsOnCall(i int, result1 error) {
+func (fake *FakeBucket) CheckIfVersionedReturnsOnCall(i int, result1 error) {
 	fake.CheckIfVersionedStub = nil
 	if fake.checkIfVersionedReturnsOnCall == nil {
 		fake.checkIfVersionedReturnsOnCall = make(map[int]struct {
@@ -278,7 +279,7 @@ func (fake *FakeVersionedBucket) CheckIfVersionedReturnsOnCall(i int, result1 er
 	}{result1}
 }
 
-func (fake *FakeVersionedBucket) Invocations() map[string][][]interface{} {
+func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.nameMutex.RLock()
@@ -298,7 +299,7 @@ func (fake *FakeVersionedBucket) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *FakeVersionedBucket) recordInvocation(key string, args []interface{}) {
+func (fake *FakeBucket) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -310,4 +311,4 @@ func (fake *FakeVersionedBucket) recordInvocation(key string, args []interface{}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ s3bucket.VersionedBucket = new(FakeVersionedBucket)
+var _ versioned.Bucket = new(FakeBucket)

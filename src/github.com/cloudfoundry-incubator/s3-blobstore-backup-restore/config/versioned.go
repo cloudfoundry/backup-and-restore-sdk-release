@@ -1,6 +1,9 @@
 package config
 
-import "github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
+import (
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/versioned"
+)
 
 type BucketConfig struct {
 	Name               string `json:"name"`
@@ -11,8 +14,8 @@ type BucketConfig struct {
 	UseIAMProfile      bool   `json:"use_iam_profile"`
 }
 
-func BuildVersionedBuckets(config map[string]BucketConfig) (map[string]s3bucket.VersionedBucket, error) {
-	var buckets = map[string]s3bucket.VersionedBucket{}
+func BuildVersionedBuckets(config map[string]BucketConfig) (map[string]versioned.Bucket, error) {
+	var buckets = map[string]versioned.Bucket{}
 
 	for identifier, bucketConfig := range config {
 		s3Bucket, err := s3bucket.NewBucket(

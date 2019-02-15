@@ -7,11 +7,11 @@ import (
 )
 
 type Backuper struct {
-	sourceBuckets       map[string]s3bucket.VersionedBucket
+	sourceBuckets       map[string]Bucket
 	destinationArtifact Artifact
 }
 
-func NewBackuper(sourceBuckets map[string]s3bucket.VersionedBucket, destinationArtifact Artifact) Backuper {
+func NewBackuper(sourceBuckets map[string]Bucket, destinationArtifact Artifact) Backuper {
 	return Backuper{
 		sourceBuckets:       sourceBuckets,
 		destinationArtifact: destinationArtifact,

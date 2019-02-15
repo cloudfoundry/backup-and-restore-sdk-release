@@ -42,15 +42,6 @@ type Version struct {
 	IsLatest bool
 }
 
-//go:generate counterfeiter -o fakes/fake_versioned_bucket.go . VersionedBucket
-type VersionedBucket interface {
-	Name() string
-	Region() string
-	CopyVersion(blobKey, versionId, originBucketName, originBucketRegion string) error
-	ListVersions() ([]Version, error)
-	CheckIfVersioned() error
-}
-
 func NewBucket(bucketName, bucketRegion, endpoint string, accessKey AccessKey, useIAMProfile bool) (Bucket, error) {
 	s3Client, err := newS3Client(bucketRegion, endpoint, accessKey, useIAMProfile)
 	if err != nil {
