@@ -61,37 +61,25 @@ var _ = Describe("Unversioned", func() {
 	})
 
 	Context("BuildBackupsToComplete", func() {
-		var artifact *fakes.FakeArtifact
 		var existingBlobsArtifact *fakes.FakeArtifact
 
 		BeforeEach(func() {
-			artifact = new(fakes.FakeArtifact)
 			existingBlobsArtifact = new(fakes.FakeArtifact)
 		})
 
 		It("builds backups to complete from a config", func() {
-			artifact.LoadReturns(map[string]incremental.Backup{
-				"bucket1": {
-					BucketName:             "backup-name1",
-					BucketRegion:           "backup-region1",
-					SrcBackupDirectoryPath: "new-backup-dir1",
-				},
-				"bucket2": {
-					BucketName:             "backup-name2",
-					BucketRegion:           "backup-region2",
-					SrcBackupDirectoryPath: "new-backup-dir2",
-				},
-			}, nil)
 			existingBlobsArtifact.LoadReturns(map[string]incremental.Backup{
 				"bucket1": {
-					SrcBackupDirectoryPath: "existing-backup-dir1",
+					SrcBackupDirectoryPath: "source-backup-dir1",
+					DstBackupDirectoryPath: "destination-backup-dir1",
 					Blobs: []string{
 						"blob-path1",
 						"blob-path2",
 					},
 				},
 				"bucket2": {
-					SrcBackupDirectoryPath: "existing-backup-dir2",
+					SrcBackupDirectoryPath: "source-backup-dir2",
+					DstBackupDirectoryPath: "destination-backup-dir2",
 					Blobs: []string{
 						"blob-path1",
 						"blob-path2",
@@ -101,13 +89,11 @@ var _ = Describe("Unversioned", func() {
 
 			backupsToComplete, err := config.BuildBackupsToComplete(
 				configs,
-				artifact,
 				existingBlobsArtifact,
 			)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(backupsToComplete).To(HaveLen(2))
-			Expect(artifact.LoadCallCount()).To(Equal(1))
 			Expect(existingBlobsArtifact.LoadCallCount()).To(Equal(1))
 			for _, n := range []string{"1", "2"} {
 				Expect(backupsToComplete).To(HaveKey("bucket" + n))
@@ -117,31 +103,19 @@ var _ = Describe("Unversioned", func() {
 				Expect(backupsToComplete["bucket"+n].BackupDirectory.Bucket.Name()).To(Equal("backup-name" + n))
 				Expect(backupsToComplete["bucket"+n].BackupDirectory.Bucket.Region()).To(Equal("backup-region" + n))
 
-				Expect(backupsToComplete["bucket"+n].BackupDirectory.Path).To(Equal("new-backup-dir" + n))
+				Expect(backupsToComplete["bucket"+n].BackupDirectory.Path).To(Equal("destination-backup-dir" + n))
 
 				Expect(backupsToComplete["bucket"+n].BlobsToCopy).To(ConsistOf(
 					incremental.BackedUpBlob{
-						Path:                "existing-backup-dir" + n + "/blob-path1",
-						BackupDirectoryPath: "existing-backup-dir" + n,
+						Path:                "source-backup-dir" + n + "/blob-path1",
+						BackupDirectoryPath: "source-backup-dir" + n,
 					},
 					incremental.BackedUpBlob{
-						Path:                "existing-backup-dir" + n + "/blob-path2",
-						BackupDirectoryPath: "existing-backup-dir" + n,
+						Path:                "source-backup-dir" + n + "/blob-path2",
+						BackupDirectoryPath: "source-backup-dir" + n,
 					},
 				))
 			}
-		})
-
-		It("returns error when it cannot load backup artifact", func() {
-			artifact.LoadReturns(nil, errors.New("fake load error"))
-
-			_, err := config.BuildBackupsToComplete(
-				configs,
-				artifact,
-				existingBlobsArtifact,
-			)
-
-			Expect(err).To(MatchError(ContainSubstring("fake load error")))
 		})
 
 		It("returns error when it cannot load existing blobs artifact", func() {
@@ -149,7 +123,6 @@ var _ = Describe("Unversioned", func() {
 
 			_, err := config.BuildBackupsToComplete(
 				configs,
-				artifact,
 				existingBlobsArtifact,
 			)
 
@@ -157,12 +130,10 @@ var _ = Describe("Unversioned", func() {
 		})
 
 		It("returns error when a configured bucketID is not in the existing blobs artifact", func() {
-			artifact.LoadReturns(map[string]incremental.Backup{}, nil)
 			existingBlobsArtifact.LoadReturns(map[string]incremental.Backup{}, nil)
 
 			_, err := config.BuildBackupsToComplete(
 				configs,
-				artifact,
 				existingBlobsArtifact,
 			)
 
@@ -185,12 +156,12 @@ var _ = Describe("Unversioned", func() {
 				"bucket1": {
 					BucketName:             "backup-name1",
 					BucketRegion:           "backup-region1",
-					SrcBackupDirectoryPath: "new-backup-dir1",
+					SrcBackupDirectoryPath: "destination-backup-dir1",
 				},
 				"bucket2": {
 					BucketName:             "backup-name2",
 					BucketRegion:           "backup-region2",
-					SrcBackupDirectoryPath: "new-backup-dir2",
+					SrcBackupDirectoryPath: "destination-backup-dir2",
 				},
 			}, nil)
 

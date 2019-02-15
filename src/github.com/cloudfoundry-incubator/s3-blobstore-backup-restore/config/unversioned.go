@@ -67,17 +67,11 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig) (map[string
 
 func BuildBackupsToComplete(
 	configs map[string]UnversionedBucketConfig,
-	artifact incremental.Artifact,
 	existingBlobsArtifact incremental.Artifact,
 ) (map[string]incremental.BackupToComplete, error) {
 	backupsToComplete := map[string]incremental.BackupToComplete{}
 
-	bucketBackups, err := artifact.Load()
-	if err != nil {
-		return nil, err
-	}
-
-	existingBlobsBucketBackups, err := existingBlobsArtifact.Load()
+	existingBackups, err := existingBlobsArtifact.Load()
 	if err != nil {
 		return nil, err
 	}
@@ -97,23 +91,23 @@ func BuildBackupsToComplete(
 			return nil, err
 		}
 
-		existingBucketBackup, exists := existingBlobsBucketBackups[bucketID]
+		existingBackup, exists := existingBackups[bucketID]
 		if !exists {
 			return nil, fmt.Errorf("failed to find bucket identifier '%s' in buckets config", bucketID)
 		}
 
 		var blobsToCopy []incremental.BackedUpBlob
-		for _, path := range existingBucketBackup.Blobs {
+		for _, path := range existingBackup.Blobs {
 			blobsToCopy = append(blobsToCopy, incremental.BackedUpBlob{
-				Path:                blobpath.Join(existingBucketBackup.SrcBackupDirectoryPath, path),
-				BackupDirectoryPath: existingBucketBackup.SrcBackupDirectoryPath,
+				Path:                blobpath.Join(existingBackup.SrcBackupDirectoryPath, path),
+				BackupDirectoryPath: existingBackup.SrcBackupDirectoryPath,
 			})
 		}
 
 		backupsToComplete[bucketID] = incremental.BackupToComplete{
 			BackupBucket: backupBucket,
 			BackupDirectory: incremental.BackupDirectory{
-				Path:   bucketBackups[bucketID].SrcBackupDirectoryPath,
+				Path:   existingBackup.DstBackupDirectoryPath,
 				Bucket: backupBucket,
 			},
 			BlobsToCopy: blobsToCopy,

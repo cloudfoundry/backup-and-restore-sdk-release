@@ -90,6 +90,7 @@ var _ = Describe("Artifact", func() {
 					"2000_01_02_03_04_05/bucket_id/f0/fd/blob2/uuid",
 				},
 				SrcBackupDirectoryPath: "2000_01_02_03_04_05/bucket_id",
+				DstBackupDirectoryPath: "2000_02_02_03_04_05/bucket_id",
 			},
 		}
 		err := artifact.Write(backup)
@@ -102,6 +103,7 @@ var _ = Describe("Artifact", func() {
 				"bucket_name": "backup-bucket",
 				"bucket_region": "backup-bucket-region",
 				"src_backup_directory_path": "2000_01_02_03_04_05/bucket_id",
+				"dst_backup_directory_path": "2000_02_02_03_04_05/bucket_id",
 				"blobs": ["2000_01_02_03_04_05/bucket_id/f0/fd/blob1/uuid", "2000_01_02_03_04_05/bucket_id/f0/fd/blob2/uuid"]
 			}
 		}`))
@@ -111,6 +113,36 @@ var _ = Describe("Artifact", func() {
 		Expect(savedBackup).To(Equal(backup))
 	})
 
+	Context("when optional fields are omitted", func() {
+		It("omits it from the artifact", func() {
+			artifact = incremental.NewArtifact(artifactFile.Name())
+
+			backup := map[string]incremental.Backup{
+				"bucket_id": {
+					Blobs: []string{
+						"2000_01_02_03_04_05/bucket_id/f0/fd/blob1/uuid",
+						"2000_01_02_03_04_05/bucket_id/f0/fd/blob2/uuid",
+					},
+					SrcBackupDirectoryPath: "2000_01_02_03_04_05/bucket_id",
+				},
+			}
+			err := artifact.Write(backup)
+
+			Expect(err).NotTo(HaveOccurred())
+
+			fileContent, err := ioutil.ReadFile(artifactFile.Name())
+			Expect(fileContent).To(MatchJSON(`{
+			"bucket_id": {
+				"src_backup_directory_path": "2000_01_02_03_04_05/bucket_id",
+				"blobs": ["2000_01_02_03_04_05/bucket_id/f0/fd/blob1/uuid", "2000_01_02_03_04_05/bucket_id/f0/fd/blob2/uuid"]
+			}
+		}`))
+
+			savedBackup, err := artifact.Load()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(savedBackup).To(Equal(backup))
+		})
+	})
 	Context("when saving the file fails", func() {
 		BeforeEach(func() {
 			artifact = incremental.NewArtifact("/this/path/does/not/exist")

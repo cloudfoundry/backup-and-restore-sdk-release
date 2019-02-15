@@ -169,13 +169,12 @@ var _ = Describe("BackupStarter", func() {
 			Expect(existingBlobsArtifact.WriteCallCount()).To(Equal(1))
 			Expect(existingBlobsArtifact.WriteArgsForCall(0)).To(Equal(map[string]incremental.Backup{
 				"bucket_id": {
-					BucketName: "backup-bucket",
 					Blobs: []string{
 						"2000_01_01_01_01_01/bucket_id/f0/fd/blob1/uuid",
 						"2000_01_01_01_01_01/bucket_id/f0/fd/blob2/uuid",
 					},
 					SrcBackupDirectoryPath: "2000_01_01_01_01_01/bucket_id",
-					BucketRegion:           "us-east-1",
+					DstBackupDirectoryPath: "2000_01_02_03_04_05/bucket_id",
 				},
 			}))
 		})

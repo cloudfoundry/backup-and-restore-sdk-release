@@ -23,10 +23,11 @@ func NewArtifact(path string) Artifact {
 }
 
 type Backup struct {
-	BucketName             string   `json:"bucket_name"`
-	BucketRegion           string   `json:"bucket_region"`
+	BucketName             string   `json:"bucket_name,omitempty"`
+	BucketRegion           string   `json:"bucket_region,omitempty"`
 	Blobs                  []string `json:"blobs"`
 	SrcBackupDirectoryPath string   `json:"src_backup_directory_path"`
+	DstBackupDirectoryPath string   `json:"dst_backup_directory_path,omitempty"`
 }
 
 func (a artifact) Write(backups map[string]Backup) error {

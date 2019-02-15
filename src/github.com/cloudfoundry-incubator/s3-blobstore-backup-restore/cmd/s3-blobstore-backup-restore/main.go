@@ -89,8 +89,7 @@ func main() {
 		case flags.UnversionedCompleter:
 			{
 				existingBackupBlobsArtifact := incremental.NewArtifact(flags.ExistingBackupBlobsArtifactFilePath)
-				backupArtifact := incremental.NewArtifact(flags.ArtifactFilePath)
-				backupsToComplete, err := config.BuildBackupsToComplete(bucketsConfig, backupArtifact, existingBackupBlobsArtifact)
+				backupsToComplete, err := config.BuildBackupsToComplete(bucketsConfig, existingBackupBlobsArtifact)
 				if err != nil {
 					exitWithError("Failed to build backups to complete", err)
 				}

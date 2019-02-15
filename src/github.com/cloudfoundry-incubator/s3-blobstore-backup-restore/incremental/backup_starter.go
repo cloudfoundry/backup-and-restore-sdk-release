@@ -68,8 +68,7 @@ func (b BackupStarter) Run() error {
 
 		existingBlobs[bucketID] = generateExistingBlobsArtifact(
 			existingBlobsArtifact,
-			backupToStart.BucketPair.BackupBucket.Name(),
-			backupToStart.BucketPair.BackupBucket.Region(),
+			backupDir.Path,
 		)
 	}
 
@@ -100,7 +99,7 @@ func generateBackupArtifact(liveBlobs []Blob, dir BackupDirectory) Backup {
 	}
 }
 
-func generateExistingBlobsArtifact(existingBlobs []BackedUpBlob, bucketName, region string) Backup {
+func generateExistingBlobsArtifact(existingBlobs []BackedUpBlob, dstBackupDirectoryPath string) Backup {
 	if len(existingBlobs) != 0 {
 		var backedUpblobs []string
 		for _, blob := range existingBlobs {
@@ -108,10 +107,9 @@ func generateExistingBlobsArtifact(existingBlobs []BackedUpBlob, bucketName, reg
 		}
 
 		return Backup{
-			BucketName:   bucketName,
-			BucketRegion: region,
-			Blobs:        backedUpblobs,
+			Blobs: backedUpblobs,
 			SrcBackupDirectoryPath: existingBlobs[0].BackupDirectoryPath,
+			DstBackupDirectoryPath: dstBackupDirectoryPath,
 		}
 	}
 
