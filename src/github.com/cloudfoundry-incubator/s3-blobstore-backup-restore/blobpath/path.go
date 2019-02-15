@@ -1,14 +1,13 @@
 package blobpath
 
 import (
-	"path/filepath"
 	"strings"
 )
 
 const Delimiter = "/"
 
 func Join(prefix, suffix string) string {
-	return filepath.Join(prefix, suffix)
+	return prefix + Delimiter + suffix
 }
 
 func TrimPrefix(path, prefix string) string {
