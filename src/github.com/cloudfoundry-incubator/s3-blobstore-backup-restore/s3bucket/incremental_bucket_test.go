@@ -290,17 +290,17 @@ func RunLargeFileTest(region, endpoint, accessKey, secretKey, preExistingBigFile
 		srcBucket, err := s3bucket.NewBucket(preExistingBigFileBucketName, region, endpoint, creds, false)
 		Expect(err).NotTo(HaveOccurred())
 
-		err = bucket.CopyBlobFromBucket(srcBucket, "big_file", "path/to/file")
+		err = bucket.CopyBlobFromBucket(srcBucket, "big_file", "path/to/big_file")
 
 		By("succeeding")
 		Expect(err).NotTo(HaveOccurred())
 
 		By("copying the large file")
-		Expect(listFiles(bucketName, endpoint, creds)).To(ConsistOf("path/to/file/big_file"))
+		Expect(listFiles(bucketName, endpoint, creds)).To(ConsistOf("path/to/big_file"))
 
 		By("not corrupting the large file")
 		Expect(
-			shasum(downloadFileToTmp(bucketName, endpoint, "path/to/file/big_file", creds))).To(
+			shasum(downloadFileToTmp(bucketName, endpoint, "path/to/big_file", creds))).To(
 			Equal("91d50642dd930e9542c39d36f0516d45f4e1af0d"))
 	})
 }
