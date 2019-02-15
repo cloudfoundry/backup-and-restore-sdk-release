@@ -5,9 +5,9 @@ set -eu
 <% if p('enabled') %>
 restore() {
   /var/vcap/packages/s3-blobstore-backup-restorer/bin/s3-blobstore-backup-restore \
-    --restore \
+    --versioned-restore \
     --config /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/config/buckets.json \
-    --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
+    --artifact "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
 }
 
 case ${1:-} in

@@ -8,18 +8,16 @@ mkdir -p $backup_scripts_state_dir
 
 backup() {
   /var/vcap/packages/s3-blobstore-backup-restorer/bin/s3-blobstore-backup-restore \
-    --backup \
-    --unversioned-backup-starter \
-    --existing-backup-blobs-artifact "$backup_scripts_state_dir/existing-backup-blobs.json" \
     --config /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/config/buckets.json \
-    --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
+    --unversioned-backup-start \
+    --artifact "${BBR_ARTIFACT_DIRECTORY}/blobstore.json" \
+    --existing-artifact "$backup_scripts_state_dir/existing-backup-blobs.json"
 
   /var/vcap/packages/s3-blobstore-backup-restorer/bin/s3-blobstore-backup-restore \
-    --backup \
-    --unversioned-backup-completer \
-    --existing-backup-blobs-artifact "$backup_scripts_state_dir/existing-backup-blobs.json" \
     --config /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/config/buckets.json \
-    --artifact-file "${BBR_ARTIFACT_DIRECTORY}/blobstore.json"
+    --unversioned-backup-complete \
+    --artifact "${BBR_ARTIFACT_DIRECTORY}/blobstore.json" \
+    --existing-artifact "$backup_scripts_state_dir/existing-backup-blobs.json"
 }
 
 case ${1:-} in

@@ -20,11 +20,15 @@ import (
 
 type CommandFlags struct {
 	ConfigPath                          string
-	IsRestore                           bool
 	ArtifactFilePath                    string
 	ExistingBackupBlobsArtifactFilePath string
-	Versioned                           bool
-	UnversionedCompleter                bool
+
+	VersionedBackup  *bool
+	VersionedRestore *bool
+
+	UnversionedBackupStart    *bool
+	UnversionedBackupComplete *bool
+	UnversionedRestore        *bool
 }
 
 type Runner interface {
@@ -49,7 +53,7 @@ func main() {
 	}
 
 	var runner Runner
-	if flags.Versioned {
+	if *flags.VersionedBackup || *flags.VersionedRestore {
 		var bucketsConfig map[string]config.BucketConfig
 		err = json.Unmarshal(rawConfig, &bucketsConfig)
 		if err != nil {
@@ -63,10 +67,10 @@ func main() {
 
 		artifact := versioned.NewFileArtifact(flags.ArtifactFilePath)
 
-		if flags.IsRestore {
-			runner = versioned.NewRestorer(buckets, artifact)
-		} else {
+		if *flags.VersionedBackup {
 			runner = versioned.NewBackuper(buckets, artifact)
+		} else {
+			runner = versioned.NewRestorer(buckets, artifact)
 		}
 	} else {
 		var bucketsConfig map[string]config.UnversionedBucketConfig
@@ -75,38 +79,31 @@ func main() {
 			exitWithError("Failed to parse config", err)
 		}
 
-		switch {
-		case flags.IsRestore:
-			{
-				backupArtifact := incremental.NewArtifact(flags.ArtifactFilePath)
-				restoreBucketPairs, err := config.BuildRestoreBucketPairs(bucketsConfig, backupArtifact)
-				if err != nil {
-					exitWithError("Failed to build restore bucket pairs", err)
-				}
+		if *flags.UnversionedBackupStart {
+			backupsToStart, err := config.BuildBackupsToStart(bucketsConfig)
+			if err != nil {
+				exitWithError("Failed to build backups to start", err)
+			}
+			backupArtifact := incremental.NewArtifact(flags.ArtifactFilePath)
+			existingBackupBlobsArtifact := incremental.NewArtifact(flags.ExistingBackupBlobsArtifactFilePath)
+			runner = incremental.NewBackupStarter(backupsToStart, clock{}, backupArtifact, existingBackupBlobsArtifact)
+		} else if *flags.UnversionedBackupComplete {
+			existingBackupBlobsArtifact := incremental.NewArtifact(flags.ExistingBackupBlobsArtifactFilePath)
+			backupsToComplete, err := config.BuildBackupsToComplete(bucketsConfig, existingBackupBlobsArtifact)
+			if err != nil {
+				exitWithError("Failed to build backups to complete", err)
+			}
+			runner = incremental.BackupCompleter{
+				BackupsToComplete: backupsToComplete,
+			}
+		} else {
+			backupArtifact := incremental.NewArtifact(flags.ArtifactFilePath)
+			restoreBucketPairs, err := config.BuildRestoreBucketPairs(bucketsConfig, backupArtifact)
+			if err != nil {
+				exitWithError("Failed to build restore bucket pairs", err)
+			}
 
-				runner = incremental.NewRestorer(restoreBucketPairs, backupArtifact)
-			}
-		case flags.UnversionedCompleter:
-			{
-				existingBackupBlobsArtifact := incremental.NewArtifact(flags.ExistingBackupBlobsArtifactFilePath)
-				backupsToComplete, err := config.BuildBackupsToComplete(bucketsConfig, existingBackupBlobsArtifact)
-				if err != nil {
-					exitWithError("Failed to build backups to complete", err)
-				}
-				runner = incremental.BackupCompleter{
-					BackupsToComplete: backupsToComplete,
-				}
-			}
-		default:
-			{
-				backupsToStart, err := config.BuildBackupsToStart(bucketsConfig)
-				if err != nil {
-					exitWithError("Failed to build backups to start", err)
-				}
-				backupArtifact := incremental.NewArtifact(flags.ArtifactFilePath)
-				existingBackupBlobsArtifact := incremental.NewArtifact(flags.ExistingBackupBlobsArtifactFilePath)
-				runner = incremental.NewBackupStarter(backupsToStart, clock{}, backupArtifact, existingBackupBlobsArtifact)
-			}
+			runner = incremental.NewRestorer(restoreBucketPairs, backupArtifact)
 		}
 	}
 
@@ -121,47 +118,53 @@ func exitWithError(context string, err error) {
 }
 
 func parseFlags() (CommandFlags, error) {
-	var configFilePath = flag.String("config", "", "Path to JSON config file")
-	var backupAction = flag.Bool("backup", false, "Run blobstore backup")
-	var restoreAction = flag.Bool("restore", false, "Run blobstore restore")
-	var artifactFilePath = flag.String("artifact-file", "", "Path to the artifact file")
-	var existingBackupBlobsArtifactFilePath = flag.String("existing-backup-blobs-artifact", "", "Path to the existing backup blobs artifact file")
-	var unversionedRestore = flag.Bool("unversioned", false, "Indicates targeted buckets are unversioned for restore")
-	var unversionedBackupStarter = flag.Bool("unversioned-backup-starter", false, "Run backup starter for unversioned buckets")
-	var unversionedBackupCompleter = flag.Bool("unversioned-backup-completer", false, "Run backup completer for unversioned buckets")
+	var (
+		configFilePath       = flag.String("config", "", "Path to config file")
+		artifactPath         = flag.String("artifact", "", "Path to the artifact file")
+		existingArtifactPath = flag.String("existing-artifact", "", "Path to the existing backups artifact file")
+		versionedBackup      = flag.Bool("versioned-backup", false, "Run versioned blobstore backup")
+		versionedRestore     = flag.Bool("versioned-restore", false, "Run versioned blobstore restore")
+
+		unversionedBackupStart    = flag.Bool("unversioned-backup-start", false, "Run backup starter for unversioned buckets")
+		unversionedBackupComplete = flag.Bool("unversioned-backup-complete", false, "Run backup completer for unversioned buckets")
+		unversionedRestore        = flag.Bool("unversioned-restore", false, "Run unversioned blobstore restore")
+	)
 
 	flag.Parse()
-
-	if *backupAction && *restoreAction {
-		return CommandFlags{}, errors.New("only one of: --backup or --restore can be provided")
-	}
-
-	if !*backupAction && !*restoreAction {
-		return CommandFlags{}, errors.New("missing --backup or --restore flag")
-	}
 
 	if *configFilePath == "" {
 		return CommandFlags{}, errors.New("missing --config flag")
 	}
 
-	if *artifactFilePath == "" {
-		return CommandFlags{}, errors.New("missing --artifact-file flag")
+	var count int
+	for _, b := range []*bool{versionedBackup, versionedRestore, unversionedBackupStart, unversionedBackupComplete, unversionedRestore} {
+		if *b {
+			count++
+		}
 	}
 
-	if *unversionedBackupCompleter && *unversionedBackupStarter {
-		return CommandFlags{}, errors.New("at most one of: --unversioned-backup-starter or --unversioned-backup-completer can be provided")
+	if count != 1 {
+		return CommandFlags{}, errors.New("exactly one action flag must be provided")
 	}
 
-	if (*unversionedBackupCompleter || *unversionedBackupStarter) && *existingBackupBlobsArtifactFilePath == "" {
-		return CommandFlags{}, errors.New("missing --existing-backup-blobs-artifact")
+	if (*versionedBackup || *versionedRestore || *unversionedBackupStart || *unversionedRestore) && *artifactPath == "" {
+		return CommandFlags{}, errors.New("missing --artifact flag")
+	}
+
+	if (*unversionedBackupStart || *unversionedBackupComplete) && *existingArtifactPath == "" {
+		return CommandFlags{}, errors.New("missing --existing-artifact flag")
 	}
 
 	return CommandFlags{
 		ConfigPath:                          *configFilePath,
-		IsRestore:                           *restoreAction,
-		ArtifactFilePath:                    *artifactFilePath,
-		ExistingBackupBlobsArtifactFilePath: *existingBackupBlobsArtifactFilePath,
-		Versioned:                           !*unversionedBackupStarter && !*unversionedBackupCompleter && !*unversionedRestore,
-		UnversionedCompleter:                *unversionedBackupCompleter,
+		ArtifactFilePath:                    *artifactPath,
+		ExistingBackupBlobsArtifactFilePath: *existingArtifactPath,
+
+		VersionedBackup:  versionedBackup,
+		VersionedRestore: versionedRestore,
+
+		UnversionedBackupStart:    unversionedBackupStart,
+		UnversionedBackupComplete: unversionedBackupComplete,
+		UnversionedRestore:        unversionedRestore,
 	}, nil
 }

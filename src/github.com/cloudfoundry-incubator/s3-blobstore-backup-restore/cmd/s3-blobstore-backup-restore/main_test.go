@@ -1,6 +1,8 @@
 package main_test
 
 import (
+	"fmt"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -11,59 +13,67 @@ import (
 )
 
 var _ = Describe("Main", func() {
-	It("it fails when there are no flags provided", func() {
-		session, err := gexec.Start(exec.Command(binaryPath), GinkgoWriter, GinkgoWriter)
-
-		exitsWithErrorMsg(err, session, "missing --backup or --restore flag")
-	})
-
 	It("it fails when the --config flag is not present", func() {
-		session, err := gexec.Start(exec.Command(binaryPath, "--restore"), GinkgoWriter, GinkgoWriter)
+		session, err := gexec.Start(exec.Command(binaryPath, ""), GinkgoWriter, GinkgoWriter)
 
 		exitsWithErrorMsg(err, session, "missing --config flag")
 	})
 
-	It("it fails when the --artifact-file flag is not present", func() {
-		session, err := gexec.Start(exec.Command(binaryPath, "--restore", "--config", "a-config-path"), GinkgoWriter, GinkgoWriter)
+	It("it fails when no action flag is provided", func() {
+		session, err := gexec.Start(exec.Command(binaryPath, "--config", "a-config-path"), GinkgoWriter, GinkgoWriter)
 
-		exitsWithErrorMsg(err, session, "missing --artifact-file")
+		exitsWithErrorMsg(err, session, "exactly one action flag must be provided")
 	})
 
-	Context("when --backup flag is passed", func() {
-		var args []string
+	Context("when multiple actions are provided", func() {
+		for _, actions := range [][]string{
+			{"versioned-backup", "versioned-restore"},
+			{"versioned-backup", "unversioned-backup-start"},
+			{"versioned-backup", "unversioned-backup-complete"},
+			{"versioned-backup", "unversioned-restore"},
+		} {
+			It(fmt.Sprintf("fails with --%s and --%s", actions[0], actions[1]), func() {
+				session, err := gexec.Start(
+					exec.Command(binaryPath, fmt.Sprintf("--%s", actions[0]), fmt.Sprintf("--%s", actions[1]), "--config", "a-config-path"),
+					GinkgoWriter,
+					GinkgoWriter,
+				)
+				exitsWithErrorMsg(err, session, "exactly one action flag must be provided")
+			})
+		}
+	})
 
-		BeforeEach(func() {
-			args = []string{"--backup", "--config", "a-config-path", "--artifact-file", "an-artifact-file"}
+	Context("when the action requires the artifact flag", func() {
+		for _, action := range []string{"versioned-backup", "versioned-restore", "unversioned-backup-start", "unversioned-restore"} {
+			It(fmt.Sprintf("fails when the --artifact flag is missing for --%s", action), func() {
+				session, err := gexec.Start(
+					exec.Command(binaryPath, fmt.Sprintf("--%s", action), "--config", "a-config-path"),
+					GinkgoWriter,
+					GinkgoWriter,
+				)
+
+				exitsWithErrorMsg(err, session, "missing --artifact flag")
+			})
+		}
+	})
+
+	Context("when the action requires the existing-artifact flag", func() {
+		It(fmt.Sprintf("fails when the --existing-artifact is missing for --unversioned-backup-start"), func() {
+			session, err := gexec.Start(
+				exec.Command(binaryPath, "--unversioned-backup-start", "--config", "a-config-path", "--artifact", "a-artifact-path"),
+				GinkgoWriter,
+				GinkgoWriter,
+			)
+			exitsWithErrorMsg(err, session, "missing --existing-artifact flag")
 		})
 
-		Context("and --unversioned-backup-completer flags is passed", func() {
-			It("it fails when the --existing-backup-blobs-artifact flag is not present", func() {
-				args = append(args, "--unversioned-backup-completer")
-
-				session, err := gexec.Start(exec.Command(binaryPath, args...), GinkgoWriter, GinkgoWriter)
-
-				exitsWithErrorMsg(err, session, "missing --existing-backup-blobs-artifact")
-			})
-		})
-
-		Context("and --unversioned-backup-starter flags is passed", func() {
-			It("it fails when the --existing-backup-blobs-artifact flag is not present", func() {
-				args = append(args, "--unversioned-backup-starter")
-
-				session, err := gexec.Start(exec.Command(binaryPath, args...), GinkgoWriter, GinkgoWriter)
-
-				exitsWithErrorMsg(err, session, "missing --existing-backup-blobs-artifact")
-			})
-		})
-
-		Context("and both --unversioned-backup-starter and --unversioned-backup-completer flags are passed", func() {
-			It("errors", func() {
-				args = append(args, "--unversioned-backup-starter", "--unversioned-backup-completer")
-
-				session, err := gexec.Start(exec.Command(binaryPath, args...), GinkgoWriter, GinkgoWriter)
-
-				exitsWithErrorMsg(err, session, "at most one of: --unversioned-backup-starter or --unversioned-backup-completer can be provided")
-			})
+		It(fmt.Sprintf("fails when the --existing-artifact is missing for --unversioned-backup-complete"), func() {
+			session, err := gexec.Start(
+				exec.Command(binaryPath, "--unversioned-backup-complete", "--config", "a-config-path"),
+				GinkgoWriter,
+				GinkgoWriter,
+			)
+			exitsWithErrorMsg(err, session, "missing --existing-artifact flag")
 		})
 	})
 })
