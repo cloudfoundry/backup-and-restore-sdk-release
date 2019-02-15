@@ -9,18 +9,14 @@ import (
 )
 
 type RestoreBucketPair struct {
-	destinationLiveBucket Bucket
-	sourceBackupBucket    Bucket
-	executionStrategy     executor.ParallelExecutor
+	liveBucket   Bucket
+	backupBucket Bucket
 }
 
 func NewRestoreBucketPair(liveBucket, backupBucket Bucket) RestoreBucketPair {
-	exe := executor.NewParallelExecutor()
-	exe.SetMaxInFlight(200)
 	return RestoreBucketPair{
-		destinationLiveBucket: liveBucket,
-		sourceBackupBucket:    backupBucket,
-		executionStrategy:     exe,
+		liveBucket:   liveBucket,
+		backupBucket: backupBucket,
 	}
 }
 
@@ -34,15 +30,18 @@ func (p RestoreBucketPair) Restore(bucketBackup BucketBackup) error {
 		executables = append(executables, copyBlobFromBucketExecutable{
 			src:       backedUpBlob.Path,
 			dst:       backedUpBlob.LiveBlobPath(),
-			srcBucket: p.sourceBackupBucket,
-			dstBucket: p.destinationLiveBucket,
+			srcBucket: p.backupBucket,
+			dstBucket: p.liveBucket,
 		})
 	}
 
-	errs := p.executionStrategy.Run([][]executor.Executable{executables})
+	e := executor.NewParallelExecutor()
+	e.SetMaxInFlight(200)
+
+	errs := e.Run([][]executor.Executable{executables})
 	if len(errs) != 0 {
 		return formatExecutorErrors(
-			fmt.Sprintf("failed to restore bucket %s", p.destinationLiveBucket.Name()),
+			fmt.Sprintf("failed to restore bucket %s", p.liveBucket.Name()),
 			errs,
 		)
 	}
@@ -51,7 +50,7 @@ func (p RestoreBucketPair) Restore(bucketBackup BucketBackup) error {
 }
 
 func (p RestoreBucketPair) CheckValidity() error {
-	if p.destinationLiveBucket.Name() == p.sourceBackupBucket.Name() {
+	if p.liveBucket.Name() == p.backupBucket.Name() {
 		return errors.New("live bucket and backup bucket cannot be the same")
 	}
 
