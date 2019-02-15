@@ -71,21 +71,6 @@ var _ = Describe("BackupStarter", func() {
 
 			liveBlobs := []incremental.Blob{liveBlob1, liveBlob2, liveBlob3}
 			liveBucket.ListBlobsReturns(liveBlobs, nil)
-
-			backupBucket.CopyBlobFromBucketStub = func(bucket incremental.Bucket, src, dst string) error {
-				Expect(bucket).To(Equal(liveBucket))
-				switch src {
-				case "f0/fd/blob1/uuid":
-					Expect(dst).To(Equal("2000_01_02_03_04_05/bucket_id/f0/fd/blob1/uuid"))
-				case "f0/fd/blob2/uuid":
-					Expect(dst).To(Equal("2000_01_02_03_04_05/bucket_id/f0/fd/blob2/uuid"))
-				case "f0/fd/blob3/uuid":
-					Expect(dst).To(Equal("2000_01_02_03_04_05/bucket_id/f0/fd/blob3/uuid"))
-				default:
-					Fail(fmt.Sprintf("CopyBlobFromBucket unexpected src: %s, with dst: %s, bucket: %s", src, dst, bucket))
-				}
-				return nil
-			}
 		})
 
 		It("copies all the live blobs to the new backup directory", func() {
@@ -95,6 +80,25 @@ var _ = Describe("BackupStarter", func() {
 			Expect(liveBucket.ListBlobsArgsForCall(0)).To(Equal(""))
 
 			Expect(backupBucket.CopyBlobFromBucketCallCount()).To(Equal(3))
+
+			bucket0, src0, dst0 := backupBucket.CopyBlobFromBucketArgsForCall(0)
+			bucket1, src1, dst1 := backupBucket.CopyBlobFromBucketArgsForCall(1)
+			bucket2, src2, dst2 := backupBucket.CopyBlobFromBucketArgsForCall(2)
+			Expect([]incremental.Bucket{bucket0, bucket1, bucket2}).To(ConsistOf(liveBucket, liveBucket, liveBucket))
+			Expect([][]string{{src0, dst0}, {src1, dst1}, {src2, dst2}}).To(ConsistOf(
+				[]string{
+					"f0/fd/blob1/uuid",
+					"2000_01_02_03_04_05/bucket_id/f0/fd/blob1/uuid",
+				},
+				[]string{
+					"f0/fd/blob2/uuid",
+					"2000_01_02_03_04_05/bucket_id/f0/fd/blob2/uuid",
+				},
+				[]string{
+					"f0/fd/blob3/uuid",
+					"2000_01_02_03_04_05/bucket_id/f0/fd/blob3/uuid",
+				},
+			))
 		})
 
 		Context("and listing the blobs from the live bucket fails", func() {

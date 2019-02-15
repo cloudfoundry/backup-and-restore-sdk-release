@@ -15,7 +15,6 @@ var _ = Describe("BucketPair", func() {
 		liveBucket           *fakes.FakeBucket
 		backupBucket         *fakes.FakeBucket
 		bucketPair           incremental.RestoreBucketPair
-		bucketBackup         incremental.BucketBackup
 		err                  error
 		configLiveBucket     string
 		configLiveRegion     string
@@ -40,7 +39,9 @@ var _ = Describe("BucketPair", func() {
 	})
 
 	Describe("Restore", func() {
-		JustBeforeEach(func() {
+		var bucketBackup incremental.BucketBackup
+
+		BeforeEach(func() {
 			bucketBackup = incremental.BucketBackup{
 				BucketName:   artifactBackupBucket,
 				BucketRegion: artifactBackupRegion,
@@ -50,34 +51,33 @@ var _ = Describe("BucketPair", func() {
 				},
 				BackupDirectoryPath: "2015-12-13-05-06-07/my_bucket_id",
 			}
-			err = bucketPair.Restore(bucketBackup)
 		})
 
 		It("successfully copies from the backup bucket to the live bucket", func() {
-			By("not returning an error", func() {
-				Expect(err).NotTo(HaveOccurred())
-			})
+			err = bucketPair.Restore(bucketBackup)
 
-			By("copying from the backup location to the live location", func() {
-				Expect(liveBucket.CopyBlobFromBucketCallCount()).To(Equal(2))
-				bucket, src, dst := liveBucket.CopyBlobFromBucketArgsForCall(0)
-				Expect(src).To(Equal("2015-12-13-05-06-07/my_bucket_id/livebucketpath/to/real/blob2"))
-				Expect(dst).To(Equal("livebucketpath/to/real/blob2"))
-				Expect(bucket.Name()).To(Equal(bucketBackup.BucketName))
-
-				bucket, src, dst = liveBucket.CopyBlobFromBucketArgsForCall(1)
-				Expect(src).To(Equal("2015-12-13-05-06-07/my_bucket_id/livebucketpath/to/real/blob1"))
-				Expect(dst).To(Equal("livebucketpath/to/real/blob1"))
-				Expect(bucket.Name()).To(Equal(bucketBackup.BucketName))
-			})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(liveBucket.CopyBlobFromBucketCallCount()).To(Equal(2))
+			bucket0, src0, dst0 := liveBucket.CopyBlobFromBucketArgsForCall(0)
+			bucket1, src1, dst1 := liveBucket.CopyBlobFromBucketArgsForCall(1)
+			Expect([][]string{{bucket0.Name(), src0, dst0}, {bucket1.Name(), src1, dst1}}).To(ConsistOf(
+				[]string{
+					bucketBackup.BucketName,
+					"2015-12-13-05-06-07/my_bucket_id/livebucketpath/to/real/blob1",
+					"livebucketpath/to/real/blob1",
+				},
+				[]string{
+					bucketBackup.BucketName,
+					"2015-12-13-05-06-07/my_bucket_id/livebucketpath/to/real/blob2",
+					"livebucketpath/to/real/blob2",
+				},
+			))
 		})
 
 		Context("When CopyObject errors", func() {
-			BeforeEach(func() {
-				liveBucket.CopyBlobFromBucketReturns(fmt.Errorf("cannot copy object"))
-			})
-
 			It("errors", func() {
+				liveBucket.CopyBlobFromBucketReturns(fmt.Errorf("cannot copy object"))
+				err = bucketPair.Restore(bucketBackup)
 				Expect(err).To(MatchError(ContainSubstring("cannot copy object")))
 			})
 		})

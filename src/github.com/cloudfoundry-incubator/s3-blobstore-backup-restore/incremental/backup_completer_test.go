@@ -2,7 +2,6 @@ package incremental_test
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental/fakes"
@@ -48,22 +47,24 @@ var _ = Describe("BackupCompleter", func() {
 			completer := incremental.BackupCompleter{
 				BackupsToComplete: backupsToComplete,
 			}
-			bucket.CopyBlobWithinBucketStub = func(src, dst string) error {
-				switch src {
-				case "previous_timestamp/bucket_id/f0/fd/blob1/uuid":
-					Expect(dst).To(Equal("timestamp/bucket_id/f0/fd/blob1/uuid"))
-				case "previous_timestamp/bucket_id/f0/bucket_id/blob2/uuid":
-					Expect(dst).To(Equal("timestamp/bucket_id/f0/bucket_id/blob2/uuid"))
-				default:
-					Fail(fmt.Sprintf("CopyBlobWithinBucket called with unexpected src: %s, dst: %s", src, dst))
-				}
-				return nil
-			}
 
 			err := completer.Run()
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(bucket.CopyBlobWithinBucketCallCount()).To(Equal(2))
+
+			src0, dst0 := bucket.CopyBlobWithinBucketArgsForCall(0)
+			src1, dst1 := bucket.CopyBlobWithinBucketArgsForCall(1)
+			Expect([][]string{{src0, dst0}, {src1, dst1}}).To(ConsistOf(
+				[]string{
+					"previous_timestamp/bucket_id/f0/fd/blob1/uuid",
+					"timestamp/bucket_id/f0/fd/blob1/uuid",
+				},
+				[]string{
+					"previous_timestamp/bucket_id/f0/bucket_id/blob2/uuid",
+					"timestamp/bucket_id/f0/bucket_id/blob2/uuid",
+				},
+			))
 		})
 
 		It("marks the backup directory complete", func() {
