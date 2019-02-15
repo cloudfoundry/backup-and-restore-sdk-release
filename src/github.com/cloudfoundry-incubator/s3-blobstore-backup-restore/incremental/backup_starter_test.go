@@ -115,6 +115,17 @@ var _ = Describe("BackupStarter", func() {
 				)))
 			})
 		})
+
+		It("writes an empty existing blobs artifact", func() {
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(existingBlobsArtifact.WriteCallCount()).To(Equal(1))
+			Expect(existingBlobsArtifact.WriteArgsForCall(0)).To(Equal(map[string]incremental.Backup{
+				"bucket_id": {
+					DstBackupDirectoryPath: "2000_01_02_03_04_05/bucket_id",
+				},
+			}))
+		})
 	})
 
 	Context("when there is a previous complete backup", func() {

@@ -113,7 +113,9 @@ func generateExistingBlobsArtifact(existingBlobs []BackedUpBlob, dstBackupDirect
 		}
 	}
 
-	return Backup{}
+	return Backup{
+		DstBackupDirectoryPath: dstBackupDirectoryPath,
+	}
 }
 
 func (b BucketPair) copyNewLiveBlobsToBackup(backedUpBlobs []BackedUpBlob, liveBlobs []Blob, backupDirPath string) ([]BackedUpBlob, error) {
