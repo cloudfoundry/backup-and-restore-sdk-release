@@ -2,12 +2,13 @@ package s3bucket_test
 
 import (
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/versioned"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("VersionedBucket", func() {
-	var bucketObjectUnderTest s3bucket.VersionedBucket
+	var bucketObjectUnderTest versioned.Bucket
 	var err error
 
 	RunVersionedBucketTests := func(mainRegion, secondaryRegion, endpoint, accessKey, secretKey string) {
@@ -109,6 +110,30 @@ var _ = Describe("VersionedBucket", func() {
 
 					Expect(err).NotTo(HaveOccurred())
 					Expect(len(versions)).To(Equal(2001))
+				})
+			})
+		})
+
+		Describe("CheckIfVersioned", func() {
+			Context("when the bucket is not versioned", func() {
+				var unversionedBucketName string
+				var bucketObjectUnderTest versioned.Bucket
+
+				BeforeEach(func() {
+					unversionedBucketName = setUpUnversionedBucket(mainRegion, endpoint, creds)
+					uploadFile(unversionedBucketName, endpoint, "unversioned-test", "UNVERSIONED-TEST", creds)
+
+					bucketObjectUnderTest, err = s3bucket.NewBucket(unversionedBucketName, mainRegion, endpoint, creds, false)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				AfterEach(func() {
+					tearDownBucket(unversionedBucketName, endpoint, creds)
+				})
+
+				It("fails", func() {
+					err = bucketObjectUnderTest.CheckIfVersioned()
+					Expect(err).To(MatchError(ContainSubstring("is not versioned")))
 				})
 			})
 		})
