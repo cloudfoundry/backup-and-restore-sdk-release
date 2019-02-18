@@ -20,7 +20,7 @@ var _ = Describe("IncrementalBucket", func() {
 		)
 	})
 
-	XDescribe("ECS S3-compatible buckets", func() {
+	Describe("ECS S3-compatible buckets", func() {
 		RunIncrementalBucketContractTests(
 			"eu-west-1",
 			"us-west-1",
