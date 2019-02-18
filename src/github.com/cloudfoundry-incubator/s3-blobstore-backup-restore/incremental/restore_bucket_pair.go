@@ -3,8 +3,6 @@ package incremental
 import (
 	"fmt"
 
-	"errors"
-
 	"github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor"
 )
 
@@ -44,14 +42,6 @@ func (p RestoreBucketPair) Restore(bucketBackup Backup) error {
 			fmt.Sprintf("failed to restore bucket %s", p.liveBucket.Name()),
 			errs,
 		)
-	}
-
-	return nil
-}
-
-func (p RestoreBucketPair) CheckValidity() error {
-	if p.liveBucket.Name() == p.backupBucket.Name() {
-		return errors.New("live bucket and backup bucket cannot be the same")
 	}
 
 	return nil
