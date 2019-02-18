@@ -7,15 +7,13 @@ import (
 
 //go:generate counterfeiter -o fakes/fake_backup_directory_finder.go . BackupDirectoryFinder
 type BackupDirectoryFinder interface {
-	ListBlobs(string) ([]BackedUpBlob, error)
+	ListBlobs(string, Bucket) ([]BackedUpBlob, error)
 }
 
-type Finder struct {
-	Bucket Bucket
-}
+type Finder struct{}
 
-func (b Finder) ListBlobs(bucketID string) ([]BackedUpBlob, error) {
-	dirs, err := b.Bucket.ListDirectories()
+func (b Finder) ListBlobs(bucketID string, backupBucket Bucket) ([]BackedUpBlob, error) {
+	dirs, err := backupBucket.ListDirectories()
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +37,7 @@ func (b Finder) ListBlobs(bucketID string) ([]BackedUpBlob, error) {
 	for _, filteredDir := range filteredDirs {
 		backupDirs = append(backupDirs, BackupDirectory{
 			Path:   joinBlobPath(filteredDir, bucketID),
-			Bucket: b.Bucket,
+			Bucket: backupBucket,
 		})
 	}
 
@@ -52,7 +50,7 @@ func (b Finder) ListBlobs(bucketID string) ([]BackedUpBlob, error) {
 		return nil, nil
 	}
 
-	blobs, err := b.Bucket.ListBlobs(lastCompleteBackupDir.Path)
+	blobs, err := backupBucket.ListBlobs(lastCompleteBackupDir.Path)
 	if err != nil {
 		return nil, err
 	}

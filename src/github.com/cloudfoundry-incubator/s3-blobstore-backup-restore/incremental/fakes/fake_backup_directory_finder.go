@@ -8,10 +8,11 @@ import (
 )
 
 type FakeBackupDirectoryFinder struct {
-	ListBlobsStub        func(string) ([]incremental.BackedUpBlob, error)
+	ListBlobsStub        func(string, incremental.Bucket) ([]incremental.BackedUpBlob, error)
 	listBlobsMutex       sync.RWMutex
 	listBlobsArgsForCall []struct {
 		arg1 string
+		arg2 incremental.Bucket
 	}
 	listBlobsReturns struct {
 		result1 []incremental.BackedUpBlob
@@ -25,16 +26,17 @@ type FakeBackupDirectoryFinder struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeBackupDirectoryFinder) ListBlobs(arg1 string) ([]incremental.BackedUpBlob, error) {
+func (fake *FakeBackupDirectoryFinder) ListBlobs(arg1 string, arg2 incremental.Bucket) ([]incremental.BackedUpBlob, error) {
 	fake.listBlobsMutex.Lock()
 	ret, specificReturn := fake.listBlobsReturnsOnCall[len(fake.listBlobsArgsForCall)]
 	fake.listBlobsArgsForCall = append(fake.listBlobsArgsForCall, struct {
 		arg1 string
-	}{arg1})
-	fake.recordInvocation("ListBlobs", []interface{}{arg1})
+		arg2 incremental.Bucket
+	}{arg1, arg2})
+	fake.recordInvocation("ListBlobs", []interface{}{arg1, arg2})
 	fake.listBlobsMutex.Unlock()
 	if fake.ListBlobsStub != nil {
-		return fake.ListBlobsStub(arg1)
+		return fake.ListBlobsStub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -48,10 +50,10 @@ func (fake *FakeBackupDirectoryFinder) ListBlobsCallCount() int {
 	return len(fake.listBlobsArgsForCall)
 }
 
-func (fake *FakeBackupDirectoryFinder) ListBlobsArgsForCall(i int) string {
+func (fake *FakeBackupDirectoryFinder) ListBlobsArgsForCall(i int) (string, incremental.Bucket) {
 	fake.listBlobsMutex.RLock()
 	defer fake.listBlobsMutex.RUnlock()
-	return fake.listBlobsArgsForCall[i].arg1
+	return fake.listBlobsArgsForCall[i].arg1, fake.listBlobsArgsForCall[i].arg2
 }
 
 func (fake *FakeBackupDirectoryFinder) ListBlobsReturns(result1 []incremental.BackedUpBlob, result2 error) {

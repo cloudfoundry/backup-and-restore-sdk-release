@@ -49,7 +49,7 @@ func (b BackupStarter) Run() error {
 			Bucket: backupToStart.BucketPair.BackupBucket,
 		}
 
-		backedUpBlobs, err := backupToStart.BackupDirectoryFinder.ListBlobs(bucketID)
+		backedUpBlobs, err := backupToStart.BackupDirectoryFinder.ListBlobs(bucketID, backupToStart.BucketPair.BackupBucket)
 		if err != nil {
 			return fmt.Errorf("failed to start backup: %s", err)
 		}

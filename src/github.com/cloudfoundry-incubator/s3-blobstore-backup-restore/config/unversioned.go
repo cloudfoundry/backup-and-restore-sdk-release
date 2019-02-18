@@ -56,9 +56,7 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig) (map[string
 				LiveBucket:   liveBucket,
 				BackupBucket: backupBucket,
 			},
-			BackupDirectoryFinder: incremental.Finder{
-				Bucket: backupBucket,
-			},
+			BackupDirectoryFinder: incremental.Finder{},
 		}
 	}
 
