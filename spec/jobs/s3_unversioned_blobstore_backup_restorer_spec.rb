@@ -13,8 +13,8 @@ describe 's3-unversioned-blobstore-backup-restorer job' do
   describe 'backup' do
     context 'when backup is not enabled' do
       it 'the templated backup script is empty' do
-        config = backup_template.render({})
-        expect(config.strip).to eq("#!/usr/bin/env bash\n\nset -eu")
+        backup_script = backup_template.render({})
+        expect(backup_script.strip).to eq("#!/usr/bin/env bash\n\nset -eu")
       end
 
       it 'the templated buckets script is empty' do
@@ -33,24 +33,24 @@ describe 's3-unversioned-blobstore-backup-restorer job' do
           }
         }
 
-        config = buckets_template.render(manifest)
-        expect(config.strip).to eq("")
+        bucket_file = buckets_template.render(manifest)
+        expect(bucket_file.strip).to eq("")
       end
     end
 
     context 'when backup is enabled' do
       context 'and bpm is enabled' do
         it 'templates bpm command correctly' do
-          config = backup_template.render({"bpm" => {"enabled" => true}, "enabled" => true})
-          expect(config).to include("/var/vcap/jobs/bpm/bin/bpm run s3-unversioned-blobstore-backup-restorer")
+          backup_script = backup_template.render({"bpm" => {"enabled" => true}, "enabled" => true})
+          expect(backup_script).to include("/var/vcap/jobs/bpm/bin/bpm run s3-unversioned-blobstore-backup-restorer")
         end
       end
 
       context 'and bpm is not enabled' do
         it 'does not template bpm' do
-          config = backup_template.render("enabled" => true)
-          expect(config).to include("backup")
-          expect(config).not_to include("/var/vcap/jobs/bpm/bin/bpm run s3-unversioned-blobstore-backup-restorer")
+          backup_script = backup_template.render("enabled" => true)
+          expect(backup_script).to include("backup")
+          expect(backup_script).not_to include("/var/vcap/jobs/bpm/bin/bpm run s3-unversioned-blobstore-backup-restorer")
         end
       end
 
@@ -166,24 +166,24 @@ describe 's3-unversioned-blobstore-backup-restorer job' do
   describe 'restore' do
     context 'when restore is not enabled' do
       it 'the templated script is empty' do
-        config = restore_template.render({})
-        expect(config.strip).to eq("#!/usr/bin/env bash\n\nset -eu")
+        restore_script = restore_template.render({})
+        expect(restore_script.strip).to eq("#!/usr/bin/env bash\n\nset -eu")
       end
     end
 
     context 'when restore is enabled' do
       context 'and when bpm is enabled' do
         it 'templates bpm command correctly' do
-          config = restore_template.render({"bpm" => {"enabled" => true}, "enabled" => true})
-          expect(config).to include("/var/vcap/jobs/bpm/bin/bpm run s3-unversioned-blobstore-backup-restorer")
+          restore_script = restore_template.render({"bpm" => {"enabled" => true}, "enabled" => true})
+          expect(restore_script).to include("/var/vcap/jobs/bpm/bin/bpm run s3-unversioned-blobstore-backup-restorer")
         end
       end
 
       context 'when bpm is not enabled' do
         it 'does not template bpm' do
-          config = restore_template.render("enabled" => true)
-          expect(config).to include("restore")
-          expect(config).not_to include("/var/vcap/jobs/bpm/bin/bpm run s3-unversioned-blobstore-backup-restorer")
+          restore_script = restore_template.render("enabled" => true)
+          expect(restore_script).to include("restore")
+          expect(restore_script).not_to include("/var/vcap/jobs/bpm/bin/bpm run s3-unversioned-blobstore-backup-restorer")
         end
       end
     end
