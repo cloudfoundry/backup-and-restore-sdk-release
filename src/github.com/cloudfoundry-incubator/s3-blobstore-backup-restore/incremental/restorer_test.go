@@ -3,6 +3,8 @@ package incremental_test
 import (
 	"fmt"
 
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
+
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental/fakes"
 
@@ -11,6 +13,13 @@ import (
 )
 
 var _ = Describe("Restorer", func() {
+
+	const (
+		dropletsBlob1 = "timestamp/droplets/my_droplet1"
+		dropletsBlob2 = "timestamp/droplets/my_droplet2"
+		packagesBlob1 = "timestamp/packages/my_package1"
+		packagesBlob2 = "timestamp/packages/my_package2"
+	)
 	var (
 		destinationLiveDropletsBucket *fakes.FakeBucket
 		sourceBackupDropletsBucket    *fakes.FakeBucket
@@ -42,16 +51,26 @@ var _ = Describe("Restorer", func() {
 			"droplets": {
 				BucketName:   "artifact_backup_droplet_bucket",
 				BucketRegion: "artifact_backup_droplet_region",
-				Blobs:        []string{"timestamp/droplets/my_droplet1", "timestamp/droplets/my_droplet2"},
+				Blobs:        []string{dropletsBlob1, dropletsBlob2},
 				SrcBackupDirectoryPath: "timestamp/droplets",
 			},
 			"packages": {
 				BucketName:   "artifact_backup_package_bucket",
 				BucketRegion: "artifact_backup_package_region",
-				Blobs:        []string{"timestamp/packages/my_package1", "timestamp/packages/my_package2"},
+				Blobs:        []string{packagesBlob1, packagesBlob2},
 				SrcBackupDirectoryPath: "timestamp/packages",
 			},
 		}
+
+		sourceBackupDropletsBucket.ListBlobsReturns([]incremental.Blob{
+			s3bucket.NewBlob(dropletsBlob1),
+			s3bucket.NewBlob(dropletsBlob2),
+		}, nil)
+
+		sourceBackupPackagesBucket.ListBlobsReturns([]incremental.Blob{
+			s3bucket.NewBlob(packagesBlob1),
+			s3bucket.NewBlob(packagesBlob2),
+		}, nil)
 		artifact.LoadReturns(bucketBackups, nil)
 
 		bucketPairs = map[string]incremental.RestoreBucketPair{
@@ -76,7 +95,7 @@ var _ = Describe("Restorer", func() {
 		It("restores all the bucket pairs", func() {
 			Expect(err).NotTo(HaveOccurred())
 
-			srcDroplets := []string{"timestamp/droplets/my_droplet1", "timestamp/droplets/my_droplet2"}
+			srcDroplets := []string{dropletsBlob1, dropletsBlob2}
 			dstDroplets := []string{"my_droplet1", "my_droplet2"}
 			testBucketsWithBlobs(
 				destinationLiveDropletsBucket,
@@ -85,7 +104,7 @@ var _ = Describe("Restorer", func() {
 				dstDroplets,
 			)
 
-			srcPackages := []string{"timestamp/packages/my_package1", "timestamp/packages/my_package2"}
+			srcPackages := []string{packagesBlob1, packagesBlob2}
 			dstPackages := []string{"my_package1", "my_package2"}
 			testBucketsWithBlobs(
 				destinationLivePackagesBucket,
@@ -93,6 +112,25 @@ var _ = Describe("Restorer", func() {
 				srcPackages,
 				dstPackages,
 			)
+		})
+	})
+
+	Context("When the there is a blob in the artifact that is not in the backup directory", func() {
+		BeforeEach(func() {
+			artifact.LoadReturns(bucketBackups, nil)
+			sourceBackupDropletsBucket.ListBlobsReturns([]incremental.Blob{
+				s3bucket.NewBlob(dropletsBlob1),
+				s3bucket.NewBlob(dropletsBlob2),
+			}, nil)
+			sourceBackupPackagesBucket.ListBlobsReturns(nil, nil)
+		})
+
+		It("returns an error", func() {
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("found blobs in artifact that are not present in backup directory for bucket artifact_backup_package_bucket:"))
+			Expect(err.Error()).To(ContainSubstring(packagesBlob1))
+			Expect(err.Error()).To(ContainSubstring(packagesBlob2))
+			Expect(sourceBackupPackagesBucket.ListBlobsCallCount()).To(Equal(1))
 		})
 	})
 
@@ -142,7 +180,7 @@ var _ = Describe("Restorer", func() {
 				"droplets": {
 					BucketName:   "artifact_backup_droplet_bucket",
 					BucketRegion: "artifact_backup_droplet_region",
-					Blobs:        []string{"my_key", "another_key"},
+					Blobs:        []string{dropletsBlob1, dropletsBlob2},
 					SrcBackupDirectoryPath: "timestamp/droplets",
 				},
 				"packages": {
@@ -156,6 +194,7 @@ var _ = Describe("Restorer", func() {
 		})
 
 		It("does not attempt to restore that pair", func() {
+			Expect(err).NotTo(HaveOccurred())
 			Expect(destinationLiveDropletsBucket.CopyBlobFromBucketCallCount()).To(Equal(2))
 			Expect(destinationLivePackagesBucket.CopyBlobFromBucketCallCount()).To(Equal(0))
 		})

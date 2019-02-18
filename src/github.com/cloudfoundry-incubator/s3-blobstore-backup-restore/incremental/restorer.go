@@ -1,6 +1,7 @@
 package incremental
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -30,6 +31,11 @@ func (b Restorer) Run() error {
 				key,
 			)
 		}
+
+		backupBlobs, _ := b.bucketPairs[key].backupBucket.ListBlobs(bucketBackups[key].SrcBackupDirectoryPath)
+		if missingBlobs := validateArtifact(backupBlobs, bucketBackups[key].Blobs); len(missingBlobs) > 0 {
+			return formatError(fmt.Sprintf("found blobs in artifact that are not present in backup directory for bucket %s:", bucketBackups[key].BucketName), missingBlobs)
+		}
 	}
 
 	for key, pair := range b.bucketPairs {
@@ -47,4 +53,31 @@ func (b Restorer) Run() error {
 		}
 	}
 	return nil
+}
+
+func validateArtifact(backupBlobs []Blob, artifactBlobs []string) []string {
+	var missingBlobs []string
+	for _, artifactBlobPath := range artifactBlobs {
+		if !contains(artifactBlobPath, backupBlobs) {
+			missingBlobs = append(missingBlobs, artifactBlobPath)
+		}
+	}
+
+	return missingBlobs
+}
+
+func contains(key string, blobs []Blob) bool {
+	for _, blob := range blobs {
+		if key == blob.Path() {
+			return true
+		}
+	}
+	return false
+}
+
+func formatError(errorMsg string, blobs []string) error {
+	for _, blob := range blobs {
+		errorMsg = errorMsg + "\n" + blob
+	}
+	return errors.New(errorMsg)
 }
