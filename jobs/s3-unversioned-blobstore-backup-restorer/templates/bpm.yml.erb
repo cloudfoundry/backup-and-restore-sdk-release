@@ -4,6 +4,11 @@ processes:
   ephemeral_disk: true
   args:
   - run
+- name: post-backup-unlock
+  executable: /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/post-backup-unlock
+  ephemeral_disk: true
+  args:
+  - run
 - name: restore
   executable: /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/restore
   args:

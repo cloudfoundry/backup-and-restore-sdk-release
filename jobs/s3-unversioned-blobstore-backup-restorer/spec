@@ -19,6 +19,7 @@ name: s3-unversioned-blobstore-backup-restorer
 
 templates:
   backup.erb: bin/bbr/backup
+  post-backup-unlock.erb: bin/bbr/post-backup-unlock
   restore.erb: bin/bbr/restore
   buckets.json.erb: config/buckets.json
   bpm.yml.erb: config/bpm.yml

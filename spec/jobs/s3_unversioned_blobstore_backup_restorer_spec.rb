@@ -7,6 +7,7 @@ describe 's3-unversioned-blobstore-backup-restorer job' do
   let(:release) { Bosh::Template::Test::ReleaseDir.new(File.join(File.dirname(__FILE__), '../..')) }
   let(:job) { release.job('s3-unversioned-blobstore-backup-restorer') }
   let(:backup_template) { job.template('bin/bbr/backup') }
+  let(:post_backup_unlock_template) { job.template('bin/bbr/post-backup-unlock') }
   let(:buckets_template) { job.template('config/buckets.json') }
   let(:restore_template) { job.template('bin/bbr/restore') }
 
@@ -15,6 +16,9 @@ describe 's3-unversioned-blobstore-backup-restorer job' do
       it 'the templated backup script is empty' do
         backup_script = backup_template.render({})
         expect(backup_script.strip).to eq("#!/usr/bin/env bash\n\nset -eu")
+
+        post_backup_unlock_script = post_backup_unlock_template.render({})
+        expect(post_backup_unlock_script.strip).to eq("#!/usr/bin/env bash\n\nset -eu")
       end
 
       it 'the templated buckets script is empty' do
@@ -43,6 +47,11 @@ describe 's3-unversioned-blobstore-backup-restorer job' do
         it 'templates bpm command correctly' do
           backup_script = backup_template.render({"bpm" => {"enabled" => true}, "enabled" => true})
           expect(backup_script).to include("/var/vcap/jobs/bpm/bin/bpm run s3-unversioned-blobstore-backup-restorer")
+          expect(backup_script).to include("-p backup")
+
+          post_backup_unlock_script = post_backup_unlock_template.render({"bpm" => {"enabled" => true}, "enabled" => true})
+          expect(post_backup_unlock_script).to include("/var/vcap/jobs/bpm/bin/bpm run s3-unversioned-blobstore-backup-restorer")
+          expect(post_backup_unlock_script).to include("-p post-backup-unlock")
         end
       end
 
@@ -51,6 +60,10 @@ describe 's3-unversioned-blobstore-backup-restorer job' do
           backup_script = backup_template.render("enabled" => true)
           expect(backup_script).to include("backup")
           expect(backup_script).not_to include("/var/vcap/jobs/bpm/bin/bpm run s3-unversioned-blobstore-backup-restorer")
+
+          post_backup_unlock_script = post_backup_unlock_template.render("enabled" => true)
+          expect(post_backup_unlock_script).to include("unversioned-backup-complete")
+          expect(post_backup_unlock_script).not_to include("/var/vcap/jobs/bpm/bin/bpm run s3-unversioned-blobstore-backup-restorer")
         end
       end
 

@@ -19,7 +19,7 @@ package s3_test
 import (
 	"time"
 
-	"github.com/onsi/gomega/gexec"
+	. "github.com/onsi/gomega/gexec"
 
 	"strconv"
 
@@ -33,14 +33,16 @@ import (
 )
 
 var _ = Describe("S3 unversioned backup and restore", func() {
-	var region string
-	var bucket string
-	var backupRegion string
-	var backupBucket string
-	var instanceArtifactDirPath string
+	var (
+		region                  string
+		bucket                  string
+		backupRegion            string
+		backupBucket            string
+		instanceArtifactDirPath string
 
-	var localArtifact *os.File
-	var backuperInstance JobInstance
+		localArtifact    *os.File
+		backuperInstance JobInstance
+	)
 
 	Context("when bpm is not enabled", func() {
 		BeforeEach(func() {
@@ -91,17 +93,30 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 					" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/backup")
 
 				backupFiles = ListFilesFromBucket(backupRegion, backupBucket)
+				Expect(backupFiles).To(ConsistOf(MatchRegexp("\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/my_bucket/original/path/to/file$")))
+				Expect(GetFileContentsFromBucket(backupRegion, backupBucket, backupFiles[0])).To(Equal("FILE1"))
+			})
+
+			By("marking the backup a complete during the unlock", func() {
+				backuperInstance.RunSuccessfully("BBR_AFTER_BACKUP_SCRIPTS_SUCCESSFUL=true" +
+					" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/post-backup-unlock")
+
+				backupFiles = ListFilesFromBucket(backupRegion, backupBucket)
 				Expect(backupFiles).To(ConsistOf(
-					MatchRegexp("\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/my_bucket/original/path/to/file"+"$"),
-					MatchRegexp("\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/my_bucket/backup_complete"+"$")))
+					MatchRegexp("\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/my_bucket/original/path/to/file$"),
+					MatchRegexp("\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/my_bucket/backup_complete$")))
 				Expect(GetFileContentsFromBucket(backupRegion, backupBucket, backupFiles[1])).To(Equal("FILE1"))
+
+				session := backuperInstance.Run("stat /var/vcap/data/s3-unversioned-blobstore-backup-restorer/existing-backup-blobs.json")
+				Expect(session).To(Exit())
+				Expect(string(session.Buffer().Contents())).To(ContainSubstring("No such file or directory"))
 			})
 
 			By("writing a helpful backup artifact file", func() {
 				session := backuperInstance.Download(
 					instanceArtifactDirPath+"/blobstore.json", localArtifact.Name())
 
-				Expect(session).Should(gexec.Exit(0))
+				Expect(session).Should(Exit(0))
 
 				fileContents, err := ioutil.ReadFile(localArtifact.Name())
 
@@ -136,7 +151,7 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 					postRestoreFiles []string
 				)
 
-				By("backing up from the source bucket to the backup bucket", func() {
+				By("backing up only new live blobs from the source bucket to the backup bucket", func() {
 					WriteFileInBucket(region, backupBucket, "2019_02_12_17_45_22/my_bucket/original/path/to/old-blob", "old-blob-contents")
 					WriteFileInBucket(region, backupBucket, "2019_02_12_17_45_22/my_bucket/backup_complete", "")
 					preBackupFiles = ListFilesFromBucket(backupRegion, backupBucket)
@@ -152,6 +167,18 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 					Expect(backupFiles).To(ConsistOf(
 						"2019_02_12_17_45_22/my_bucket/backup_complete",
 						"2019_02_12_17_45_22/my_bucket/original/path/to/old-blob",
+						MatchRegexp("\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/my_bucket/original/path/to/new-blob$"),
+					))
+				})
+
+				By("backing up the previously backed up blobs from the previous backup to the new backup", func() {
+					backuperInstance.RunSuccessfully("BBR_AFTER_BACKUP_SCRIPTS_SUCCESSFUL=true" +
+						" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/post-backup-unlock")
+
+					backupFiles = ListFilesFromBucket(backupRegion, backupBucket)
+					Expect(backupFiles).To(ConsistOf(
+						"2019_02_12_17_45_22/my_bucket/backup_complete",
+						"2019_02_12_17_45_22/my_bucket/original/path/to/old-blob",
 						MatchRegexp("\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/my_bucket/original/path/to/old-blob$"),
 						MatchRegexp("\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/my_bucket/original/path/to/new-blob$"),
 						MatchRegexp("\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/my_bucket/backup_complete$"),
@@ -162,7 +189,7 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 					session := backuperInstance.Download(
 						instanceArtifactDirPath+"/blobstore.json", localArtifact.Name())
 
-					Expect(session).Should(gexec.Exit(0))
+					Expect(session).Should(Exit(0))
 
 					fileContents, err := ioutil.ReadFile(localArtifact.Name())
 
@@ -236,6 +263,8 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 
 			backuperInstance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
 				" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/backup")
+			backuperInstance.RunSuccessfully("sudo BBR_AFTER_BACKUP_SCRIPTS_SUCCESSFUL=true" +
+				" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/post-backup-unlock")
 
 			DeleteAllFilesFromBucket(region, bucket)
 			Expect(ListFilesFromBucket(region, bucket)).To(HaveLen(0))
@@ -244,6 +273,10 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 				" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/restore")
 
 			Expect(GetFileContentsFromBucket(region, bucket, "original/path/to/file")).To(Equal("FILE1"))
+
+			session := backuperInstance.Run("stat /var/vcap/data/s3-unversioned-blobstore-backup-restorer/existing-backup-blobs.json")
+			Expect(session).To(Exit())
+			Expect(string(session.Buffer().Contents())).To(ContainSubstring("No such file or directory"))
 		})
 	})
 
@@ -288,10 +321,49 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 
 				backuperInstance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
 					" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/backup")
+				backuperInstance.RunSuccessfully("BBR_AFTER_BACKUP_SCRIPTS_SUCCESSFUL=true" +
+					" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/post-backup-unlock")
 
-				preBackupFiles = ListFilesFromBucket(backupRegion, backupBucket)
-				Expect(len(preBackupFiles)).To(BeNumerically(">", 1900))
+				backupFiles := ListFilesFromBucket(backupRegion, backupBucket)
+				Expect(len(backupFiles)).To(BeNumerically(">", 1900))
+				Expect(backupFiles).To(ContainElement(MatchRegexp("\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/my_bucket/backup_complete$")))
 			})
+		})
+	})
+
+	Context("when post-backup-unlock is called with an old version of bbr", func() {
+		It("returns an error", func() {
+			backuperInstance = JobInstance{
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "s3-unversioned-backuper",
+				Index:      "0",
+			}
+
+			session := backuperInstance.Run("/var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/post-backup-unlock")
+			Expect(session).To(Exit())
+			Expect(session.ExitCode()).NotTo(Equal(0))
+			Expect(string(session.Buffer().Contents())).To(ContainSubstring("Error: BBR_AFTER_BACKUP_SCRIPTS_SUCCESSFUL unset, please ensure you are using the latest version of bbr"))
+		})
+	})
+
+	Context("when post-backup-unlock is called by backu-cleanup", func() {
+		It("cleans up the existing-backup-blobs.json", func() {
+
+			backuperInstance = JobInstance{
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "s3-unversioned-backuper",
+				Index:      "0",
+			}
+
+			backuperInstance.RunSuccessfully("touch /var/vcap/data/s3-unversioned-blobstore-backup-restorer/existing-backup-blobs.json")
+
+			session := backuperInstance.Run("BBR_AFTER_BACKUP_SCRIPTS_SUCCESSFUL=false /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/post-backup-unlock")
+			Expect(session).To(Exit(0))
+
+			session = backuperInstance.Run("stat /var/vcap/data/s3-unversioned-blobstore-backup-restorer/existing-backup-blobs.json")
+			Expect(session).To(Exit())
+			Expect(string(session.Buffer().Contents())).To(ContainSubstring("No such file or directory"))
+
 		})
 	})
 })
