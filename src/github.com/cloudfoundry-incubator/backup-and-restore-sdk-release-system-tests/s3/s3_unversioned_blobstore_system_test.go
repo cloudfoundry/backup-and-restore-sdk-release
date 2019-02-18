@@ -106,7 +106,9 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 					MatchRegexp("\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/my_bucket/original/path/to/file$"),
 					MatchRegexp("\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/my_bucket/backup_complete$")))
 				Expect(GetFileContentsFromBucket(backupRegion, backupBucket, backupFiles[1])).To(Equal("FILE1"))
+			})
 
+			By("cleaning up the existing blobs artifact", func() {
 				session := backuperInstance.Run("stat /var/vcap/data/s3-unversioned-blobstore-backup-restorer/existing-backup-blobs.json")
 				Expect(session).To(Exit())
 				Expect(string(session.Buffer().Contents())).To(ContainSubstring("No such file or directory"))
@@ -261,22 +263,28 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 
 			WriteFileInBucket(region, bucket, "original/path/to/file", "FILE1")
 
-			backuperInstance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
-				" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/backup")
-			backuperInstance.RunSuccessfully("sudo BBR_AFTER_BACKUP_SCRIPTS_SUCCESSFUL=true" +
-				" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/post-backup-unlock")
+			By("creating a backup", func() {
+				backuperInstance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
+					" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/backup")
+				backuperInstance.RunSuccessfully("sudo BBR_AFTER_BACKUP_SCRIPTS_SUCCESSFUL=true" +
+					" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/post-backup-unlock")
+			})
 
 			DeleteAllFilesFromBucket(region, bucket)
 			Expect(ListFilesFromBucket(region, bucket)).To(HaveLen(0))
 
-			backuperInstance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
-				" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/restore")
+			By("restoring", func() {
+				backuperInstance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
+					" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/restore")
 
-			Expect(GetFileContentsFromBucket(region, bucket, "original/path/to/file")).To(Equal("FILE1"))
+				Expect(GetFileContentsFromBucket(region, bucket, "original/path/to/file")).To(Equal("FILE1"))
+			})
 
-			session := backuperInstance.Run("stat /var/vcap/data/s3-unversioned-blobstore-backup-restorer/existing-backup-blobs.json")
-			Expect(session).To(Exit())
-			Expect(string(session.Buffer().Contents())).To(ContainSubstring("No such file or directory"))
+			By("cleaning up the existing blobs artifact", func() {
+				session := backuperInstance.Run("stat /var/vcap/data/s3-unversioned-blobstore-backup-restorer/existing-backup-blobs.json")
+				Expect(session).To(Exit())
+				Expect(string(session.Buffer().Contents())).To(ContainSubstring("No such file or directory"))
+			})
 		})
 	})
 
