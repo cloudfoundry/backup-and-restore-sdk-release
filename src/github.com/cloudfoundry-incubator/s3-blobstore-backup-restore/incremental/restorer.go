@@ -33,7 +33,7 @@ func (b Restorer) Run() error {
 		}
 
 		backupBlobs, _ := b.bucketPairs[key].backupBucket.ListBlobs(bucketBackups[key].SrcBackupDirectoryPath)
-		if missingBlobs := validateArtifact(backupBlobs, bucketBackups[key].Blobs); len(missingBlobs) > 0 {
+		if missingBlobs := validateArtifact(bucketBackups[key].SrcBackupDirectoryPath, backupBlobs, bucketBackups[key].Blobs); len(missingBlobs) > 0 {
 			return formatError(fmt.Sprintf("found blobs in artifact that are not present in backup directory for bucket %s:", bucketBackups[key].BucketName), missingBlobs)
 		}
 	}
@@ -55,10 +55,10 @@ func (b Restorer) Run() error {
 	return nil
 }
 
-func validateArtifact(backupBlobs []Blob, artifactBlobs []string) []string {
+func validateArtifact(srcBackupDirectoryPath string, backupBlobs []Blob, artifactBlobs []string) []string {
 	var missingBlobs []string
 	for _, artifactBlobPath := range artifactBlobs {
-		if !contains(artifactBlobPath, backupBlobs) {
+		if !contains(srcBackupDirectoryPath, artifactBlobPath, backupBlobs) {
 			missingBlobs = append(missingBlobs, artifactBlobPath)
 		}
 	}
@@ -66,9 +66,9 @@ func validateArtifact(backupBlobs []Blob, artifactBlobs []string) []string {
 	return missingBlobs
 }
 
-func contains(key string, blobs []Blob) bool {
+func contains(srcBackupDirectoryPath, key string, blobs []Blob) bool {
 	for _, blob := range blobs {
-		if key == blob.Path() {
+		if key == joinBlobPath(srcBackupDirectoryPath, blob.Path()) {
 			return true
 		}
 	}
