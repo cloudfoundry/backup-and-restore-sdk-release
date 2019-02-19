@@ -59,12 +59,14 @@ func (b BackupStarter) Run() error {
 			return fmt.Errorf("failed to start backup: %s", err)
 		}
 
-		existingBlobsArtifact, err := backupToStart.BucketPair.copyNewLiveBlobsToBackup(backedUpBlobs, liveBlobs, backupDir.Path)
+		filteredLiveBlobs := filterOutBackupComplete(liveBlobs)
+
+		existingBlobsArtifact, err := backupToStart.BucketPair.copyNewLiveBlobsToBackup(backedUpBlobs, filteredLiveBlobs, backupDir.Path)
 		if err != nil {
 			return fmt.Errorf("failed to copy blobs during backup: %s", err)
 		}
 
-		backups[bucketID] = generateBackupArtifact(liveBlobs, backupDir)
+		backups[bucketID] = generateBackupArtifact(filteredLiveBlobs, backupDir)
 
 		existingBlobs[bucketID] = generateExistingBlobsArtifact(
 			existingBlobsArtifact,
@@ -83,6 +85,18 @@ func (b BackupStarter) Run() error {
 	}
 
 	return nil
+}
+
+func filterOutBackupComplete(liveBlobs []Blob) []Blob {
+	var filteredLiveBlobs []Blob
+
+	for _, liveBlob := range liveBlobs {
+		if liveBlob.Path() != backupComplete {
+			filteredLiveBlobs = append(filteredLiveBlobs, liveBlob)
+		}
+	}
+
+	return filteredLiveBlobs
 }
 
 func generateBackupArtifact(liveBlobs []Blob, dir BackupDirectory) Backup {

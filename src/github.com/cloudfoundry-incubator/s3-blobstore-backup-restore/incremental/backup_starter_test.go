@@ -20,6 +20,7 @@ var _ = Describe("BackupStarter", func() {
 		liveBlob1             *fakes.FakeBlob
 		liveBlob2             *fakes.FakeBlob
 		liveBlob3             *fakes.FakeBlob
+		backupCompleteBlob    *fakes.FakeBlob
 		artifact              *fakes.FakeArtifact
 		existingBlobsArtifact *fakes.FakeArtifact
 		backupDirectoryFinder *fakes.FakeBackupDirectoryFinder
@@ -42,6 +43,8 @@ var _ = Describe("BackupStarter", func() {
 		liveBlob2.PathReturns("f0/fd/blob2/uuid")
 		liveBlob3 = new(fakes.FakeBlob)
 		liveBlob3.PathReturns("f0/fd/blob3/uuid")
+		backupCompleteBlob = new(fakes.FakeBlob)
+		backupCompleteBlob.PathReturns("backup_complete")
 
 		backupDirectoryFinder = new(fakes.FakeBackupDirectoryFinder)
 
@@ -69,7 +72,7 @@ var _ = Describe("BackupStarter", func() {
 		BeforeEach(func() {
 			backupDirectoryFinder.ListBlobsReturns(nil, nil)
 
-			liveBlobs := []incremental.Blob{liveBlob1, liveBlob2, liveBlob3}
+			liveBlobs := []incremental.Blob{liveBlob1, liveBlob2, liveBlob3, backupCompleteBlob}
 			liveBucket.ListBlobsReturns(liveBlobs, nil)
 		})
 
