@@ -73,16 +73,16 @@ var _ = Describe("Unversioned", func() {
 					SrcBackupDirectoryPath: "source-backup-dir1",
 					DstBackupDirectoryPath: "destination-backup-dir1",
 					Blobs: []string{
-						"blob-path1",
-						"blob-path2",
+						"source-backup-dir1/blob-path1",
+						"source-backup-dir1/blob-path2",
 					},
 				},
 				"bucket2": {
 					SrcBackupDirectoryPath: "source-backup-dir2",
 					DstBackupDirectoryPath: "destination-backup-dir2",
 					Blobs: []string{
-						"blob-path1",
-						"blob-path2",
+						"source-backup-dir2/blob-path1",
+						"source-backup-dir2/blob-path2",
 					},
 				},
 			}, nil)

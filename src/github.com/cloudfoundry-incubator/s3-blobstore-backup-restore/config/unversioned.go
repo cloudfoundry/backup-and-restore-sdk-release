@@ -3,8 +3,6 @@ package config
 import (
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/blobpath"
-
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
 )
@@ -97,7 +95,7 @@ func BuildBackupsToComplete(
 		var blobsToCopy []incremental.BackedUpBlob
 		for _, path := range existingBackup.Blobs {
 			blobsToCopy = append(blobsToCopy, incremental.BackedUpBlob{
-				Path:                blobpath.Join(existingBackup.SrcBackupDirectoryPath, path),
+				Path:                path,
 				BackupDirectoryPath: existingBackup.SrcBackupDirectoryPath,
 			})
 		}
