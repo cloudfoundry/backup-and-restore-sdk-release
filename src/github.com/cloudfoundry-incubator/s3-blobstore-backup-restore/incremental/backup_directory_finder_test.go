@@ -50,7 +50,7 @@ var _ = Describe("Finder", func() {
 		Context("when there is a complete backup directory", func() {
 			BeforeEach(func() {
 				blob := new(fakes.FakeBlob)
-				blob.PathReturns("2000_01_01_01_01_01/bucket_id/f0/fd/blob1/uuid")
+				blob.PathReturns("f0/fd/blob1/uuid")
 
 				bucket.ListDirectoriesReturns([]string{"2000_01_01_01_01_01"}, nil)
 				bucket.ListBlobsReturns([]incremental.Blob{blob}, nil)
@@ -85,7 +85,7 @@ var _ = Describe("Finder", func() {
 		Context("when there are multiple complete backup directories", func() {
 			BeforeEach(func() {
 				blob := new(fakes.FakeBlob)
-				blob.PathReturns("2000_01_01_01_01_01/bucket_id/f0/fd/blob1/uuid")
+				blob.PathReturns("f0/fd/blob1/uuid")
 
 				bucket.ListDirectoriesReturns([]string{
 					"2000_01_02_01_01_01",

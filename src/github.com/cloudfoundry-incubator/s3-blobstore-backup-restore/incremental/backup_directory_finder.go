@@ -58,7 +58,7 @@ func (b Finder) ListBlobs(bucketID string, backupBucket Bucket) ([]BackedUpBlob,
 	var backedUpBlobs []BackedUpBlob
 	for _, blob := range blobs {
 		backedUpBlobs = append(backedUpBlobs, BackedUpBlob{
-			Path:                blob.Path(),
+			Path:                joinBlobPath(lastCompleteBackupDir.Path, blob.Path()),
 			BackupDirectoryPath: lastCompleteBackupDir.Path,
 		})
 	}
