@@ -350,7 +350,7 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 			session := backuperInstance.Run("/var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/post-backup-unlock")
 			Expect(session).To(Exit())
 			Expect(session.ExitCode()).NotTo(Equal(0))
-			Expect(string(session.Buffer().Contents())).To(ContainSubstring("Error: BBR_AFTER_BACKUP_SCRIPTS_SUCCESSFUL unset, please ensure you are using the latest version of bbr"))
+			Expect(string(session.Buffer().Contents())).To(ContainSubstring("Error: BBR_AFTER_BACKUP_SCRIPTS_SUCCESSFUL is not set, please ensure you are using the latest version of bbr"))
 		})
 	})
 

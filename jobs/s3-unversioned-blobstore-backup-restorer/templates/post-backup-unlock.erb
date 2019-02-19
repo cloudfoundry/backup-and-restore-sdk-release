@@ -9,7 +9,7 @@ mkdir -p $backup_scripts_state_dir
 unlock() {
   if [ -z ${BBR_AFTER_BACKUP_SCRIPTS_SUCCESSFUL+x} ]
   then
-      echo "Error: BBR_AFTER_BACKUP_SCRIPTS_SUCCESSFUL unset, please ensure you are using the latest version of bbr"
+      echo "Error: BBR_AFTER_BACKUP_SCRIPTS_SUCCESSFUL is not set, please ensure you are using the latest version of bbr"
       exit 1
   fi
 
