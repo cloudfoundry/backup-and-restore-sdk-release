@@ -50,9 +50,9 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig) (map[string
 		}
 
 		backupsToStart[bucketID] = incremental.BackupToStart{
-			BucketPair: incremental.BucketPair{
-				LiveBucket:   liveBucket,
-				BackupBucket: backupBucket,
+			BucketPair: incremental.BackupBucketPair{
+				ConfigLiveBucket:   liveBucket,
+				ConfigBackupBucket: backupBucket,
 			},
 			BackupDirectoryFinder: incremental.Finder{},
 		}

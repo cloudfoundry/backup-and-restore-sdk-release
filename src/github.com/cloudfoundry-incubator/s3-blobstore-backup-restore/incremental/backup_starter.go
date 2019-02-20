@@ -2,17 +2,10 @@ package incremental
 
 import (
 	"fmt"
-
-	"github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor"
 )
 
-type BucketPair struct {
-	LiveBucket   Bucket
-	BackupBucket Bucket
-}
-
 type BackupToStart struct {
-	BucketPair            BucketPair
+	BucketPair            BackupBucketPair
 	BackupDirectoryFinder BackupDirectoryFinder
 }
 
@@ -46,22 +39,22 @@ func (b BackupStarter) Run() error {
 	for bucketID, backupToStart := range b.BackupsToStart {
 		backupDir := BackupDirectory{
 			Path:   joinBlobPath(timestamp, bucketID),
-			Bucket: backupToStart.BucketPair.BackupBucket,
+			Bucket: backupToStart.BucketPair.ConfigBackupBucket,
 		}
 
-		backedUpBlobs, err := backupToStart.BackupDirectoryFinder.ListBlobs(bucketID, backupToStart.BucketPair.BackupBucket)
+		backedUpBlobs, err := backupToStart.BackupDirectoryFinder.ListBlobs(bucketID, backupToStart.BucketPair.ConfigBackupBucket)
 		if err != nil {
 			return fmt.Errorf("failed to start backup: %s", err)
 		}
 
-		liveBlobs, err := backupToStart.BucketPair.LiveBucket.ListBlobs("")
+		liveBlobs, err := backupToStart.BucketPair.ConfigLiveBucket.ListBlobs("")
 		if err != nil {
 			return fmt.Errorf("failed to start backup: %s", err)
 		}
 
 		filteredLiveBlobs := filterOutBackupComplete(liveBlobs)
 
-		existingBlobsArtifact, err := backupToStart.BucketPair.copyNewLiveBlobsToBackup(backedUpBlobs, filteredLiveBlobs, backupDir.Path)
+		existingBlobsArtifact, err := backupToStart.BucketPair.CopyNewLiveBlobsToBackup(backedUpBlobs, filteredLiveBlobs, backupDir.Path)
 		if err != nil {
 			return fmt.Errorf("failed to copy blobs during backup: %s", err)
 		}
@@ -106,8 +99,8 @@ func generateBackupArtifact(liveBlobs []Blob, dir BackupDirectory) Backup {
 	}
 
 	return Backup{
-		BucketName: dir.Bucket.Name(),
-		Blobs:      blobs,
+		BucketName:             dir.Bucket.Name(),
+		Blobs:                  blobs,
 		SrcBackupDirectoryPath: dir.Path,
 		BucketRegion:           dir.Bucket.Region(),
 	}
@@ -121,7 +114,7 @@ func generateExistingBlobsArtifact(existingBlobs []BackedUpBlob, dstBackupDirect
 		}
 
 		return Backup{
-			Blobs: backedUpblobs,
+			Blobs:                  backedUpblobs,
 			SrcBackupDirectoryPath: existingBlobs[0].BackupDirectoryPath,
 			DstBackupDirectoryPath: dstBackupDirectoryPath,
 		}
@@ -130,52 +123,4 @@ func generateExistingBlobsArtifact(existingBlobs []BackedUpBlob, dstBackupDirect
 	return Backup{
 		DstBackupDirectoryPath: dstBackupDirectoryPath,
 	}
-}
-
-func (b BucketPair) copyNewLiveBlobsToBackup(backedUpBlobs []BackedUpBlob, liveBlobs []Blob, backupDirPath string) ([]BackedUpBlob, error) {
-	backedUpBlobsMap := make(map[string]BackedUpBlob)
-	for _, backedUpBlob := range backedUpBlobs {
-		backedUpBlobsMap[backedUpBlob.LiveBlobPath()] = backedUpBlob
-	}
-
-	var (
-		executables   []executor.Executable
-		existingBlobs []BackedUpBlob
-	)
-	for _, liveBlob := range liveBlobs {
-		backedUpBlob, exists := backedUpBlobsMap[liveBlob.Path()]
-
-		if !exists {
-			executable := copyBlobFromBucketExecutable{
-				src:       liveBlob.Path(),
-				dst:       joinBlobPath(backupDirPath, liveBlob.Path()),
-				srcBucket: b.LiveBucket,
-				dstBucket: b.BackupBucket,
-			}
-			executables = append(executables, executable)
-		} else {
-			existingBlobs = append(existingBlobs, backedUpBlob)
-		}
-	}
-
-	e := executor.NewParallelExecutor()
-	e.SetMaxInFlight(200)
-
-	errs := e.Run([][]executor.Executable{executables})
-	if len(errs) != 0 {
-		return nil, formatExecutorErrors("failing copying blobs in parallel", errs)
-	}
-
-	return existingBlobs, nil
-}
-
-type copyBlobFromBucketExecutable struct {
-	src       string
-	dst       string
-	dstBucket Bucket
-	srcBucket Bucket
-}
-
-func (e copyBlobFromBucketExecutable) Execute() error {
-	return e.dstBucket.CopyBlobFromBucket(e.srcBucket, e.src, e.dst)
 }

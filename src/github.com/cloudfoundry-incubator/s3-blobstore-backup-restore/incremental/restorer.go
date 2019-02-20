@@ -32,7 +32,7 @@ func (b Restorer) Run() error {
 			)
 		}
 
-		backupBlobs, _ := b.bucketPairs[key].backupBucket.ListBlobs(bucketBackups[key].SrcBackupDirectoryPath)
+		backupBlobs, _ := b.bucketPairs[key].ArtifactBackupBucket.ListBlobs(bucketBackups[key].SrcBackupDirectoryPath)
 		if missingBlobs := validateArtifact(bucketBackups[key].SrcBackupDirectoryPath, backupBlobs, bucketBackups[key].Blobs); len(missingBlobs) > 0 {
 			return formatError(fmt.Sprintf("found blobs in artifact that are not present in backup directory for bucket %s:", bucketBackups[key].BucketName), missingBlobs)
 		}

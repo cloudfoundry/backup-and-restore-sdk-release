@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("BucketPair", func() {
+var _ = Describe("RestoreBucketPair", func() {
 	var (
 		liveBucket           *fakes.FakeBucket
 		backupBucket         *fakes.FakeBucket
@@ -30,7 +30,10 @@ var _ = Describe("BucketPair", func() {
 
 		liveBucket = new(fakes.FakeBucket)
 		backupBucket = new(fakes.FakeBucket)
-		bucketPair = incremental.NewRestoreBucketPair(liveBucket, backupBucket)
+		bucketPair = incremental.RestoreBucketPair{
+			ConfigLiveBucket:     liveBucket,
+			ArtifactBackupBucket: backupBucket,
+		}
 
 		liveBucket.NameReturns(configLiveBucket)
 		liveBucket.RegionReturns(configLiveRegion)
@@ -39,10 +42,10 @@ var _ = Describe("BucketPair", func() {
 	})
 
 	Describe("Restore", func() {
-		var bucketBackup incremental.Backup
+		var backup incremental.Backup
 
 		BeforeEach(func() {
-			bucketBackup = incremental.Backup{
+			backup = incremental.Backup{
 				BucketName:   artifactBackupBucket,
 				BucketRegion: artifactBackupRegion,
 				Blobs: []string{
@@ -54,7 +57,7 @@ var _ = Describe("BucketPair", func() {
 		})
 
 		It("successfully copies from the backup bucket to the live bucket", func() {
-			err = bucketPair.Restore(bucketBackup)
+			err = bucketPair.Restore(backup)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(liveBucket.CopyBlobFromBucketCallCount()).To(Equal(2))
@@ -62,12 +65,12 @@ var _ = Describe("BucketPair", func() {
 			bucket1, src1, dst1 := liveBucket.CopyBlobFromBucketArgsForCall(1)
 			Expect([][]string{{bucket0.Name(), src0, dst0}, {bucket1.Name(), src1, dst1}}).To(ConsistOf(
 				[]string{
-					bucketBackup.BucketName,
+					backup.BucketName,
 					"2015-12-13-05-06-07/my_bucket_id/livebucketpath/to/real/blob1",
 					"livebucketpath/to/real/blob1",
 				},
 				[]string{
-					bucketBackup.BucketName,
+					backup.BucketName,
 					"2015-12-13-05-06-07/my_bucket_id/livebucketpath/to/real/blob2",
 					"livebucketpath/to/real/blob2",
 				},
@@ -77,7 +80,7 @@ var _ = Describe("BucketPair", func() {
 		Context("When CopyObject errors", func() {
 			It("errors", func() {
 				liveBucket.CopyBlobFromBucketReturns(fmt.Errorf("cannot copy object"))
-				err = bucketPair.Restore(bucketBackup)
+				err = bucketPair.Restore(backup)
 				Expect(err).To(MatchError(ContainSubstring("cannot copy object")))
 			})
 		})

@@ -50,10 +50,10 @@ var _ = Describe("Unversioned", func() {
 			Expect(backupsToStart).To(HaveLen(2))
 			for _, n := range []string{"1", "2"} {
 				Expect(backupsToStart).To(HaveKey("bucket" + n))
-				Expect(backupsToStart["bucket"+n].BucketPair.LiveBucket.Name()).To(Equal("live-name" + n))
-				Expect(backupsToStart["bucket"+n].BucketPair.LiveBucket.Region()).To(Equal("live-region" + n))
-				Expect(backupsToStart["bucket"+n].BucketPair.BackupBucket.Name()).To(Equal("backup-name" + n))
-				Expect(backupsToStart["bucket"+n].BucketPair.BackupBucket.Region()).To(Equal("backup-region" + n))
+				Expect(backupsToStart["bucket"+n].BucketPair.ConfigLiveBucket.Name()).To(Equal("live-name" + n))
+				Expect(backupsToStart["bucket"+n].BucketPair.ConfigLiveBucket.Region()).To(Equal("live-region" + n))
+				Expect(backupsToStart["bucket"+n].BucketPair.ConfigBackupBucket.Name()).To(Equal("backup-name" + n))
+				Expect(backupsToStart["bucket"+n].BucketPair.ConfigBackupBucket.Region()).To(Equal("backup-region" + n))
 
 				Expect(backupsToStart["bucket1"].BackupDirectoryFinder).NotTo(BeNil())
 			}

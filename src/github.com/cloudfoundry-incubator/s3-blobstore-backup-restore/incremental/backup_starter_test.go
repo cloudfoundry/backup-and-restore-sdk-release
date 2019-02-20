@@ -51,9 +51,9 @@ var _ = Describe("BackupStarter", func() {
 		starter = incremental.NewBackupStarter(
 			map[string]incremental.BackupToStart{
 				"bucket_id": {
-					BucketPair: incremental.BucketPair{
-						BackupBucket: backupBucket,
-						LiveBucket:   liveBucket,
+					BucketPair: incremental.BackupBucketPair{
+						ConfigBackupBucket: backupBucket,
+						ConfigLiveBucket:   liveBucket,
 					},
 					BackupDirectoryFinder: backupDirectoryFinder,
 				},

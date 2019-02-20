@@ -7,29 +7,22 @@ import (
 )
 
 type RestoreBucketPair struct {
-	liveBucket   Bucket
-	backupBucket Bucket
+	ConfigLiveBucket     Bucket
+	ArtifactBackupBucket Bucket
 }
 
-func NewRestoreBucketPair(liveBucket, backupBucket Bucket) RestoreBucketPair {
-	return RestoreBucketPair{
-		liveBucket:   liveBucket,
-		backupBucket: backupBucket,
-	}
-}
-
-func (p RestoreBucketPair) Restore(bucketBackup Backup) error {
+func (p RestoreBucketPair) Restore(backup Backup) error {
 	var executables []executor.Executable
-	for _, blob := range bucketBackup.Blobs {
+	for _, blob := range backup.Blobs {
 		backedUpBlob := BackedUpBlob{
 			Path:                blob,
-			BackupDirectoryPath: bucketBackup.SrcBackupDirectoryPath,
+			BackupDirectoryPath: backup.SrcBackupDirectoryPath,
 		}
 		executables = append(executables, copyBlobFromBucketExecutable{
 			src:       backedUpBlob.Path,
 			dst:       backedUpBlob.LiveBlobPath(),
-			srcBucket: p.backupBucket,
-			dstBucket: p.liveBucket,
+			srcBucket: p.ArtifactBackupBucket,
+			dstBucket: p.ConfigLiveBucket,
 		})
 	}
 
@@ -39,7 +32,7 @@ func (p RestoreBucketPair) Restore(bucketBackup Backup) error {
 	errs := e.Run([][]executor.Executable{executables})
 	if len(errs) != 0 {
 		return formatExecutorErrors(
-			fmt.Sprintf("failed to restore bucket %s", p.liveBucket.Name()),
+			fmt.Sprintf("failed to restore bucket %s", p.ConfigLiveBucket.Name()),
 			errs,
 		)
 	}

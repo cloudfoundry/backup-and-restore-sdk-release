@@ -43,21 +43,27 @@ var _ = Describe("Restorer", func() {
 		destinationLivePackagesBucket = new(fakes.FakeBucket)
 		sourceBackupPackagesBucket = new(fakes.FakeBucket)
 
-		dropletsBucketPair = incremental.NewRestoreBucketPair(destinationLiveDropletsBucket, sourceBackupDropletsBucket)
-		packagesBucketPair = incremental.NewRestoreBucketPair(destinationLivePackagesBucket, sourceBackupPackagesBucket)
+		dropletsBucketPair = incremental.RestoreBucketPair{
+			ConfigLiveBucket:     destinationLiveDropletsBucket,
+			ArtifactBackupBucket: sourceBackupDropletsBucket,
+		}
+		packagesBucketPair = incremental.RestoreBucketPair{
+			ConfigLiveBucket:     destinationLivePackagesBucket,
+			ArtifactBackupBucket: sourceBackupPackagesBucket,
+		}
 
 		artifact = new(fakes.FakeArtifact)
 		bucketBackups = map[string]incremental.Backup{
 			"droplets": {
-				BucketName:             "artifact_backup_droplet_bucket",
-				BucketRegion:           "artifact_backup_droplet_region",
-				Blobs:                  []string{dropletsBlob1, dropletsBlob2},
+				BucketName:   "artifact_backup_droplet_bucket",
+				BucketRegion: "artifact_backup_droplet_region",
+				Blobs:        []string{dropletsBlob1, dropletsBlob2},
 				SrcBackupDirectoryPath: "timestamp/droplets",
 			},
 			"packages": {
-				BucketName:             "artifact_backup_package_bucket",
-				BucketRegion:           "artifact_backup_package_region",
-				Blobs:                  []string{packagesBlob1, packagesBlob2},
+				BucketName:   "artifact_backup_package_bucket",
+				BucketRegion: "artifact_backup_package_region",
+				Blobs:        []string{packagesBlob1, packagesBlob2},
 				SrcBackupDirectoryPath: "timestamp/packages",
 			},
 		}
@@ -158,7 +164,10 @@ var _ = Describe("Restorer", func() {
 		BeforeEach(func() {
 			notInArtifactBucket1 := new(fakes.FakeBucket)
 			notInArtifactBucket2 := new(fakes.FakeBucket)
-			notInArtifactPair := incremental.NewRestoreBucketPair(notInArtifactBucket1, notInArtifactBucket2)
+			notInArtifactPair := incremental.RestoreBucketPair{
+				ConfigLiveBucket:     notInArtifactBucket1,
+				ArtifactBackupBucket: notInArtifactBucket2,
+			}
 
 			bucketPairs["not-in-artifact"] = notInArtifactPair
 			restorer = incremental.NewRestorer(bucketPairs, artifact)
