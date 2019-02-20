@@ -153,10 +153,10 @@ func BuildRestoreBucketPairs(
 			return nil, err
 		}
 
-		buckets[bucketID] = incremental.NewRestoreBucketPair(
-			liveBucket,
-			backupBucket,
-		)
+		buckets[bucketID] = incremental.RestoreBucketPair{
+			ConfigLiveBucket:     liveBucket,
+			ArtifactBackupBucket: backupBucket,
+		}
 	}
 
 	return buckets, nil
