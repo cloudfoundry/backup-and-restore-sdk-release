@@ -9,7 +9,7 @@ then
 fi
 
 function checkIsInteger() {
-  if ! expr "$1" : '^[0-9]\+$' >/dev/null
+  if ! [[ $1 =~ ^[0-9]+$ ]]
   then
     echo "Error: BBR version must be a valid semVer"
     exit 1

@@ -2,9 +2,12 @@ require 'rspec'
 require 'yaml'
 require 'json'
 require 'bosh/template/test'
+require 'open3'
+require 'pp'
 
 describe 's3-unversioned-blobstore-backup-restorer job' do
-  let(:release) { Bosh::Template::Test::ReleaseDir.new(File.join(File.dirname(__FILE__), '../..')) }
+  let(:release_dir) { File.join(File.dirname(__FILE__), '../..') }
+  let(:release) { Bosh::Template::Test::ReleaseDir.new(release_dir) }
   let(:job) { release.job('s3-unversioned-blobstore-backup-restorer') }
   let(:buckets_template) { job.template('config/buckets.json') }
 
@@ -204,4 +207,52 @@ describe 's3-unversioned-blobstore-backup-restorer job' do
       end
     end
   end
+
+  describe 'metadata' do
+    let(:metadata_template) { job.template('bin/bbr/metadata') }
+
+    it 'fails when called with an old version of bbr that does not export BBR_VERSION' do
+      backup_script = metadata_template.render({})
+      stdout_str, error_str, status = Open3.capture3(backup_script)
+      expect(status.success?).not_to eq(true)
+      expect(error_str).to include('Error: BBR_VERSION is not set, please ensure you are using the latest version of bbr')
+    end
+
+    it 'fails to run when bbr major version set to string' do
+        backup_script = metadata_template.render({})
+        stdout_str, error_str, status = Open3.capture3({'BBR_VERSION' => 'foo.bar.baz'}, backup_script)
+        expect(status.success?).not_to eq(true)
+        expect(stdout_str).to include('Error: BBR version must be a valid semVer')
+    end
+
+    it 'fails to run when bbr minor version set to string' do
+        backup_script = metadata_template.render({})
+        stdout_str, error_str, status = Open3.capture3({'BBR_VERSION' => '1.bar.baz'}, backup_script)
+        expect(status.success?).not_to eq(true)
+        expect(stdout_str).to include('Error: BBR version must be a valid semVer')
+    end
+
+    it 'returns error if the bbr_version is less than 1.4.0' do
+      backup_script = metadata_template.render({})
+      stdout_str, error_str, status = Open3.capture3({'BBR_VERSION' => '1.3.2'}, backup_script)
+      expect(status.success?).not_to eq(true)
+      expect(stdout_str).to include('Error: BBR version must be 1.4.0 or greater')
+    end
+
+    it 'succesfully runs if the bbr_version is 1.4.0' do
+        backup_script = metadata_template.render({})
+        stdout_str, error_str, status = Open3.capture3({'BBR_VERSION' => '1.4.0'}, backup_script)
+        expect(status.success?).to eq(true)
+        expect(stdout_str).to include('---')
+    end
+
+    it 'succesfully runs if the bbr_version is greater than 1.4.0' do
+        backup_script = metadata_template.render({})
+        stdout_str, error_str, status = Open3.capture3({'BBR_VERSION' => '2.3.4'}, backup_script)
+        expect(status.success?).to eq(true)
+        expect(stdout_str).to include('---')
+    end
+  end
 end
+
+
