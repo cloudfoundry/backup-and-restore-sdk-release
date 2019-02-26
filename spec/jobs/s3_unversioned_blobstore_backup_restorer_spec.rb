@@ -6,12 +6,13 @@ require 'bosh/template/test'
 describe 's3-unversioned-blobstore-backup-restorer job' do
   let(:release) { Bosh::Template::Test::ReleaseDir.new(File.join(File.dirname(__FILE__), '../..')) }
   let(:job) { release.job('s3-unversioned-blobstore-backup-restorer') }
-  let(:backup_template) { job.template('bin/bbr/backup') }
-  let(:post_backup_unlock_template) { job.template('bin/bbr/post-backup-unlock') }
   let(:buckets_template) { job.template('config/buckets.json') }
-  let(:restore_template) { job.template('bin/bbr/restore') }
+
 
   describe 'backup' do
+    let(:backup_template) { job.template('bin/bbr/backup') }
+    let(:post_backup_unlock_template) { job.template('bin/bbr/post-backup-unlock') }
+
     context 'when backup is not enabled' do
       it 'the templated backup script is empty' do
         backup_script = backup_template.render({})
@@ -177,6 +178,8 @@ describe 's3-unversioned-blobstore-backup-restorer job' do
   end
 
   describe 'restore' do
+    let(:restore_template) { job.template('bin/bbr/restore') }
+
     context 'when restore is not enabled' do
       it 'the templated script is empty' do
         restore_script = restore_template.render({})
