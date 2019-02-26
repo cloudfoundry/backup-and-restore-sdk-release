@@ -23,6 +23,7 @@ templates:
   restore.erb: bin/bbr/restore
   buckets.json.erb: config/buckets.json
   bpm.yml.erb: config/bpm.yml
+  metadata.erb: bin/bbr/metadata
 
 packages:
 - s3-blobstore-backup-restorer
