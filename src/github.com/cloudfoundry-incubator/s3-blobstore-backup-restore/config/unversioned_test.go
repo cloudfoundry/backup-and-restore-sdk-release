@@ -178,12 +178,39 @@ var _ = Describe("Unversioned", func() {
 			}
 		})
 
+		It("filters out bucket pairs when the backup artifact indicates a duplicate bucket", func() {
+			artifact.LoadReturns(map[string]incremental.Backup{
+				"bucket1": {
+					BucketName:             "backup-artifact-name1",
+					BucketRegion:           "backup-artifact-region1",
+					SrcBackupDirectoryPath: "destination-backup-dir1",
+				},
+				"bucket2": {
+					SameBucketAs: "bucket1",
+				},
+			}, nil)
+
+			restoreBucketPairs, err := config.BuildRestoreBucketPairs(configs, artifact)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(restoreBucketPairs).To(HaveLen(1))
+			Expect(restoreBucketPairs).To(HaveKey("bucket1"))
+		})
+
 		It("returns error when it cannot load backup artifact", func() {
 			artifact.LoadReturns(nil, errors.New("fake load error"))
 
 			_, err := config.BuildRestoreBucketPairs(configs, artifact)
 
 			Expect(err).To(MatchError(ContainSubstring("fake load error")))
+		})
+
+		It("returns error when the backup artifact does not have a configured bucket ID", func() {
+			artifact.LoadReturns(map[string]incremental.Backup{}, nil)
+
+			_, err := config.BuildRestoreBucketPairs(configs, artifact)
+
+			Expect(err).To(MatchError(ContainSubstring("backup artifact does not contain bucket ID")))
 		})
 	})
 })

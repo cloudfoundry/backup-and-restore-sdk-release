@@ -28,6 +28,7 @@ type Backup struct {
 	Blobs                  []string `json:"blobs"`
 	SrcBackupDirectoryPath string   `json:"src_backup_directory_path"`
 	DstBackupDirectoryPath string   `json:"dst_backup_directory_path,omitempty"`
+	SameBucketAs           string   `json:",omitempty"`
 }
 
 func (a artifact) Write(backups map[string]Backup) error {

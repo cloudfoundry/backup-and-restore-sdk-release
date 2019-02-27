@@ -117,7 +117,7 @@ func BuildRestoreBucketPairs(
 	configs map[string]UnversionedBucketConfig,
 	artifact incremental.Artifact,
 ) (map[string]incremental.RestoreBucketPair, error) {
-	buckets := map[string]incremental.RestoreBucketPair{}
+	pairs := map[string]incremental.RestoreBucketPair{}
 
 	backups, err := artifact.Load()
 	if err != nil {
@@ -125,6 +125,14 @@ func BuildRestoreBucketPairs(
 	}
 
 	for bucketID, config := range configs {
+		if _, ok := backups[bucketID]; !ok {
+			return nil, fmt.Errorf("backup artifact does not contain bucket ID '%s'", bucketID)
+		}
+
+		if backups[bucketID].SameBucketAs != "" {
+			continue
+		}
+
 		liveBucket, err := s3bucket.NewBucket(
 			config.Name,
 			config.Region,
@@ -153,11 +161,11 @@ func BuildRestoreBucketPairs(
 			return nil, err
 		}
 
-		buckets[bucketID] = incremental.RestoreBucketPair{
+		pairs[bucketID] = incremental.RestoreBucketPair{
 			ConfigLiveBucket:     liveBucket,
 			ArtifactBackupBucket: backupBucket,
 		}
 	}
 
-	return buckets, nil
+	return pairs, nil
 }
