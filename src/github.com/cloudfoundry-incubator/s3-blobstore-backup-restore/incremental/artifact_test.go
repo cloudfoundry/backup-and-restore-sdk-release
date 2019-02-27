@@ -39,10 +39,10 @@ var _ = Describe("Artifact", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			artifact := incremental.NewArtifact(artifactFile.Name())
-			bucketBackup, err := artifact.Load()
+			backups, err := artifact.Load()
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(bucketBackup).To(Equal(map[string]incremental.Backup{
+			Expect(backups).To(Equal(map[string]incremental.Backup{
 				"bucket_id": {
 					BucketName: "backup-bucket",
 					Blobs: []string{

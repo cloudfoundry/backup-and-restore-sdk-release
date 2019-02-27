@@ -119,7 +119,7 @@ func BuildRestoreBucketPairs(
 ) (map[string]incremental.RestoreBucketPair, error) {
 	buckets := map[string]incremental.RestoreBucketPair{}
 
-	bucketBackups, err := artifact.Load()
+	backups, err := artifact.Load()
 	if err != nil {
 		return nil, err
 	}
@@ -140,8 +140,8 @@ func BuildRestoreBucketPairs(
 		}
 
 		backupBucket, err := s3bucket.NewBucket(
-			bucketBackups[bucketID].BucketName,
-			bucketBackups[bucketID].BucketRegion,
+			backups[bucketID].BucketName,
+			backups[bucketID].BucketRegion,
 			config.Endpoint,
 			s3bucket.AccessKey{
 				Id:     config.AwsAccessKeyId,

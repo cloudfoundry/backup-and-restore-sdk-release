@@ -18,12 +18,12 @@ func NewRestorer(bucketPairs map[string]RestoreBucketPair, artifact Artifact) Re
 }
 
 func (b Restorer) Run() error {
-	bucketBackups, err := b.artifact.Load()
+	backups, err := b.artifact.Load()
 	if err != nil {
 		return err
 	}
 
-	for key := range bucketBackups {
+	for key := range backups {
 		_, exists := b.bucketPairs[key]
 		if !exists {
 			return fmt.Errorf(
@@ -32,20 +32,20 @@ func (b Restorer) Run() error {
 			)
 		}
 
-		backupBlobs, _ := b.bucketPairs[key].ArtifactBackupBucket.ListBlobs(bucketBackups[key].SrcBackupDirectoryPath)
-		if missingBlobs := validateArtifact(bucketBackups[key].SrcBackupDirectoryPath, backupBlobs, bucketBackups[key].Blobs); len(missingBlobs) > 0 {
-			return formatError(fmt.Sprintf("found blobs in artifact that are not present in backup directory for bucket %s:", bucketBackups[key].BucketName), missingBlobs)
+		backupBlobs, _ := b.bucketPairs[key].ArtifactBackupBucket.ListBlobs(backups[key].SrcBackupDirectoryPath)
+		if missingBlobs := validateArtifact(backups[key].SrcBackupDirectoryPath, backupBlobs, backups[key].Blobs); len(missingBlobs) > 0 {
+			return formatError(fmt.Sprintf("found blobs in artifact that are not present in backup directory for bucket %s:", backups[key].BucketName), missingBlobs)
 		}
 	}
 
 	for key, pair := range b.bucketPairs {
-		bucketBackup, exists := bucketBackups[key]
+		backup, exists := backups[key]
 		if !exists {
 			return fmt.Errorf("cannot restore bucket %s, not found in backup artifact", key)
 		}
 
-		if len(bucketBackup.Blobs) != 0 {
-			err = pair.Restore(bucketBackup)
+		if len(backup.Blobs) != 0 {
+			err = pair.Restore(backup)
 		}
 
 		if err != nil {

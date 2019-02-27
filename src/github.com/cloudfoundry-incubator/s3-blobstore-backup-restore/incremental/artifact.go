@@ -50,11 +50,11 @@ func (a artifact) Load() (map[string]Backup, error) {
 		return nil, fmt.Errorf("could not read backup file: %s", err.Error())
 	}
 
-	var bucketBackups map[string]Backup
-	err = json.Unmarshal(bytes, &bucketBackups)
+	var backups map[string]Backup
+	err = json.Unmarshal(bytes, &backups)
 	if err != nil {
 		return nil, fmt.Errorf("backup file has an invalid format: %s", err.Error())
 	}
 
-	return bucketBackups, nil
+	return backups, nil
 }
