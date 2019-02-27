@@ -226,7 +226,6 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 	})
 
 	Context("when bpm is enabled", func() {
-
 		BeforeEach(func() {
 			var err error
 			localArtifact, err = ioutil.TempFile("", "blobstore-")
@@ -260,7 +259,6 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 		})
 
 		It("backs up and restores an unversioned bucket", func() {
-
 			WriteFileInBucket(region, bucket, "original/path/to/file", "FILE1")
 
 			By("creating a backup", func() {
@@ -289,7 +287,6 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 	})
 
 	Context("when there are a larger number of files", func() {
-
 		BeforeEach(func() {
 			var err error
 			localArtifact, err = ioutil.TempFile("", "blobstore-")
@@ -356,7 +353,6 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 
 	Context("when post-backup-unlock is called by backup-cleanup", func() {
 		It("cleans up the existing-backup-blobs.json", func() {
-
 			backuperInstance = JobInstance{
 				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
 				Name:       "s3-unversioned-backuper",
@@ -371,7 +367,6 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 			session = backuperInstance.Run("stat /var/vcap/data/s3-unversioned-blobstore-backup-restorer/existing-backup-blobs.json")
 			Expect(session).To(Exit())
 			Expect(string(session.Buffer().Contents())).To(ContainSubstring("No such file or directory"))
-
 		})
 	})
 })
