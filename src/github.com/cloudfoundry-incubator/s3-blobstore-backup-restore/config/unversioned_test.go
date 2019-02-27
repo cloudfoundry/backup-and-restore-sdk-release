@@ -154,13 +154,13 @@ var _ = Describe("Unversioned", func() {
 		It("builds restore bucket pairs from a config and a backup artifact", func() {
 			artifact.LoadReturns(map[string]incremental.Backup{
 				"bucket1": {
-					BucketName:             "backup-name1",
-					BucketRegion:           "backup-region1",
+					BucketName:             "backup-artifact-name1",
+					BucketRegion:           "backup-artifact-region1",
 					SrcBackupDirectoryPath: "destination-backup-dir1",
 				},
 				"bucket2": {
-					BucketName:             "backup-name2",
-					BucketRegion:           "backup-region2",
+					BucketName:             "backup-artifact-name2",
+					BucketRegion:           "backup-artifact-region2",
 					SrcBackupDirectoryPath: "destination-backup-dir2",
 				},
 			}, nil)
@@ -171,6 +171,10 @@ var _ = Describe("Unversioned", func() {
 			Expect(restoreBucketPairs).To(HaveLen(2))
 			for _, n := range []string{"1", "2"} {
 				Expect(restoreBucketPairs).To(HaveKey("bucket" + n))
+				Expect(restoreBucketPairs["bucket"+n].ConfigLiveBucket.Name()).To(Equal("live-name" + n))
+				Expect(restoreBucketPairs["bucket"+n].ConfigLiveBucket.Region()).To(Equal("live-region" + n))
+				Expect(restoreBucketPairs["bucket"+n].ArtifactBackupBucket.Name()).To(Equal("backup-artifact-name" + n))
+				Expect(restoreBucketPairs["bucket"+n].ArtifactBackupBucket.Region()).To(Equal("backup-artifact-region" + n))
 			}
 		})
 

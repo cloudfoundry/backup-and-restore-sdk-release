@@ -336,6 +336,84 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 		})
 	})
 
+	Context("when restoring to another region", func() {
+		var (
+			cloneRegion   string
+			cloneBucket   string
+			cloneInstance JobInstance
+		)
+
+		BeforeEach(func() {
+			var err error
+			localArtifact, err = ioutil.TempFile("", "blobstore-")
+			Expect(err).NotTo(HaveOccurred())
+
+			liveRegion = MustHaveEnv("S3_UNVERSIONED_BUCKET_REGION")
+			liveBucket = MustHaveEnv("S3_UNVERSIONED_BUCKET_NAME")
+
+			backupRegion = MustHaveEnv("S3_UNVERSIONED_BACKUP_BUCKET_REGION")
+			backupBucket = MustHaveEnv("S3_UNVERSIONED_BACKUP_BUCKET_NAME")
+
+			cloneRegion = MustHaveEnv("S3_UNVERSIONED_CLONE_BUCKET_REGION")
+			cloneBucket = MustHaveEnv("S3_UNVERSIONED_CLONE_BUCKET_NAME")
+
+			DeleteAllFilesFromBucket(liveRegion, liveBucket)
+			DeleteAllFilesFromBucket(backupRegion, backupBucket)
+			DeleteAllFilesFromBucket(cloneRegion, cloneBucket)
+
+			backuperInstance = JobInstance{
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "s3-unversioned-backuper",
+				Index:      "0",
+			}
+
+			cloneInstance = JobInstance{
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "s3-unversioned-backuper-clone",
+				Index:      "0",
+			}
+
+			instanceArtifactDirPath = "/tmp/s3-unversioned-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
+			backuperInstance.RunSuccessfully("mkdir -p " + instanceArtifactDirPath)
+			cloneInstance.RunSuccessfully("mkdir -p " + instanceArtifactDirPath)
+		})
+
+		AfterEach(func() {
+			err := os.Remove(localArtifact.Name())
+			Expect(err).NotTo(HaveOccurred())
+
+			backuperInstance.RunSuccessfully("sudo rm -rf " + instanceArtifactDirPath)
+			cloneInstance.RunSuccessfully("sudo rm -rf " + instanceArtifactDirPath)
+
+			DeleteAllFilesFromBucket(liveRegion, liveBucket)
+			DeleteAllFilesFromBucket(backupRegion, backupBucket)
+			DeleteAllFilesFromBucket(cloneRegion, cloneBucket)
+		})
+
+		It("succeeds", func() {
+			WriteFileInBucket(liveRegion, liveBucket, "original/path/to/file", "FILE1")
+
+			By("creating a backup", func() {
+				backuperInstance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
+					" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/backup")
+				backuperInstance.RunSuccessfully("sudo BBR_AFTER_BACKUP_SCRIPTS_SUCCESSFUL=true" +
+					" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/post-backup-unlock")
+			})
+
+			By("copying the backup artifact to the clone instance", func() {
+				backuperInstance.Download(instanceArtifactDirPath+"/blobstore.json", "/tmp/blobstore.json")
+				cloneInstance.Upload("/tmp/blobstore.json", instanceArtifactDirPath+"/blobstore.json")
+			})
+
+			By("restoring", func() {
+				cloneInstance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
+					" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/restore")
+
+				Expect(GetFileContentsFromBucket(cloneRegion, cloneBucket, "original/path/to/file")).To(Equal("FILE1"))
+			})
+		})
+	})
+
 	Context("when using an old version of bbr", func() {
 		It("fail in post-backup-unlock", func() {
 			backuperInstance = JobInstance{
