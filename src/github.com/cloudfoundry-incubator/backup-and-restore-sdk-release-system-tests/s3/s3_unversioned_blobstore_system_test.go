@@ -34,8 +34,8 @@ import (
 
 var _ = Describe("S3 unversioned backup and restore", func() {
 	var (
-		region                  string
-		bucket                  string
+		liveRegion              string
+		liveBucket              string
 		backupRegion            string
 		backupBucket            string
 		instanceArtifactDirPath string
@@ -50,13 +50,13 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 			localArtifact, err = ioutil.TempFile("", "blobstore-")
 			Expect(err).NotTo(HaveOccurred())
 
-			region = MustHaveEnv("S3_UNVERSIONED_BUCKET_REGION")
-			bucket = MustHaveEnv("S3_UNVERSIONED_BUCKET_NAME")
+			liveRegion = MustHaveEnv("S3_UNVERSIONED_BUCKET_REGION")
+			liveBucket = MustHaveEnv("S3_UNVERSIONED_BUCKET_NAME")
 
 			backupRegion = MustHaveEnv("S3_UNVERSIONED_BACKUP_BUCKET_REGION")
 			backupBucket = MustHaveEnv("S3_UNVERSIONED_BACKUP_BUCKET_NAME")
 
-			DeleteAllFilesFromBucket(region, bucket)
+			DeleteAllFilesFromBucket(liveRegion, liveBucket)
 			DeleteAllFilesFromBucket(backupRegion, backupBucket)
 
 			backuperInstance = JobInstance{
@@ -73,7 +73,7 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 			backuperInstance.RunSuccessfully("sudo rm -rf " + instanceArtifactDirPath)
 			err := os.Remove(localArtifact.Name())
 			Expect(err).NotTo(HaveOccurred())
-			DeleteAllFilesFromBucket(region, bucket)
+			DeleteAllFilesFromBucket(liveRegion, liveBucket)
 			DeleteAllFilesFromBucket(backupRegion, backupBucket)
 		})
 
@@ -85,7 +85,7 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 			)
 
 			By("backing up from the source bucket to the backup bucket", func() {
-				WriteFileInBucket(region, bucket, "original/path/to/file", "FILE1")
+				WriteFileInBucket(liveRegion, liveBucket, "original/path/to/file", "FILE1")
 				preBackupFiles = ListFilesFromBucket(backupRegion, backupBucket)
 				Expect(preBackupFiles).To(BeEmpty())
 
@@ -130,18 +130,18 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 					"\"src_backup_directory_path\":\"\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}\\/my_bucket\""))
 			})
 
-			DeleteAllFilesFromBucket(region, bucket)
-			Expect(ListFilesFromBucket(region, bucket)).To(HaveLen(0))
-			WriteFileInBucket(region, bucket, "should/be/left/alone", "STILL_HERE")
+			DeleteAllFilesFromBucket(liveRegion, liveBucket)
+			Expect(ListFilesFromBucket(liveRegion, liveBucket)).To(HaveLen(0))
+			WriteFileInBucket(liveRegion, liveBucket, "should/be/left/alone", "STILL_HERE")
 
 			By("restoring from the backup bucket to the source bucket", func() {
 				backuperInstance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
 					" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/restore")
 
-				postRestoreFiles = ListFilesFromBucket(region, bucket)
+				postRestoreFiles = ListFilesFromBucket(liveRegion, liveBucket)
 				Expect(postRestoreFiles).To(ConsistOf([]string{"should/be/left/alone", "original/path/to/file"}))
-				Expect(GetFileContentsFromBucket(region, bucket, "original/path/to/file")).To(Equal("FILE1"))
-				Expect(GetFileContentsFromBucket(region, bucket, "should/be/left/alone")).To(Equal("STILL_HERE"))
+				Expect(GetFileContentsFromBucket(liveRegion, liveBucket, "original/path/to/file")).To(Equal("FILE1"))
+				Expect(GetFileContentsFromBucket(liveRegion, liveBucket, "should/be/left/alone")).To(Equal("STILL_HERE"))
 			})
 		})
 
@@ -154,13 +154,13 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 				)
 
 				By("backing up only new live blobs from the source bucket to the backup bucket", func() {
-					WriteFileInBucket(region, backupBucket, "2019_02_12_17_45_22/my_bucket/original/path/to/old-blob", "old-blob-contents")
-					WriteFileInBucket(region, backupBucket, "2019_02_12_17_45_22/my_bucket/backup_complete", "")
+					WriteFileInBucket(liveRegion, backupBucket, "2019_02_12_17_45_22/my_bucket/original/path/to/old-blob", "old-blob-contents")
+					WriteFileInBucket(liveRegion, backupBucket, "2019_02_12_17_45_22/my_bucket/backup_complete", "")
 					preBackupFiles = ListFilesFromBucket(backupRegion, backupBucket)
 					Expect(preBackupFiles).To(HaveLen(2))
 
-					WriteFileInBucket(region, bucket, "original/path/to/old-blob", "old-blob-contents")
-					WriteFileInBucket(region, bucket, "original/path/to/new-blob", "new-blob-contents")
+					WriteFileInBucket(liveRegion, liveBucket, "original/path/to/old-blob", "old-blob-contents")
+					WriteFileInBucket(liveRegion, liveBucket, "original/path/to/new-blob", "new-blob-contents")
 
 					backuperInstance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
 						" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/backup")
@@ -203,23 +203,23 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 						"\"src_backup_directory_path\":\"\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}\\/my_bucket\""))
 				})
 
-				DeleteAllFilesFromBucket(region, bucket)
-				Expect(ListFilesFromBucket(region, bucket)).To(HaveLen(0))
-				WriteFileInBucket(region, bucket, "should/be/left/alone", "STILL_HERE")
+				DeleteAllFilesFromBucket(liveRegion, liveBucket)
+				Expect(ListFilesFromBucket(liveRegion, liveBucket)).To(HaveLen(0))
+				WriteFileInBucket(liveRegion, liveBucket, "should/be/left/alone", "STILL_HERE")
 
 				By("restoring from the backup bucket to the source bucket", func() {
 					backuperInstance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
 						" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/restore")
 
-					postRestoreFiles = ListFilesFromBucket(region, bucket)
+					postRestoreFiles = ListFilesFromBucket(liveRegion, liveBucket)
 					Expect(postRestoreFiles).To(ConsistOf(
 						"should/be/left/alone",
 						"original/path/to/old-blob",
 						"original/path/to/new-blob",
 					))
-					Expect(GetFileContentsFromBucket(region, bucket, "original/path/to/old-blob")).To(Equal("old-blob-contents"))
-					Expect(GetFileContentsFromBucket(region, bucket, "original/path/to/new-blob")).To(Equal("new-blob-contents"))
-					Expect(GetFileContentsFromBucket(region, bucket, "should/be/left/alone")).To(Equal("STILL_HERE"))
+					Expect(GetFileContentsFromBucket(liveRegion, liveBucket, "original/path/to/old-blob")).To(Equal("old-blob-contents"))
+					Expect(GetFileContentsFromBucket(liveRegion, liveBucket, "original/path/to/new-blob")).To(Equal("new-blob-contents"))
+					Expect(GetFileContentsFromBucket(liveRegion, liveBucket, "should/be/left/alone")).To(Equal("STILL_HERE"))
 				})
 			})
 		})
@@ -231,13 +231,13 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 			localArtifact, err = ioutil.TempFile("", "blobstore-")
 			Expect(err).NotTo(HaveOccurred())
 
-			region = MustHaveEnv("S3_UNVERSIONED_BPM_BUCKET_REGION")
-			bucket = MustHaveEnv("S3_UNVERSIONED_BPM_BUCKET_NAME")
+			liveRegion = MustHaveEnv("S3_UNVERSIONED_BPM_BUCKET_REGION")
+			liveBucket = MustHaveEnv("S3_UNVERSIONED_BPM_BUCKET_NAME")
 
 			backupRegion = MustHaveEnv("S3_UNVERSIONED_BPM_BACKUP_BUCKET_REGION")
 			backupBucket = MustHaveEnv("S3_UNVERSIONED_BPM_BACKUP_BUCKET_NAME")
 
-			DeleteAllFilesFromBucket(region, bucket)
+			DeleteAllFilesFromBucket(liveRegion, liveBucket)
 			DeleteAllFilesFromBucket(backupRegion, backupBucket)
 
 			backuperInstance = JobInstance{
@@ -254,12 +254,12 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 			backuperInstance.RunSuccessfully("sudo rm -rf " + instanceArtifactDirPath)
 			err := os.Remove(localArtifact.Name())
 			Expect(err).NotTo(HaveOccurred())
-			DeleteAllFilesFromBucket(region, bucket)
+			DeleteAllFilesFromBucket(liveRegion, liveBucket)
 			DeleteAllFilesFromBucket(backupRegion, backupBucket)
 		})
 
 		It("backs up and restores an unversioned bucket", func() {
-			WriteFileInBucket(region, bucket, "original/path/to/file", "FILE1")
+			WriteFileInBucket(liveRegion, liveBucket, "original/path/to/file", "FILE1")
 
 			By("creating a backup", func() {
 				backuperInstance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
@@ -268,14 +268,14 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 					" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/post-backup-unlock")
 			})
 
-			DeleteAllFilesFromBucket(region, bucket)
-			Expect(ListFilesFromBucket(region, bucket)).To(HaveLen(0))
+			DeleteAllFilesFromBucket(liveRegion, liveBucket)
+			Expect(ListFilesFromBucket(liveRegion, liveBucket)).To(HaveLen(0))
 
 			By("restoring", func() {
 				backuperInstance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
 					" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/restore")
 
-				Expect(GetFileContentsFromBucket(region, bucket, "original/path/to/file")).To(Equal("FILE1"))
+				Expect(GetFileContentsFromBucket(liveRegion, liveBucket, "original/path/to/file")).To(Equal("FILE1"))
 			})
 
 			By("cleaning up the existing blobs artifact", func() {
@@ -292,8 +292,8 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 			localArtifact, err = ioutil.TempFile("", "blobstore-")
 			Expect(err).NotTo(HaveOccurred())
 
-			region = MustHaveEnv("S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BUCKET_REGION")
-			bucket = MustHaveEnv("S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BUCKET_NAME")
+			liveRegion = MustHaveEnv("S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BUCKET_REGION")
+			liveBucket = MustHaveEnv("S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BUCKET_NAME")
 
 			backupRegion = MustHaveEnv("S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BACKUP_BUCKET_REGION")
 			backupBucket = MustHaveEnv("S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BACKUP_BUCKET_NAME")
