@@ -6,6 +6,7 @@ type BackupToComplete struct {
 	BackupBucket    Bucket
 	BackupDirectory BackupDirectory
 	BlobsToCopy     []BackedUpBlob
+	SameAsBucketID  string
 }
 
 func (b BackupToComplete) executables() [][]executor.Executable {

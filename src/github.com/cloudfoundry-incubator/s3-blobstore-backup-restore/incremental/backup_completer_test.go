@@ -138,6 +138,27 @@ var _ = Describe("BackupCompleter", func() {
 		})
 	})
 
+	Context("when a backup to complete is marked same", func() {
+		It("does not mark the backup directory complete", func() {
+			bucket := new(fakes.FakeBucket)
+			backupsToComplete := map[string]incremental.BackupToComplete{
+				"bucket_id": {
+					BackupBucket:   bucket,
+					SameAsBucketID: "another_bucket_id",
+				},
+			}
+			completer := incremental.BackupCompleter{
+				BackupsToComplete: backupsToComplete,
+			}
+
+			err := completer.Run()
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(bucket.CopyBlobWithinBucketCallCount()).To(BeZero())
+			Expect(bucket.UploadBlobCallCount()).To(BeZero())
+		})
+	})
+
 	Context("when there are no backups to complete", func() {
 		It("no-ops", func() {
 			backupsToComplete := map[string]incremental.BackupToComplete{}

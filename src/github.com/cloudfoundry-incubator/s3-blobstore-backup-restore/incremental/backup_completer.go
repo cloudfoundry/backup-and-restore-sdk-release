@@ -13,6 +13,10 @@ type BackupCompleter struct {
 
 func (b BackupCompleter) Run() error {
 	for _, backupToComplete := range b.BackupsToComplete {
+		if backupToComplete.SameAsBucketID != "" {
+			continue
+		}
+
 		e := executor.NewParallelExecutor()
 		e.SetMaxInFlight(200)
 
