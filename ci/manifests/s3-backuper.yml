@@ -203,6 +203,38 @@ instance_groups:
           backup:
             name: "((s3-unversioned-backup-bucket-name))"
             region: "((s3-unversioned-backup-bucket-region))"
+- name: s3-unversioned-backuper-same-bucket
+  azs: [z1]
+  instances: 1
+  vm_type: small
+  persistent_disk_type: 10GB
+  stemcell: xenial
+  update:
+    serial: true
+  networks:
+    - name: default
+  jobs:
+    - name: s3-unversioned-blobstore-backup-restorer
+      release: backup-and-restore-sdk
+      properties:
+        enabled: true
+        buckets:
+          bucket1:
+            name: "((s3-unversioned-bucket-name))"
+            region: "((s3-unversioned-bucket-region))"
+            aws_access_key_id: "((aws-access-key-id))"
+            aws_secret_access_key: "((aws-secret-access-key))"
+            backup:
+              name: "((s3-unversioned-backup-bucket-name))"
+              region: "((s3-unversioned-backup-bucket-region))"
+          bucket2:
+            name: "((s3-unversioned-bucket-name))"
+            region: "((s3-unversioned-bucket-region))"
+            aws_access_key_id: "((aws-access-key-id))"
+            aws_secret_access_key: "((aws-secret-access-key))"
+            backup:
+              name: "((s3-unversioned-backup-bucket-name))"
+              region: "((s3-unversioned-backup-bucket-region))"
 - name: s3-unversioned-backuper-large-number-of-files
   azs: [z1]
   instances: 1

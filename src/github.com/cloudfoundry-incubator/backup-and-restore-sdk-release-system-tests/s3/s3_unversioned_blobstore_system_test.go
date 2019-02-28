@@ -17,7 +17,10 @@
 package s3_test
 
 import (
+	"encoding/json"
 	"time"
+
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
 
 	. "github.com/onsi/gomega/gexec"
 
@@ -282,6 +285,104 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 				session := backuperInstance.Run("stat /var/vcap/data/s3-unversioned-blobstore-backup-restorer/existing-backup-blobs.json")
 				Expect(session).To(Exit())
 				Expect(string(session.Buffer().Contents())).To(ContainSubstring("No such file or directory"))
+			})
+		})
+	})
+
+	Context("when the same bucket is used for two bucket IDs", func() {
+		BeforeEach(func() {
+			var err error
+			localArtifact, err = ioutil.TempFile("", "blobstore-")
+			Expect(err).NotTo(HaveOccurred())
+
+			liveRegion = MustHaveEnv("S3_UNVERSIONED_BUCKET_REGION")
+			liveBucket = MustHaveEnv("S3_UNVERSIONED_BUCKET_NAME")
+
+			backupRegion = MustHaveEnv("S3_UNVERSIONED_BACKUP_BUCKET_REGION")
+			backupBucket = MustHaveEnv("S3_UNVERSIONED_BACKUP_BUCKET_NAME")
+
+			DeleteAllFilesFromBucket(liveRegion, liveBucket)
+			DeleteAllFilesFromBucket(backupRegion, backupBucket)
+
+			backuperInstance = JobInstance{
+				Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+				Name:       "s3-unversioned-backuper-same-bucket",
+				Index:      "0",
+			}
+
+			instanceArtifactDirPath = "/tmp/s3-unversioned-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
+			backuperInstance.RunSuccessfully("mkdir -p " + instanceArtifactDirPath)
+		})
+
+		AfterEach(func() {
+			backuperInstance.RunSuccessfully("sudo rm -rf " + instanceArtifactDirPath)
+
+			err := os.Remove(localArtifact.Name())
+			Expect(err).NotTo(HaveOccurred())
+
+			DeleteAllFilesFromBucket(liveRegion, liveBucket)
+			DeleteAllFilesFromBucket(backupRegion, backupBucket)
+		})
+
+		It("succeeds", func() {
+			WriteFileInBucket(liveRegion, liveBucket, "original/path/to/file", "FILE1")
+
+			By("creating a backup", func() {
+				backuperInstance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
+					" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/backup")
+				backuperInstance.RunSuccessfully("sudo BBR_AFTER_BACKUP_SCRIPTS_SUCCESSFUL=true" +
+					" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/post-backup-unlock")
+
+				backupFiles := ListFilesFromBucket(backupRegion, backupBucket)
+				Expect(backupFiles).To(ConsistOf(
+					MatchRegexp(`^\d{4}(_\d{2}){5}/bucket1/backup_complete$`),
+					MatchRegexp(`^\d{4}(_\d{2}){5}/bucket1/original/path/to/file$`),
+				))
+			})
+
+			By("writing a helpful backup artifact file", func() {
+				session := backuperInstance.Download(
+					instanceArtifactDirPath+"/blobstore.json", localArtifact.Name())
+				Expect(session).Should(Exit(0))
+
+				fileContents, err := ioutil.ReadFile(localArtifact.Name())
+				Expect(err).NotTo(HaveOccurred())
+
+				var backups map[string]incremental.Backup
+				err = json.Unmarshal(fileContents, &backups)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(backups).To(Equal(map[string]incremental.Backup{
+					"bucket1": {
+						BucketName:   backupBucket,
+						BucketRegion: backupRegion,
+						Blobs:        backups["bucket1"].Blobs, //skip
+						SrcBackupDirectoryPath: backups["bucket1"].SrcBackupDirectoryPath, //skip
+					},
+					"bucket2": {
+						SameBucketAs: "bucket1",
+					},
+				}))
+
+				Expect(backups["bucket1"].Blobs).To(ConsistOf(MatchRegexp(`^\d{4}(_\d{2}){5}/bucket1/original/path/to/file`)))
+				Expect(backups["bucket1"].SrcBackupDirectoryPath).To(MatchRegexp(`^\d{4}(_\d{2}){5}/bucket1$`))
+			})
+
+			By("changing blobs in the live bucket", func() {
+				DeleteAllFilesFromBucket(liveRegion, liveBucket)
+				Expect(ListFilesFromBucket(liveRegion, liveBucket)).To(HaveLen(0))
+				WriteFileInBucket(liveRegion, liveBucket, "should/be/left/alone", "STILL_HERE")
+			})
+
+			By("restoring the backup", func() {
+				backuperInstance.RunSuccessfully("BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
+					" /var/vcap/jobs/s3-unversioned-blobstore-backup-restorer/bin/bbr/restore")
+
+				postRestoreFiles := ListFilesFromBucket(liveRegion, liveBucket)
+				Expect(postRestoreFiles).To(ConsistOf([]string{
+					"should/be/left/alone",
+					"original/path/to/file",
+				}))
 			})
 		})
 	})
