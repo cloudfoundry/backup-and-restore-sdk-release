@@ -11,8 +11,13 @@ import (
 )
 
 var _ = Describe("Unversioned", func() {
-	configs := map[string]config.UnversionedBucketConfig{
-		"bucket1": {
+	var (
+		configs       map[string]config.UnversionedBucketConfig
+		bucket1Config config.UnversionedBucketConfig
+	)
+
+	BeforeEach(func() {
+		bucket1Config = config.UnversionedBucketConfig{
 			BucketConfig: config.BucketConfig{
 				Name:               "live-name1",
 				Region:             "live-region1",
@@ -25,22 +30,26 @@ var _ = Describe("Unversioned", func() {
 				Name:   "backup-name1",
 				Region: "backup-region1",
 			},
-		},
-		"bucket2": {
-			BucketConfig: config.BucketConfig{
-				Name:               "live-name2",
-				Region:             "live-region2",
-				AwsAccessKeyId:     "my-id",
-				AwsSecretAccessKey: "my-secret-key",
-				Endpoint:           "my-s3-endpoint.aws",
-				UseIAMProfile:      false,
+		}
+
+		configs = map[string]config.UnversionedBucketConfig{
+			"bucket1": bucket1Config,
+			"bucket2": {
+				BucketConfig: config.BucketConfig{
+					Name:               "live-name2",
+					Region:             "live-region2",
+					AwsAccessKeyId:     "my-id",
+					AwsSecretAccessKey: "my-secret-key",
+					Endpoint:           "my-s3-endpoint.aws",
+					UseIAMProfile:      false,
+				},
+				Backup: config.BackupBucketConfig{
+					Name:   "backup-name2",
+					Region: "backup-region2",
+				},
 			},
-			Backup: config.BackupBucketConfig{
-				Name:   "backup-name2",
-				Region: "backup-region2",
-			},
-		},
-	}
+		}
+	})
 
 	Context("BuildBackupsToStart", func() {
 		It("builds backups to start from a config", func() {
@@ -57,6 +66,33 @@ var _ = Describe("Unversioned", func() {
 
 				Expect(backupsToStart["bucket1"].BackupDirectoryFinder).NotTo(BeNil())
 			}
+		})
+
+		Context("when the same bucket is configured for two bucket IDs", func() {
+			BeforeEach(func() {
+				configs = map[string]config.UnversionedBucketConfig{
+					"bucket1": bucket1Config,
+					"bucket2": bucket1Config,
+				}
+			})
+
+			It("builds backups to start", func() {
+				backupsToStart, err := config.BuildBackupsToStart(configs)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(backupsToStart).To(HaveLen(2))
+				Expect(backupsToStart).To(HaveKey("bucket1"))
+				Expect(backupsToStart["bucket1"].BucketPair.ConfigLiveBucket.Name()).To(Equal("live-name1"))
+				Expect(backupsToStart["bucket1"].BucketPair.ConfigLiveBucket.Region()).To(Equal("live-region1"))
+				Expect(backupsToStart["bucket1"].BucketPair.ConfigBackupBucket.Name()).To(Equal("backup-name1"))
+				Expect(backupsToStart["bucket1"].BucketPair.ConfigBackupBucket.Region()).To(Equal("backup-region1"))
+
+				Expect(backupsToStart["bucket1"].BackupDirectoryFinder).NotTo(BeNil())
+
+				Expect(backupsToStart["bucket2"]).To(Equal(incremental.BackupToStart{
+					SameAsBucketID: "bucket1",
+				}))
+			})
 		})
 	})
 

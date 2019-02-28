@@ -37,6 +37,12 @@ func (b BackupStarter) Run() error {
 			Bucket: backupToStart.BucketPair.ConfigBackupBucket,
 		}
 
+		if backupToStart.SameAsBucketID != "" {
+			backups[bucketID] = Backup{SameBucketAs: backupToStart.SameAsBucketID}
+			existingBlobs[bucketID] = Backup{DstBackupDirectoryPath: backupDir.Path}
+			continue
+		}
+
 		backedUpBlobs, err := backupToStart.BackupDirectoryFinder.ListBlobs(bucketID, backupToStart.BucketPair.ConfigBackupBucket)
 		if err != nil {
 			return fmt.Errorf("failed to start backup: %s", err)

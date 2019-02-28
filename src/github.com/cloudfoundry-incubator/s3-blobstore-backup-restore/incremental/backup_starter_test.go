@@ -104,6 +104,34 @@ var _ = Describe("BackupStarter", func() {
 			))
 		})
 
+		It("writes the backup artifact", func() {
+			Expect(err).NotTo(HaveOccurred())
+			Expect(artifact.WriteCallCount()).To(Equal(1))
+			Expect(artifact.WriteArgsForCall(0)).To(Equal(map[string]incremental.Backup{
+				"bucket_id": {
+					BucketName: "backup-bucket",
+					Blobs: []string{
+						"2000_01_02_03_04_05/bucket_id/f0/fd/blob1/uuid",
+						"2000_01_02_03_04_05/bucket_id/f0/fd/blob2/uuid",
+						"2000_01_02_03_04_05/bucket_id/f0/fd/blob3/uuid",
+					},
+					SrcBackupDirectoryPath: "2000_01_02_03_04_05/bucket_id",
+					BucketRegion:           "us-east-1",
+				},
+			}))
+		})
+
+		It("writes an empty existing blobs artifact", func() {
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(existingBlobsArtifact.WriteCallCount()).To(Equal(1))
+			Expect(existingBlobsArtifact.WriteArgsForCall(0)).To(Equal(map[string]incremental.Backup{
+				"bucket_id": {
+					DstBackupDirectoryPath: "2000_01_02_03_04_05/bucket_id",
+				},
+			}))
+		})
+
 		Context("and listing the blobs from the live bucket fails", func() {
 			BeforeEach(func() {
 				liveBucket.ListBlobsReturns(nil, fmt.Errorf("mayhem"))
@@ -119,15 +147,65 @@ var _ = Describe("BackupStarter", func() {
 			})
 		})
 
-		It("writes an empty existing blobs artifact", func() {
-			Expect(err).NotTo(HaveOccurred())
+		Context("and a backup to start is marked the same as another", func() {
+			BeforeEach(func() {
+				starter = incremental.NewBackupStarter(
+					map[string]incremental.BackupToStart{
+						"bucket_id": {
+							BucketPair: incremental.BackupBucketPair{
+								ConfigBackupBucket: backupBucket,
+								ConfigLiveBucket:   liveBucket,
+							},
+							BackupDirectoryFinder: backupDirectoryFinder,
+						},
+						"marked_bucket_id": {
+							SameAsBucketID: "bucket_id",
+						},
+					},
+					clock,
+					artifact,
+					existingBlobsArtifact,
+				)
+			})
 
-			Expect(existingBlobsArtifact.WriteCallCount()).To(Equal(1))
-			Expect(existingBlobsArtifact.WriteArgsForCall(0)).To(Equal(map[string]incremental.Backup{
-				"bucket_id": {
-					DstBackupDirectoryPath: "2000_01_02_03_04_05/bucket_id",
-				},
-			}))
+			It("backs up the bucket only once", func() {
+				Expect(err).NotTo(HaveOccurred())
+				Expect(backupBucket.CopyBlobFromBucketCallCount()).To(Equal(3))
+			})
+
+			It("writes the backup artifact", func() {
+				Expect(err).NotTo(HaveOccurred())
+				Expect(artifact.WriteCallCount()).To(Equal(1))
+				Expect(artifact.WriteArgsForCall(0)).To(Equal(map[string]incremental.Backup{
+					"bucket_id": {
+						BucketName: "backup-bucket",
+						Blobs: []string{
+							"2000_01_02_03_04_05/bucket_id/f0/fd/blob1/uuid",
+							"2000_01_02_03_04_05/bucket_id/f0/fd/blob2/uuid",
+							"2000_01_02_03_04_05/bucket_id/f0/fd/blob3/uuid",
+						},
+						SrcBackupDirectoryPath: "2000_01_02_03_04_05/bucket_id",
+						BucketRegion:           "us-east-1",
+					},
+					"marked_bucket_id": {
+						SameBucketAs: "bucket_id",
+					},
+				}))
+			})
+
+			It("writes an empty existing blobs artifact", func() {
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(existingBlobsArtifact.WriteCallCount()).To(Equal(1))
+				Expect(existingBlobsArtifact.WriteArgsForCall(0)).To(Equal(map[string]incremental.Backup{
+					"bucket_id": {
+						DstBackupDirectoryPath: "2000_01_02_03_04_05/bucket_id",
+					},
+					"marked_bucket_id": {
+						DstBackupDirectoryPath: "2000_01_02_03_04_05/marked_bucket_id",
+					},
+				}))
+			})
 		})
 	})
 

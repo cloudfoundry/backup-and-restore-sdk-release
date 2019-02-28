@@ -58,6 +58,8 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig) (map[string
 		}
 	}
 
+	backupsToStart = incremental.MarkSameBackupsToStart(backupsToStart)
+
 	return backupsToStart, nil
 }
 
