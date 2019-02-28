@@ -64,12 +64,12 @@ func (b BackupStarter) Run() error {
 
 	err := b.backupArtifact.Write(backups)
 	if err != nil {
-		return fmt.Errorf("failed to write backupArtifact: %s", err)
+		return fmt.Errorf("failed to write backup artifact: %s", err)
 	}
 
 	err = b.existingBlobsArtifact.Write(existingBlobs)
 	if err != nil {
-		return fmt.Errorf("failed to write existing blobs backupArtifact: %s", err)
+		return fmt.Errorf("failed to write existing blobs artifact: %s", err)
 	}
 
 	return nil
