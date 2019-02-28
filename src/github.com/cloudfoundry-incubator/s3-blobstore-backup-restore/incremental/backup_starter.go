@@ -4,11 +4,6 @@ import (
 	"fmt"
 )
 
-type BackupToStart struct {
-	BucketPair            BackupBucketPair
-	BackupDirectoryFinder BackupDirectoryFinder
-}
-
 //go:generate counterfeiter -o fakes/fake_clock.go . Clock
 type Clock interface {
 	Now() string
