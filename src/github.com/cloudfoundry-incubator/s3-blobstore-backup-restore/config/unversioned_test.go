@@ -154,6 +154,33 @@ var _ = Describe("Unversioned", func() {
 			}
 		})
 
+		It("builds backups to complete marked same", func() {
+			existingBlobsArtifact.LoadReturns(map[string]incremental.Backup{
+				"bucket1": {
+					SrcBackupDirectoryPath: "source-backup-dir1",
+					DstBackupDirectoryPath: "destination-backup-dir1",
+					Blobs: []string{
+						"source-backup-dir1/blob-path1",
+						"source-backup-dir1/blob-path2",
+					},
+				},
+				"bucket2": {
+					SameBucketAs: "bucket1",
+				},
+			}, nil)
+
+			backupsToComplete, err := config.BuildBackupsToComplete(
+				configs,
+				existingBlobsArtifact,
+			)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(backupsToComplete).To(HaveLen(2))
+			Expect(backupsToComplete["bucket2"]).To(Equal(incremental.BackupToComplete{
+				SameAsBucketID: "bucket1",
+			}))
+		})
+
 		It("returns error when it cannot load existing blobs artifact", func() {
 			existingBlobsArtifact.LoadReturns(nil, errors.New("fake load error"))
 

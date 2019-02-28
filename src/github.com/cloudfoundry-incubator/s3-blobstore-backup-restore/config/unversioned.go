@@ -75,6 +75,18 @@ func BuildBackupsToComplete(
 	}
 
 	for bucketID, config := range configs {
+		existingBackup, exists := existingBackups[bucketID]
+		if !exists {
+			return nil, fmt.Errorf("failed to find bucket identifier '%s' in buckets config", bucketID)
+		}
+
+		if existingBackup.SameBucketAs != "" {
+			backupsToComplete[bucketID] = incremental.BackupToComplete{
+				SameAsBucketID: existingBackup.SameBucketAs,
+			}
+			continue
+		}
+
 		backupBucket, err := s3bucket.NewBucket(
 			config.Backup.Name,
 			config.Backup.Region,
@@ -87,11 +99,6 @@ func BuildBackupsToComplete(
 		)
 		if err != nil {
 			return nil, err
-		}
-
-		existingBackup, exists := existingBackups[bucketID]
-		if !exists {
-			return nil, fmt.Errorf("failed to find bucket identifier '%s' in buckets config", bucketID)
 		}
 
 		var blobsToCopy []incremental.BackedUpBlob

@@ -32,15 +32,16 @@ func (b BackupStarter) Run() error {
 	existingBlobs := map[string]Backup{}
 
 	for bucketID, backupToStart := range b.BackupsToStart {
+		if backupToStart.SameAsBucketID != "" {
+			sameAsBackup := Backup{SameBucketAs: backupToStart.SameAsBucketID}
+			backups[bucketID] = sameAsBackup
+			existingBlobs[bucketID] = sameAsBackup
+			continue
+		}
+
 		backupDir := BackupDirectory{
 			Path:   joinBlobPath(timestamp, bucketID),
 			Bucket: backupToStart.BucketPair.ConfigBackupBucket,
-		}
-
-		if backupToStart.SameAsBucketID != "" {
-			backups[bucketID] = Backup{SameBucketAs: backupToStart.SameAsBucketID}
-			existingBlobs[bucketID] = Backup{DstBackupDirectoryPath: backupDir.Path}
-			continue
 		}
 
 		backedUpBlobs, err := backupToStart.BackupDirectoryFinder.ListBlobs(bucketID, backupToStart.BucketPair.ConfigBackupBucket)

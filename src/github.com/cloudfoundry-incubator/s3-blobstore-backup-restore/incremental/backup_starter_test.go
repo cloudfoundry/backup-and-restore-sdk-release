@@ -202,7 +202,7 @@ var _ = Describe("BackupStarter", func() {
 						DstBackupDirectoryPath: "2000_01_02_03_04_05/bucket_id",
 					},
 					"marked_bucket_id": {
-						DstBackupDirectoryPath: "2000_01_02_03_04_05/marked_bucket_id",
+						SameBucketAs: "bucket_id",
 					},
 				}))
 			})
