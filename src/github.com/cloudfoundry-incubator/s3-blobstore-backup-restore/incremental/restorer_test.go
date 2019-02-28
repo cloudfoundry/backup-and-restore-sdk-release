@@ -32,8 +32,6 @@ var _ = Describe("Restorer", func() {
 
 		err error
 
-		restorer incremental.Restorer
-
 		backups map[string]incremental.Backup
 	)
 
@@ -83,11 +81,10 @@ var _ = Describe("Restorer", func() {
 			"droplets": dropletsBucketPair,
 			"packages": packagesBucketPair,
 		}
-
-		restorer = incremental.NewRestorer(bucketPairs, artifact)
 	})
 
 	JustBeforeEach(func() {
+		restorer := incremental.NewRestorer(bucketPairs, artifact)
 		err = restorer.Run()
 	})
 
@@ -118,6 +115,34 @@ var _ = Describe("Restorer", func() {
 				srcPackages,
 				dstPackages,
 			)
+		})
+	})
+
+	Context("when a bucket is marked same as another", func() {
+		BeforeEach(func() {
+			backups = map[string]incremental.Backup{
+				"droplets": {
+					BucketName:             "artifact_backup_droplet_bucket",
+					BucketRegion:           "artifact_backup_droplet_region",
+					Blobs:                  []string{dropletsBlob1, dropletsBlob2},
+					SrcBackupDirectoryPath: "timestamp/droplets",
+				},
+				"packages": {
+					SameBucketAs: "droplets",
+				},
+			}
+			bucketPairs = map[string]incremental.RestoreBucketPair{
+				"droplets": dropletsBucketPair,
+				"packages": {
+					SameAsBucketID: "droplets",
+				},
+			}
+			artifact.LoadReturns(backups, nil)
+		})
+
+		It("does not restore the marked bucket", func() {
+			Expect(err).NotTo(HaveOccurred())
+			Expect(destinationLiveDropletsBucket.CopyBlobFromBucketCallCount()).To(Equal(2))
 		})
 	})
 
@@ -160,7 +185,6 @@ var _ = Describe("Restorer", func() {
 	})
 
 	Context("When there is a bucket pair in the restore config that is not in the backup artifact", func() {
-
 		BeforeEach(func() {
 			notInArtifactBucket1 := new(fakes.FakeBucket)
 			notInArtifactBucket2 := new(fakes.FakeBucket)
@@ -170,7 +194,6 @@ var _ = Describe("Restorer", func() {
 			}
 
 			bucketPairs["not-in-artifact"] = notInArtifactPair
-			restorer = incremental.NewRestorer(bucketPairs, artifact)
 		})
 
 		It("returns an error", func() {

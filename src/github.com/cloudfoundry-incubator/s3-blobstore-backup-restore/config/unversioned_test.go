@@ -241,7 +241,7 @@ var _ = Describe("Unversioned", func() {
 			}
 		})
 
-		It("filters out bucket pairs when the backup artifact indicates a duplicate bucket", func() {
+		It("builds restore bucket pairs marked same", func() {
 			artifact.LoadReturns(map[string]incremental.Backup{
 				"bucket1": {
 					BucketName:             "backup-artifact-name1",
@@ -256,8 +256,16 @@ var _ = Describe("Unversioned", func() {
 			restoreBucketPairs, err := config.BuildRestoreBucketPairs(configs, artifact)
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(restoreBucketPairs).To(HaveLen(1))
+			Expect(restoreBucketPairs).To(HaveLen(2))
 			Expect(restoreBucketPairs).To(HaveKey("bucket1"))
+			Expect(restoreBucketPairs["bucket1"].ConfigLiveBucket.Name()).To(Equal("live-name1"))
+			Expect(restoreBucketPairs["bucket1"].ConfigLiveBucket.Region()).To(Equal("live-region1"))
+			Expect(restoreBucketPairs["bucket1"].ArtifactBackupBucket.Name()).To(Equal("backup-artifact-name1"))
+			Expect(restoreBucketPairs["bucket1"].ArtifactBackupBucket.Region()).To(Equal("backup-artifact-region1"))
+			Expect(restoreBucketPairs).To(HaveKey("bucket2"))
+			Expect(restoreBucketPairs["bucket2"]).To(Equal(incremental.RestoreBucketPair{
+				SameAsBucketID: "bucket1",
+			}))
 		})
 
 		It("returns error when it cannot load backup artifact", func() {

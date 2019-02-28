@@ -23,18 +23,22 @@ func (b Restorer) Run() error {
 		return err
 	}
 
-	for key := range backups {
-		_, exists := b.bucketPairs[key]
+	for bucketID, backup := range backups {
+		_, exists := b.bucketPairs[bucketID]
 		if !exists {
 			return fmt.Errorf(
 				"restore config does not mention bucket: %s, but is present in the artifact",
-				key,
+				bucketID,
 			)
 		}
 
-		backupBlobs, _ := b.bucketPairs[key].ArtifactBackupBucket.ListBlobs(backups[key].SrcBackupDirectoryPath)
-		if missingBlobs := validateArtifact(backups[key].SrcBackupDirectoryPath, backupBlobs, backups[key].Blobs); len(missingBlobs) > 0 {
-			return formatError(fmt.Sprintf("found blobs in artifact that are not present in backup directory for bucket %s:", backups[key].BucketName), missingBlobs)
+		if backup.SameBucketAs != "" {
+			continue
+		}
+
+		backupBlobs, _ := b.bucketPairs[bucketID].ArtifactBackupBucket.ListBlobs(backup.SrcBackupDirectoryPath)
+		if missingBlobs := validateArtifact(backup.SrcBackupDirectoryPath, backupBlobs, backup.Blobs); len(missingBlobs) > 0 {
+			return formatError(fmt.Sprintf("found blobs in artifact that are not present in backup directory for bucket %s:", backup.BucketName), missingBlobs)
 		}
 	}
 
@@ -52,6 +56,7 @@ func (b Restorer) Run() error {
 			return err
 		}
 	}
+
 	return nil
 }
 

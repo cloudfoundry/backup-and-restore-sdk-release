@@ -139,6 +139,9 @@ func BuildRestoreBucketPairs(
 		}
 
 		if backups[bucketID].SameBucketAs != "" {
+			pairs[bucketID] = incremental.RestoreBucketPair{
+				SameAsBucketID: backups[bucketID].SameBucketAs,
+			}
 			continue
 		}
 

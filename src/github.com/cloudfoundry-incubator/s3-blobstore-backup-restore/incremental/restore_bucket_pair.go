@@ -9,6 +9,7 @@ import (
 type RestoreBucketPair struct {
 	ConfigLiveBucket     Bucket
 	ArtifactBackupBucket Bucket
+	SameAsBucketID       string
 }
 
 func (p RestoreBucketPair) Restore(backup Backup) error {
