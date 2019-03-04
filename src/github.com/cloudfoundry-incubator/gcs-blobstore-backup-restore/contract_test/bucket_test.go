@@ -3,6 +3,8 @@ package contract_test
 import (
 	"fmt"
 
+	"github.com/cloudfoundry-incubator/gcs-blobstore-backup-restore/fakes"
+
 	"github.com/cloudfoundry-incubator/gcs-blobstore-backup-restore"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,12 +20,12 @@ var _ = Describe("Bucket", func() {
 				},
 			}
 
-			buckets, err := gcs.BuildBackupsToComplete(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
+			backupsToComplete, err := gcs.BuildBackupsToComplete(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(buckets).To(HaveLen(1))
-			Expect(buckets["droplets"].LiveBucket.Name()).To(Equal("droplets-bucket"))
-			Expect(buckets["droplets"].BackupBucket.Name()).To(Equal("backup-droplets-bucket"))
+			Expect(backupsToComplete).To(HaveLen(1))
+			Expect(backupsToComplete["droplets"].BucketPair.LiveBucket.Name()).To(Equal("droplets-bucket"))
+			Expect(backupsToComplete["droplets"].BucketPair.BackupBucket.Name()).To(Equal("backup-droplets-bucket"))
 		})
 
 		Context("when providing invalid service account key", func() {
@@ -38,6 +40,87 @@ var _ = Describe("Bucket", func() {
 				_, err := gcs.BuildBackupsToComplete("not-valid-json", config)
 				Expect(err).To(HaveOccurred())
 			})
+		})
+
+		Context("when two bucket pairs point to the same bucket", func() {
+			It("builds the correct bucket pairs", func() {
+				config := map[string]gcs.Config{
+					"bucket-1": {
+						BucketName:       "common-bucket",
+						BackupBucketName: "backup-common-bucket",
+					},
+
+					"bucket-2": {
+						BucketName:       "common-bucket",
+						BackupBucketName: "backup-common-bucket",
+					},
+				}
+
+				backupsToComplete, err := gcs.BuildBackupsToComplete(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(backupsToComplete).To(HaveLen(2))
+				Expect(backupsToComplete["bucket-1"].BucketPair.LiveBucket.Name()).To(Equal("common-bucket"))
+				Expect(backupsToComplete["bucket-1"].BucketPair.BackupBucket.Name()).To(Equal("backup-common-bucket"))
+				Expect(backupsToComplete["bucket-1"].SameAsBucketID).To(BeEmpty())
+				Expect(backupsToComplete["bucket-2"].SameAsBucketID).To(Equal("bucket-1"))
+				Expect(backupsToComplete["bucket-2"].BucketPair).To(Equal(gcs.BucketPair{}))
+			})
+		})
+	})
+
+	Describe("MarkSameBackupsToComplete", func() {
+		It("marks backups to complete that are the same as another bucket ID", func() {
+			liveBucket1 := new(fakes.FakeBucket)
+			liveBucket1.NameReturns("live-bucket-1")
+			liveBucket3 := new(fakes.FakeBucket)
+			liveBucket3.NameReturns("live-bucket-3")
+
+			backupsToComplete := map[string]gcs.BackupToComplete{
+				"bucket-4": {
+					BucketPair: gcs.BucketPair{
+						LiveBucket: liveBucket1,
+					},
+				},
+				"bucket-2": {
+					BucketPair: gcs.BucketPair{
+						LiveBucket: liveBucket3,
+					},
+				},
+				"bucket-1": {
+					BucketPair: gcs.BucketPair{
+						LiveBucket: liveBucket1,
+					},
+				},
+				"bucket-3": {
+					BucketPair: gcs.BucketPair{
+						LiveBucket: liveBucket3,
+					},
+				},
+			}
+
+			markedSameBackupsToComplete := gcs.MarkSameBackupsToComplete(backupsToComplete)
+
+			Expect(markedSameBackupsToComplete).To(Equal(
+				map[string]gcs.BackupToComplete{
+					"bucket-1": {
+						BucketPair: gcs.BucketPair{
+							LiveBucket: liveBucket1,
+						},
+					},
+					"bucket-2": {
+						BucketPair: gcs.BucketPair{
+							LiveBucket: liveBucket3,
+						},
+					},
+					"bucket-3": {
+						SameAsBucketID: "bucket-2",
+					},
+					"bucket-4": {
+						SameAsBucketID: "bucket-1",
+					},
+				},
+			))
 		})
 	})
 
@@ -81,9 +164,9 @@ var _ = Describe("Bucket", func() {
 					},
 				}
 
-				bucketPair, err := gcs.BuildBackupsToComplete(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
+				backupsToComplete, err := gcs.BuildBackupsToComplete(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = bucketPair["droplets"].LiveBucket.ListBlobs("")
+				_, err = backupsToComplete["droplets"].BucketPair.LiveBucket.ListBlobs("")
 				Expect(err).To(MatchError("storage: bucket doesn't exist"))
 			})
 		})

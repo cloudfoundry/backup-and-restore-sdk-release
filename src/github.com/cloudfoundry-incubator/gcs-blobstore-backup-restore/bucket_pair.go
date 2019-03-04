@@ -1,6 +1,10 @@
 package gcs
 
-import "github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor"
+import (
+	"sort"
+
+	"github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor"
+)
 
 type BucketPair struct {
 	LiveBucket        Bucket
@@ -34,5 +38,32 @@ func BuildBackupsToComplete(gcpServiceAccountKey string, config map[string]Confi
 		}
 	}
 
-	return backupsToComplete, nil
+	markedSameBackupsToComplete := MarkSameBackupsToComplete(backupsToComplete)
+
+	return markedSameBackupsToComplete, nil
+}
+
+func MarkSameBackupsToComplete(backupsToComplete map[string]BackupToComplete) map[string]BackupToComplete {
+	liveBucketNamesToBucketIDs := make(map[string][]string)
+
+	for bucketID, backupToComplete := range backupsToComplete {
+		bucketIDs := liveBucketNamesToBucketIDs[backupToComplete.BucketPair.LiveBucket.Name()]
+		liveBucketNamesToBucketIDs[backupToComplete.BucketPair.LiveBucket.Name()] = append(bucketIDs, bucketID)
+	}
+
+	markedSameBackupsToComplete := make(map[string]BackupToComplete)
+
+	for _, bucketIDs := range liveBucketNamesToBucketIDs {
+		sort.Strings(bucketIDs)
+
+		for i, bucketID := range bucketIDs {
+			if i == 0 {
+				markedSameBackupsToComplete[bucketID] = backupsToComplete[bucketID]
+			} else {
+				markedSameBackupsToComplete[bucketID] = BackupToComplete{SameAsBucketID: bucketIDs[0]}
+			}
+		}
+	}
+
+	return markedSameBackupsToComplete
 }
