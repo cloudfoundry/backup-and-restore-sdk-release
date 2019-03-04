@@ -3,24 +3,24 @@ package gcs
 import "fmt"
 
 type Restorer struct {
-	buckets map[string]BucketPair
+	backupsToComplete map[string]BackupToComplete
 }
 
-func NewRestorer(buckets map[string]BucketPair) Restorer {
+func NewRestorer(backupsToComplete map[string]BackupToComplete) Restorer {
 	return Restorer{
-		buckets: buckets,
+		backupsToComplete: backupsToComplete,
 	}
 }
 
 func (r Restorer) Restore(bucketBackups map[string]BucketBackup) error {
 	for bucketID := range bucketBackups {
-		_, ok := r.buckets[bucketID]
+		_, ok := r.backupsToComplete[bucketID]
 		if !ok {
 			return fmt.Errorf("no entry found in restore config for bucket: %s", bucketID)
 		}
 	}
 
-	for bucketID := range r.buckets {
+	for bucketID := range r.backupsToComplete {
 		_, ok := bucketBackups[bucketID]
 		if !ok {
 			return fmt.Errorf("no entry found in restore artifact for bucket: %s", bucketID)
@@ -28,8 +28,8 @@ func (r Restorer) Restore(bucketBackups map[string]BucketBackup) error {
 	}
 
 	for bucketID, bucketBackup := range bucketBackups {
-		err := r.buckets[bucketID].BackupBucket.CopyBlobsToBucket(
-			r.buckets[bucketID].LiveBucket,
+		err := r.backupsToComplete[bucketID].BucketPair.BackupBucket.CopyBlobsToBucket(
+			r.backupsToComplete[bucketID].BucketPair.LiveBucket,
 			bucketBackup.Path,
 		)
 		if err != nil {

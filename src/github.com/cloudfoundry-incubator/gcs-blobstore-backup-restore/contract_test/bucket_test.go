@@ -9,7 +9,7 @@ import (
 )
 
 var _ = Describe("Bucket", func() {
-	Describe("BuildBucketPairs", func() {
+	Describe("BuildBackupsToComplete", func() {
 		It("builds bucket pairs", func() {
 			config := map[string]gcs.Config{
 				"droplets": {
@@ -18,7 +18,7 @@ var _ = Describe("Bucket", func() {
 				},
 			}
 
-			buckets, err := gcs.BuildBucketPairs(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
+			buckets, err := gcs.BuildBackupsToComplete(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(buckets).To(HaveLen(1))
@@ -35,7 +35,7 @@ var _ = Describe("Bucket", func() {
 					},
 				}
 
-				_, err := gcs.BuildBucketPairs("not-valid-json", config)
+				_, err := gcs.BuildBackupsToComplete("not-valid-json", config)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -81,7 +81,7 @@ var _ = Describe("Bucket", func() {
 					},
 				}
 
-				bucketPair, err := gcs.BuildBucketPairs(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
+				bucketPair, err := gcs.BuildBackupsToComplete(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
 				Expect(err).NotTo(HaveOccurred())
 				_, err = bucketPair["droplets"].LiveBucket.ListBlobs("")
 				Expect(err).To(MatchError("storage: bucket doesn't exist"))

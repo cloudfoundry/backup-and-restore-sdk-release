@@ -30,13 +30,13 @@ func main() {
 	gcpServiceAccountKey, err := gcs.ReadGCPServiceAccountKey(*gcpServiceAccountKeyPath)
 	exitOnError(err)
 
-	bucketPairs, err := gcs.BuildBucketPairs(gcpServiceAccountKey, config)
+	backupsToComplete, err := gcs.BuildBackupsToComplete(gcpServiceAccountKey, config)
 	exitOnError(err)
 
 	artifact := gcs.NewArtifact(*artifactPath)
 
 	if *backupAction {
-		backuper := gcs.NewBackuper(bucketPairs)
+		backuper := gcs.NewBackuper(backupsToComplete)
 
 		backupBucketDirectories, err := backuper.Backup()
 		exitOnError(err)
@@ -44,7 +44,7 @@ func main() {
 		err = artifact.Write(backupBucketDirectories)
 		exitOnError(err)
 	} else {
-		restorer := gcs.NewRestorer(bucketPairs)
+		restorer := gcs.NewRestorer(backupsToComplete)
 
 		backupBuckets, err := artifact.Read()
 		exitOnError(err)

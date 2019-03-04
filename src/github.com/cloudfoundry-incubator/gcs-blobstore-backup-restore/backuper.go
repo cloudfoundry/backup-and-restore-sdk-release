@@ -10,13 +10,18 @@ import (
 
 const timestampFormat = "2006_01_02_15_04_05"
 
-type Backuper struct {
-	bucketPairs map[string]BucketPair
+type BackupToComplete struct {
+	BucketPair     BucketPair
+	SameAsBucketID string
 }
 
-func NewBackuper(bucketPairs map[string]BucketPair) Backuper {
+type Backuper struct {
+	backupsToComplete map[string]BackupToComplete
+}
+
+func NewBackuper(backupsToComplete map[string]BackupToComplete) Backuper {
 	return Backuper{
-		bucketPairs: bucketPairs,
+		backupsToComplete: backupsToComplete,
 	}
 }
 
@@ -33,9 +38,9 @@ func (b *Backuper) Backup() (map[string]BucketBackup, error) {
 	timestamp := time.Now().Format(timestampFormat)
 	bucketBackups := make(map[string]BucketBackup)
 
-	for bucketID, bucketPair := range b.bucketPairs {
-		liveBucket := bucketPair.LiveBucket
-		backupBucket := bucketPair.BackupBucket
+	for bucketID, backupToComplete := range b.backupsToComplete {
+		liveBucket := backupToComplete.BucketPair.LiveBucket
+		backupBucket := backupToComplete.BucketPair.BackupBucket
 
 		bucketBackups[bucketID] = BucketBackup{
 			BucketName: backupBucket.Name(),
@@ -58,7 +63,7 @@ func (b *Backuper) Backup() (map[string]BucketBackup, error) {
 			}})
 		}
 
-		errs := bucketPair.ExecutionStrategy.Run([][]executor.Executable{executables})
+		errs := backupToComplete.BucketPair.ExecutionStrategy.Run([][]executor.Executable{executables})
 		if len(errs) != 0 {
 			return map[string]BucketBackup{}, formatErrors(
 				fmt.Sprintf("failed to backup bucket %s", liveBucket.Name()),

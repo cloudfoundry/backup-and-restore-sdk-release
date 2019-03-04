@@ -31,11 +31,14 @@ var _ = Describe("Backuper", func() {
 
 		parallelExecutor := executor.NewParallelExecutor()
 		parallelExecutor.SetMaxInFlight(200)
-		backuper = gcs.NewBackuper(map[string]gcs.BucketPair{
+		backuper = gcs.NewBackuper(map[string]gcs.BackupToComplete{
 			bucketId: {
-				LiveBucket:        liveBucket,
-				BackupBucket:      backupBucket,
-				ExecutionStrategy: parallelExecutor,
+				BucketPair: gcs.BucketPair{
+					LiveBucket:        liveBucket,
+					BackupBucket:      backupBucket,
+					ExecutionStrategy: parallelExecutor,
+				},
+				SameAsBucketID: "",
 			},
 		})
 	})

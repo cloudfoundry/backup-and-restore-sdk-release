@@ -8,8 +8,8 @@ type BucketPair struct {
 	ExecutionStrategy executor.Executor
 }
 
-func BuildBucketPairs(gcpServiceAccountKey string, config map[string]Config) (map[string]BucketPair, error) {
-	buckets := map[string]BucketPair{}
+func BuildBackupsToComplete(gcpServiceAccountKey string, config map[string]Config) (map[string]BackupToComplete, error) {
+	backupsToComplete := map[string]BackupToComplete{}
 	exe := executor.NewParallelExecutor()
 	exe.SetMaxInFlight(200)
 	for bucketID, bucketConfig := range config {
@@ -23,12 +23,16 @@ func BuildBucketPairs(gcpServiceAccountKey string, config map[string]Config) (ma
 			return nil, err
 		}
 
-		buckets[bucketID] = BucketPair{
+		bucketPair := BucketPair{
 			LiveBucket:        bucket,
 			BackupBucket:      backupBucket,
 			ExecutionStrategy: exe,
 		}
+		backupsToComplete[bucketID] = BackupToComplete{
+			BucketPair:     bucketPair,
+			SameAsBucketID: "",
+		}
 	}
 
-	return buckets, nil
+	return backupsToComplete, nil
 }
