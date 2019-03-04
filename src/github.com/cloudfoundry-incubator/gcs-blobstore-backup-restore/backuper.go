@@ -39,6 +39,13 @@ func (b *Backuper) Backup() (map[string]BucketBackup, error) {
 	bucketBackups := make(map[string]BucketBackup)
 
 	for bucketID, backupToComplete := range b.backupsToComplete {
+		if backupToComplete.SameAsBucketID != "" {
+			bucketBackups[bucketID] = BucketBackup{
+				SameBucketAs: backupToComplete.SameAsBucketID,
+			}
+			continue
+		}
+
 		liveBucket := backupToComplete.BucketPair.LiveBucket
 		backupBucket := backupToComplete.BucketPair.BackupBucket
 

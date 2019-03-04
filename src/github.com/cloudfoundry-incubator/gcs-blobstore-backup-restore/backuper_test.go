@@ -98,6 +98,59 @@ var _ = Describe("Backuper", func() {
 				Expect(backupBucketDir[bucketId].BucketName).To(Equal(backupBucket.Name()))
 				Expect(backupBucketDir[bucketId].Path).To(MatchRegexp(".*\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/.*"))
 			})
+
+			Context("and there is another live bucket which points to the same live bucket", func() {
+				const secondBucketId = "another-bucket"
+
+				BeforeEach(func() {
+					parallelExecutor := executor.NewParallelExecutor()
+					parallelExecutor.SetMaxInFlight(200)
+					backuper = gcs.NewBackuper(map[string]gcs.BackupToComplete{
+						bucketId: {
+							BucketPair: gcs.BucketPair{
+								LiveBucket:        liveBucket,
+								BackupBucket:      backupBucket,
+								ExecutionStrategy: parallelExecutor,
+							},
+							SameAsBucketID: "",
+						},
+						secondBucketId: {
+							BucketPair: gcs.BucketPair{
+								LiveBucket:        liveBucket,
+								BackupBucket:      backupBucket,
+								ExecutionStrategy: parallelExecutor,
+							},
+							SameAsBucketID: bucketId,
+						},
+					})
+				})
+
+				It("only copies across the blobs in live bucket to backup bucket once", func() {
+					_, err := backuper.Backup()
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(liveBucket.CopyBlobToBucketCallCount()).To(Equal(2))
+					_, blob1Name, _ := liveBucket.CopyBlobToBucketArgsForCall(0)
+					_, blob2Name, _ := liveBucket.CopyBlobToBucketArgsForCall(1)
+					argsForCalls := []string{blob1Name, blob2Name}
+					Expect(argsForCalls).To(ConsistOf(blob1, blob2))
+				})
+
+				It("returns a valid BucketBackup map", func() {
+					backupBucketDir, err := backuper.Backup()
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(backupBucketDir).To(HaveLen(2))
+
+					Expect(backupBucketDir[bucketId].BucketName).To(Equal(backupBucket.Name()))
+					Expect(backupBucketDir[bucketId].Path).To(MatchRegexp(".*\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}/.*"))
+					Expect(backupBucketDir[bucketId].SameBucketAs).To(BeEmpty())
+
+					Expect(backupBucketDir[secondBucketId].BucketName).To(BeEmpty())
+					Expect(backupBucketDir[secondBucketId].Path).To(BeEmpty())
+					Expect(backupBucketDir[secondBucketId].SameBucketAs).To(Equal(bucketId))
+				})
+			})
 		})
 	})
 })
