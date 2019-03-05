@@ -29,6 +29,9 @@ var _ = Describe("Artifact", func() {
 						BucketName: "bucket_name",
 						Path:       "a_path",
 					},
+					"bucket_identifier_2": {
+						SameBucketAs: "bucket_identifier",
+					},
 				},
 				)
 
@@ -39,6 +42,11 @@ var _ = Describe("Artifact", func() {
 					"bucket_identifier": {
 						"bucket_name": "bucket_name",
 						"path": "a_path"
+					},
+					"bucket_identifier_2": {
+						"bucket_name": "",
+						"path": "",
+						"same_bucket_as": "bucket_identifier"
 					}
 				}`))
 			})
