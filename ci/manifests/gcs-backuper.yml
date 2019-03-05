@@ -54,6 +54,33 @@ instance_groups:
         droplets:
           bucket_name: ((gcs-bucket-name))
           backup_bucket_name: ((gcs-backup-bucket-name))
+- name: gcs-backuper-same-bucket
+  instances: 1
+  vm_type: small
+  persistent_disk_type: 10GB
+  stemcell: xenial
+  update:
+    serial: true
+  networks:
+    - name: default
+  azs: [z1]
+  jobs:
+    - name: bpm
+      release: bpm
+    - name: gcs-blobstore-backup-restorer
+      release: backup-and-restore-sdk
+      properties:
+        bpm:
+          enabled: true
+        enabled: true
+        gcp_service_account_key: ((gcp-service-account-key))
+        buckets:
+          bucket1:
+            bucket_name: ((gcs-bucket-name))
+            backup_bucket_name: ((gcs-backup-bucket-name))
+          bucket2:
+            bucket_name: ((gcs-bucket-name))
+            backup_bucket_name: ((gcs-backup-bucket-name))
 update:
   canaries: 1
   max_in_flight: 1
