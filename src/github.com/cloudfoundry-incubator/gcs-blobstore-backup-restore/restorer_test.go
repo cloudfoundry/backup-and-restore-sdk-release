@@ -74,6 +74,38 @@ var _ = Describe("Restorer", func() {
 			Expect(sourcePath).To(Equal(timestamp + "/second"))
 		})
 
+		Context("when the live buckets in the configuration point to the same bucket", func() {
+			BeforeEach(func() {
+				config := map[string]gcs.BackupToComplete{
+					"first": {
+						BucketPair:     gcs.BucketPair{LiveBucket: firstBucket, BackupBucket: firstBackupBucket},
+						SameAsBucketID: "",
+					},
+					"second": {
+						BucketPair:     gcs.BucketPair{LiveBucket: firstBackupBucket, BackupBucket: firstBackupBucket},
+						SameAsBucketID: "",
+					},
+				}
+
+				artifact = map[string]gcs.BucketBackup{
+					"first":  {BucketName: firstBackupBucketName, Path: timestamp + "/first"},
+					"second": {SameBucketAs: "first"},
+				}
+
+				restorer = gcs.NewRestorer(config)
+			})
+
+			It("copies the blobs from the path in the backup bucket to the live bucket only once", func() {
+				err := restorer.Restore(artifact)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(firstBackupBucket.CopyBlobsToBucketCallCount()).To(Equal(1))
+				destinationBucket, sourcePath := firstBackupBucket.CopyBlobsToBucketArgsForCall(0)
+				Expect(destinationBucket).To(Equal(firstBucket))
+				Expect(sourcePath).To(Equal(timestamp + "/first"))
+			})
+		})
+
 		Context("when a copy fails", func() {
 			BeforeEach(func() {
 				firstBackupBucket.CopyBlobsToBucketReturns(fmt.Errorf("foo"))

@@ -28,6 +28,10 @@ func (r Restorer) Restore(bucketBackups map[string]BucketBackup) error {
 	}
 
 	for bucketID, bucketBackup := range bucketBackups {
+		if bucketBackup.SameBucketAs != "" {
+			continue
+		}
+
 		err := r.backupsToComplete[bucketID].BucketPair.BackupBucket.CopyBlobsToBucket(
 			r.backupsToComplete[bucketID].BucketPair.LiveBucket,
 			bucketBackup.Path,
