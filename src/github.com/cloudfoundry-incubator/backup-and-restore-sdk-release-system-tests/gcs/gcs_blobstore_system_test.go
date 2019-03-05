@@ -21,40 +21,44 @@ var (
 )
 
 var _ = Describe("GCS Blobstore System Tests", func() {
-	BeforeEach(func() {
-		bucket = MustHaveEnv("GCS_BUCKET_NAME")
-		backupBucket = MustHaveEnv("GCS_BACKUP_BUCKET_NAME")
-		instance = JobInstance{
-			Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
-			Name:       "gcs-backuper",
-			Index:      "0",
-		}
-
-		instanceArtifactDirPath = "/var/vcap/store/gcs-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
-		instance.RunSuccessfully("sudo mkdir -p " + instanceArtifactDirPath)
-	})
-
 	Describe("Backup and bpm is enabled", func() {
+		BeforeEach(func() {
+			bucket = MustHaveEnv("GCS_BUCKET_NAME")
+			backupBucket = MustHaveEnv("GCS_BACKUP_BUCKET_NAME")
+		})
+
 		AfterEach(func() {
 			gcsClient.DeleteAllBlobInBucket(fmt.Sprintf(bucket + "/*"))
 			gcsClient.DeleteAllBlobInBucket(fmt.Sprintf(backupBucket + "/*"))
 		})
-		Context("there is large number files in the bucket", func() {
-			numberOfBlobs := 2000
+
+		Context("when there is single live bucket", func() {
 			BeforeEach(func() {
-				gcsClient.WriteNBlobsToBucket(bucket, "test_file_%d_", "TEST_BLOB_%d", numberOfBlobs)
+				instance = JobInstance{
+					Deployment: MustHaveEnv("BOSH_DEPLOYMENT"),
+					Name:       "gcs-backuper",
+					Index:      "0",
+				}
+
+				instanceArtifactDirPath = "/var/vcap/store/gcs-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)
+				instance.RunSuccessfully("sudo mkdir -p " + instanceArtifactDirPath)
 			})
-			runTestWithBlobs(numberOfBlobs)
-		})
-		Context("there is large file in the bucket", func() {
-			sizeOfBlob := 10
-			BeforeEach(func() {
-				gcsClient.WriteNSizeBlobToBucket(bucket, "test_file_0_", sizeOfBlob)
+			Context("and there is large number files in the bucket", func() {
+				numberOfBlobs := 2000
+				BeforeEach(func() {
+					gcsClient.WriteNBlobsToBucket(bucket, "test_file_%d_", "TEST_BLOB_%d", numberOfBlobs)
+				})
+				runTestWithBlobs(numberOfBlobs)
 			})
-			runTestWithBlobs(1)
+			Context("and there is large file in the bucket", func() {
+				sizeOfBlob := 10
+				BeforeEach(func() {
+					gcsClient.WriteNSizeBlobToBucket(bucket, "test_file_0_", sizeOfBlob)
+				})
+				runTestWithBlobs(1)
+			})
 		})
 	})
-
 })
 
 func runTestWithBlobs(numberOfBlobs int) {
