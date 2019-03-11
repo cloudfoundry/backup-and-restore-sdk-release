@@ -9,11 +9,13 @@ import (
 )
 
 var (
-	TestAWSAccessKeyID     = MustHaveEnv("TEST_AWS_ACCESS_KEY_ID")
-	TestAWSSecretAccessKey = MustHaveEnv("TEST_AWS_SECRET_ACCESS_KEY")
-
-	TestECSAccessKeyID     = MustHaveEnv("TEST_ECS_ACCESS_KEY_ID")
-	TestECSSecretAccessKey = MustHaveEnv("TEST_ECS_SECRET_ACCESS_KEY")
+	LiveRegion                   = MustHaveEnv("S3_LIVE_REGION")
+	BackupRegion                 = MustHaveEnv("S3_BACKUP_REGION")
+	S3Endpoint                   = MustHaveEnv("S3_ENDPOINT")
+	AccessKey                    = MustHaveEnv("S3_ACCESS_KEY_ID")
+	SecretKey                    = MustHaveEnv("S3_SECRET_ACCESS_KEY")
+	PreExistingBigFileBucketName = MustHaveEnv("S3_BIG_FILE_BUCKET")
+	EmptyBucketName              = MustHaveEnv("S3_EMPTY_BUCKET")
 )
 
 func TestS3(t *testing.T) {
