@@ -21,8 +21,8 @@ import (
 )
 
 func MustHaveEnv(keyname string) string {
-	val, exists := os.LookupEnv(keyname)
-	if !exists {
+	val := os.Getenv(keyname)
+	if val == "" {
 		panic("Need " + keyname + " for the test")
 	}
 	return val
