@@ -42,15 +42,14 @@ instance_groups:
   jobs:
   - name: postgres
     release: postgres
+    properties:
+      databases:
+        roles:
+        - name: ((db_username))
+          password: ((db_password))
   - name: bpm
     release: bpm
   azs: [((availability_zone))]
-  properties:
-    postgres:
-      databases:
-        roles:
-          - name: ((db_username))
-            password: ((db_password))
 
 update:
   canaries: 1
