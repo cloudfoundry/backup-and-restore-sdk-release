@@ -31,7 +31,7 @@ var _ = Describe("ParsePostgresVersion", func() {
 		}))
 	})
 
-	It("parses out 11.1 version", func() {
+	It("parses out 11.x version", func() {
 		Expect(ParseVersion(
 			" PostgreSQL 11.1 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 5.4.0-6ubuntu1~16.04.11) 5.4.0 20160609, 64-bit"),
 		).To(Equal(version.SemanticVersion{

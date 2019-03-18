@@ -36,6 +36,7 @@ var envVars map[string]string
 var fakePgDump94 *binmock.Mock
 var fakePgDump96 *binmock.Mock
 var fakePgDump106 *binmock.Mock
+var fakePgDump11 *binmock.Mock
 var fakePgRestore94 *binmock.Mock
 var fakePgRestore96 *binmock.Mock
 var fakePgRestore106 *binmock.Mock
@@ -59,6 +60,7 @@ var _ = BeforeSuite(func() {
 	fakePgDump94 = binmock.NewBinMock(Fail)
 	fakePgDump96 = binmock.NewBinMock(Fail)
 	fakePgDump106 = binmock.NewBinMock(Fail)
+	fakePgDump11 = binmock.NewBinMock(Fail)
 	fakePgRestore94 = binmock.NewBinMock(Fail)
 	fakePgRestore96 = binmock.NewBinMock(Fail)
 	fakePgRestore106 = binmock.NewBinMock(Fail)
@@ -78,6 +80,7 @@ var _ = BeforeEach(func() {
 		"PG_DUMP_9_4_PATH":      "non-existent",
 		"PG_DUMP_9_6_PATH":      "non-existent",
 		"PG_DUMP_10_6_PATH":     "non-existent",
+		"PG_DUMP_11_PATH":       "non-existent",
 		"PG_RESTORE_9_4_PATH":   "non-existent",
 		"PG_RESTORE_9_6_PATH":   "non-existent",
 		"PG_RESTORE_10_6_PATH":  "non-existent",

@@ -30,6 +30,11 @@ var _ = Describe("InteractorFactory", func() {
 			Restore: "pg_p_10_6_restore",
 			Client:  "pg_p_10_6_client",
 		},
+		Postgres11: config.UtilityPaths{
+			Dump:    "pg_p_11_dump",
+			Restore: "pg_p_11_restore",
+			Client:  "pg_p_11_client",
+		},
 		Mariadb: config.UtilityPaths{
 			Dump:    "mariadb_dump",
 			Restore: "mariadb_restore",
@@ -140,6 +145,28 @@ var _ = Describe("InteractorFactory", func() {
 								connectionConfig,
 								tempFolderManager,
 								"pg_p_10_6_dump",
+							),
+						),
+					))
+				})
+			})
+
+			Context("when the version is detected as 11", func() {
+				BeforeEach(func() {
+					postgresServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "11", Minor: "1", Patch: "0"}},
+						nil)
+				})
+
+				It("builds a database.TableCheckingInteractor", func() {
+					Expect(factoryError).NotTo(HaveOccurred())
+					Expect(interactor).To(Equal(
+						database.NewTableCheckingInteractor(connectionConfig,
+							postgres.NewTableChecker(connectionConfig, "pg_p_11_client"),
+							postgres.NewBackuper(
+								connectionConfig,
+								tempFolderManager,
+								"pg_p_11_dump",
 							),
 						),
 					))
