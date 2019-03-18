@@ -54,6 +54,7 @@ var _ = Describe("Postgres", func() {
 		fakePgRestore94.Reset()
 		fakePgRestore96.Reset()
 		fakePgRestore106.Reset()
+		fakePgRestore11.Reset()
 
 		envVars["PG_CLIENT_PATH"] = fakePgClient.Path
 		envVars["PG_DUMP_9_4_PATH"] = fakePgDump94.Path
@@ -63,6 +64,7 @@ var _ = Describe("Postgres", func() {
 		envVars["PG_RESTORE_9_4_PATH"] = fakePgRestore94.Path
 		envVars["PG_RESTORE_9_6_PATH"] = fakePgRestore96.Path
 		envVars["PG_RESTORE_10_6_PATH"] = fakePgRestore106.Path
+		envVars["PG_RESTORE_11_PATH"] = fakePgRestore11.Path
 
 		configFile = saveFile(fmt.Sprintf(`{
 				"adapter":  "postgres",
@@ -1462,6 +1464,69 @@ var _ = Describe("Postgres", func() {
 			Context("and pg_restore fails to get file list", func() {
 				BeforeEach(func() {
 					fakePgRestore106.WhenCalled().WillExitWith(1)
+				})
+
+				It("also fails", func() {
+					Eventually(session).Should(gexec.Exit(1))
+				})
+			})
+		})
+
+		Context("Postgres database server is version 11", func() {
+			BeforeEach(func() {
+				fakePgClient.WhenCalled().WillPrintToStdOut(
+					" PostgreSQL 11.2 on x86_64-pc-linux-gnu, compiled by gcc " +
+						"(Ubuntu 5.4.0-6ubuntu1~16.04.11) 5.4.0 20160609, 64-bit").
+					WillExitWith(0)
+			})
+
+			Context("pg_restore succeeds", func() {
+				BeforeEach(func() {
+					fakePgRestore11.WhenCalled().WillExitWith(0)
+					fakePgRestore11.WhenCalled().WillExitWith(0)
+				})
+
+				It("calls pg_restore to get information about the restore", func() {
+					Expect(fakePgRestore11.Invocations()).To(HaveLen(2))
+
+					Expect(fakePgRestore11.Invocations()[0].Args()).To(Equal([]string{"--list", artifactFile}))
+
+					expectedArgs := []interface{}{
+						"--verbose",
+						fmt.Sprintf("--username=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--format=custom",
+						fmt.Sprintf("--dbname=%s", databaseName),
+						"--clean",
+						"--if-exists",
+						HavePrefix("--use-list="),
+						artifactFile,
+					}
+
+					Expect(fakePgRestore11.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+					Expect(fakePgRestore11.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+				})
+
+				It("succeeds", func() {
+					Expect(session).Should(gexec.Exit(0))
+				})
+			})
+
+			Context("and pg_restore fails when restoring", func() {
+				BeforeEach(func() {
+					fakePgRestore11.WhenCalled().WillExitWith(0)
+					fakePgRestore11.WhenCalled().WillExitWith(1)
+				})
+
+				It("also fails", func() {
+					Eventually(session).Should(gexec.Exit(1))
+				})
+			})
+
+			Context("and pg_restore fails to get file list", func() {
+				BeforeEach(func() {
+					fakePgRestore11.WhenCalled().WillExitWith(1)
 				})
 
 				It("also fails", func() {

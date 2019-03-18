@@ -40,6 +40,7 @@ var fakePgDump11 *binmock.Mock
 var fakePgRestore94 *binmock.Mock
 var fakePgRestore96 *binmock.Mock
 var fakePgRestore106 *binmock.Mock
+var fakePgRestore11 *binmock.Mock
 var fakePgClient *binmock.Mock
 var fakeMysqlClient55 *binmock.Mock
 var fakeMysqlDump55 *binmock.Mock
@@ -64,6 +65,7 @@ var _ = BeforeSuite(func() {
 	fakePgRestore94 = binmock.NewBinMock(Fail)
 	fakePgRestore96 = binmock.NewBinMock(Fail)
 	fakePgRestore106 = binmock.NewBinMock(Fail)
+	fakePgRestore11 = binmock.NewBinMock(Fail)
 	fakeMysqlDump55 = binmock.NewBinMock(Fail)
 	fakeMysqlClient55 = binmock.NewBinMock(Fail)
 	fakeMysqlDump56 = binmock.NewBinMock(Fail)
@@ -84,6 +86,7 @@ var _ = BeforeEach(func() {
 		"PG_RESTORE_9_4_PATH":   "non-existent",
 		"PG_RESTORE_9_6_PATH":   "non-existent",
 		"PG_RESTORE_10_6_PATH":  "non-existent",
+		"PG_RESTORE_11_PATH":    "non-existent",
 		"MARIADB_CLIENT_PATH":   "non-existent",
 		"MARIADB_DUMP_PATH":     "non-existent",
 		"MYSQL_CLIENT_5_5_PATH": "non-existent",

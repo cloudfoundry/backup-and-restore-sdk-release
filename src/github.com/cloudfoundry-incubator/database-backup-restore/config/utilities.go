@@ -25,8 +25,9 @@ type UtilitiesConfig struct {
 func GetUtilitiesConfigFromEnv() UtilitiesConfig {
 	return UtilitiesConfig{
 		Postgres11: UtilityPaths{
-			Client: lookupEnv("PG_CLIENT_PATH"),
-			Dump:   lookupEnv("PG_DUMP_11_PATH"),
+			Client:  lookupEnv("PG_CLIENT_PATH"),
+			Dump:    lookupEnv("PG_DUMP_11_PATH"),
+			Restore: lookupEnv("PG_RESTORE_11_PATH"),
 		},
 		Postgres106: UtilityPaths{
 			Client:  lookupEnv("PG_CLIENT_PATH"),
