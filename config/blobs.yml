@@ -32,4 +32,5 @@ postgres/postgresql-10.6.tar.gz:
   sha: 3c10c2ba99ffe72758c868f252e459926cea8452
 postgres/postgresql-11.2.tar.gz:
   size: 25779561
+  object_id: 832a7000-d9bf-4d92-4ad8-86c2f31a1144
   sha: c047df58bed5b00058d5eb6bde011beed102521d
