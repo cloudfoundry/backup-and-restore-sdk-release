@@ -49,21 +49,21 @@ var _ = Describe("Postgres", func() {
 		fakePgClient.Reset()
 		fakePgDump94.Reset()
 		fakePgDump96.Reset()
-		fakePgDump106.Reset()
+		fakePgDump10.Reset()
 		fakePgDump11.Reset()
 		fakePgRestore94.Reset()
 		fakePgRestore96.Reset()
-		fakePgRestore106.Reset()
+		fakePgRestore10.Reset()
 		fakePgRestore11.Reset()
 
 		envVars["PG_CLIENT_PATH"] = fakePgClient.Path
 		envVars["PG_DUMP_9_4_PATH"] = fakePgDump94.Path
 		envVars["PG_DUMP_9_6_PATH"] = fakePgDump96.Path
-		envVars["PG_DUMP_10_6_PATH"] = fakePgDump106.Path
+		envVars["PG_DUMP_10_PATH"] = fakePgDump10.Path
 		envVars["PG_DUMP_11_PATH"] = fakePgDump11.Path
 		envVars["PG_RESTORE_9_4_PATH"] = fakePgRestore94.Path
 		envVars["PG_RESTORE_9_6_PATH"] = fakePgRestore96.Path
-		envVars["PG_RESTORE_10_6_PATH"] = fakePgRestore106.Path
+		envVars["PG_RESTORE_10_PATH"] = fakePgRestore10.Path
 		envVars["PG_RESTORE_11_PATH"] = fakePgRestore11.Path
 
 		configFile = saveFile(fmt.Sprintf(`{
@@ -697,7 +697,7 @@ var _ = Describe("Postgres", func() {
 			})
 		})
 
-		Context("Postgres database server is version 10.6", func() {
+		Context("Postgres database server is version 10", func() {
 			BeforeEach(func() {
 				fakePgClient.WhenCalled().WillPrintToStdOut(
 					" PostgreSQL 10.6 on x86_64-pc-linux-gnu, compiled by gcc " +
@@ -707,7 +707,7 @@ var _ = Describe("Postgres", func() {
 
 			Context("when pg_dump succeeds", func() {
 				BeforeEach(func() {
-					fakePgDump106.WhenCalled().WillExitWith(0)
+					fakePgDump10.WhenCalled().WillExitWith(0)
 				})
 
 				It("takes a backup", func() {
@@ -737,9 +737,9 @@ var _ = Describe("Postgres", func() {
 							databaseName,
 						}
 
-						Expect(fakePgDump106.Invocations()).To(HaveLen(1))
-						Expect(fakePgDump106.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
-						Expect(fakePgDump106.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+						Expect(fakePgDump10.Invocations()).To(HaveLen(1))
+						Expect(fakePgDump10.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+						Expect(fakePgDump10.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 					})
 
 					By("not invoking the dump binary for a different version", func() {
@@ -800,7 +800,7 @@ var _ = Describe("Postgres", func() {
 								"-t", "table3",
 							}
 
-							Expect(fakePgDump106.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+							Expect(fakePgDump10.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
 						})
 
 						Expect(session).Should(gexec.Exit(0))
@@ -872,7 +872,7 @@ var _ = Describe("Postgres", func() {
 					fakePgClient.WhenCalled().WillPrintToStdOut(
 						" table1 \n table2 \n\n\n").
 						WillExitWith(0)
-					fakePgDump106.WhenCalled().WillExitWith(1)
+					fakePgDump10.WhenCalled().WillExitWith(1)
 				})
 
 				It("also fails", func() {
@@ -1409,7 +1409,7 @@ var _ = Describe("Postgres", func() {
 			})
 		})
 
-		Context("Postgres database server is version 10.6", func() {
+		Context("Postgres database server is version 10", func() {
 			BeforeEach(func() {
 				fakePgClient.WhenCalled().WillPrintToStdOut(
 					" PostgreSQL 10.6 on x86_64-pc-linux-gnu, compiled by gcc " +
@@ -1419,14 +1419,14 @@ var _ = Describe("Postgres", func() {
 
 			Context("pg_restore succeeds", func() {
 				BeforeEach(func() {
-					fakePgRestore106.WhenCalled().WillExitWith(0)
-					fakePgRestore106.WhenCalled().WillExitWith(0)
+					fakePgRestore10.WhenCalled().WillExitWith(0)
+					fakePgRestore10.WhenCalled().WillExitWith(0)
 				})
 
 				It("calls pg_restore to get information about the restore", func() {
-					Expect(fakePgRestore106.Invocations()).To(HaveLen(2))
+					Expect(fakePgRestore10.Invocations()).To(HaveLen(2))
 
-					Expect(fakePgRestore106.Invocations()[0].Args()).To(Equal([]string{"--list", artifactFile}))
+					Expect(fakePgRestore10.Invocations()[0].Args()).To(Equal([]string{"--list", artifactFile}))
 
 					expectedArgs := []interface{}{
 						"--verbose",
@@ -1441,8 +1441,8 @@ var _ = Describe("Postgres", func() {
 						artifactFile,
 					}
 
-					Expect(fakePgRestore106.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
-					Expect(fakePgRestore106.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+					Expect(fakePgRestore10.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+					Expect(fakePgRestore10.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
 				})
 
 				It("succeeds", func() {
@@ -1452,8 +1452,8 @@ var _ = Describe("Postgres", func() {
 
 			Context("and pg_restore fails when restoring", func() {
 				BeforeEach(func() {
-					fakePgRestore106.WhenCalled().WillExitWith(0)
-					fakePgRestore106.WhenCalled().WillExitWith(1)
+					fakePgRestore10.WhenCalled().WillExitWith(0)
+					fakePgRestore10.WhenCalled().WillExitWith(1)
 				})
 
 				It("also fails", func() {
@@ -1463,7 +1463,7 @@ var _ = Describe("Postgres", func() {
 
 			Context("and pg_restore fails to get file list", func() {
 				BeforeEach(func() {
-					fakePgRestore106.WhenCalled().WillExitWith(1)
+					fakePgRestore10.WhenCalled().WillExitWith(1)
 				})
 
 				It("also fails", func() {

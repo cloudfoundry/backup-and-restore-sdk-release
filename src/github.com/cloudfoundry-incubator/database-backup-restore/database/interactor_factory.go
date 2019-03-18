@@ -157,10 +157,10 @@ func (f InteractorFactory) getUtilitiesForPostgres(postgresVersion version.Datab
 			f.utilitiesConfig.Postgres96.Dump,
 			f.utilitiesConfig.Postgres96.Restore,
 			nil
-	} else if semVer.MinorVersionMatches(version.SemVer("10", "6", "0")) {
-		return f.utilitiesConfig.Postgres106.Client,
-			f.utilitiesConfig.Postgres106.Dump,
-			f.utilitiesConfig.Postgres106.Restore,
+	} else if semVer.MajorVersionMatches(version.SemVer("10", "x", "x")) {
+		return f.utilitiesConfig.Postgres10.Client,
+			f.utilitiesConfig.Postgres10.Dump,
+			f.utilitiesConfig.Postgres10.Restore,
 			nil
 	} else if semVer.MajorVersionMatches(version.SemVer("11", "x", "x")) {
 		return f.utilitiesConfig.Postgres11.Client,

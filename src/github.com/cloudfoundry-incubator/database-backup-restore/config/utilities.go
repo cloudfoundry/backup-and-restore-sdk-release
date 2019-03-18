@@ -12,14 +12,14 @@ type UtilityPaths struct {
 }
 
 type UtilitiesConfig struct {
-	Postgres96  UtilityPaths
-	Postgres94  UtilityPaths
-	Postgres106 UtilityPaths
-	Postgres11  UtilityPaths
-	Mariadb     UtilityPaths
-	Mysql55     UtilityPaths
-	Mysql56     UtilityPaths
-	Mysql57     UtilityPaths
+	Postgres96 UtilityPaths
+	Postgres94 UtilityPaths
+	Postgres10 UtilityPaths
+	Postgres11 UtilityPaths
+	Mariadb    UtilityPaths
+	Mysql55    UtilityPaths
+	Mysql56    UtilityPaths
+	Mysql57    UtilityPaths
 }
 
 func GetUtilitiesConfigFromEnv() UtilitiesConfig {
@@ -29,10 +29,10 @@ func GetUtilitiesConfigFromEnv() UtilitiesConfig {
 			Dump:    lookupEnv("PG_DUMP_11_PATH"),
 			Restore: lookupEnv("PG_RESTORE_11_PATH"),
 		},
-		Postgres106: UtilityPaths{
+		Postgres10: UtilityPaths{
 			Client:  lookupEnv("PG_CLIENT_PATH"),
-			Dump:    lookupEnv("PG_DUMP_10_6_PATH"),
-			Restore: lookupEnv("PG_RESTORE_10_6_PATH"),
+			Dump:    lookupEnv("PG_DUMP_10_PATH"),
+			Restore: lookupEnv("PG_RESTORE_10_PATH"),
 		},
 		Postgres96: UtilityPaths{
 			Client:  lookupEnv("PG_CLIENT_PATH"),
