@@ -91,4 +91,30 @@ var _ = Describe("SemanticVersion", func() {
 			})).To(BeFalse())
 		})
 	})
+
+	Describe("MajorVersionMatches", func() {
+		It("returns true if the major version match", func() {
+			Expect(SemanticVersion{
+				Major: "11",
+				Minor: "2",
+				Patch: "0",
+			}.MajorVersionMatches(SemanticVersion{
+				Major: "11",
+				Minor: "3",
+				Patch: "9",
+			})).To(BeTrue())
+		})
+
+		It("returns false if the major versions differ", func() {
+			Expect(SemanticVersion{
+				Major: "2",
+				Minor: "2",
+				Patch: "9",
+			}.MajorVersionMatches(SemanticVersion{
+				Major: "1",
+				Minor: "2",
+				Patch: "9",
+			})).To(BeFalse())
+		})
+	})
 })
