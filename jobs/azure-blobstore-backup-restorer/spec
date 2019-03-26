@@ -20,6 +20,7 @@ name: azure-blobstore-backup-restorer
 templates:
   backup.erb: bin/bbr/backup
   restore.erb: bin/bbr/restore
+  metadata.erb: bin/bbr/metadata
   containers.json.erb: config/containers.json
   bpm.yml.erb: config/bpm.yml
 

@@ -8,6 +8,7 @@ describe 'azure-blobstore-backup-restorer job' do
   let(:job) { release.job('azure-blobstore-backup-restorer') }
   let(:backup_template) { job.template('bin/bbr/backup') }
   let(:restore_template) { job.template('bin/bbr/restore') }
+  let(:metadata_template) { job.template('bin/bbr/metadata') }
   let(:containers_template) { job.template('config/containers.json') }
 
   describe 'backup' do
@@ -27,6 +28,11 @@ describe 'azure-blobstore-backup-restorer job' do
         config = containers_template.render(manifest)
         expect(config.strip).to eq("")
       end
+
+      it 'the metadata script enables the skip_bbr_scripts flag' do
+        metadata = metadata_template.render({})
+        expect(metadata).to include("skip_bbr_scripts: true")
+      end
     end
 
     context 'when backup is enabled' do
@@ -43,6 +49,11 @@ describe 'azure-blobstore-backup-restorer job' do
           expect(config).to include("backup")
           expect(config).not_to include("/var/vcap/jobs/bpm/bin/bpm run azure-blobstore-backup-restorer")
         end
+      end
+
+      it 'the metadata script disables the skip_bbr_scripts flag' do
+        metadata = metadata_template.render("enabled" => true)
+        expect(metadata).to include("skip_bbr_scripts: false")
       end
     end
   end
