@@ -9,6 +9,7 @@ describe 's3-versioned-blobstore-backup-restorer job' do
   let(:buckets_template) { job.template('config/buckets.json') }
   let(:backup_template) { job.template('bin/bbr/backup') }
   let(:restore_template) { job.template('bin/bbr/restore') }
+  let(:metadata_template) { job.template('bin/bbr/metadata') }
 
   describe 'backup' do
     context 'when backup is not enabled' do
@@ -27,9 +28,19 @@ describe 's3-versioned-blobstore-backup-restorer job' do
         config = buckets_template.render(manifest)
         expect(config.strip).to eq("")
       end
+
+      it 'the metadata script enables the skip_bbr_scripts flag' do
+        metadata = metadata_template.render({})
+        expect(metadata).to include("skip_bbr_scripts: true")
+      end
     end
 
     context 'when backup is enabled' do
+      it 'the metadata script disables the skip_bbr_scripts flag' do
+        metadata = metadata_template.render("enabled" => true)
+        expect(metadata).to include("skip_bbr_scripts: false")
+      end
+
       context 'and bpm is enabled' do
         it 'templates bpm command correctly' do
           config = backup_template.render({"bpm" => {"enabled" => true}, "enabled" => true})
