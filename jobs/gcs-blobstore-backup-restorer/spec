@@ -20,6 +20,7 @@ name: gcs-blobstore-backup-restorer
 templates:
   backup.erb: bin/bbr/backup
   restore.erb: bin/bbr/restore
+  metadata.erb: bin/bbr/metadata
   buckets.json.erb: config/buckets.json
   gcp-service-account-key.json.erb: config/gcp-service-account-key.json
   bpm.yml.erb: config/bpm.yml

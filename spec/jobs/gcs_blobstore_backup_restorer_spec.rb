@@ -7,6 +7,7 @@ describe 'gcs-blobstore-backup-restorer job' do
   let(:release) { Bosh::Template::Test::ReleaseDir.new(File.join(File.dirname(__FILE__), '../..')) }
   let(:job) { release.job('gcs-blobstore-backup-restorer') }
   let(:backup_template) { job.template('bin/bbr/backup') }
+  let(:metadata_template) { job.template('bin/bbr/metadata') }
   let(:buckets_template) { job.template('config/buckets.json') }
   let(:gcp_service_account_key_template) { job.template('config/gcp-service-account-key.json') }
   let(:restore_template) { job.template('bin/bbr/restore') }
@@ -41,9 +42,19 @@ describe 'gcs-blobstore-backup-restorer job' do
         config = gcp_service_account_key_template.render(manifest)
         expect(config.strip).to eq("")
       end
+
+      it 'the metadata script enables the skip_bbr_scripts flag' do
+        metadata = metadata_template.render({})
+        expect(metadata).to include("skip_bbr_scripts: true")
+      end
     end
 
     context 'when backup is enabled' do
+      it 'the metadata script disables the skip_bbr_scripts flag' do
+        metadata = metadata_template.render("enabled" => true)
+        expect(metadata).to include("skip_bbr_scripts: false")
+      end
+
       context 'and it is configured correctly' do
         it 'succeeds' do
           manifest = {
