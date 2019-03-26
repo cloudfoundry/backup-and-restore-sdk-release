@@ -34,4 +34,6 @@ if (( major < 1 )); then
    exit 1
 fi
 
-echo "---"
+echo "---
+skip_bbr_scripts: <%= !p('enabled') %>
+"

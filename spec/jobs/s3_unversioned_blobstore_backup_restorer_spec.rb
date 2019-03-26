@@ -213,6 +213,15 @@ describe 's3-unversioned-blobstore-backup-restorer job' do
     let(:metadata_script) { metadata_template.render({}) }
     let(:metadata_cmd) { "bash -c '#{metadata_script}'" }
 
+    it 'it enables the skip_bbr_scripts flag when the job is disabled' do
+      expect(metadata_script).to include("skip_bbr_scripts: true")
+    end
+
+    it 'it disables the skip_bbr_scripts flag when the job is enabled' do
+      metadata = metadata_template.render("enabled" => true)
+      expect(metadata).to include("skip_bbr_scripts: false")
+    end
+
     it 'fails when called with an old version of bbr that does not export BBR_VERSION' do
       stdout_str, error_str, status = Open3.capture3(metadata_cmd)
       expect(status.success?).not_to eq(true)
