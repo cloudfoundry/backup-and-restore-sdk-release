@@ -231,21 +231,21 @@ describe 's3-unversioned-blobstore-backup-restorer job' do
     end
 
     it 'fails to run when bbr major version set to string' do
-        stdout_str, _, status = Open3.capture3({'BBR_VERSION' => 'foo.bar.baz'}, metadata_cmd)
+        _, stderr_str, status = Open3.capture3({'BBR_VERSION' => 'foo.bar.baz'}, metadata_cmd)
         expect(status.success?).not_to eq(true)
-        expect(stdout_str).to include('Error: BBR version must be a valid semVer')
+        expect(stderr_str).to include('Error: BBR version must be a valid semVer')
     end
 
     it 'fails to run when bbr minor version set to string' do
-        stdout_str, _, status = Open3.capture3({'BBR_VERSION' => '1.bar.baz'}, metadata_cmd)
+        _, stderr_str, status = Open3.capture3({'BBR_VERSION' => '1.bar.baz'}, metadata_cmd)
         expect(status.success?).not_to eq(true)
-        expect(stdout_str).to include('Error: BBR version must be a valid semVer')
+        expect(stderr_str).to include('Error: BBR version must be a valid semVer')
     end
 
     it 'returns error if the bbr_version is less than 1.4.0' do
-      stdout_str, _, status = Open3.capture3({'BBR_VERSION' => '1.3.2'}, metadata_cmd)
+      _, stderr_str, status = Open3.capture3({'BBR_VERSION' => '1.3.2'}, metadata_cmd)
       expect(status.success?).not_to eq(true)
-      expect(stdout_str).to include('Error: BBR version must be 1.4.0 or greater')
+      expect(stderr_str).to include('Error: BBR version must be 1.4.0 or greater')
     end
 
     it 'succesfully runs if the bbr_version is 1.4.0' do
