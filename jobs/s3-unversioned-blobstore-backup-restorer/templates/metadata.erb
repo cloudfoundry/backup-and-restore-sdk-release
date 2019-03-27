@@ -11,7 +11,7 @@ fi
 function checkIsInteger() {
   if ! [[ $1 =~ ^[0-9]+$ ]]
   then
-    echo "Error: BBR version must be a valid semVer"
+    >&2 echo "Error: BBR version must be a valid semVer"
     exit 1
   fi
 }
@@ -24,13 +24,13 @@ checkIsInteger "$minor"
 
 if (( major == 1 )); then
    if ! (( minor >= 4 )); then
-      echo "Error: BBR version must be 1.4.0 or greater"
+      >&2 echo "Error: BBR version must be 1.4.0 or greater"
       exit 1
    fi
 fi
 
 if (( major < 1 )); then
-   echo "Error: BBR version must be 1.4.0 or greater"
+   >&2 echo "Error: BBR version must be 1.4.0 or greater"
    exit 1
 fi
 
