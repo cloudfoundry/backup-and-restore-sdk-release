@@ -12,6 +12,28 @@ type BucketPair struct {
 	ExecutionStrategy executor.Executor
 }
 
+func CreateBucketsForBackupArtifact(gcpSerivceAccountKey string, bucketBackups map[string]BucketBackup) (map[string]BucketBackup, error) {
+	bucketBackupsWithGCSBucket := map[string]BucketBackup{}
+
+	for bucketID, bucketBackup := range bucketBackups {
+		newBucketBackup := BucketBackup{
+			BucketName:   bucketBackup.BucketName,
+			Path:         bucketBackup.Path,
+			SameBucketAs: bucketBackup.SameBucketAs,
+		}
+
+		if bucketBackup.BucketName != "" {
+			bucket, err := NewSDKBucket(gcpSerivceAccountKey, bucketBackup.BucketName)
+			if err != nil {
+				return nil, err
+			}
+			newBucketBackup.Bucket = bucket
+		}
+		bucketBackupsWithGCSBucket[bucketID] = newBucketBackup
+	}
+
+	return bucketBackupsWithGCSBucket, nil
+}
 func BuildBackupsToComplete(gcpServiceAccountKey string, config map[string]Config) (map[string]BackupToComplete, error) {
 	backupsToComplete := map[string]BackupToComplete{}
 	exe := executor.NewParallelExecutor()

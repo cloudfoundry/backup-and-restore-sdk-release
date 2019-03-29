@@ -69,6 +69,51 @@ var _ = Describe("Bucket", func() {
 		})
 	})
 
+	Describe("CreateBucketsForBackupArtifact", func() {
+		var (
+			id1        = "bucket_identifier1"
+			id2        = "bucket_identifier2"
+			bucketName = "bucket_name"
+		)
+
+		It("builds bucket pairs", func() {
+			config := map[string]gcs.BucketBackup{
+				id1: {
+					BucketName: bucketName,
+					Path:       "a_path",
+				},
+				id2: {
+					SameBucketAs: "bucket_identifier",
+				},
+			}
+
+			bucketBackups, err := gcs.CreateBucketsForBackupArtifact(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(bucketBackups).To(HaveKey(id1))
+			Expect(bucketBackups).To(HaveKey(id2))
+			Expect(bucketBackups[id1].Bucket.Name()).To(Equal(bucketName))
+			Expect(bucketBackups[id2].Bucket).To(BeNil())
+		})
+
+		Context("when providing invalid service account key", func() {
+			It("returns an error", func() {
+				config := map[string]gcs.BucketBackup{
+					id1: {
+						BucketName: bucketName,
+						Path:       "a_path",
+					},
+					id2: {
+						SameBucketAs: "bucket_identifier",
+					},
+				}
+
+				_, err := gcs.CreateBucketsForBackupArtifact("not-valid-json", config)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
+
 	Describe("MarkSameBackupsToComplete", func() {
 		It("marks backups to complete that are the same as another bucket ID", func() {
 			liveBucket1 := new(fakes.FakeBucket)

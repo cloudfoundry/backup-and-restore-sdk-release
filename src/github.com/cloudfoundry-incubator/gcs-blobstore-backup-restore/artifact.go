@@ -18,6 +18,7 @@ type Artifact struct {
 
 type BucketBackup struct {
 	BucketName   string `json:"bucket_name"`
+	Bucket       Bucket `json:"-"`
 	Path         string `json:"path"`
 	SameBucketAs string `json:"same_bucket_as,omitempty"`
 }

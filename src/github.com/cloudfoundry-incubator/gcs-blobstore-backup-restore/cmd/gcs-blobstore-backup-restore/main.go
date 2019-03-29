@@ -49,6 +49,9 @@ func main() {
 		backupBuckets, err := artifact.Read()
 		exitOnError(err)
 
+		backupBuckets, err = gcs.CreateBucketsForBackupArtifact(gcpServiceAccountKey, backupBuckets)
+		exitOnError(err)
+
 		err = restorer.Restore(backupBuckets)
 		exitOnError(err)
 	}

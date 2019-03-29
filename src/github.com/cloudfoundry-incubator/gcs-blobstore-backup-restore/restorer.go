@@ -32,7 +32,7 @@ func (r Restorer) Restore(bucketBackups map[string]BucketBackup) error {
 			continue
 		}
 
-		err := r.backupsToComplete[bucketID].BucketPair.BackupBucket.CopyBlobsToBucket(
+		err := bucketBackup.Bucket.CopyBlobsToBucket(
 			r.backupsToComplete[bucketID].BucketPair.LiveBucket,
 			bucketBackup.Path,
 		)

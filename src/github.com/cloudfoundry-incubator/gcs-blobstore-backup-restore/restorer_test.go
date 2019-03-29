@@ -36,11 +36,11 @@ var _ = Describe("Restorer", func() {
 		secondBackupBucket.NameReturns(secondBackupBucketName)
 		config := map[string]gcs.BackupToComplete{
 			"first": {
-				BucketPair:     gcs.BucketPair{LiveBucket: firstBucket, BackupBucket: firstBackupBucket},
+				BucketPair:     gcs.BucketPair{LiveBucket: firstBucket},
 				SameAsBucketID: "",
 			},
 			"second": {
-				BucketPair:     gcs.BucketPair{LiveBucket: secondBucket, BackupBucket: secondBackupBucket},
+				BucketPair:     gcs.BucketPair{LiveBucket: secondBucket},
 				SameAsBucketID: "",
 			},
 		}
@@ -51,8 +51,8 @@ var _ = Describe("Restorer", func() {
 	Context("when the configuration is valid", func() {
 		BeforeEach(func() {
 			artifact = map[string]gcs.BucketBackup{
-				"first":  {BucketName: firstBackupBucketName, Path: timestamp + "/first"},
-				"second": {BucketName: secondBackupBucketName, Path: timestamp + "/second"},
+				"first":  {BucketName: firstBackupBucketName, Bucket: firstBackupBucket, Path: timestamp + "/first"},
+				"second": {BucketName: secondBackupBucketName, Bucket: secondBackupBucket, Path: timestamp + "/second"},
 			}
 
 			firstBackupBucket.CopyBlobsToBucketReturns(nil)
@@ -78,17 +78,17 @@ var _ = Describe("Restorer", func() {
 			BeforeEach(func() {
 				config := map[string]gcs.BackupToComplete{
 					"first": {
-						BucketPair:     gcs.BucketPair{LiveBucket: firstBucket, BackupBucket: firstBackupBucket},
+						BucketPair:     gcs.BucketPair{LiveBucket: firstBucket},
 						SameAsBucketID: "",
 					},
 					"second": {
-						BucketPair:     gcs.BucketPair{LiveBucket: firstBackupBucket, BackupBucket: firstBackupBucket},
+						BucketPair:     gcs.BucketPair{LiveBucket: firstBackupBucket},
 						SameAsBucketID: "",
 					},
 				}
 
 				artifact = map[string]gcs.BucketBackup{
-					"first":  {BucketName: firstBackupBucketName, Path: timestamp + "/first"},
+					"first":  {BucketName: firstBackupBucketName, Bucket: firstBackupBucket, Path: timestamp + "/first"},
 					"second": {SameBucketAs: "first"},
 				}
 
