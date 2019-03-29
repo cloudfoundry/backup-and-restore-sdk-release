@@ -2,6 +2,7 @@ package gcs
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 )
 
@@ -38,14 +39,14 @@ func (a Artifact) Write(backups map[string]BucketBackup) error {
 func (a Artifact) Read() (map[string]BucketBackup, error) {
 	fileContents, err := ioutil.ReadFile(a.path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to read artifact file %s: %s", a.path, err.Error())
 	}
 
 	var backupBuckets = map[string]BucketBackup{}
 
 	err = json.Unmarshal(fileContents, &backupBuckets)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to unmarshall artifact %s: %s", a.path, err.Error())
 	}
 
 	return backupBuckets, nil
