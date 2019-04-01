@@ -46,7 +46,6 @@ func (r Restorer) Action(artifactFilePath string) error {
 		"--clean",
 		"--if-exists",
 		"--single-transaction",
-		"--exit-on-error",
 		fmt.Sprintf("--use-list=%s", listFile.Name()),
 		artifactFilePath,
 	}
