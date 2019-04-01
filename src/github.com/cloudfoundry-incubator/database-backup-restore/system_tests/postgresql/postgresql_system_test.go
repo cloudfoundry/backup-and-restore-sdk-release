@@ -79,7 +79,7 @@ var _ = Describe("postgres", func() {
 		pgConnection.OpenSuccessfully("postgres")
 		pgConnection.RunSQLCommand("CREATE DATABASE " + databaseName)
 		pgConnection.SwitchToDb(databaseName)
-		pgConnection.RunSQLCommand("CREATE TABLE people (name varchar(255));")
+		pgConnection.RunSQLCommand("CREATE TABLE people (name varchar(255) unique);")
 		pgConnection.RunSQLCommand("INSERT INTO people VALUES ('Old Person');")
 		pgConnection.RunSQLCommand("CREATE TABLE places (name varchar);")
 		pgConnection.RunSQLCommand("INSERT INTO places VALUES ('Old Place');")
@@ -116,22 +116,49 @@ var _ = Describe("postgres", func() {
 			brJob.RunOnVMAndSucceed(fmt.Sprintf("ls -l %s", dbDumpPath))
 		})
 
-		It("restores the Postgres database", func() {
-			pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
-			pgConnection.RunSQLCommand("UPDATE places SET NAME = 'New Place';")
+		Context("when tables exist", func() {
+			BeforeEach(func() {
+				pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
+				pgConnection.RunSQLCommand("UPDATE places SET NAME = 'New Place';")
 
-			brJob.RunOnVMAndSucceed(
-				fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
-					configPath, dbDumpPath))
+			})
 
-			Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
-				To(ConsistOf("Old Person"))
-			Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
-				NotTo(ConsistOf("New Person"))
-			Expect(pgConnection.FetchSQLColumn("SELECT name FROM places;")).
-				To(ConsistOf("Old Place"))
-			Expect(pgConnection.FetchSQLColumn("SELECT name FROM places;")).
-				NotTo(ConsistOf("New Place"))
+			It("restores the Postgres database", func() {
+				brJob.RunOnVMAndSucceed(
+					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
+						configPath, dbDumpPath))
+
+				Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
+					To(ConsistOf("Old Person"))
+				Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
+					NotTo(ConsistOf("New Person"))
+				Expect(pgConnection.FetchSQLColumn("SELECT name FROM places;")).
+					To(ConsistOf("Old Place"))
+				Expect(pgConnection.FetchSQLColumn("SELECT name FROM places;")).
+					NotTo(ConsistOf("New Place"))
+			})
+
+			Context("when the restore fails due to an SQL error", func() {
+				BeforeEach(func() {
+					pgConnection.RunSQLCommand("CREATE TABLE children (name varchar(255) REFERENCES people(name));")
+				})
+
+				It("the restore is atomic and does not contain any new data", func() {
+					session := brJob.RunOnInstance(
+						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
+							configPath, dbDumpPath))
+
+					Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
+						To(ConsistOf("New Person"))
+					Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
+						NotTo(ConsistOf("Old Person"))
+					Expect(pgConnection.FetchSQLColumn("SELECT name FROM places;")).
+						To(ConsistOf("New Place"))
+					Expect(pgConnection.FetchSQLColumn("SELECT name FROM places;")).
+						NotTo(ConsistOf("Old Place"))
+					Expect(session.ExitCode()).To(Equal(1))
+				})
+			})
 		})
 
 		Context("when tables do not exist", func() {
@@ -146,7 +173,6 @@ var _ = Describe("postgres", func() {
 					To(ConsistOf("Old Person"))
 			})
 		})
-
 	})
 
 	Context("and 'tables' are specified in config", func() {
