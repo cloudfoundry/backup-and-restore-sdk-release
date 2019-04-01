@@ -1105,6 +1105,8 @@ var _ = Describe("Postgres", func() {
 						fmt.Sprintf("--dbname=%s", databaseName),
 						"--clean",
 						"--if-exists",
+						"--single-transaction",
+						"--exit-on-error",
 						HavePrefix("--use-list="),
 						artifactFile,
 					}
@@ -1169,6 +1171,8 @@ var _ = Describe("Postgres", func() {
 							fmt.Sprintf("--dbname=%s", databaseName),
 							"--clean",
 							"--if-exists",
+							"--single-transaction",
+							"--exit-on-error",
 							HavePrefix("--use-list="),
 							artifactFile,
 						}
@@ -1235,6 +1239,8 @@ var _ = Describe("Postgres", func() {
 									fmt.Sprintf("--dbname=%s", databaseName),
 									"--clean",
 									"--if-exists",
+									"--single-transaction",
+									"--exit-on-error",
 									HavePrefix("--use-list="),
 									artifactFile,
 								}
@@ -1301,6 +1307,8 @@ var _ = Describe("Postgres", func() {
 									fmt.Sprintf("--dbname=%s", databaseName),
 									"--clean",
 									"--if-exists",
+									"--single-transaction",
+									"--exit-on-error",
 									HavePrefix("--use-list="),
 									artifactFile,
 								}
@@ -1370,6 +1378,8 @@ var _ = Describe("Postgres", func() {
 									fmt.Sprintf("--dbname=%s", databaseName),
 									"--clean",
 									"--if-exists",
+									"--single-transaction",
+									"--exit-on-error",
 									HavePrefix("--use-list="),
 									artifactFile,
 								}
@@ -1437,6 +1447,8 @@ var _ = Describe("Postgres", func() {
 						fmt.Sprintf("--dbname=%s", databaseName),
 						"--clean",
 						"--if-exists",
+						"--single-transaction",
+						"--exit-on-error",
 						HavePrefix("--use-list="),
 						artifactFile,
 					}
@@ -1500,6 +1512,8 @@ var _ = Describe("Postgres", func() {
 						fmt.Sprintf("--dbname=%s", databaseName),
 						"--clean",
 						"--if-exists",
+						"--single-transaction",
+						"--exit-on-error",
 						HavePrefix("--use-list="),
 						artifactFile,
 					}
