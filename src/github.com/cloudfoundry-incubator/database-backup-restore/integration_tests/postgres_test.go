@@ -1106,6 +1106,7 @@ var _ = Describe("Postgres", func() {
 						"--clean",
 						"--if-exists",
 						"--single-transaction",
+						"--exit-on-error",
 						HavePrefix("--use-list="),
 						artifactFile,
 					}
@@ -1171,6 +1172,7 @@ var _ = Describe("Postgres", func() {
 							"--clean",
 							"--if-exists",
 							"--single-transaction",
+							"--exit-on-error",
 							HavePrefix("--use-list="),
 							artifactFile,
 						}
@@ -1238,6 +1240,7 @@ var _ = Describe("Postgres", func() {
 									"--clean",
 									"--if-exists",
 									"--single-transaction",
+									"--exit-on-error",
 									HavePrefix("--use-list="),
 									artifactFile,
 								}
@@ -1305,6 +1308,7 @@ var _ = Describe("Postgres", func() {
 									"--clean",
 									"--if-exists",
 									"--single-transaction",
+									"--exit-on-error",
 									HavePrefix("--use-list="),
 									artifactFile,
 								}
@@ -1375,6 +1379,7 @@ var _ = Describe("Postgres", func() {
 									"--clean",
 									"--if-exists",
 									"--single-transaction",
+									"--exit-on-error",
 									HavePrefix("--use-list="),
 									artifactFile,
 								}
@@ -1443,6 +1448,7 @@ var _ = Describe("Postgres", func() {
 						"--clean",
 						"--if-exists",
 						"--single-transaction",
+						"--exit-on-error",
 						HavePrefix("--use-list="),
 						artifactFile,
 					}
@@ -1507,6 +1513,7 @@ var _ = Describe("Postgres", func() {
 						"--clean",
 						"--if-exists",
 						"--single-transaction",
+						"--exit-on-error",
 						HavePrefix("--use-list="),
 						artifactFile,
 					}
