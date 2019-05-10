@@ -1,8 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Prior to postgres 10, x.y was a major version (i.e. 9.6).
+# As of postgres 10, they follow semver.
+MAJOR=${MAJOR:?Required: postgres major version}
+
+MINOR=${MINOR:?Required: postgres minor version}
+
 sdk_root="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
-old_blob="$( grep --only-matching "postgres/postgresql-${MAJOR}\.\d\+.tar.gz" "${sdk_root}/config/blobs.yml" )"
+old_blob="$(
+  if ! grep --only-matching "postgres/postgresql-${MAJOR}\.\d\+.tar.gz" "${sdk_root}/config/blobs.yml"; then
+      echo "could not find MAJOR version v${MAJOR} in blobs.yml" 1>&2
+  fi
+)"
 new_version="${MAJOR}.${MINOR}"
 
 sed -i "" \
