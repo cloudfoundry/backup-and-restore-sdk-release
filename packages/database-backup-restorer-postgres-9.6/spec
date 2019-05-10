@@ -20,4 +20,4 @@ name: database-backup-restorer-postgres-9.6
 dependencies: []
 
 files:
-- postgres/postgresql-9.6.12.tar.gz
+- postgres/postgresql-9.6.13.tar.gz
