@@ -19,7 +19,7 @@ name: ((deployment-name))
 
 releases:
 - name: postgres
-  version: 18
+  version: 30
   url: http://bosh.io/d/github.com/cloudfoundry/postgres-release?v=18
 
 stemcells:
