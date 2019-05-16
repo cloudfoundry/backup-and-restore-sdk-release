@@ -57,6 +57,8 @@ builds:
     version: 1.7.0
   fad67fc3-4e57-4225-7c6a-5a3bafd0bdba:
     version: 1.13.0
+  fc9a92cc-0661-45be-4256-91da60fb10ef:
+    version: 1.15.1
   ffdc7e80-cb32-4f79-8c47-31255e3c7417:
     version: 1.8.0
 format-version: "2"
