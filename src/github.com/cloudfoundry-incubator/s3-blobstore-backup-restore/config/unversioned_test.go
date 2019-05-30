@@ -3,6 +3,8 @@ package config_test
 import (
 	"errors"
 
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
+
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/config"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental/fakes"
@@ -14,6 +16,7 @@ var _ = Describe("Unversioned", func() {
 	var (
 		configs       map[string]config.UnversionedBucketConfig
 		bucket1Config config.UnversionedBucketConfig
+		newBucket     config.NewBucket
 	)
 
 	BeforeEach(func() {
@@ -49,11 +52,13 @@ var _ = Describe("Unversioned", func() {
 				},
 			},
 		}
+
+		newBucket = s3bucket.NewBucket
 	})
 
 	Context("BuildBackupsToStart", func() {
 		It("builds backups to start from a config", func() {
-			backupsToStart, err := config.BuildBackupsToStart(configs)
+			backupsToStart, err := config.BuildBackupsToStart(configs, newBucket)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(backupsToStart).To(HaveLen(2))
@@ -77,7 +82,7 @@ var _ = Describe("Unversioned", func() {
 			})
 
 			It("builds backups to start", func() {
-				backupsToStart, err := config.BuildBackupsToStart(configs)
+				backupsToStart, err := config.BuildBackupsToStart(configs, newBucket)
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(backupsToStart).To(HaveLen(2))
@@ -228,7 +233,7 @@ var _ = Describe("Unversioned", func() {
 				},
 			}, nil)
 
-			restoreBucketPairs, err := config.BuildRestoreBucketPairs(configs, artifact)
+			restoreBucketPairs, err := config.BuildRestoreBucketPairs(configs, artifact, newBucket)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(restoreBucketPairs).To(HaveLen(2))
@@ -253,7 +258,7 @@ var _ = Describe("Unversioned", func() {
 				},
 			}, nil)
 
-			restoreBucketPairs, err := config.BuildRestoreBucketPairs(configs, artifact)
+			restoreBucketPairs, err := config.BuildRestoreBucketPairs(configs, artifact, newBucket)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(restoreBucketPairs).To(HaveLen(2))
@@ -271,7 +276,7 @@ var _ = Describe("Unversioned", func() {
 		It("returns error when it cannot load backup artifact", func() {
 			artifact.LoadReturns(nil, errors.New("fake load error"))
 
-			_, err := config.BuildRestoreBucketPairs(configs, artifact)
+			_, err := config.BuildRestoreBucketPairs(configs, artifact, newBucket)
 
 			Expect(err).To(MatchError(ContainSubstring("fake load error")))
 		})
@@ -279,7 +284,7 @@ var _ = Describe("Unversioned", func() {
 		It("returns error when the backup artifact does not have a configured bucket ID", func() {
 			artifact.LoadReturns(map[string]incremental.Backup{}, nil)
 
-			_, err := config.BuildRestoreBucketPairs(configs, artifact)
+			_, err := config.BuildRestoreBucketPairs(configs, artifact, newBucket)
 
 			Expect(err).To(MatchError(ContainSubstring("backup artifact does not contain bucket ID")))
 		})

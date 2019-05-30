@@ -17,11 +17,13 @@ type BackupBucketConfig struct {
 	Region string `json:"region"`
 }
 
-func BuildBackupsToStart(configs map[string]UnversionedBucketConfig) (map[string]incremental.BackupToStart, error) {
+type NewBucket func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile bool) (s3bucket.Bucket, error)
+
+func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket NewBucket) (map[string]incremental.BackupToStart, error) {
 	backupsToStart := make(map[string]incremental.BackupToStart)
 
 	for bucketID, config := range configs {
-		liveBucket, err := s3bucket.NewBucket(
+		liveBucket, err := newBucket(
 			config.Name,
 			config.Region,
 			config.Endpoint,
@@ -35,7 +37,7 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig) (map[string
 			return nil, err
 		}
 
-		backupBucket, err := s3bucket.NewBucket(
+		backupBucket, err := newBucket(
 			config.Backup.Name,
 			config.Backup.Region,
 			config.Endpoint,
@@ -125,6 +127,7 @@ func BuildBackupsToComplete(
 func BuildRestoreBucketPairs(
 	configs map[string]UnversionedBucketConfig,
 	artifact incremental.Artifact,
+	newBucket NewBucket,
 ) (map[string]incremental.RestoreBucketPair, error) {
 	pairs := map[string]incremental.RestoreBucketPair{}
 
@@ -145,7 +148,7 @@ func BuildRestoreBucketPairs(
 			continue
 		}
 
-		liveBucket, err := s3bucket.NewBucket(
+		liveBucket, err := newBucket(
 			config.Name,
 			config.Region,
 			config.Endpoint,
@@ -159,7 +162,7 @@ func BuildRestoreBucketPairs(
 			return nil, err
 		}
 
-		backupBucket, err := s3bucket.NewBucket(
+		backupBucket, err := newBucket(
 			backups[bucketID].BucketName,
 			backups[bucketID].BucketRegion,
 			config.Endpoint,

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/config"
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
 
 	"encoding/json"
 	"io/ioutil"
@@ -80,7 +81,7 @@ func main() {
 		}
 
 		if *flags.UnversionedBackupStart {
-			backupsToStart, err := config.BuildBackupsToStart(bucketsConfig)
+			backupsToStart, err := config.BuildBackupsToStart(bucketsConfig, s3bucket.NewBucket)
 			if err != nil {
 				exitWithError("Failed to build backups to start", err)
 			}
@@ -98,7 +99,7 @@ func main() {
 			}
 		} else {
 			backupArtifact := incremental.NewArtifact(flags.ArtifactFilePath)
-			restoreBucketPairs, err := config.BuildRestoreBucketPairs(bucketsConfig, backupArtifact)
+			restoreBucketPairs, err := config.BuildRestoreBucketPairs(bucketsConfig, backupArtifact, s3bucket.NewBucket)
 			if err != nil {
 				exitWithError("Failed to build restore bucket pairs", err)
 			}
