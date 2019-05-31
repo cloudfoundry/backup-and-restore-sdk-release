@@ -94,7 +94,6 @@ var _ = Describe("VersionedBucket", func() {
 				})
 
 				It("fails", func() {
-					Expect(versions).To(BeNil())
 					Expect(err).To(MatchError(ContainSubstring("is not versioned")))
 				})
 			})
@@ -108,6 +107,17 @@ var _ = Describe("VersionedBucket", func() {
 				It("works", func() {
 					Expect(err).NotTo(HaveOccurred())
 					Expect(len(versions)).To(Equal(2001))
+				})
+			})
+
+			Context("when the bucket is empty", func() {
+				BeforeEach(func() {
+					clearOutVersionedBucket(bucketName, S3Endpoint, creds)
+				})
+
+				It("works", func() {
+					Expect(err).NotTo(HaveOccurred())
+					Expect(len(versions)).To(Equal(0))
 				})
 			})
 		})
@@ -228,26 +238,6 @@ var _ = Describe("VersionedBucket", func() {
 
 			AfterEach(func() {
 				tearDownVersionedBucket(secondaryBucketName, S3Endpoint, creds)
-			})
-		})
-	})
-
-	Describe("Empty S3 bucket", func() {
-		BeforeEach(func() {
-			creds := s3bucket.AccessKey{
-				Id:     AccessKey,
-				Secret: SecretKey,
-			}
-
-			clearOutVersionedBucket(EmptyBucketName, S3Endpoint, creds)
-			bucketObjectUnderTest, err = s3bucket.NewBucket(EmptyBucketName, LiveRegion, S3Endpoint, creds, false)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		Context("when listing versions for an empty bucket", func() {
-			It("does not fail", func() {
-				_, err := bucketObjectUnderTest.ListVersions()
-				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 	})

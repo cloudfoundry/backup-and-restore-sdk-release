@@ -17,7 +17,6 @@ var (
 	AccessKey                    = MustHaveEnv("S3_ACCESS_KEY_ID")
 	SecretKey                    = MustHaveEnv("S3_SECRET_ACCESS_KEY")
 	PreExistingBigFileBucketName = MustHaveEnv("S3_BIG_FILE_BUCKET")
-	EmptyBucketName              = MustHaveEnv("S3_EMPTY_BUCKET")
 )
 
 func TestS3(t *testing.T) {
