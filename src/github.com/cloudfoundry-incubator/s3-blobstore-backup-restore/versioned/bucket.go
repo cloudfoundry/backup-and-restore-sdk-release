@@ -8,5 +8,5 @@ type Bucket interface {
 	Region() string
 	CopyVersion(blobKey, versionId, originBucketName, originBucketRegion string) error
 	ListVersions() ([]s3bucket.Version, error)
-	CheckIfVersioned() error
+	IsVersioned() (bool, error)
 }

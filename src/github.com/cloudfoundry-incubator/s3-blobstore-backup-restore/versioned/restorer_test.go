@@ -2,6 +2,7 @@ package versioned_test
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/versioned/fakes"
 
@@ -25,6 +26,10 @@ var _ = Describe("Restorer", func() {
 		dropletsBucket = new(fakes.FakeBucket)
 		buildpacksBucket = new(fakes.FakeBucket)
 		packagesBucket = new(fakes.FakeBucket)
+
+		dropletsBucket.IsVersionedReturns(true, nil)
+		buildpacksBucket.IsVersionedReturns(true, nil)
+		packagesBucket.IsVersionedReturns(true, nil)
 
 		artifact = new(fakes.FakeArtifact)
 
@@ -80,9 +85,9 @@ var _ = Describe("Restorer", func() {
 			})
 
 			By("Checking the buckets are versioned", func() {
-				Expect(dropletsBucket.CheckIfVersionedCallCount()).To(Equal(1))
-				Expect(buildpacksBucket.CheckIfVersionedCallCount()).To(Equal(1))
-				Expect(packagesBucket.CheckIfVersionedCallCount()).To(Equal(1))
+				Expect(dropletsBucket.IsVersionedCallCount()).To(Equal(1))
+				Expect(buildpacksBucket.IsVersionedCallCount()).To(Equal(1))
+				Expect(packagesBucket.IsVersionedCallCount()).To(Equal(1))
 			})
 
 			By("Calling CopyVersion for each object in the droplets bucket with the old region", func() {
@@ -171,6 +176,86 @@ var _ = Describe("Restorer", func() {
 
 		It("stops and returns an error", func() {
 			Expect(err).To(MatchError("failed to put version to bucket 'buildpacks'"))
+		})
+	})
+
+	Context("when the bucket is not versioned", func() {
+		BeforeEach(func() {
+			artifact.LoadReturns(map[string]versioned.BucketSnapshot{
+				"droplets": {
+					BucketName: "my_droplets_bucket",
+					RegionName: "my_droplets_region",
+					Versions: []versioned.BlobVersion{
+						{BlobKey: "one", Id: "13"},
+						{BlobKey: "two", Id: "22"},
+					},
+				},
+				"buildpacks": {
+					BucketName: "my_buildpacks_bucket",
+					RegionName: "my_buildpacks_region",
+					Versions: []versioned.BlobVersion{
+						{BlobKey: "three", Id: "32"},
+					},
+				},
+				"packages": {
+					BucketName: "my_packages_bucket",
+					RegionName: "my_packages_region",
+					Versions: []versioned.BlobVersion{
+						{BlobKey: "four", Id: "43"},
+					},
+				},
+			}, nil)
+
+			dropletsBucket.CopyVersionReturns(nil)
+			buildpacksBucket.CopyVersionReturns(nil)
+			packagesBucket.CopyVersionReturns(nil)
+
+			dropletsBucket.IsVersionedReturns(false, nil)
+			dropletsBucket.NameReturns("my_droplets_bucket")
+		})
+
+		It("returns an error", func() {
+			Expect(err).To(MatchError(fmt.Errorf("bucket my_droplets_bucket is not versioned")))
+		})
+	})
+
+	Context("when it fails to check if the bucket is versioned", func() {
+		BeforeEach(func() {
+			artifact.LoadReturns(map[string]versioned.BucketSnapshot{
+				"droplets": {
+					BucketName: "my_droplets_bucket",
+					RegionName: "my_droplets_region",
+					Versions: []versioned.BlobVersion{
+						{BlobKey: "one", Id: "13"},
+						{BlobKey: "two", Id: "22"},
+					},
+				},
+				"buildpacks": {
+					BucketName: "my_buildpacks_bucket",
+					RegionName: "my_buildpacks_region",
+					Versions: []versioned.BlobVersion{
+						{BlobKey: "three", Id: "32"},
+					},
+				},
+				"packages": {
+					BucketName: "my_packages_bucket",
+					RegionName: "my_packages_region",
+					Versions: []versioned.BlobVersion{
+						{BlobKey: "four", Id: "43"},
+					},
+				},
+			}, nil)
+
+			dropletsBucket.CopyVersionReturns(nil)
+			buildpacksBucket.CopyVersionReturns(nil)
+			packagesBucket.CopyVersionReturns(nil)
+
+			dropletsBucket.IsVersionedReturns(false, fmt.Errorf("ooops"))
+			dropletsBucket.NameReturns("my_droplets_bucket")
+		})
+
+		It("returns an error", func() {
+			Expect(err).To(MatchError(fmt.Errorf("failed to check if my_droplets_bucket is versioned: ooops")))
 		})
 	})
 

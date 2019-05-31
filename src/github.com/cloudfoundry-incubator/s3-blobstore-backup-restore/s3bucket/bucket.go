@@ -128,9 +128,13 @@ func (b Bucket) ListDirectories() ([]string, error) {
 }
 
 func (b Bucket) ListVersions() ([]Version, error) {
-	err := b.CheckIfVersioned()
+	isVersioned, err := b.IsVersioned()
 	if err != nil {
 		return nil, err
+	}
+
+	if !isVersioned {
+		return nil, fmt.Errorf("bucket %s is not versioned", b.Name())
 	}
 
 	var versions []Version
@@ -156,20 +160,20 @@ func (b Bucket) ListVersions() ([]Version, error) {
 	return versions, nil
 }
 
-func (b Bucket) CheckIfVersioned() error {
+func (b Bucket) IsVersioned() (bool, error) {
 	output, err := b.s3Client.GetBucketVersioning(&s3.GetBucketVersioningInput{
 		Bucket: &b.name,
 	})
 
 	if err != nil {
-		return fmt.Errorf("could not check if bucket %s is versioned: %s", b.name, err)
+		return false, fmt.Errorf("could not check if bucket %s is versioned: %s", b.name, err)
 	}
 
 	if output == nil || output.Status == nil || *output.Status != "Enabled" {
-		return fmt.Errorf("b %s is not versioned", b.name)
+		return false, nil
 	}
 
-	return nil
+	return true, nil
 }
 
 func (b Bucket) CopyBlobWithinBucket(src, dst string) error {

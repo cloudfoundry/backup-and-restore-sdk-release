@@ -34,9 +34,14 @@ func (r Restorer) Run() error {
 			return fmt.Errorf("no entry found in backup artifact for bucket: %s", identifier)
 		}
 
-		err := destinationBucket.CheckIfVersioned()
+		isVersioned, err := destinationBucket.IsVersioned()
+
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to check if %s is versioned: %s", destinationBucket.Name(), err.Error())
+		}
+
+		if !isVersioned {
+			return fmt.Errorf("bucket %s is not versioned", destinationBucket.Name())
 		}
 
 		for _, versionToCopy := range bucketSnapshot.Versions {

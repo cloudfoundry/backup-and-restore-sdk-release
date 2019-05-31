@@ -106,19 +106,39 @@ var _ = Describe("VersionedBucket", func() {
 				})
 
 				It("works", func() {
-					versions, err := bucketObjectUnderTest.ListVersions()
-
 					Expect(err).NotTo(HaveOccurred())
 					Expect(len(versions)).To(Equal(2001))
 				})
 			})
 		})
 
-		Describe("CheckIfVersioned", func() {
-			Context("when the bucket is not versioned", func() {
-				var unversionedBucketName string
-				var bucketObjectUnderTest versioned.Bucket
+		Describe("IsVersioned", func() {
+			var (
+				unversionedBucketName string
+				bucketObjectUnderTest versioned.Bucket
+			)
+			Context("when the bucket is versioned", func() {
 
+				BeforeEach(func() {
+					unversionedBucketName = setUpVersionedBucket(LiveRegion, S3Endpoint, creds)
+					uploadFile(unversionedBucketName, S3Endpoint, "unversioned-test", "UNVERSIONED-TEST", creds)
+
+					bucketObjectUnderTest, err = s3bucket.NewBucket(unversionedBucketName, LiveRegion, S3Endpoint, creds, false)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				AfterEach(func() {
+					tearDownVersionedBucket(unversionedBucketName, S3Endpoint, creds)
+				})
+
+				It("returns true", func() {
+					isVersioned, err := bucketObjectUnderTest.IsVersioned()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(isVersioned).To(BeTrue())
+				})
+			})
+
+			Context("when the bucket is not versioned", func() {
 				BeforeEach(func() {
 					unversionedBucketName = setUpUnversionedBucket(LiveRegion, S3Endpoint, creds)
 					uploadFile(unversionedBucketName, S3Endpoint, "unversioned-test", "UNVERSIONED-TEST", creds)
@@ -131,9 +151,22 @@ var _ = Describe("VersionedBucket", func() {
 					tearDownBucket(unversionedBucketName, S3Endpoint, creds)
 				})
 
-				It("fails", func() {
-					err = bucketObjectUnderTest.CheckIfVersioned()
-					Expect(err).To(MatchError(ContainSubstring("is not versioned")))
+				It("returns false", func() {
+					isVersioned, err := bucketObjectUnderTest.IsVersioned()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(isVersioned).To(BeFalse())
+				})
+			})
+
+			Context("when it fails to check the version", func() {
+				BeforeEach(func() {
+					bucketObjectUnderTest, err = s3bucket.NewBucket("does-not-exist", LiveRegion, S3Endpoint, creds, false)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("returns an error", func() {
+					_, err := bucketObjectUnderTest.IsVersioned()
+					Expect(err).To(MatchError(ContainSubstring("could not check if bucket does-not-exist is versioned")))
 				})
 			})
 		})

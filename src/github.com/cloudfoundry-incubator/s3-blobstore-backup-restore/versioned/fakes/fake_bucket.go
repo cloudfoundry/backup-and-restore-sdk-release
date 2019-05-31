@@ -52,14 +52,16 @@ type FakeBucket struct {
 		result1 []s3bucket.Version
 		result2 error
 	}
-	CheckIfVersionedStub        func() error
-	checkIfVersionedMutex       sync.RWMutex
-	checkIfVersionedArgsForCall []struct{}
-	checkIfVersionedReturns     struct {
-		result1 error
+	IsVersionedStub        func() (bool, error)
+	isVersionedMutex       sync.RWMutex
+	isVersionedArgsForCall []struct{}
+	isVersionedReturns     struct {
+		result1 bool
+		result2 error
 	}
-	checkIfVersionedReturnsOnCall map[int]struct {
-		result1 error
+	isVersionedReturnsOnCall map[int]struct {
+		result1 bool
+		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -239,44 +241,47 @@ func (fake *FakeBucket) ListVersionsReturnsOnCall(i int, result1 []s3bucket.Vers
 	}{result1, result2}
 }
 
-func (fake *FakeBucket) CheckIfVersioned() error {
-	fake.checkIfVersionedMutex.Lock()
-	ret, specificReturn := fake.checkIfVersionedReturnsOnCall[len(fake.checkIfVersionedArgsForCall)]
-	fake.checkIfVersionedArgsForCall = append(fake.checkIfVersionedArgsForCall, struct{}{})
-	fake.recordInvocation("CheckIfVersioned", []interface{}{})
-	fake.checkIfVersionedMutex.Unlock()
-	if fake.CheckIfVersionedStub != nil {
-		return fake.CheckIfVersionedStub()
+func (fake *FakeBucket) IsVersioned() (bool, error) {
+	fake.isVersionedMutex.Lock()
+	ret, specificReturn := fake.isVersionedReturnsOnCall[len(fake.isVersionedArgsForCall)]
+	fake.isVersionedArgsForCall = append(fake.isVersionedArgsForCall, struct{}{})
+	fake.recordInvocation("IsVersioned", []interface{}{})
+	fake.isVersionedMutex.Unlock()
+	if fake.IsVersionedStub != nil {
+		return fake.IsVersionedStub()
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.checkIfVersionedReturns.result1
+	return fake.isVersionedReturns.result1, fake.isVersionedReturns.result2
 }
 
-func (fake *FakeBucket) CheckIfVersionedCallCount() int {
-	fake.checkIfVersionedMutex.RLock()
-	defer fake.checkIfVersionedMutex.RUnlock()
-	return len(fake.checkIfVersionedArgsForCall)
+func (fake *FakeBucket) IsVersionedCallCount() int {
+	fake.isVersionedMutex.RLock()
+	defer fake.isVersionedMutex.RUnlock()
+	return len(fake.isVersionedArgsForCall)
 }
 
-func (fake *FakeBucket) CheckIfVersionedReturns(result1 error) {
-	fake.CheckIfVersionedStub = nil
-	fake.checkIfVersionedReturns = struct {
-		result1 error
-	}{result1}
+func (fake *FakeBucket) IsVersionedReturns(result1 bool, result2 error) {
+	fake.IsVersionedStub = nil
+	fake.isVersionedReturns = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeBucket) CheckIfVersionedReturnsOnCall(i int, result1 error) {
-	fake.CheckIfVersionedStub = nil
-	if fake.checkIfVersionedReturnsOnCall == nil {
-		fake.checkIfVersionedReturnsOnCall = make(map[int]struct {
-			result1 error
+func (fake *FakeBucket) IsVersionedReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.IsVersionedStub = nil
+	if fake.isVersionedReturnsOnCall == nil {
+		fake.isVersionedReturnsOnCall = make(map[int]struct {
+			result1 bool
+			result2 error
 		})
 	}
-	fake.checkIfVersionedReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
+	fake.isVersionedReturnsOnCall[i] = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeBucket) Invocations() map[string][][]interface{} {
@@ -290,8 +295,8 @@ func (fake *FakeBucket) Invocations() map[string][][]interface{} {
 	defer fake.copyVersionMutex.RUnlock()
 	fake.listVersionsMutex.RLock()
 	defer fake.listVersionsMutex.RUnlock()
-	fake.checkIfVersionedMutex.RLock()
-	defer fake.checkIfVersionedMutex.RUnlock()
+	fake.isVersionedMutex.RLock()
+	defer fake.isVersionedMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
