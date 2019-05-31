@@ -6,6 +6,7 @@ import (
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/unversioned"
 
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental/fakes"
+	unversionedFakes "github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/unversioned/fakes"
 
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
 
@@ -16,9 +17,13 @@ import (
 
 var _ = Describe("Unversioned", func() {
 	var (
-		configs       map[string]unversioned.UnversionedBucketConfig
-		bucket1Config unversioned.UnversionedBucketConfig
-		newBucket     unversioned.NewBucket
+		configs           map[string]unversioned.UnversionedBucketConfig
+		bucket1Config     unversioned.UnversionedBucketConfig
+		newBucket         unversioned.NewBucket
+		fakeLiveBucket1   *unversionedFakes.FakeBucket
+		fakeBackupBucket1 *unversionedFakes.FakeBucket
+		fakeLiveBucket2   *unversionedFakes.FakeBucket
+		fakeBackupBucket2 *unversionedFakes.FakeBucket
 	)
 
 	BeforeEach(func() {
@@ -51,29 +56,58 @@ var _ = Describe("Unversioned", func() {
 			},
 		}
 
-		//newBucket = s3bucket.NewBucket
+		fakeLiveBucket1 = new(unversionedFakes.FakeBucket)
+		fakeLiveBucket1.NameReturns("live-name1")
+
+		fakeLiveBucket2 = new(unversionedFakes.FakeBucket)
+		fakeLiveBucket2.NameReturns("live-name2")
+
+		fakeBackupBucket1 = new(unversionedFakes.FakeBucket)
+		fakeBackupBucket1.NameReturns("backup-name1")
+
+		fakeBackupBucket2 = new(unversionedFakes.FakeBucket)
+		fakeBackupBucket2.NameReturns("backup-name2")
 
 		newBucket = func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile bool) (unversioned.Bucket, error) {
-			bucket, err := s3bucket.NewBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile)
-			return &bucket, err
+			if endpoint == "my-s3-endpoint.aws" && accessKey.Secret == "my-secret-key" && accessKey.Id == "my-id" && !useIAMProfile {
+				if bucketName == "live-name1" && bucketRegion == "live-region1" {
+					return fakeLiveBucket1, nil
+				} else if bucketName == "live-name2" && bucketRegion == "live-region2" {
+					return fakeLiveBucket2, nil
+				} else if bucketName == "backup-name1" && bucketRegion == "backup-region1" {
+					return fakeBackupBucket1, nil
+				} else if bucketName == "backup-name2" && bucketRegion == "backup-region2" {
+					return fakeBackupBucket2, nil
+				}
+			}
+
+			return nil, errors.New("new bucket called with invalid arguments")
 		}
 	})
 
 	Context("BuildBackupsToStart", func() {
 		It("builds backups to start from a config", func() {
 			backupsToStart, err := unversioned.BuildBackupsToStart(configs, newBucket)
-
 			Expect(err).NotTo(HaveOccurred())
-			Expect(backupsToStart).To(HaveLen(2))
-			for _, n := range []string{"1", "2"} {
-				Expect(backupsToStart).To(HaveKey("bucket" + n))
-				Expect(backupsToStart["bucket"+n].BucketPair.ConfigLiveBucket.Name()).To(Equal("live-name" + n))
-				Expect(backupsToStart["bucket"+n].BucketPair.ConfigLiveBucket.Region()).To(Equal("live-region" + n))
-				Expect(backupsToStart["bucket"+n].BucketPair.ConfigBackupBucket.Name()).To(Equal("backup-name" + n))
-				Expect(backupsToStart["bucket"+n].BucketPair.ConfigBackupBucket.Region()).To(Equal("backup-region" + n))
 
-				Expect(backupsToStart["bucket1"].BackupDirectoryFinder).NotTo(BeNil())
-			}
+			Expect(backupsToStart).To(Equal(
+				map[string]incremental.BackupToStart{
+					"bucket1": {
+						BucketPair: incremental.BackupBucketPair{
+							ConfigLiveBucket:   fakeLiveBucket1,
+							ConfigBackupBucket: fakeBackupBucket1,
+						},
+						BackupDirectoryFinder: incremental.Finder{},
+					},
+					"bucket2": {
+						BucketPair: incremental.BackupBucketPair{
+							ConfigLiveBucket:   fakeLiveBucket2,
+							ConfigBackupBucket: fakeBackupBucket2,
+						},
+						BackupDirectoryFinder: incremental.Finder{},
+					},
+				},
+			))
 		})
 
 		Context("when the same bucket is configured for two bucket IDs", func() {
@@ -82,24 +116,28 @@ var _ = Describe("Unversioned", func() {
 					"bucket1": bucket1Config,
 					"bucket2": bucket1Config,
 				}
+				fakeLiveBucket2.NameReturns("live-name1")
 			})
 
 			It("builds backups to start", func() {
 				backupsToStart, err := unversioned.BuildBackupsToStart(configs, newBucket)
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(backupsToStart).To(HaveLen(2))
-				Expect(backupsToStart).To(HaveKey("bucket1"))
-				Expect(backupsToStart["bucket1"].BucketPair.ConfigLiveBucket.Name()).To(Equal("live-name1"))
-				Expect(backupsToStart["bucket1"].BucketPair.ConfigLiveBucket.Region()).To(Equal("live-region1"))
-				Expect(backupsToStart["bucket1"].BucketPair.ConfigBackupBucket.Name()).To(Equal("backup-name1"))
-				Expect(backupsToStart["bucket1"].BucketPair.ConfigBackupBucket.Region()).To(Equal("backup-region1"))
 
-				Expect(backupsToStart["bucket1"].BackupDirectoryFinder).NotTo(BeNil())
-
-				Expect(backupsToStart["bucket2"]).To(Equal(incremental.BackupToStart{
-					SameAsBucketID: "bucket1",
-				}))
+				Expect(backupsToStart).To(Equal(
+					map[string]incremental.BackupToStart{
+						"bucket1": {
+							BucketPair: incremental.BackupBucketPair{
+								ConfigLiveBucket:   fakeLiveBucket1,
+								ConfigBackupBucket: fakeBackupBucket1,
+							},
+							BackupDirectoryFinder: incremental.Finder{},
+						},
+						"bucket2": {
+							SameAsBucketID: "bucket1",
+						},
+					},
+				))
 			})
 		})
 	})
