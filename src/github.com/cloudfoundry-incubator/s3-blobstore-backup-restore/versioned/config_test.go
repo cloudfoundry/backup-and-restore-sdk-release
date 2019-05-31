@@ -1,7 +1,7 @@
-package config_test
+package versioned_test
 
 import (
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/config"
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/versioned"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -9,7 +9,7 @@ import (
 var _ = Describe("Versioned", func() {
 	Context("BuildVersionedBuckets", func() {
 		It("builds versioned buckets from config", func() {
-			configs := map[string]config.BucketConfig{
+			configs := map[string]versioned.BucketConfig{
 				"bucket1": {
 					Name:               "live-name1",
 					Region:             "live-region1",
@@ -28,7 +28,7 @@ var _ = Describe("Versioned", func() {
 				},
 			}
 
-			buckets, err := config.BuildVersionedBuckets(configs)
+			buckets, err := versioned.BuildVersionedBuckets(configs)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(buckets).To(HaveLen(2))

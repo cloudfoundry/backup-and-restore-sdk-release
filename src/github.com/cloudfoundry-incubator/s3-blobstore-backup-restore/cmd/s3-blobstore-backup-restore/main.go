@@ -4,8 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/config"
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/unversioned"
 
 	"encoding/json"
 	"io/ioutil"
@@ -55,13 +54,13 @@ func main() {
 
 	var runner Runner
 	if *flags.VersionedBackup || *flags.VersionedRestore {
-		var bucketsConfig map[string]config.BucketConfig
+		var bucketsConfig map[string]versioned.BucketConfig
 		err = json.Unmarshal(rawConfig, &bucketsConfig)
 		if err != nil {
 			exitWithError("Failed to parse config", err)
 		}
 
-		buckets, err := config.BuildVersionedBuckets(bucketsConfig)
+		buckets, err := versioned.BuildVersionedBuckets(bucketsConfig)
 		if err != nil {
 			exitWithError("Failed to establish build versioned buckets", err)
 		}
@@ -74,14 +73,14 @@ func main() {
 			runner = versioned.NewRestorer(buckets, artifact)
 		}
 	} else {
-		var bucketsConfig map[string]config.UnversionedBucketConfig
+		var bucketsConfig map[string]unversioned.UnversionedBucketConfig
 		err = json.Unmarshal(rawConfig, &bucketsConfig)
 		if err != nil {
 			exitWithError("Failed to parse config", err)
 		}
 
 		if *flags.UnversionedBackupStart {
-			backupsToStart, err := config.BuildBackupsToStart(bucketsConfig, s3bucket.NewBucket)
+			backupsToStart, err := unversioned.BuildBackupsToStart(bucketsConfig, unversioned.NewUnversionedBucket)
 			if err != nil {
 				exitWithError("Failed to build backups to start", err)
 			}
@@ -90,7 +89,7 @@ func main() {
 			runner = incremental.NewBackupStarter(backupsToStart, clock{}, backupArtifact, existingBackupBlobsArtifact)
 		} else if *flags.UnversionedBackupComplete {
 			existingBackupBlobsArtifact := incremental.NewArtifact(flags.ExistingBackupBlobsArtifactFilePath)
-			backupsToComplete, err := config.BuildBackupsToComplete(bucketsConfig, existingBackupBlobsArtifact)
+			backupsToComplete, err := unversioned.BuildBackupsToComplete(bucketsConfig, existingBackupBlobsArtifact)
 			if err != nil {
 				exitWithError("Failed to build backups to complete", err)
 			}
@@ -99,7 +98,7 @@ func main() {
 			}
 		} else {
 			backupArtifact := incremental.NewArtifact(flags.ArtifactFilePath)
-			restoreBucketPairs, err := config.BuildRestoreBucketPairs(bucketsConfig, backupArtifact, s3bucket.NewBucket)
+			restoreBucketPairs, err := unversioned.BuildRestoreBucketPairs(bucketsConfig, backupArtifact, unversioned.NewUnversionedBucket)
 			if err != nil {
 				exitWithError("Failed to build restore bucket pairs", err)
 			}

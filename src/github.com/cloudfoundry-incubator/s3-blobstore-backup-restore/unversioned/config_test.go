@@ -1,64 +1,67 @@
-package config_test
+package unversioned_test
 
 import (
 	"errors"
 
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/unversioned"
+
+	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental/fakes"
+
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/config"
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Unversioned", func() {
 	var (
-		configs       map[string]config.UnversionedBucketConfig
-		bucket1Config config.UnversionedBucketConfig
-		newBucket     config.NewBucket
+		configs       map[string]unversioned.UnversionedBucketConfig
+		bucket1Config unversioned.UnversionedBucketConfig
+		newBucket     unversioned.NewBucket
 	)
 
 	BeforeEach(func() {
-		bucket1Config = config.UnversionedBucketConfig{
-			BucketConfig: config.BucketConfig{
-				Name:               "live-name1",
-				Region:             "live-region1",
-				AwsAccessKeyId:     "my-id",
-				AwsSecretAccessKey: "my-secret-key",
-				Endpoint:           "my-s3-endpoint.aws",
-				UseIAMProfile:      false,
-			},
-			Backup: config.BackupBucketConfig{
+		bucket1Config = unversioned.UnversionedBucketConfig{
+			Name:               "live-name1",
+			Region:             "live-region1",
+			AwsAccessKeyId:     "my-id",
+			AwsSecretAccessKey: "my-secret-key",
+			Endpoint:           "my-s3-endpoint.aws",
+			UseIAMProfile:      false,
+			Backup: unversioned.BackupBucketConfig{
 				Name:   "backup-name1",
 				Region: "backup-region1",
 			},
 		}
 
-		configs = map[string]config.UnversionedBucketConfig{
+		configs = map[string]unversioned.UnversionedBucketConfig{
 			"bucket1": bucket1Config,
 			"bucket2": {
-				BucketConfig: config.BucketConfig{
-					Name:               "live-name2",
-					Region:             "live-region2",
-					AwsAccessKeyId:     "my-id",
-					AwsSecretAccessKey: "my-secret-key",
-					Endpoint:           "my-s3-endpoint.aws",
-					UseIAMProfile:      false,
-				},
-				Backup: config.BackupBucketConfig{
+				Name:               "live-name2",
+				Region:             "live-region2",
+				AwsAccessKeyId:     "my-id",
+				AwsSecretAccessKey: "my-secret-key",
+				Endpoint:           "my-s3-endpoint.aws",
+				UseIAMProfile:      false,
+				Backup: unversioned.BackupBucketConfig{
 					Name:   "backup-name2",
 					Region: "backup-region2",
 				},
 			},
 		}
 
-		newBucket = s3bucket.NewBucket
+		//newBucket = s3bucket.NewBucket
+
+		newBucket = func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile bool) (unversioned.Bucket, error) {
+			bucket, err := s3bucket.NewBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile)
+			return &bucket, err
+		}
 	})
 
 	Context("BuildBackupsToStart", func() {
 		It("builds backups to start from a config", func() {
-			backupsToStart, err := config.BuildBackupsToStart(configs, newBucket)
+			backupsToStart, err := unversioned.BuildBackupsToStart(configs, newBucket)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(backupsToStart).To(HaveLen(2))
@@ -75,14 +78,14 @@ var _ = Describe("Unversioned", func() {
 
 		Context("when the same bucket is configured for two bucket IDs", func() {
 			BeforeEach(func() {
-				configs = map[string]config.UnversionedBucketConfig{
+				configs = map[string]unversioned.UnversionedBucketConfig{
 					"bucket1": bucket1Config,
 					"bucket2": bucket1Config,
 				}
 			})
 
 			It("builds backups to start", func() {
-				backupsToStart, err := config.BuildBackupsToStart(configs, newBucket)
+				backupsToStart, err := unversioned.BuildBackupsToStart(configs, newBucket)
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(backupsToStart).To(HaveLen(2))
@@ -128,7 +131,7 @@ var _ = Describe("Unversioned", func() {
 				},
 			}, nil)
 
-			backupsToComplete, err := config.BuildBackupsToComplete(
+			backupsToComplete, err := unversioned.BuildBackupsToComplete(
 				configs,
 				existingBlobsArtifact,
 			)
@@ -174,7 +177,7 @@ var _ = Describe("Unversioned", func() {
 				},
 			}, nil)
 
-			backupsToComplete, err := config.BuildBackupsToComplete(
+			backupsToComplete, err := unversioned.BuildBackupsToComplete(
 				configs,
 				existingBlobsArtifact,
 			)
@@ -189,7 +192,7 @@ var _ = Describe("Unversioned", func() {
 		It("returns error when it cannot load existing blobs artifact", func() {
 			existingBlobsArtifact.LoadReturns(nil, errors.New("fake load error"))
 
-			_, err := config.BuildBackupsToComplete(
+			_, err := unversioned.BuildBackupsToComplete(
 				configs,
 				existingBlobsArtifact,
 			)
@@ -200,7 +203,7 @@ var _ = Describe("Unversioned", func() {
 		It("returns error when a configured bucketID is not in the existing blobs artifact", func() {
 			existingBlobsArtifact.LoadReturns(map[string]incremental.Backup{}, nil)
 
-			_, err := config.BuildBackupsToComplete(
+			_, err := unversioned.BuildBackupsToComplete(
 				configs,
 				existingBlobsArtifact,
 			)
@@ -233,7 +236,7 @@ var _ = Describe("Unversioned", func() {
 				},
 			}, nil)
 
-			restoreBucketPairs, err := config.BuildRestoreBucketPairs(configs, artifact, newBucket)
+			restoreBucketPairs, err := unversioned.BuildRestoreBucketPairs(configs, artifact, newBucket)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(restoreBucketPairs).To(HaveLen(2))
@@ -258,7 +261,7 @@ var _ = Describe("Unversioned", func() {
 				},
 			}, nil)
 
-			restoreBucketPairs, err := config.BuildRestoreBucketPairs(configs, artifact, newBucket)
+			restoreBucketPairs, err := unversioned.BuildRestoreBucketPairs(configs, artifact, newBucket)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(restoreBucketPairs).To(HaveLen(2))
@@ -276,7 +279,7 @@ var _ = Describe("Unversioned", func() {
 		It("returns error when it cannot load backup artifact", func() {
 			artifact.LoadReturns(nil, errors.New("fake load error"))
 
-			_, err := config.BuildRestoreBucketPairs(configs, artifact, newBucket)
+			_, err := unversioned.BuildRestoreBucketPairs(configs, artifact, newBucket)
 
 			Expect(err).To(MatchError(ContainSubstring("fake load error")))
 		})
@@ -284,7 +287,7 @@ var _ = Describe("Unversioned", func() {
 		It("returns error when the backup artifact does not have a configured bucket ID", func() {
 			artifact.LoadReturns(map[string]incremental.Backup{}, nil)
 
-			_, err := config.BuildRestoreBucketPairs(configs, artifact, newBucket)
+			_, err := unversioned.BuildRestoreBucketPairs(configs, artifact, newBucket)
 
 			Expect(err).To(MatchError(ContainSubstring("backup artifact does not contain bucket ID")))
 		})

@@ -1,4 +1,4 @@
-package config
+package unversioned
 
 import (
 	"fmt"
@@ -8,8 +8,13 @@ import (
 )
 
 type UnversionedBucketConfig struct {
-	BucketConfig
-	Backup BackupBucketConfig `json:"backup"`
+	Name               string             `json:"name"`
+	Region             string             `json:"region"`
+	AwsAccessKeyId     string             `json:"aws_access_key_id"`
+	AwsSecretAccessKey string             `json:"aws_secret_access_key"`
+	Endpoint           string             `json:"endpoint"`
+	UseIAMProfile      bool               `json:"use_iam_profile"`
+	Backup             BackupBucketConfig `json:"backup"`
 }
 
 type BackupBucketConfig struct {
@@ -17,7 +22,7 @@ type BackupBucketConfig struct {
 	Region string `json:"region"`
 }
 
-type NewBucket func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile bool) (s3bucket.Bucket, error)
+type NewBucket func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile bool) (Bucket, error)
 
 func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket NewBucket) (map[string]incremental.BackupToStart, error) {
 	backupsToStart := make(map[string]incremental.BackupToStart)
