@@ -2,6 +2,7 @@ package unversioned_test
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/unversioned"
 
@@ -110,6 +111,43 @@ var _ = Describe("Unversioned", func() {
 			))
 		})
 
+		Context("when bucket initialisation fails", func() {
+			var (
+				newBucketFails unversioned.NewBucket
+				bucketToFail   string
+			)
+
+			JustBeforeEach(func() {
+				newBucketFails = func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile bool) (unversioned.Bucket, error) {
+					if bucketName == bucketToFail {
+						return nil, errors.New("oups")
+					} else {
+						return newBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile)
+					}
+				}
+			})
+
+			Context("and it's a live bucket", func() {
+				BeforeEach(func() {
+					bucketToFail = "live-name2"
+				})
+				It("returns an error", func() {
+					_, err := unversioned.BuildBackupsToStart(configs, newBucketFails)
+					Expect(err).To(MatchError("oups"))
+				})
+			})
+
+			Context("and it's a backup bucket", func() {
+				BeforeEach(func() {
+					bucketToFail = "backup-name1"
+				})
+				It("returns an error", func() {
+					_, err := unversioned.BuildBackupsToStart(configs, newBucketFails)
+					Expect(err).To(MatchError("oups"))
+				})
+			})
+		})
+
 		Context("when the same bucket is configured for two bucket IDs", func() {
 			BeforeEach(func() {
 				configs = map[string]unversioned.UnversionedBucketConfig{
@@ -138,6 +176,50 @@ var _ = Describe("Unversioned", func() {
 						},
 					},
 				))
+			})
+		})
+
+		Context("when it fails to check if a live bucket is versioned", func() {
+			BeforeEach(func() {
+				fakeLiveBucket1.IsVersionedReturns(false, errors.New("oopps"))
+			})
+
+			It("errors", func() {
+				_, err := unversioned.BuildBackupsToStart(configs, newBucket)
+				Expect(err).To(MatchError("oopps"))
+			})
+		})
+
+		Context("when it fails to check if a backup bucket is versioned", func() {
+			BeforeEach(func() {
+				fakeBackupBucket1.IsVersionedReturns(false, errors.New("oopps"))
+			})
+
+			It("errors", func() {
+				_, err := unversioned.BuildBackupsToStart(configs, newBucket)
+				Expect(err).To(MatchError("oopps"))
+			})
+		})
+
+		Context("when a live bucket is versioned", func() {
+			BeforeEach(func() {
+				fakeLiveBucket1.IsVersionedReturns(true, nil)
+			})
+
+			It("errors", func() {
+				_, err := unversioned.BuildBackupsToStart(configs, newBucket)
+				Expect(err).To(MatchError(fmt.Errorf("bucket %s is versioned", fakeLiveBucket1.Name())))
+			})
+		})
+
+		Context("when a backup bucket is versioned", func() {
+			BeforeEach(func() {
+				fakeBackupBucket1.IsVersionedReturns(true, nil)
+			})
+
+			It("errors", func() {
+				_, err := unversioned.BuildBackupsToStart(configs, newBucket)
+				Expect(err).To(MatchError(fmt.Errorf("bucket %s is versioned", fakeBackupBucket1.Name())))
 			})
 		})
 	})
@@ -258,60 +340,155 @@ var _ = Describe("Unversioned", func() {
 
 		BeforeEach(func() {
 			artifact = new(fakes.FakeArtifact)
-		})
-
-		It("builds restore bucket pairs from a config and a backup artifact", func() {
 			artifact.LoadReturns(map[string]incremental.Backup{
 				"bucket1": {
-					BucketName:             "backup-artifact-name1",
-					BucketRegion:           "backup-artifact-region1",
+					BucketName:             "backup-name1",
+					BucketRegion:           "backup-region1",
 					SrcBackupDirectoryPath: "destination-backup-dir1",
 				},
 				"bucket2": {
-					BucketName:             "backup-artifact-name2",
-					BucketRegion:           "backup-artifact-region2",
+					BucketName:             "backup-name2",
+					BucketRegion:           "backup-region2",
 					SrcBackupDirectoryPath: "destination-backup-dir2",
 				},
 			}, nil)
-
-			restoreBucketPairs, err := unversioned.BuildRestoreBucketPairs(configs, artifact, newBucket)
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(restoreBucketPairs).To(HaveLen(2))
-			for _, n := range []string{"1", "2"} {
-				Expect(restoreBucketPairs).To(HaveKey("bucket" + n))
-				Expect(restoreBucketPairs["bucket"+n].ConfigLiveBucket.Name()).To(Equal("live-name" + n))
-				Expect(restoreBucketPairs["bucket"+n].ConfigLiveBucket.Region()).To(Equal("live-region" + n))
-				Expect(restoreBucketPairs["bucket"+n].ArtifactBackupBucket.Name()).To(Equal("backup-artifact-name" + n))
-				Expect(restoreBucketPairs["bucket"+n].ArtifactBackupBucket.Region()).To(Equal("backup-artifact-region" + n))
-			}
 		})
 
-		It("builds restore bucket pairs marked same", func() {
-			artifact.LoadReturns(map[string]incremental.Backup{
-				"bucket1": {
-					BucketName:             "backup-artifact-name1",
-					BucketRegion:           "backup-artifact-region1",
-					SrcBackupDirectoryPath: "destination-backup-dir1",
-				},
-				"bucket2": {
-					SameBucketAs: "bucket1",
-				},
-			}, nil)
-
+		It("builds restore bucket pairs from a config and a backup artifact", func() {
 			restoreBucketPairs, err := unversioned.BuildRestoreBucketPairs(configs, artifact, newBucket)
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(restoreBucketPairs).To(HaveLen(2))
-			Expect(restoreBucketPairs).To(HaveKey("bucket1"))
-			Expect(restoreBucketPairs["bucket1"].ConfigLiveBucket.Name()).To(Equal("live-name1"))
-			Expect(restoreBucketPairs["bucket1"].ConfigLiveBucket.Region()).To(Equal("live-region1"))
-			Expect(restoreBucketPairs["bucket1"].ArtifactBackupBucket.Name()).To(Equal("backup-artifact-name1"))
-			Expect(restoreBucketPairs["bucket1"].ArtifactBackupBucket.Region()).To(Equal("backup-artifact-region1"))
-			Expect(restoreBucketPairs).To(HaveKey("bucket2"))
-			Expect(restoreBucketPairs["bucket2"]).To(Equal(incremental.RestoreBucketPair{
-				SameAsBucketID: "bucket1",
-			}))
+
+			Expect(restoreBucketPairs).To(Equal(
+				map[string]incremental.RestoreBucketPair{
+					"bucket1": {
+						ConfigLiveBucket:     fakeLiveBucket1,
+						ArtifactBackupBucket: fakeBackupBucket1,
+					},
+					"bucket2": {
+						ConfigLiveBucket:     fakeLiveBucket2,
+						ArtifactBackupBucket: fakeBackupBucket2,
+					},
+				},
+			))
+		})
+
+		Context("when checking if the bucket is versioned", func() {
+
+			Context("when it fails to check if a live bucket is versioned", func() {
+				BeforeEach(func() {
+					fakeLiveBucket1.IsVersionedReturns(false, errors.New("oopps"))
+				})
+
+				It("errors", func() {
+					_, err := unversioned.BuildRestoreBucketPairs(configs, artifact, newBucket)
+					Expect(err).To(MatchError("oopps"))
+				})
+			})
+
+			Context("when it fails to check if a backup bucket is versioned", func() {
+				BeforeEach(func() {
+					fakeBackupBucket1.IsVersionedReturns(false, errors.New("oopps"))
+				})
+
+				It("errors", func() {
+					_, err := unversioned.BuildRestoreBucketPairs(configs, artifact, newBucket)
+					Expect(err).To(MatchError("oopps"))
+				})
+			})
+
+			Context("when a live bucket is versioned", func() {
+				BeforeEach(func() {
+					fakeLiveBucket1.IsVersionedReturns(true, nil)
+				})
+
+				It("errors", func() {
+					_, err := unversioned.BuildRestoreBucketPairs(configs, artifact, newBucket)
+					Expect(err).To(MatchError(fmt.Errorf("bucket %s is versioned", fakeLiveBucket1.Name())))
+				})
+			})
+
+			Context("when a backup bucket is versioned", func() {
+				BeforeEach(func() {
+					fakeBackupBucket1.IsVersionedReturns(true, nil)
+				})
+
+				It("errors", func() {
+					_, err := unversioned.BuildRestoreBucketPairs(configs, artifact, newBucket)
+					Expect(err).To(MatchError(fmt.Errorf("bucket %s is versioned", fakeBackupBucket1.Name())))
+				})
+			})
+		})
+
+		Context("when bucket initialisation fails", func() {
+			var (
+				newBucketFails unversioned.NewBucket
+				bucketToFail   string
+			)
+
+			JustBeforeEach(func() {
+				newBucketFails = func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile bool) (unversioned.Bucket, error) {
+					if bucketName == bucketToFail {
+						return nil, errors.New("oups")
+					} else {
+						return newBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile)
+					}
+				}
+			})
+
+			Context("and it's a live bucket", func() {
+				BeforeEach(func() {
+					bucketToFail = "live-name2"
+				})
+				It("returns an error", func() {
+					_, err := unversioned.BuildRestoreBucketPairs(configs, artifact, newBucketFails)
+					Expect(err).To(MatchError("oups"))
+				})
+			})
+
+			Context("and it's a backup bucket", func() {
+				BeforeEach(func() {
+					bucketToFail = "backup-name1"
+				})
+				It("returns an error", func() {
+					_, err := unversioned.BuildRestoreBucketPairs(configs, artifact, newBucketFails)
+					Expect(err).To(MatchError("oups"))
+				})
+			})
+		})
+
+		Context("when there are duplicate live buckets", func() {
+			BeforeEach(func() {
+				fakeLiveBucket2.NameReturns("live-name1")
+			})
+
+			It("builds restore bucket pairs marked same", func() {
+				artifact.LoadReturns(map[string]incremental.Backup{
+					"bucket1": {
+						BucketName:             "backup-name1",
+						BucketRegion:           "backup-region1",
+						SrcBackupDirectoryPath: "destination-backup-dir1",
+					},
+					"bucket2": {
+						SameBucketAs: "bucket1",
+					},
+				}, nil)
+
+				restoreBucketPairs, err := unversioned.BuildRestoreBucketPairs(configs, artifact, newBucket)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(restoreBucketPairs).To(Equal(
+					map[string]incremental.RestoreBucketPair{
+						"bucket1": {
+							ConfigLiveBucket:     fakeLiveBucket1,
+							ArtifactBackupBucket: fakeBackupBucket1,
+						},
+						"bucket2": {
+							SameAsBucketID: "bucket1",
+						},
+					},
+				))
+			})
 		})
 
 		It("returns error when it cannot load backup artifact", func() {

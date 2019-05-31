@@ -354,9 +354,9 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 
 				Expect(backups).To(Equal(map[string]incremental.Backup{
 					"bucket1": {
-						BucketName:   backupBucket,
-						BucketRegion: backupRegion,
-						Blobs:        backups["bucket1"].Blobs, //skip
+						BucketName:             backupBucket,
+						BucketRegion:           backupRegion,
+						Blobs:                  backups["bucket1"].Blobs,                  //skip
 						SrcBackupDirectoryPath: backups["bucket1"].SrcBackupDirectoryPath, //skip
 					},
 					"bucket2": {

@@ -42,6 +42,10 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket N
 			return nil, err
 		}
 
+		if err := bucketIsVersioned(liveBucket); err != nil {
+			return nil, err
+		}
+
 		backupBucket, err := newBucket(
 			config.Backup.Name,
 			config.Backup.Region,
@@ -53,6 +57,10 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket N
 			config.UseIAMProfile,
 		)
 		if err != nil {
+			return nil, err
+		}
+
+		if err := bucketIsVersioned(backupBucket); err != nil {
 			return nil, err
 		}
 
@@ -68,6 +76,18 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket N
 	backupsToStart = incremental.MarkSameBackupsToStart(backupsToStart)
 
 	return backupsToStart, nil
+}
+
+func bucketIsVersioned(bucket Bucket) error {
+	isVersioned, err := bucket.IsVersioned()
+	if err != nil {
+		return err
+	}
+
+	if isVersioned {
+		return fmt.Errorf("bucket %s is versioned", bucket.Name())
+	}
+	return nil
 }
 
 func BuildBackupsToComplete(
@@ -163,7 +183,12 @@ func BuildRestoreBucketPairs(
 			},
 			config.UseIAMProfile,
 		)
+
 		if err != nil {
+			return nil, err
+		}
+
+		if err := bucketIsVersioned(liveBucket); err != nil {
 			return nil, err
 		}
 
@@ -177,7 +202,12 @@ func BuildRestoreBucketPairs(
 			},
 			config.UseIAMProfile,
 		)
+
 		if err != nil {
+			return nil, err
+		}
+
+		if err := bucketIsVersioned(backupBucket); err != nil {
 			return nil, err
 		}
 
