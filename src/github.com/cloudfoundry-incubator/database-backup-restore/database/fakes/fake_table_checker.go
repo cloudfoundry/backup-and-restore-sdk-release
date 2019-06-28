@@ -8,10 +8,10 @@ import (
 )
 
 type FakeTableChecker struct {
-	FindMissingTablesStub        func(tableNames []string) ([]string, error)
+	FindMissingTablesStub        func([]string) ([]string, error)
 	findMissingTablesMutex       sync.RWMutex
 	findMissingTablesArgsForCall []struct {
-		tableNames []string
+		arg1 []string
 	}
 	findMissingTablesReturns struct {
 		result1 []string
@@ -25,26 +25,27 @@ type FakeTableChecker struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeTableChecker) FindMissingTables(tableNames []string) ([]string, error) {
-	var tableNamesCopy []string
-	if tableNames != nil {
-		tableNamesCopy = make([]string, len(tableNames))
-		copy(tableNamesCopy, tableNames)
+func (fake *FakeTableChecker) FindMissingTables(arg1 []string) ([]string, error) {
+	var arg1Copy []string
+	if arg1 != nil {
+		arg1Copy = make([]string, len(arg1))
+		copy(arg1Copy, arg1)
 	}
 	fake.findMissingTablesMutex.Lock()
 	ret, specificReturn := fake.findMissingTablesReturnsOnCall[len(fake.findMissingTablesArgsForCall)]
 	fake.findMissingTablesArgsForCall = append(fake.findMissingTablesArgsForCall, struct {
-		tableNames []string
-	}{tableNamesCopy})
-	fake.recordInvocation("FindMissingTables", []interface{}{tableNamesCopy})
+		arg1 []string
+	}{arg1Copy})
+	fake.recordInvocation("FindMissingTables", []interface{}{arg1Copy})
 	fake.findMissingTablesMutex.Unlock()
 	if fake.FindMissingTablesStub != nil {
-		return fake.FindMissingTablesStub(tableNames)
+		return fake.FindMissingTablesStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.findMissingTablesReturns.result1, fake.findMissingTablesReturns.result2
+	fakeReturns := fake.findMissingTablesReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeTableChecker) FindMissingTablesCallCount() int {
@@ -53,13 +54,22 @@ func (fake *FakeTableChecker) FindMissingTablesCallCount() int {
 	return len(fake.findMissingTablesArgsForCall)
 }
 
+func (fake *FakeTableChecker) FindMissingTablesCalls(stub func([]string) ([]string, error)) {
+	fake.findMissingTablesMutex.Lock()
+	defer fake.findMissingTablesMutex.Unlock()
+	fake.FindMissingTablesStub = stub
+}
+
 func (fake *FakeTableChecker) FindMissingTablesArgsForCall(i int) []string {
 	fake.findMissingTablesMutex.RLock()
 	defer fake.findMissingTablesMutex.RUnlock()
-	return fake.findMissingTablesArgsForCall[i].tableNames
+	argsForCall := fake.findMissingTablesArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeTableChecker) FindMissingTablesReturns(result1 []string, result2 error) {
+	fake.findMissingTablesMutex.Lock()
+	defer fake.findMissingTablesMutex.Unlock()
 	fake.FindMissingTablesStub = nil
 	fake.findMissingTablesReturns = struct {
 		result1 []string
@@ -68,6 +78,8 @@ func (fake *FakeTableChecker) FindMissingTablesReturns(result1 []string, result2
 }
 
 func (fake *FakeTableChecker) FindMissingTablesReturnsOnCall(i int, result1 []string, result2 error) {
+	fake.findMissingTablesMutex.Lock()
+	defer fake.findMissingTablesMutex.Unlock()
 	fake.FindMissingTablesStub = nil
 	if fake.findMissingTablesReturnsOnCall == nil {
 		fake.findMissingTablesReturnsOnCall = make(map[int]struct {

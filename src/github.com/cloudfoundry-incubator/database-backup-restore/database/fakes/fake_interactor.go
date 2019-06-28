@@ -8,10 +8,10 @@ import (
 )
 
 type FakeInteractor struct {
-	ActionStub        func(artifactFilePath string) error
+	ActionStub        func(string) error
 	actionMutex       sync.RWMutex
 	actionArgsForCall []struct {
-		artifactFilePath string
+		arg1 string
 	}
 	actionReturns struct {
 		result1 error
@@ -23,21 +23,22 @@ type FakeInteractor struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeInteractor) Action(artifactFilePath string) error {
+func (fake *FakeInteractor) Action(arg1 string) error {
 	fake.actionMutex.Lock()
 	ret, specificReturn := fake.actionReturnsOnCall[len(fake.actionArgsForCall)]
 	fake.actionArgsForCall = append(fake.actionArgsForCall, struct {
-		artifactFilePath string
-	}{artifactFilePath})
-	fake.recordInvocation("Action", []interface{}{artifactFilePath})
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("Action", []interface{}{arg1})
 	fake.actionMutex.Unlock()
 	if fake.ActionStub != nil {
-		return fake.ActionStub(artifactFilePath)
+		return fake.ActionStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.actionReturns.result1
+	fakeReturns := fake.actionReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeInteractor) ActionCallCount() int {
@@ -46,13 +47,22 @@ func (fake *FakeInteractor) ActionCallCount() int {
 	return len(fake.actionArgsForCall)
 }
 
+func (fake *FakeInteractor) ActionCalls(stub func(string) error) {
+	fake.actionMutex.Lock()
+	defer fake.actionMutex.Unlock()
+	fake.ActionStub = stub
+}
+
 func (fake *FakeInteractor) ActionArgsForCall(i int) string {
 	fake.actionMutex.RLock()
 	defer fake.actionMutex.RUnlock()
-	return fake.actionArgsForCall[i].artifactFilePath
+	argsForCall := fake.actionArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeInteractor) ActionReturns(result1 error) {
+	fake.actionMutex.Lock()
+	defer fake.actionMutex.Unlock()
 	fake.ActionStub = nil
 	fake.actionReturns = struct {
 		result1 error
@@ -60,6 +70,8 @@ func (fake *FakeInteractor) ActionReturns(result1 error) {
 }
 
 func (fake *FakeInteractor) ActionReturnsOnCall(i int, result1 error) {
+	fake.actionMutex.Lock()
+	defer fake.actionMutex.Unlock()
 	fake.ActionStub = nil
 	if fake.actionReturnsOnCall == nil {
 		fake.actionReturnsOnCall = make(map[int]struct {

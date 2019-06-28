@@ -11,8 +11,9 @@ import (
 type FakeDumpUtilityVersionDetector struct {
 	GetVersionStub        func() (version.SemanticVersion, error)
 	getVersionMutex       sync.RWMutex
-	getVersionArgsForCall []struct{}
-	getVersionReturns     struct {
+	getVersionArgsForCall []struct {
+	}
+	getVersionReturns struct {
 		result1 version.SemanticVersion
 		result2 error
 	}
@@ -27,7 +28,8 @@ type FakeDumpUtilityVersionDetector struct {
 func (fake *FakeDumpUtilityVersionDetector) GetVersion() (version.SemanticVersion, error) {
 	fake.getVersionMutex.Lock()
 	ret, specificReturn := fake.getVersionReturnsOnCall[len(fake.getVersionArgsForCall)]
-	fake.getVersionArgsForCall = append(fake.getVersionArgsForCall, struct{}{})
+	fake.getVersionArgsForCall = append(fake.getVersionArgsForCall, struct {
+	}{})
 	fake.recordInvocation("GetVersion", []interface{}{})
 	fake.getVersionMutex.Unlock()
 	if fake.GetVersionStub != nil {
@@ -36,7 +38,8 @@ func (fake *FakeDumpUtilityVersionDetector) GetVersion() (version.SemanticVersio
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.getVersionReturns.result1, fake.getVersionReturns.result2
+	fakeReturns := fake.getVersionReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeDumpUtilityVersionDetector) GetVersionCallCount() int {
@@ -45,7 +48,15 @@ func (fake *FakeDumpUtilityVersionDetector) GetVersionCallCount() int {
 	return len(fake.getVersionArgsForCall)
 }
 
+func (fake *FakeDumpUtilityVersionDetector) GetVersionCalls(stub func() (version.SemanticVersion, error)) {
+	fake.getVersionMutex.Lock()
+	defer fake.getVersionMutex.Unlock()
+	fake.GetVersionStub = stub
+}
+
 func (fake *FakeDumpUtilityVersionDetector) GetVersionReturns(result1 version.SemanticVersion, result2 error) {
+	fake.getVersionMutex.Lock()
+	defer fake.getVersionMutex.Unlock()
 	fake.GetVersionStub = nil
 	fake.getVersionReturns = struct {
 		result1 version.SemanticVersion
@@ -54,6 +65,8 @@ func (fake *FakeDumpUtilityVersionDetector) GetVersionReturns(result1 version.Se
 }
 
 func (fake *FakeDumpUtilityVersionDetector) GetVersionReturnsOnCall(i int, result1 version.SemanticVersion, result2 error) {
+	fake.getVersionMutex.Lock()
+	defer fake.getVersionMutex.Unlock()
 	fake.GetVersionStub = nil
 	if fake.getVersionReturnsOnCall == nil {
 		fake.getVersionReturnsOnCall = make(map[int]struct {

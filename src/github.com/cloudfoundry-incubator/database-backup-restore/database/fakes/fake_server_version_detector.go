@@ -43,7 +43,8 @@ func (fake *FakeServerVersionDetector) GetVersion(arg1 config.ConnectionConfig, 
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.getVersionReturns.result1, fake.getVersionReturns.result2
+	fakeReturns := fake.getVersionReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeServerVersionDetector) GetVersionCallCount() int {
@@ -52,13 +53,22 @@ func (fake *FakeServerVersionDetector) GetVersionCallCount() int {
 	return len(fake.getVersionArgsForCall)
 }
 
+func (fake *FakeServerVersionDetector) GetVersionCalls(stub func(config.ConnectionConfig, config.TempFolderManager) (version.DatabaseServerVersion, error)) {
+	fake.getVersionMutex.Lock()
+	defer fake.getVersionMutex.Unlock()
+	fake.GetVersionStub = stub
+}
+
 func (fake *FakeServerVersionDetector) GetVersionArgsForCall(i int) (config.ConnectionConfig, config.TempFolderManager) {
 	fake.getVersionMutex.RLock()
 	defer fake.getVersionMutex.RUnlock()
-	return fake.getVersionArgsForCall[i].arg1, fake.getVersionArgsForCall[i].arg2
+	argsForCall := fake.getVersionArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeServerVersionDetector) GetVersionReturns(result1 version.DatabaseServerVersion, result2 error) {
+	fake.getVersionMutex.Lock()
+	defer fake.getVersionMutex.Unlock()
 	fake.GetVersionStub = nil
 	fake.getVersionReturns = struct {
 		result1 version.DatabaseServerVersion
@@ -67,6 +77,8 @@ func (fake *FakeServerVersionDetector) GetVersionReturns(result1 version.Databas
 }
 
 func (fake *FakeServerVersionDetector) GetVersionReturnsOnCall(i int, result1 version.DatabaseServerVersion, result2 error) {
+	fake.getVersionMutex.Lock()
+	defer fake.getVersionMutex.Unlock()
 	fake.GetVersionStub = nil
 	if fake.getVersionReturnsOnCall == nil {
 		fake.getVersionReturnsOnCall = make(map[int]struct {
