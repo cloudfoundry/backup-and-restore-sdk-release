@@ -19,10 +19,10 @@ package main
 import (
 	"log"
 
-	"github.com/cloudfoundry-incubator/database-backup-restore/config"
-	"github.com/cloudfoundry-incubator/database-backup-restore/database"
-	"github.com/cloudfoundry-incubator/database-backup-restore/mysql"
-	"github.com/cloudfoundry-incubator/database-backup-restore/postgres"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/config"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/database"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/mysql"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/postgres"
 )
 
 func main() {

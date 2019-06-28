@@ -6,8 +6,8 @@ import (
 
 	"io/ioutil"
 
-	"github.com/cloudfoundry-incubator/database-backup-restore/config"
-	"github.com/cloudfoundry-incubator/database-backup-restore/runner"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/config"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/runner"
 )
 
 type Restorer struct {

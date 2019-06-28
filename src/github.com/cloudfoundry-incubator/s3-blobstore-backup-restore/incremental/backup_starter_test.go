@@ -7,8 +7,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental/fakes"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/s3-blobstore-backup-restore/incremental"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/s3-blobstore-backup-restore/incremental/fakes"
 )
 
 var _ = Describe("BackupStarter", func() {

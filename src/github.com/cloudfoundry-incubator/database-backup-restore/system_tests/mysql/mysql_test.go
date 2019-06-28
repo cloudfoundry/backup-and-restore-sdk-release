@@ -9,7 +9,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
-	. "github.com/cloudfoundry-incubator/database-backup-restore/system_tests/utils"
+	. "github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/system_tests/utils"
 )
 
 var _ = Describe("mysql", func() {

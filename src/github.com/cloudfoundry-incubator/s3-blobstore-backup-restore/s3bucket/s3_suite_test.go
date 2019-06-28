@@ -3,7 +3,7 @@ package s3bucket_test
 import (
 	"os"
 
-	. "github.com/cloudfoundry-incubator/backup-and-restore-sdk-release-system-tests"
+	. "github.com/cloudfoundry-incubator/backup-and-restore-sdk/backup-and-restore-sdk-release-system-tests"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 

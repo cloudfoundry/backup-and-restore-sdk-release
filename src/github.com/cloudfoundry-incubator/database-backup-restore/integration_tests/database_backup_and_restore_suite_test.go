@@ -54,7 +54,7 @@ var fakeMariaDBDump *binmock.Mock
 var _ = BeforeSuite(func() {
 	var err error
 	compiledSDKPath, err = gexec.Build(
-		"github.com/cloudfoundry-incubator/database-backup-restore/cmd/database-backup-restore")
+		"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/cmd/database-backup-restore")
 	Expect(err).NotTo(HaveOccurred())
 
 	fakePgClient = binmock.NewBinMock(Fail)

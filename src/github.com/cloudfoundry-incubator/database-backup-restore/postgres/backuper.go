@@ -1,7 +1,7 @@
 package postgres
 
 import (
-	"github.com/cloudfoundry-incubator/database-backup-restore/config"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/config"
 )
 
 type Backuper struct {

@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/versioned"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/s3-blobstore-backup-restore/versioned"
 )
 
 type FakeArtifact struct {

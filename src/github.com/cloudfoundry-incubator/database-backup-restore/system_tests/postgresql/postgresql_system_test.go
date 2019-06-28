@@ -25,7 +25,7 @@ import (
 
 	"os"
 
-	. "github.com/cloudfoundry-incubator/database-backup-restore/system_tests/utils"
+	. "github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/system_tests/utils"
 
 	"strconv"
 

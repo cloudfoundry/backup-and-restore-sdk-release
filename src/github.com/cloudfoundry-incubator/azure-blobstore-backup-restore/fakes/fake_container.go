@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	azure "github.com/cloudfoundry-incubator/azure-blobstore-backup-restore"
+	azure "github.com/cloudfoundry-incubator/backup-and-restore-sdk/azure-blobstore-backup-restore"
 )
 
 type FakeContainer struct {

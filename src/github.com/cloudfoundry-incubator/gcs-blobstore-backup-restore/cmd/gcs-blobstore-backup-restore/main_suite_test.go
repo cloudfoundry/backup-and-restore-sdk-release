@@ -16,7 +16,7 @@ func TestGcsBlobstoreBackupRestore(t *testing.T) {
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {
-	binaryPath, err := gexec.Build("github.com/cloudfoundry-incubator/gcs-blobstore-backup-restore/cmd/gcs-blobstore-backup-restore")
+	binaryPath, err := gexec.Build("github.com/cloudfoundry-incubator/backup-and-restore-sdk/gcs-blobstore-backup-restore/cmd/gcs-blobstore-backup-restore")
 	Expect(err).NotTo(HaveOccurred())
 
 	return []byte(binaryPath)

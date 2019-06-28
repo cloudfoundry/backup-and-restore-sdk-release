@@ -3,7 +3,7 @@ package versioned
 import (
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/s3-blobstore-backup-restore/s3bucket"
 )
 
 type Backuper struct {

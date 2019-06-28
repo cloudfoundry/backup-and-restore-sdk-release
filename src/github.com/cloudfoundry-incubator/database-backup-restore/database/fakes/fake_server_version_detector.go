@@ -4,9 +4,9 @@ package fakes
 import (
 	"sync"
 
-	"github.com/cloudfoundry-incubator/database-backup-restore/config"
-	"github.com/cloudfoundry-incubator/database-backup-restore/database"
-	"github.com/cloudfoundry-incubator/database-backup-restore/version"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/config"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/database"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/version"
 )
 
 type FakeServerVersionDetector struct {

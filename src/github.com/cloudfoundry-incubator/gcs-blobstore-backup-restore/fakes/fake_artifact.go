@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	gcs "github.com/cloudfoundry-incubator/gcs-blobstore-backup-restore"
+	gcs "github.com/cloudfoundry-incubator/backup-and-restore-sdk/gcs-blobstore-backup-restore"
 )
 
 type FakeBackupArtifact struct {

@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/unversioned"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/s3-blobstore-backup-restore/unversioned"
 
 	"encoding/json"
 	"io/ioutil"
@@ -14,8 +14,8 @@ import (
 
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/versioned"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/s3-blobstore-backup-restore/incremental"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/s3-blobstore-backup-restore/versioned"
 )
 
 type CommandFlags struct {

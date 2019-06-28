@@ -5,7 +5,7 @@ import (
 
 	"strings"
 
-	"github.com/cloudfoundry-incubator/database-backup-restore/config"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/config"
 )
 
 //go:generate counterfeiter -o fakes/fake_table_checker.go . TableChecker

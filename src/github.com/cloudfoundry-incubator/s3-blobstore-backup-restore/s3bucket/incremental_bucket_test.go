@@ -3,7 +3,7 @@ package s3bucket_test
 import (
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/s3bucket"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/s3-blobstore-backup-restore/s3bucket"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

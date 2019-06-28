@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/incremental"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/s3-blobstore-backup-restore/incremental"
 
 	. "github.com/onsi/gomega/gexec"
 
@@ -30,7 +30,7 @@ import (
 
 	"os"
 
-	. "github.com/cloudfoundry-incubator/backup-and-restore-sdk-release-system-tests"
+	. "github.com/cloudfoundry-incubator/backup-and-restore-sdk/backup-and-restore-sdk-release-system-tests"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

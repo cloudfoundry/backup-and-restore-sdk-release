@@ -1,7 +1,7 @@
 package postgresql_mutual_tls_test
 
 import (
-	. "github.com/cloudfoundry-incubator/database-backup-restore/system_tests/utils"
+	. "github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/system_tests/utils"
 
 	"fmt"
 	"os"

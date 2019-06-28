@@ -3,10 +3,10 @@ package database
 import (
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/database-backup-restore/config"
-	"github.com/cloudfoundry-incubator/database-backup-restore/mysql"
-	"github.com/cloudfoundry-incubator/database-backup-restore/postgres"
-	"github.com/cloudfoundry-incubator/database-backup-restore/version"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/config"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/mysql"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/postgres"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/version"
 )
 
 type InteractorFactory struct {

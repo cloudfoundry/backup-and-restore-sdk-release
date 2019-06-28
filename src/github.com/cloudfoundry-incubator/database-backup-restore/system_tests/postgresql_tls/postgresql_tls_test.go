@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	. "github.com/cloudfoundry-incubator/database-backup-restore/system_tests/utils"
+	. "github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/system_tests/utils"
 	"github.com/onsi/gomega/gexec"
 
 	"strconv"

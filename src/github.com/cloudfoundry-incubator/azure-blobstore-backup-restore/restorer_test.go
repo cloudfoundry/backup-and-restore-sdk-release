@@ -3,8 +3,8 @@ package azure_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/azure-blobstore-backup-restore"
-	"github.com/cloudfoundry-incubator/azure-blobstore-backup-restore/fakes"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/azure-blobstore-backup-restore"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/azure-blobstore-backup-restore/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

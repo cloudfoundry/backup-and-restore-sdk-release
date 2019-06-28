@@ -3,9 +3,9 @@ package database_test
 import (
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/database-backup-restore/config"
-	"github.com/cloudfoundry-incubator/database-backup-restore/database"
-	"github.com/cloudfoundry-incubator/database-backup-restore/database/fakes"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/config"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/database"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/database-backup-restore/database/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

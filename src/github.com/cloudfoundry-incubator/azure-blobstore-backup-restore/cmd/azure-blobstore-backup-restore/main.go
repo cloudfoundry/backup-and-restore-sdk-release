@@ -4,7 +4,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/cloudfoundry-incubator/azure-blobstore-backup-restore"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/azure-blobstore-backup-restore"
 )
 
 func main() {

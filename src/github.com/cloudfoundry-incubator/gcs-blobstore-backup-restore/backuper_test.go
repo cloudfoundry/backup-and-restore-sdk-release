@@ -8,8 +8,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/cloudfoundry-incubator/gcs-blobstore-backup-restore"
-	"github.com/cloudfoundry-incubator/gcs-blobstore-backup-restore/fakes"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/gcs-blobstore-backup-restore"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/gcs-blobstore-backup-restore/fakes"
 )
 
 var _ = Describe("Backuper", func() {

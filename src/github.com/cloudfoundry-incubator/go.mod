@@ -1,4 +1,4 @@
-module github.com/cloudfoundry-incubator
+module github.com/cloudfoundry-incubator/backup-and-restore-sdk
 
 go 1.12
 

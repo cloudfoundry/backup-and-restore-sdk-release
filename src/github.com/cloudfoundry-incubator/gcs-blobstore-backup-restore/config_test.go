@@ -5,7 +5,7 @@ import (
 
 	"os"
 
-	"github.com/cloudfoundry-incubator/gcs-blobstore-backup-restore"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/gcs-blobstore-backup-restore"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

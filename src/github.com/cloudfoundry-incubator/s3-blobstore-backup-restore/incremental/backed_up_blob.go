@@ -1,7 +1,7 @@
 package incremental
 
 import (
-	"github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/blobpath"
+	"github.com/cloudfoundry-incubator/backup-and-restore-sdk/s3-blobstore-backup-restore/blobpath"
 )
 
 type BackedUpBlob struct {
