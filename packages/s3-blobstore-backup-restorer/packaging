@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Copyright (C) 2017-Present Pivotal Software, Inc. All rights reserved.
 #
 # This program and the accompanying materials are made available under
@@ -14,14 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
-source /var/vcap/packages/golang-1-linux/bosh/compile.env
+set -euo pipefail
 
-mkdir -p ${BOSH_INSTALL_TARGET}/src
-cp -a . ${BOSH_INSTALL_TARGET}/src
+# shellcheck source=../../src/bosh-go.bash
+source bosh-go.bash
 
-export GOPATH=$BOSH_INSTALL_TARGET
+cd ./s3-blobstore-backup-restore
 
-go install github.com/cloudfoundry-incubator/s3-blobstore-backup-restore/cmd/s3-blobstore-backup-restore
-
-rm -rf ${BOSH_INSTALL_TARGET}/src ${BOSH_INSTALL_TARGET}/pkg
+go build -mod vendor -o "${BOSH_INSTALL_TARGET}/bin/s3-blobstore-backup-restore" ./cmd/s3-blobstore-backup-restore

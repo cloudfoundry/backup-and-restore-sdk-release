@@ -7,3 +7,4 @@ export GOPATH; GOPATH="$( readlink -nf ./gopath )"
 
 export GOROOT; GOROOT="$( readlink -nf /var/vcap/packages/golang )"
 export PATH="${GOROOT}/bin:${PATH}"
+
