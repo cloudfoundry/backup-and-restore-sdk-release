@@ -16,7 +16,7 @@ func TestGcsBlobstoreBackupRestore(t *testing.T) {
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {
-	binaryPath, err := gexec.Build("s3-blobstore-backup-restore/cmd/s3-blobstore-backup-restore")
+	binaryPath, err := gexec.Build("s3-blobstore-backup-restore/cmd/s3-blobstore-backup-restore", "-mod", "vendor")
 	Expect(err).NotTo(HaveOccurred())
 
 	return []byte(binaryPath)
