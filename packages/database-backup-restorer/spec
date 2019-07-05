@@ -7,10 +7,5 @@ dependencies:
 - golang-1-linux
 
 files:
-- github.com/cloudfoundry-incubator/database-backup-restore/cmd/database-backup-restore/*.go
-- github.com/cloudfoundry-incubator/database-backup-restore/config/*.go
-- github.com/cloudfoundry-incubator/database-backup-restore/database/*.go
-- github.com/cloudfoundry-incubator/database-backup-restore/mysql/*.go
-- github.com/cloudfoundry-incubator/database-backup-restore/postgres/*.go
-- github.com/cloudfoundry-incubator/database-backup-restore/runner/*.go
-- github.com/cloudfoundry-incubator/database-backup-restore/version/*.go
+- 'database-backup-restore/**/*'
+- 'bosh-go.bash'
