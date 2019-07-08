@@ -9,6 +9,6 @@ export GOCACHE=/tmp/gocache
 # that ./gopath is a GOPATH.
 export GOPATH; GOPATH="$( readlink -nf ./gopath )"
 
-export GOROOT; GOROOT="$( readlink -nf /var/vcap/packages/golang )"
+export GOROOT; GOROOT="$( readlink -nf /var/vcap/packages/golang-1-linux )"
 export PATH="${GOROOT}/bin:${PATH}"
 
