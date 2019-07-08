@@ -141,7 +141,7 @@ func runTestWithBlobs(numberOfBlobs int) {
 		})
 
 		By("generating a complete backup artifact", func() {
-			session := instance.Run(fmt.Sprintf("cat %s/%s", instanceArtifactDirPath, "blobstore.json"))
+			session := instance.Run(fmt.Sprintf("sudo cat %s/%s", instanceArtifactDirPath, "blobstore.json"))
 			Expect(session).Should(gexec.Exit(0))
 			fileContents := string(session.Out.Contents())
 
