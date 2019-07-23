@@ -287,10 +287,10 @@ var _ = Describe("InteractorFactory", func() {
 				action = "backup"
 			})
 
-			Context("when the version is detected as MariaDB 10.*", func() {
+			Context("when the version is detected as MariaDB 10.1.30", func() {
 				BeforeEach(func() {
 					mysqlServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"mariadb", version.SemanticVersion{Major: "10", Minor: "3"}}, nil)
+						version.DatabaseServerVersion{"mariadb", version.SemanticVersion{Major: "10", Minor: "1", Patch: "30"}}, nil)
 				})
 
 				It("builds a mysql.Backuper", func() {
@@ -379,12 +379,12 @@ var _ = Describe("InteractorFactory", func() {
 				action = "restore"
 			})
 
-			Context("when the version is detected as MariaDB 10.*", func() {
+			Context("when the version is detected as MariaDB 10.1.30", func() {
 				BeforeEach(func() {
 					mysqlServerVersionDetector.GetVersionReturns(
 						version.DatabaseServerVersion{
 							"mariadb",
-							version.SemanticVersion{Major: "10", Minor: "3"}}, nil)
+							version.SemanticVersion{Major: "10", Minor: "1", Patch: "30"}}, nil)
 				})
 
 				It("builds a mysql.Restorer", func() {
