@@ -17,34 +17,35 @@
 package postgresql
 
 import (
+	"fmt"
+	"os"
+	"strconv"
+
+	_ "github.com/lib/pq"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 
-	"fmt"
-
-	"os"
-
 	. "database-backup-restore/system_tests/utils"
-
-	"strconv"
-
-	_ "github.com/lib/pq"
 )
 
-var pgConnection *PostgresConnection
+var (
+	pgConnection *PostgresConnection
 
-var postgresHostName string
-var postgresUsername string
-var postgresPassword string
-var postgresPort int
+	postgresHostName string
+	postgresUsername string
+	postgresPassword string
+	postgresPort     int
 
-var brJob JobInstance
+	brJob JobInstance
+)
 
 var _ = Describe("postgres", func() {
-	var databaseName string
-	var dbDumpPath string
-	var configPath string
+	var (
+		databaseName string
+		dbDumpPath   string
+		configPath   string
+	)
 
 	BeforeSuite(func() {
 		brJob = JobInstance{
