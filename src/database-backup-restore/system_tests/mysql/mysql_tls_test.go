@@ -15,12 +15,14 @@ import (
 )
 
 var _ = Describe("mysql with tls", func() {
-	var dbDumpPath string
-	var configPath string
-	var databaseName string
-	var mysqlSslUsername string
-	var mysqlMutualTlsUsername string
-	var configJson string
+	var (
+		dbDumpPath             string
+		configPath             string
+		databaseName           string
+		mysqlSslUsername       string
+		mysqlMutualTlsUsername string
+		configJson             string
+	)
 
 	BeforeEach(func() {
 		if os.Getenv("TEST_TLS") == "false" {

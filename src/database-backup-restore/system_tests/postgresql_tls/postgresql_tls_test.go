@@ -3,33 +3,33 @@ package postgresql_tls_test
 import (
 	"fmt"
 	"os"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
-	. "database-backup-restore/system_tests/utils"
-	"github.com/onsi/gomega/gexec"
-
 	"strconv"
 
 	_ "github.com/lib/pq"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gexec"
+
+	. "database-backup-restore/system_tests/utils"
 )
 
 var _ = Describe("postgres with tls", func() {
-	var dbDumpPath string
-	var configPath string
-	var databaseName string
-	var configJson string
+	var (
+		dbDumpPath   string
+		configPath   string
+		databaseName string
+		configJson   string
 
-	var pgConnection *PostgresConnection
+		pgConnection *PostgresConnection
 
-	var postgresHostName string
-	var postgresUsername string
-	var postgresPassword string
-	var postgresPort int
-	var postgresCaCert string
+		postgresHostName string
+		postgresUsername string
+		postgresPassword string
+		postgresPort     int
+		postgresCaCert   string
 
-	var brJob JobInstance
+		brJob JobInstance
+	)
 
 	BeforeSuite(func() {
 		brJob = JobInstance{

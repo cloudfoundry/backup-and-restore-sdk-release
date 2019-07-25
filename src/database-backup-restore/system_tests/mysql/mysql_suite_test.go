@@ -1,35 +1,34 @@
 package mysql
 
 import (
+	"database/sql"
+	"os"
+	"strconv"
+	"testing"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"database/sql"
-	"os"
-	"testing"
-
 	"github.com/onsi/gomega/gexec"
-
-	"strconv"
 
 	. "database-backup-restore/system_tests/utils"
 )
 
-var proxySession *gexec.Session
-var connection *sql.DB
+var (
+	proxySession *gexec.Session
+	connection   *sql.DB
 
-var mysqlHostName string
-var mysqlNonSslUsername string
-var mysqlPassword string
-var mysqlPort int
+	mysqlHostName       string
+	mysqlNonSslUsername string
+	mysqlPassword       string
+	mysqlPort           int
 
-var mysqlCaCert string
-var mysqlClientCert string
-var mysqlClientKey string
+	mysqlCaCert     string
+	mysqlClientCert string
+	mysqlClientKey  string
 
-var brJob JobInstance
+	brJob JobInstance
+)
 
 func TestMysql(t *testing.T) {
 	RegisterFailHandler(Fail)

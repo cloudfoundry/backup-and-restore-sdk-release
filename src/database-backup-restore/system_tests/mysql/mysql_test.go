@@ -3,19 +3,20 @@ package mysql
 import (
 	"fmt"
 
+	_ "github.com/go-sql-driver/mysql"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
-
-	_ "github.com/go-sql-driver/mysql"
 
 	. "database-backup-restore/system_tests/utils"
 )
 
 var _ = Describe("mysql", func() {
-	var dbDumpPath string
-	var configPath string
-	var databaseName string
+	var (
+		dbDumpPath   string
+		configPath   string
+		databaseName string
+	)
 
 	BeforeEach(func() {
 		disambiguationString := DisambiguationString()

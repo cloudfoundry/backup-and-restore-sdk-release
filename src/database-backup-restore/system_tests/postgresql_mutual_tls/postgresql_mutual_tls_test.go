@@ -1,41 +1,40 @@
 package postgresql_mutual_tls_test
 
 import (
-	. "database-backup-restore/system_tests/utils"
-
 	"fmt"
+	"io/ioutil"
 	"os"
-
 	"strconv"
 
+	_ "github.com/lib/pq"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 
-	"io/ioutil"
-
-	_ "github.com/lib/pq"
+	. "database-backup-restore/system_tests/utils"
 )
 
 var _ = Describe("postgres with mutual tls", func() {
-	var dbDumpPath string
-	var configPath string
-	var databaseName string
-	var configJson string
+	var (
+		dbDumpPath   string
+		configPath   string
+		databaseName string
+		configJson   string
 
-	var pgConnection *PostgresConnection
+		pgConnection *PostgresConnection
 
-	var postgresHostName string
-	var postgresUsername string
-	var postgresPassword string
-	var postgresPort int
-	var postgresCaCert string
-	var postgresClientCert string
-	var postgresClientKey string
-	var postgresClientCertPath string
-	var postgresClientKeyPath string
+		postgresHostName       string
+		postgresUsername       string
+		postgresPassword       string
+		postgresPort           int
+		postgresCaCert         string
+		postgresClientCert     string
+		postgresClientKey      string
+		postgresClientCertPath string
+		postgresClientKeyPath  string
 
-	var brJob JobInstance
+		brJob JobInstance
+	)
 
 	BeforeSuite(func() {
 		brJob = JobInstance{
