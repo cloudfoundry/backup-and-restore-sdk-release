@@ -124,9 +124,9 @@ var _ = Describe("postgres with mutual tls", func() {
 
 	Context("when TLS info is provided in the config", func() {
 		Context("and host verification is not skipped", func() {
-			if os.Getenv("TEST_TLS_VERIFY_IDENTITY") == "false" {
-				return
-			}
+			BeforeEach(func() {
+				maybeSkipTLSVerifyIdentityTests()
+			})
 
 			Context("and the CA cert is correct", func() {
 				BeforeEach(func() {

@@ -71,3 +71,9 @@ var _ = Describe("mysql", func() {
 		}
 	})
 })
+
+func maybeSkipTLSVerifyIdentityTests() {
+	if os.Getenv("TEST_TLS_VERIFY_IDENTITY") == "false" {
+		Skip("Skipping TLS verify identity tests")
+	}
+}

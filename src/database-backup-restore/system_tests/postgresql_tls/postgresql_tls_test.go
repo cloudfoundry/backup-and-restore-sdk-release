@@ -1,4 +1,4 @@
-package postgresql_tls
+package postgresql_tls_test
 
 import (
 	"fmt"
@@ -137,12 +137,9 @@ var _ = Describe("postgres with tls", func() {
 
 	Context("when TLS info is provided in the config", func() {
 		Context("And host verification is not skipped", func() {
-			if os.Getenv("TEST_TLS_VERIFY_IDENTITY") == "false" {
-				fmt.Println("**********************************************")
-				fmt.Println("Not testing TLS with Verify Identity")
-				fmt.Println("**********************************************")
-				return
-			}
+			BeforeEach(func() {
+				maybeSkipTLSVerifyIdentityTests()
+			})
 
 			Context("And the CA cert is correct", func() {
 				BeforeEach(func() {

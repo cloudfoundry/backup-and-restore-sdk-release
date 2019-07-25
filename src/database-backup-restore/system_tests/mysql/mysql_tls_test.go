@@ -4,25 +4,17 @@ import (
 	"fmt"
 	"net"
 	"os"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
-	_ "github.com/go-sql-driver/mysql"
-
 	"strings"
 
-	. "database-backup-restore/system_tests/utils"
+	_ "github.com/go-sql-driver/mysql"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+
+	. "database-backup-restore/system_tests/utils"
 )
 
 var _ = Describe("mysql with tls", func() {
-	if os.Getenv("TEST_TLS") == "false" {
-		fmt.Println("**********************************************")
-		fmt.Println("Not testing TLS")
-		fmt.Println("**********************************************")
-		return
-	}
 	var dbDumpPath string
 	var configPath string
 	var databaseName string
@@ -31,6 +23,10 @@ var _ = Describe("mysql with tls", func() {
 	var configJson string
 
 	BeforeEach(func() {
+		if os.Getenv("TEST_TLS") == "false" {
+			Skip("Skipping TLS tests")
+		}
+
 		disambiguationString := DisambiguationString()
 		configPath = "/tmp/config" + disambiguationString
 		dbDumpPath = "/tmp/artifact" + disambiguationString
@@ -102,12 +98,10 @@ var _ = Describe("mysql with tls", func() {
 
 		Context("when TLS info is provided in the config", func() {
 			Context("and host verification is not skipped", func() {
-				if os.Getenv("TEST_TLS_VERIFY_IDENTITY") == "false" {
-					fmt.Println("**********************************************")
-					fmt.Println("Not testing TLS with Verify Identity")
-					fmt.Println("**********************************************")
-					return
-				}
+				BeforeEach(func() {
+					maybeSkipTLSVerifyIdentityTests()
+				})
+
 				Context("and the CA cert is correct", func() {
 					BeforeEach(func() {
 						configJson = fmt.Sprintf(
@@ -257,13 +251,11 @@ var _ = Describe("mysql with tls", func() {
 	})
 
 	Context("when the db user requires TLS and Mutual TLS", func() {
-		if os.Getenv("TEST_TLS_MUTUAL_TLS") == "false" {
-			fmt.Println("**********************************************")
-			fmt.Println("Not testing TLS with Mutual TLS")
-			fmt.Println("**********************************************")
-			return
-		}
 		BeforeEach(func() {
+			if os.Getenv("TEST_TLS_MUTUAL_TLS") == "false" {
+				Skip("Skipping mutual TLS tests")
+			}
+
 			RunSQLCommand(fmt.Sprintf("GRANT ALL PRIVILEGES ON %s.* TO %s REQUIRE SSL;", databaseName, mysqlMutualTlsUsername), connection)
 			RunSQLCommand(fmt.Sprintf("GRANT ALL PRIVILEGES ON %s.* TO %s REQUIRE X509;", databaseName, mysqlMutualTlsUsername), connection)
 		})
@@ -295,9 +287,10 @@ var _ = Describe("mysql with tls", func() {
 
 		Context("when TLS info is provided in the config", func() {
 			Context("and host verification is not skipped", func() {
-				if os.Getenv("TEST_TLS_VERIFY_IDENTITY") == "false" {
-					return
-				}
+				BeforeEach(func() {
+					maybeSkipTLSVerifyIdentityTests()
+				})
+
 				Context("and the CA cert is correct", func() {
 					BeforeEach(func() {
 						configJson = fmt.Sprintf(
@@ -460,9 +453,10 @@ var _ = Describe("mysql with tls", func() {
 
 	Context("when the db user does not require TLS", func() {
 		Context("and host verification is not skipped", func() {
-			if os.Getenv("TEST_TLS_VERIFY_IDENTITY") == "false" {
-				return
-			}
+			BeforeEach(func() {
+				maybeSkipTLSVerifyIdentityTests()
+			})
+
 			Context("and the CA cert is correct", func() {
 				BeforeEach(func() {
 					configJson = fmt.Sprintf(
