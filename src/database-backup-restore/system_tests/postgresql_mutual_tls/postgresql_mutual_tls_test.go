@@ -86,8 +86,8 @@ var _ = Describe("postgres with mutual tls", func() {
 		pgConnection.RunSQLCommand("DROP DATABASE " + databaseName)
 		pgConnection.Close()
 
-		os.Remove(postgresClientCertPath)
-		os.Remove(postgresClientKeyPath)
+		Expect(os.Remove(postgresClientCertPath)).To(Succeed())
+		Expect(os.Remove(postgresClientKeyPath)).To(Succeed())
 
 		brJob.RunOnVMAndSucceed(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath))
 	})
@@ -291,6 +291,6 @@ func writeToFile(contents string) string {
 	file, err := ioutil.TempFile("", "")
 	Expect(err).NotTo(HaveOccurred())
 	path := file.Name()
-	ioutil.WriteFile(path, []byte(contents), 0777)
+	Expect(ioutil.WriteFile(path, []byte(contents), 0777)).To(Succeed())
 	return path
 }
