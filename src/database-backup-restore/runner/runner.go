@@ -33,8 +33,8 @@ func (c Command) WithStdin(stdin io.Reader) Command {
 }
 
 func (c Command) Run() ([]byte, []byte, error) {
-	outb := bytes.NewBuffer([]byte{})
-	errb := bytes.NewBuffer([]byte{})
+	outb := new(bytes.Buffer)
+	errb := new(bytes.Buffer)
 
 	command := exec.Command(c.cmd, c.params...)
 
