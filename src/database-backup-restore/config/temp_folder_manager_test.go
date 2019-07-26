@@ -10,8 +10,10 @@ import (
 )
 
 var _ = Describe("TempFolderManager", func() {
-	var tempFolderManager TempFolderManager
-	var err error
+	var (
+		tempFolderManager TempFolderManager
+		err               error
+	)
 
 	BeforeEach(func() {
 		tempFolderManager, err = NewTempFolderManager()
