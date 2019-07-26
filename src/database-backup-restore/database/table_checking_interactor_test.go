@@ -3,20 +3,23 @@ package database_test
 import (
 	"fmt"
 
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+
 	"database-backup-restore/config"
 	"database-backup-restore/database"
 	"database-backup-restore/database/fakes"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("TableCheckingInteractor", func() {
-	var tableChecker *fakes.FakeTableChecker
-	var interactor *fakes.FakeInteractor
-	var tableCheckingInteractor database.TableCheckingInteractor
-	var returnError error
-	var cfg config.ConnectionConfig
-	artifactPath := "/artifact/file/path"
+	var (
+		tableChecker            *fakes.FakeTableChecker
+		interactor              *fakes.FakeInteractor
+		tableCheckingInteractor database.TableCheckingInteractor
+		returnError             error
+		cfg                     config.ConnectionConfig
+		artifactPath            = "/artifact/file/path"
+	)
 
 	BeforeEach(func() {
 		tableChecker = new(fakes.FakeTableChecker)
