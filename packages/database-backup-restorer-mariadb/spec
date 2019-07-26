@@ -20,4 +20,4 @@ name: database-backup-restorer-mariadb
 dependencies: []
 
 files:
-- mariadb/mariadb-10.1.37.tar.gz
+- mariadb/mariadb-10.2.25.tar.gz
