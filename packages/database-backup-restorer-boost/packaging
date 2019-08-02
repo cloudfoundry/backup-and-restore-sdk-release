@@ -14,21 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
----
-name: database-backup-restorer
+# abort script on any command that exits with a non zero value
+set -e
 
-templates:
-  backup: bin/backup
-  restore: bin/restore
-
-packages:
-- database-backup-restorer
-- database-backup-restorer-postgres-9.4
-- database-backup-restorer-postgres-9.6
-- database-backup-restorer-postgres-10
-- database-backup-restorer-postgres-11
-- database-backup-restorer-mariadb
-- database-backup-restorer-mysql-5.6
-- database-backup-restorer-mysql-5.7
-
-properties: {}
+tar -xzf boost/boost_1_59_0.tar.gz -C ${BOSH_INSTALL_TARGET}
