@@ -17,4 +17,4 @@
 # abort script on any command that exits with a non zero value
 set -e
 
-tar -xzf boost/boost_1_70_0.tar.gz -C ${BOSH_INSTALL_TARGET}
+tar -xzf boost/boost_1_59_0.tar.gz -C ${BOSH_INSTALL_TARGET}
