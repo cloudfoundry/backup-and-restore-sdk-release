@@ -28,7 +28,6 @@ packages:
 - database-backup-restorer-postgres-10
 - database-backup-restorer-postgres-11
 - database-backup-restorer-mariadb
-- database-backup-restorer-mysql-5.5
 - database-backup-restorer-mysql-5.6
 - database-backup-restorer-mysql-5.7
 
