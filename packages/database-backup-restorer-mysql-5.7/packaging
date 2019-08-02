@@ -35,7 +35,7 @@ tar xzf mysql/mysql-${MYSQL_VERSION}.tar.gz
       -DWITH_WSREP=ON \
       -DWITH_INNODB_DISALLOW_WRITES=1 \
       -DWITH_PCRE=bundled \
-      -DWITH_BOOST=/var/vcap/packages/database-backup-restorer-boost/boost_1_70_0
+      -DWITH_BOOST=/var/vcap/packages/database-backup-restorer-boost/boost_1_59_0
 
   set +e
   make -j 3 > build.out 2> build.err
