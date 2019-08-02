@@ -6,10 +6,6 @@ mariadb/mariadb-10.2.26.tar.gz:
   size: 73037655
   object_id: 58884c84-f59f-4893-6898-37a3f5d265fa
   sha: sha256:152fe941c4f2a352b2b3a4db1ef64e70235fd9ff055af62ad7bda9f2b2191528
-mysql/mysql-5.5.62.tar.gz:
-  size: 21111902
-  object_id: 351569df-2663-49d4-5ae6-8e5fc9990d56
-  sha: b3df3c8c50b8655878cfbc288537f44715f6b060
 mysql/mysql-5.6.45.tar.gz:
   size: 32525559
   object_id: 74122cca-1eb0-48dc-5722-c11b1fe93bd5

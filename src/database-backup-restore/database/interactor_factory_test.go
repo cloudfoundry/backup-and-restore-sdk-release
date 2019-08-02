@@ -40,11 +40,6 @@ var _ = Describe("InteractorFactory", func() {
 			Restore: "mariadb_restore",
 			Client:  "mariadb_client",
 		},
-		Mysql55: config.UtilityPaths{
-			Dump:    "mysql_55_dump",
-			Restore: "mysql_55_restore",
-			Client:  "mysql_55_client",
-		},
 		Mysql56: config.UtilityPaths{
 			Dump:    "mysql_56_dump",
 			Restore: "mysql_56_restore",
@@ -304,23 +299,6 @@ var _ = Describe("InteractorFactory", func() {
 				})
 			})
 
-			Context("when the version is detected as MySQL 5.5.57", func() {
-				BeforeEach(func() {
-					mysqlServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"mysql", version.SemanticVersion{Major: "5", Minor: "5", Patch: "57"}}, nil)
-				})
-
-				It("builds a mysql.Backuper", func() {
-					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewBackuper(
-						connectionConfig,
-						"mysql_55_dump",
-						mysql.NewLegacySSLOptionsProvider(tempFolderManager),
-						mysql.NewEmptyAdditionalOptionsProvider(),
-					)))
-				})
-			})
-
 			Context("when the version is detected as MySQL 5.6.37", func() {
 				BeforeEach(func() {
 					mysqlServerVersionDetector.GetVersionReturns(
@@ -392,24 +370,6 @@ var _ = Describe("InteractorFactory", func() {
 					Expect(interactor).To(Equal(mysql.NewRestorer(
 						connectionConfig,
 						"mariadb_restore",
-						mysql.NewLegacySSLOptionsProvider(tempFolderManager)),
-					))
-				})
-			})
-
-			Context("when the version is detected as MySQL 5.5.57", func() {
-				BeforeEach(func() {
-					mysqlServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{
-							"mysql",
-							version.SemanticVersion{Major: "5", Minor: "5", Patch: "57"}}, nil)
-				})
-
-				It("builds a mysql.Restorer", func() {
-					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewRestorer(
-						connectionConfig,
-						"mysql_55_restore",
 						mysql.NewLegacySSLOptionsProvider(tempFolderManager)),
 					))
 				})

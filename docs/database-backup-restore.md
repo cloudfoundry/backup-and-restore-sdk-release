@@ -33,7 +33,7 @@ The SDK accepts a JSON document with the following fields:
 #### Supported Database Adapters
 
 * `postgres` (auto-detects versions between `9.4.x` and `9.6.x`)
-* `mysql` (auto-detects `MariaDB 10.1.x`, and `MySQL 5.5.x`, `5.6.x`, `5.7.x`. Any other `mysql` variants are not tested)
+* `mysql` (auto-detects `MariaDB 10.1.x`, and `MySQL 5.6.x`, `5.7.x`. Any other `mysql` variants are not tested)
 
 
 #### Deploying as an instance group

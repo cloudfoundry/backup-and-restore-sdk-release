@@ -90,7 +90,6 @@ var _ = BeforeEach(func() {
 		"MARIADB_CLIENT_PATH":   "non-existent",
 		"MARIADB_DUMP_PATH":     "non-existent",
 		"MYSQL_CLIENT_5_5_PATH": "non-existent",
-		"MYSQL_DUMP_5_5_PATH":   "non-existent",
 		"MYSQL_CLIENT_5_6_PATH": "non-existent",
 		"MYSQL_DUMP_5_6_PATH":   "non-existent",
 		"MYSQL_CLIENT_5_7_PATH": "non-existent",

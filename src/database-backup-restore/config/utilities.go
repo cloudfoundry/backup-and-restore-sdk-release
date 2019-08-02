@@ -17,7 +17,6 @@ type UtilitiesConfig struct {
 	Postgres10 UtilityPaths
 	Postgres11 UtilityPaths
 	Mariadb    UtilityPaths
-	Mysql55    UtilityPaths
 	Mysql56    UtilityPaths
 	Mysql57    UtilityPaths
 }
@@ -48,11 +47,6 @@ func GetUtilitiesConfigFromEnv() UtilitiesConfig {
 			Client:  lookupEnv("MARIADB_CLIENT_PATH"),
 			Dump:    lookupEnv("MARIADB_DUMP_PATH"),
 			Restore: lookupEnv("MARIADB_CLIENT_PATH"),
-		},
-		Mysql55: UtilityPaths{
-			Client:  lookupEnv("MYSQL_CLIENT_5_5_PATH"),
-			Dump:    lookupEnv("MYSQL_DUMP_5_5_PATH"),
-			Restore: lookupEnv("MYSQL_CLIENT_5_5_PATH"),
 		},
 		Mysql56: UtilityPaths{
 			Client:  lookupEnv("MYSQL_CLIENT_5_6_PATH"),
