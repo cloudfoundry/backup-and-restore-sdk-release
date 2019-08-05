@@ -17,13 +17,28 @@
 # abort script on any command that exits with a non zero value
 set -e
 
-MYSQL_VERSION=5.7.23
+MYSQL_VERSION=5.7.27
 MY_DIR=$(pwd)
+
+patch_file="$( mktemp )"
+echo '--- mysys/mf_iocache2.c 2019-08-05 09:42:13.000000000 +0000
++++ mysys/mf_iocache2.c.patched 2019-08-05 09:41:53.000000000 +0000
+@@ -17,6 +17,7 @@
+   More functions to be used with IO_CACHE files
+ */
+
++#include "mysql/psi/mysql_file.h"
+ #include "mysys_priv.h"
+ #include "my_sys.h"
+ #include <m_string.h>
+' > "$patch_file"
 
 tar xzf mysql/mysql-${MYSQL_VERSION}.tar.gz
 (
   set -e
   cd mysql-${MYSQL_VERSION}
+
+  patch mysys/mf_iocache2.c "$patch_file"
 
   mkdir bld
   cd bld
