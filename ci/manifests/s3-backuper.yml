@@ -20,9 +20,10 @@ name: "((deployment-name))"
 releases:
 - name: backup-and-restore-sdk
   version: latest
-- name: minio
-  version: 2019-02-06T21-16-36Z
-  url: https://bosh.io/d/github.com/minio/minio-boshrelease
+- name: "minio"
+  version: "2019-08-14T20-37-41Z"
+  url: "https://bosh.io/d/github.com/minio/minio-boshrelease?v=2019-08-14T20-37-41Z"
+  sha1: "a2d622702e70ad7653a1c3809f34d73c9798c7c3"
 - name: os-conf
   version: latest
   url: https://bosh.io/d/github.com/cloudfoundry/os-conf-release
