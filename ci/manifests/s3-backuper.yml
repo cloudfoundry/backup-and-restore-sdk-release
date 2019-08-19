@@ -21,9 +21,9 @@ releases:
 - name: backup-and-restore-sdk
   version: latest
 - name: "minio"
-  version: "2019-08-14T20-37-41Z"
-  url: "https://bosh.io/d/github.com/minio/minio-boshrelease?v=2019-08-14T20-37-41Z"
-  sha1: "a2d622702e70ad7653a1c3809f34d73c9798c7c3"
+  version: "2019-02-06T21-16-36Z"
+  url: "https://bosh.io/d/github.com/minio/minio-boshrelease?v=2019-02-06T21-16-36Z"
+  sha1: "19951d2d53d5057d6472427d6126386032b782c9"
 - name: os-conf
   version: latest
   url: https://bosh.io/d/github.com/cloudfoundry/os-conf-release
