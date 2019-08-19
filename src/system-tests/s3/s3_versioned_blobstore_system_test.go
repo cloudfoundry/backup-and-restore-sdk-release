@@ -167,7 +167,7 @@ var _ = Describe("S3 versioned backup and restore", func() {
 				" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
 
 			Expect(session).To(gexec.Exit(1))
-			Expect(session.Out.Contents()).To(ContainSubstring("is not versioned"))
+			Expect(string(session.Out.Contents())).To(ContainSubstring("is not versioned"))
 			Expect(backuperInstanceWithUnversionedBucket.Run("stat " + artifactDirPath + "/blobstore.json")).To(gexec.Exit(1))
 		})
 	})
@@ -188,9 +188,9 @@ var _ = Describe("S3 versioned backup and restore", func() {
 				" /var/vcap/jobs/s3-versioned-blobstore-backup-restorer/bin/bbr/backup")
 
 			Expect(session).To(gexec.Exit(1))
-			Expect(session.Out.Contents()).NotTo(ContainSubstring("CERTIFICATE_VERIFY_FAILED"))
-			Expect(session.Out.Contents()).NotTo(ContainSubstring("no such host"))
-			Expect(session.Out.Contents()).To(ContainSubstring("A header you provided implies functionality that is not implemented"))
+			Expect(string(session.Out.Contents())).NotTo(ContainSubstring("CERTIFICATE_VERIFY_FAILED"))
+			Expect(string(session.Out.Contents())).NotTo(ContainSubstring("no such host"))
+			Expect(string(session.Out.Contents())).To(ContainSubstring("A header you provided implies functionality that is not implemented"))
 		})
 	})
 
