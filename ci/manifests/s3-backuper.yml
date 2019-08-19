@@ -173,7 +173,7 @@ instance_groups:
   - name: minio-server
     release: minio
     properties:
-      ca_cert: "((minio_ca.certificate))"
+      ca_cert: "((minio_ca.ca))"
       server_cert: "((minio_ca.certificate))"
       server_key: "((minio_ca.private_key))"
       credential:
