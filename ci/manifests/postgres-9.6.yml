@@ -18,9 +18,10 @@
 name: ((deployment-name))
 
 releases:
-- name: postgres
-  version: 30
-  url: http://bosh.io/d/github.com/cloudfoundry/postgres-release?v=18
+- name: "postgres"
+  version: "30"
+  url: "https://bosh.io/d/github.com/cloudfoundry/postgres-release?v=30"
+  sha1: "a798999d29b9f5aa12035cff907b26674b491200"
 
 stemcells:
 - alias: xenial

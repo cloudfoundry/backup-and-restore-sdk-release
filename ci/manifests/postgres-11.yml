@@ -21,9 +21,10 @@ releases:
 - name: bpm
   version: latest
   url: https://bosh.io/d/github.com/cloudfoundry-incubator/bpm-release
-- name: postgres
-  version: 37
-  url: https://bosh.io/d/github.com/cloudfoundry/postgres-release
+- name: "postgres"
+  version: "37"
+  url: "https://bosh.io/d/github.com/cloudfoundry/postgres-release?v=37"
+  sha1: "0bffec6b98df81219a18ec8da0e19721be799eed"
 
 stemcells:
 - alias: xenial
