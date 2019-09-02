@@ -12,10 +12,10 @@ import (
 
 	"strconv"
 
-	"s3-blobstore-backup-restore/s3bucket"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"s3-blobstore-backup-restore/s3bucket"
 )
 
 type PutResponse struct {
@@ -128,11 +128,19 @@ func setUpVersionedBucket(region, endpoint string, creds s3bucket.AccessKey) str
 }
 
 func enableBucketVersioning(bucket, endpoint string, creds s3bucket.AccessKey) {
+	setBucketVersioning("Status=Enabled", bucket, endpoint, creds)
+}
+
+func disableBucketVersioning(bucket, endpoint string, creds s3bucket.AccessKey) {
+	setBucketVersioning("Status=Suspended", bucket, endpoint, creds)
+}
+
+func setBucketVersioning(versioningConfig, bucket, endpoint string, creds s3bucket.AccessKey) {
 	baseCmd := constructBaseCmd(endpoint)
 	baseCmd = append(baseCmd, "s3api",
 		"put-bucket-versioning",
 		"--bucket", bucket,
-		"--versioning-configuration", "Status=Enabled")
+		"--versioning-configuration", versioningConfig)
 
 	runAwsCommand(creds.Id, creds.Secret, baseCmd)
 }

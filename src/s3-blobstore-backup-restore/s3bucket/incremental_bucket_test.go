@@ -130,6 +130,40 @@ var _ = Describe("IncrementalBucket", func() {
 					))
 				})
 			})
+
+			Context("when the bucket was previously versioned but now is unversioned", func() {
+				var (
+					previouslyVersionedLiveBucketName string
+					previouslyVersionedLiveBucket     s3bucket.Bucket
+				)
+
+				BeforeEach(func() {
+					previouslyVersionedLiveBucketName = setUpVersionedBucket(LiveRegion, S3Endpoint, creds)
+					uploadFile(previouslyVersionedLiveBucketName, S3Endpoint, "path1/blob1", "blob1-content", creds)
+
+					disableBucketVersioning(previouslyVersionedLiveBucketName, S3Endpoint, creds)
+
+					var err error
+					previouslyVersionedLiveBucket, err = s3bucket.NewBucket(previouslyVersionedLiveBucketName, LiveRegion, S3Endpoint, creds, false)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				AfterEach(func() {
+					tearDownVersionedBucket(previouslyVersionedLiveBucketName, S3Endpoint, creds)
+				})
+
+				It("successfully copies the blob", func() {
+					blobs := listFiles(previouslyVersionedLiveBucketName, S3Endpoint, creds)
+					copyPath := "path1/blob1-copy"
+					Expect(blobs).NotTo(ContainElement(copyPath))
+
+					err := previouslyVersionedLiveBucket.CopyBlobWithinBucket("path1/blob1", copyPath)
+
+					Expect(err).NotTo(HaveOccurred())
+					actualContents := getFileContents(previouslyVersionedLiveBucketName, S3Endpoint, copyPath, creds)
+					Expect(actualContents).To(Equal("blob1-content"))
+				})
+			})
 		})
 
 		Describe("CopyBlobFromBucket", func() {

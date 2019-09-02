@@ -230,7 +230,11 @@ func (b Bucket) copyVersion(blobKey, versionID, destinationKey, originBucketName
 		return err
 	}
 
-	copySource := blobpath.Delimiter + originBucketName + blobpath.Delimiter + blobKey + "?versionId=" + versionID
+	copySource := blobpath.Delimiter + originBucketName + blobpath.Delimiter + blobKey
+	if versionID != "null" {
+		copySource = copySource + "?versionId=" + versionID
+	}
+
 	copySource = strings.Replace(copySource, blobpath.Delimiter+blobpath.Delimiter, blobpath.Delimiter, -1)
 
 	if sizeInMbs(blobSize) <= 1024 {
@@ -246,11 +250,15 @@ func (b Bucket) getBlobSize(bucketName, bucketRegion, blobKey, versionID string)
 		return 0, err
 	}
 
-	headObjectOutput, err := s3Client.HeadObject(&s3.HeadObjectInput{
-		Bucket:    aws.String(bucketName),
-		Key:       aws.String(blobKey),
-		VersionId: aws.String(versionID),
-	})
+	input := s3.HeadObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(blobKey),
+	}
+	if versionID != "null" {
+		input.SetVersionId(versionID)
+	}
+
+	headObjectOutput, err := s3Client.HeadObject(&input)
 
 	if err != nil {
 		return 0, fmt.Errorf("failed to get blob size for blob '%s' in bucket '%s': %s", blobKey, bucketName, err)
