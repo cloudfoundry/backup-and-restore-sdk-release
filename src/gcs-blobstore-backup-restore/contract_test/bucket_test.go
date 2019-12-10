@@ -6,6 +6,7 @@ import (
 	"gcs-blobstore-backup-restore/fakes"
 
 	"gcs-blobstore-backup-restore"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -276,7 +277,7 @@ var _ = Describe("Bucket", func() {
 			It("errors with a useful message", func() {
 				err := srcBucket.CopyBlobToBucket(dstBucket, "foobar", "copydir/file1")
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(ContainSubstring("failed to copy object: ")))
+				Expect(err).To(MatchError(And(ContainSubstring("failed to copy object:"), ContainSubstring("foobar"))))
 			})
 		})
 
