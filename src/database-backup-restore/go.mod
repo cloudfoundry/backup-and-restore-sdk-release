@@ -9,3 +9,5 @@ require (
 	github.com/pivotal-cf/go-binmock v0.0.0-20171027112700-f797157c64e9 // indirect
 	google.golang.org/appengine v1.6.1 // indirect
 )
+
+go 1.13
