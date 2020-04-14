@@ -43,7 +43,7 @@ type Version struct {
 }
 
 func NewBucket(bucketName, bucketRegion, endpoint string, accessKey AccessKey, useIAMProfile bool) (Bucket, error) {
-	s3Client, err := newS3Client(bucketRegion, endpoint, accessKey, useIAMProfile)
+	s3Client, err := newS3Client(bucketRegion, endpoint, accessKey, useIAMProfile, true)
 	if err != nil {
 		return Bucket{}, err
 	}
@@ -245,7 +245,7 @@ func (b Bucket) copyVersion(blobKey, versionID, destinationKey, originBucketName
 }
 
 func (b Bucket) getBlobSize(bucketName, bucketRegion, blobKey, versionID string) (int64, error) {
-	s3Client, err := newS3Client(bucketRegion, b.endpoint, b.accessKey, b.useIAMProfile)
+	s3Client, err := newS3Client(bucketRegion, b.endpoint, b.accessKey, b.useIAMProfile, true)
 	if err != nil {
 		return 0, err
 	}
@@ -361,7 +361,7 @@ func formatErrors(contextString string, errors []error) error {
 	return fmt.Errorf("%s: %s", contextString, strings.Join(errorStrings, "\n"))
 }
 
-func newS3Client(regionName string, endpoint string, accessKey AccessKey, useIAMProfile bool) (*s3.S3, error) {
+func newS3Client(regionName, endpoint string, accessKey AccessKey, useIAMProfile, usePathStyle bool) (*s3.S3, error) {
 	var creds = credentials.NewStaticCredentials(accessKey.Id, accessKey.Secret, "")
 
 	if useIAMProfile {
@@ -373,12 +373,12 @@ func newS3Client(regionName string, endpoint string, accessKey AccessKey, useIAM
 		creds = ec2rolecreds.NewCredentials(s)
 	}
 
-	awsSession, err := createSession(
-		regionName,
-		creds,
-		endpoint,
-		true,
-	)
+	awsSession, err := session.NewSession(&aws.Config{
+			Region: &regionName,
+			Credentials: creds,
+			Endpoint: aws.String(endpoint),
+			S3ForcePathStyle: aws.Bool(usePathStyle),
+		})
 
 	if err != nil {
 		return nil, err
@@ -387,13 +387,3 @@ func newS3Client(regionName string, endpoint string, accessKey AccessKey, useIAM
 	return s3.New(awsSession), nil
 }
 
-func createSession(regionName string, credentials *credentials.Credentials, endpoint string, pathStyle bool) (*session.Session, error) {
-	session, err := session.NewSession(&aws.Config{
-			Region: &regionName,
-			Credentials: credentials,
-			Endpoint: aws.String(endpoint),
-			S3ForcePathStyle: aws.Bool(pathStyle),
-		})
-
-	return session, err
-}

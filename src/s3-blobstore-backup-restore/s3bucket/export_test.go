@@ -1,3 +1,3 @@
 package s3bucket
 
-var CreateSessionImpl = createSession
+var NewS3ClientImpl = newS3Client
