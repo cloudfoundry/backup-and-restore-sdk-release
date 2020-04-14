@@ -8,25 +8,25 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Bucket", func() {
+var _ = Describe("Creating a session on a bucket", func() {
 
-	Context("Given a Path Style", func() {
-		FIt("adds that property to the config object", func() {
-			config := &aws.Config{
-				Region:           aws.String("foo"),
-				Credentials:      nil,
-				Endpoint:         aws.String("endpoint"),
-				S3ForcePathStyle: aws.Bool(true),
-			}
+	When("we want to use a path style bucket addresses", func() {
+		It("adds the appropriate property to the config object", func() {
 
-			session, _ := s3bucket.CreateSession(
-				*config.Region,
-				config.Credentials,
-				*config.Endpoint,
-				*config.S3ForcePathStyle)
+			session, err := s3bucket.CreateSession("", nil, "", true)
 
-			Expect(session.Config.S3ForcePathStyle).To(Equal(aws.Bool(false)))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(session.Config.S3ForcePathStyle).To(Equal(aws.Bool(true)))
 		})
 	})
 
+	When("we want to use a v-host style bucket addresses", func(){
+		It("adds the appropriate property to the config object", func() {
+
+			session, err := s3bucket.CreateSession("", nil, "", false)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(session.Config.S3ForcePathStyle).To(Equal(aws.Bool(false)))
+		})
+	})
 })
