@@ -123,6 +123,7 @@ func BuildBackupsToComplete(
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
+			true,
 		)
 		if err != nil {
 			return nil, err
