@@ -26,6 +26,7 @@ func BuildVersionedBuckets(config map[string]BucketConfig) (map[string]Bucket, e
 				Secret: bucketConfig.AwsSecretAccessKey,
 			},
 			bucketConfig.UseIAMProfile,
+			true,
 		)
 		if err != nil {
 			return nil, err

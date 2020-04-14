@@ -42,7 +42,7 @@ type Version struct {
 	IsLatest bool
 }
 
-func NewBucket(bucketName, bucketRegion, endpoint string, accessKey AccessKey, useIAMProfile bool) (Bucket, error) {
+func NewBucket(bucketName, bucketRegion, endpoint string, accessKey AccessKey, useIAMProfile, usePathStyle bool) (Bucket, error) {
 	s3Client, err := newS3Client(bucketRegion, endpoint, accessKey, useIAMProfile, true)
 	if err != nil {
 		return Bucket{}, err
