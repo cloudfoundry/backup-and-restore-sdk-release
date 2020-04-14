@@ -373,7 +373,7 @@ func newS3Client(regionName string, endpoint string, accessKey AccessKey, useIAM
 		creds = ec2rolecreds.NewCredentials(s)
 	}
 
-	awsSession, err := CreateSession(
+	awsSession, err := createSession(
 		regionName,
 		creds,
 		endpoint,
@@ -387,7 +387,7 @@ func newS3Client(regionName string, endpoint string, accessKey AccessKey, useIAM
 	return s3.New(awsSession), nil
 }
 
-func CreateSession(regionName string, credentials *credentials.Credentials, endpoint string, pathStyle bool) (*session.Session, error) {
+func createSession(regionName string, credentials *credentials.Credentials, endpoint string, pathStyle bool) (*session.Session, error) {
 	session, err := session.NewSession(&aws.Config{
 			Region: &regionName,
 			Credentials: credentials,
