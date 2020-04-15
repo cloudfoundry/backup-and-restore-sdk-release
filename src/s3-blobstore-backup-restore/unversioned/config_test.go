@@ -111,6 +111,27 @@ var _ = Describe("Unversioned", func() {
 			))
 		})
 
+		It("passes the appropriate path/vhost information from the config to the bucket builder", func() {
+			configs := map[string]unversioned.UnversionedBucketConfig{
+				"bucket1": unversioned.UnversionedBucketConfig{ UsePathStyle: true },
+				"bucket2": unversioned.UnversionedBucketConfig{ UsePathStyle: false},
+			}
+
+			usePathStyles := []bool{}
+			newBucketSpy := func(_, _, _ string, _ s3bucket.AccessKey, _, usePathStyle bool) (unversioned.Bucket, error) {
+				usePathStyles = append(usePathStyles, usePathStyle)
+				return fakeLiveBucket1, nil
+			}
+
+			_, err := unversioned.BuildBackupsToStart(configs, newBucketSpy)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(usePathStyles[0]).To(BeTrue(), "usePathStyle param to newBucket for live bucket1 should match bucket config")
+			Expect(usePathStyles[1]).To(BeTrue(), "usePathStyle param to newBucket for backup bucket1 should match bucket config")
+			Expect(usePathStyles[2]).To(BeFalse(), "usePathStyle param to newBucket for live bucket2 should match bucket config")
+			Expect(usePathStyles[3]).To(BeFalse(), "usePathStyle param to newBucket for backup bucket2 should match bucket config")
+		})
+
 		Context("when bucket initialisation fails", func() {
 			var (
 				newBucketFails unversioned.NewBucket
