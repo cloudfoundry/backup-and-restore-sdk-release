@@ -113,8 +113,8 @@ var _ = Describe("Unversioned", func() {
 
 		It("passes the appropriate path/vhost information from the config to the bucket builder", func() {
 			configs := map[string]unversioned.UnversionedBucketConfig{
-				"bucket1": unversioned.UnversionedBucketConfig{ UsePathStyle: true },
-				"bucket2": unversioned.UnversionedBucketConfig{ UsePathStyle: false},
+				"bucket1": unversioned.UnversionedBucketConfig{ ForcePathStyle: true },
+				"bucket2": unversioned.UnversionedBucketConfig{ ForcePathStyle: false},
 			}
 
 			usePathStyles := []bool{}
@@ -143,7 +143,7 @@ var _ = Describe("Unversioned", func() {
 					if bucketName == bucketToFail {
 						return nil, errors.New("oups")
 					} else {
-						return newBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile, s3bucket.UsePathStyleDuringTheRefactor)
+						return newBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile, s3bucket.ForcePathStyleDuringTheRefactor)
 					}
 				}
 			})
@@ -452,7 +452,7 @@ var _ = Describe("Unversioned", func() {
 					if bucketName == bucketToFail {
 						return nil, errors.New("oups")
 					} else {
-						return newBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile, s3bucket.UsePathStyleDuringTheRefactor)
+						return newBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile, s3bucket.ForcePathStyleDuringTheRefactor)
 					}
 				}
 			})
