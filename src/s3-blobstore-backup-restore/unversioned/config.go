@@ -23,7 +23,7 @@ type BackupBucketConfig struct {
 	Region string `json:"region"`
 }
 
-type NewBucket func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, usePathStyle bool) (Bucket, error)
+type NewBucket func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (Bucket, error)
 
 func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket NewBucket) (map[string]incremental.BackupToStart, error) {
 	backupsToStart := make(map[string]incremental.BackupToStart)

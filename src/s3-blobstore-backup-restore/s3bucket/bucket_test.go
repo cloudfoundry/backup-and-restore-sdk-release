@@ -12,7 +12,7 @@ import (
 )
 
 var _ = Describe("Creating a bucket", func() {
-	It("adds the appropriate usePathStyle property to the config object in the bucket", func() {
+	It("adds the appropriate forcePathStyle property to the config object in the bucket", func() {
 		bucket, err := s3bucket.NewBucket("fred", "", "", s3bucket.AccessKey{}, false, true)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(bucket.UsesPathStyle()).To(BeTrue())
