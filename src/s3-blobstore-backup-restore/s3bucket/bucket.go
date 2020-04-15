@@ -361,6 +361,7 @@ func formatErrors(contextString string, errors []error) error {
 	return fmt.Errorf("%s: %s", contextString, strings.Join(errorStrings, "\n"))
 }
 
+var injectableCredIAMProvider = ec2rolecreds.NewCredentials
 func newS3Client(regionName, endpoint string, accessKey AccessKey, useIAMProfile, usePathStyle bool) (*s3.S3, error) {
 	var creds = credentials.NewStaticCredentials(accessKey.Id, accessKey.Secret, "")
 
@@ -370,7 +371,7 @@ func newS3Client(regionName, endpoint string, accessKey AccessKey, useIAMProfile
 			return nil, err
 		}
 
-		creds = ec2rolecreds.NewCredentials(s)
+		creds = injectableCredIAMProvider(s)
 	}
 
 	awsSession, err := session.NewSession(&aws.Config{
