@@ -43,7 +43,7 @@ type Version struct {
 }
 
 func NewBucket(bucketName, bucketRegion, endpoint string, accessKey AccessKey, useIAMProfile, usePathStyle bool) (Bucket, error) {
-	s3Client, err := newS3Client(bucketRegion, endpoint, accessKey, useIAMProfile, true)
+	s3Client, err := newS3Client(bucketRegion, endpoint, accessKey, useIAMProfile, usePathStyle)
 	if err != nil {
 		return Bucket{}, err
 	}

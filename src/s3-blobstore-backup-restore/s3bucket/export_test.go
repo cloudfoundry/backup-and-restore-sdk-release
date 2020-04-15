@@ -12,3 +12,7 @@ type CredIAMProvider = func(c client.ConfigProvider, options ...func(*ec2rolecre
 func SetCredIAMProvider(provider CredIAMProvider) {
 	injectableCredIAMProvider = provider
 }
+
+func (b Bucket) UsesPathStyle() bool {
+	return *b.s3Client.Client.Config.S3ForcePathStyle
+}
