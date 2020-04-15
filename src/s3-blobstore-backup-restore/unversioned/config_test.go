@@ -69,7 +69,7 @@ var _ = Describe("Unversioned", func() {
 		fakeBackupBucket2 = new(unversionedFakes.FakeBucket)
 		fakeBackupBucket2.NameReturns("backup-name2")
 
-		newBucket = func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile bool) (unversioned.Bucket, error) {
+		newBucket = func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, _ bool) (unversioned.Bucket, error) {
 			if endpoint == "my-s3-endpoint.aws" && accessKey.Secret == "my-secret-key" && accessKey.Id == "my-id" && !useIAMProfile {
 				if bucketName == "live-name1" && bucketRegion == "live-region1" {
 					return fakeLiveBucket1, nil
@@ -118,11 +118,11 @@ var _ = Describe("Unversioned", func() {
 			)
 
 			JustBeforeEach(func() {
-				newBucketFails = func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile bool) (unversioned.Bucket, error) {
+				newBucketFails = func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, _ bool) (unversioned.Bucket, error) {
 					if bucketName == bucketToFail {
 						return nil, errors.New("oups")
 					} else {
-						return newBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile)
+						return newBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile, s3bucket.UsePathStyleDuringTheRefactor)
 					}
 				}
 			})
@@ -427,11 +427,11 @@ var _ = Describe("Unversioned", func() {
 			)
 
 			JustBeforeEach(func() {
-				newBucketFails = func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile bool) (unversioned.Bucket, error) {
+				newBucketFails = func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, _ bool) (unversioned.Bucket, error) {
 					if bucketName == bucketToFail {
 						return nil, errors.New("oups")
 					} else {
-						return newBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile)
+						return newBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile, s3bucket.UsePathStyleDuringTheRefactor)
 					}
 				}
 			})
