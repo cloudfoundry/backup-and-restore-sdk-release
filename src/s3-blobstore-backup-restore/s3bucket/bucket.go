@@ -44,8 +44,8 @@ type Version struct {
 
 const ForcePathStyleDuringTheRefactor = true
 
-func NewBucket(bucketName, bucketRegion, endpoint string, accessKey AccessKey, useIAMProfile, usePathStyle bool) (Bucket, error) {
-	s3Client, err := newS3Client(bucketRegion, endpoint, accessKey, useIAMProfile, usePathStyle)
+func NewBucket(bucketName, bucketRegion, endpoint string, accessKey AccessKey, useIAMProfile, forcePathStyle bool) (Bucket, error) {
+	s3Client, err := newS3Client(bucketRegion, endpoint, accessKey, useIAMProfile, forcePathStyle)
 	if err != nil {
 		return Bucket{}, err
 	}
@@ -364,7 +364,7 @@ func formatErrors(contextString string, errors []error) error {
 }
 
 var injectableCredIAMProvider = ec2rolecreds.NewCredentials
-func newS3Client(regionName, endpoint string, accessKey AccessKey, useIAMProfile, usePathStyle bool) (*s3.S3, error) {
+func newS3Client(regionName, endpoint string, accessKey AccessKey, useIAMProfile, forcePathStyle bool) (*s3.S3, error) {
 	var creds = credentials.NewStaticCredentials(accessKey.Id, accessKey.Secret, "")
 
 	if useIAMProfile {
@@ -380,7 +380,7 @@ func newS3Client(regionName, endpoint string, accessKey AccessKey, useIAMProfile
 			Region: &regionName,
 			Credentials: creds,
 			Endpoint: aws.String(endpoint),
-			S3ForcePathStyle: aws.Bool(usePathStyle),
+			S3ForcePathStyle: aws.Bool(forcePathStyle),
 		})
 
 	if err != nil {
