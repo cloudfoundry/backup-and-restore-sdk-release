@@ -11,8 +11,19 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Creating an S3 Client", func() {
+var _ = Describe("Creating a bucket", func() {
+	It("adds the appropriate usePathStyle property to the config object in the bucket", func() {
+		bucket, err := s3bucket.NewBucket("fred", "", "", s3bucket.AccessKey{}, false, true)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(bucket.UsesPathStyle()).To(BeTrue())
 
+		bucket, err = s3bucket.NewBucket("fred", "", "", s3bucket.AccessKey{}, false, false)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(bucket.UsesPathStyle()).To(BeFalse())
+	})
+})
+
+var _ = Describe("Creating an S3 Client", func() {
 	When("we are not using an IAMProfile", func() {
 		It("provides static credentials", func() {
 
