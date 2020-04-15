@@ -125,7 +125,7 @@ func BuildBackupsToComplete(
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
-			true,
+			s3bucket.UsePathStyleDuringTheRefactor,
 		)
 		if err != nil {
 			return nil, err
