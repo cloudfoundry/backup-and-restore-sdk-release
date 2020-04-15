@@ -12,5 +12,5 @@ type Bucket interface {
 }
 
 func NewUnversionedBucket(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, usePathStyle bool) (bucket Bucket, e error) {
-	return s3bucket.NewBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile, s3bucket.UsePathStyleDuringTheRefactor)
+	return s3bucket.NewBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile, usePathStyle)
 }
