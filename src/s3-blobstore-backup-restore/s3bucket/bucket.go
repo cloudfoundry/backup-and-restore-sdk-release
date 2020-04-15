@@ -42,7 +42,7 @@ type Version struct {
 	IsLatest bool
 }
 
-const UsePathStyleDuringTheRefactor = true
+const ForcePathStyleDuringTheRefactor = true
 
 func NewBucket(bucketName, bucketRegion, endpoint string, accessKey AccessKey, useIAMProfile, usePathStyle bool) (Bucket, error) {
 	s3Client, err := newS3Client(bucketRegion, endpoint, accessKey, useIAMProfile, usePathStyle)

@@ -15,7 +15,7 @@ type UnversionedBucketConfig struct {
 	Endpoint           string             `json:"endpoint"`
 	UseIAMProfile      bool               `json:"use_iam_profile"`
 	Backup             BackupBucketConfig `json:"backup"`
-	UsePathStyle			 bool								`json:"force_path_style"`
+	ForcePathStyle			 bool								`json:"force_path_style"`
 }
 
 type BackupBucketConfig struct {
@@ -38,7 +38,7 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket N
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
-			config.UsePathStyle,
+			config.ForcePathStyle,
 		)
 		if err != nil {
 			return nil, err
@@ -57,7 +57,7 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket N
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
-			config.UsePathStyle,
+			config.ForcePathStyle,
 		)
 		if err != nil {
 			return nil, err
@@ -126,7 +126,7 @@ func BuildBackupsToComplete(
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
-			s3bucket.UsePathStyleDuringTheRefactor,
+			s3bucket.ForcePathStyleDuringTheRefactor,
 		)
 		if err != nil {
 			return nil, err
@@ -186,7 +186,7 @@ func BuildRestoreBucketPairs(
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
-			s3bucket.UsePathStyleDuringTheRefactor,
+			s3bucket.ForcePathStyleDuringTheRefactor,
 		)
 
 		if err != nil {
@@ -206,7 +206,7 @@ func BuildRestoreBucketPairs(
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
-			s3bucket.UsePathStyleDuringTheRefactor,
+			s3bucket.ForcePathStyleDuringTheRefactor,
 		)
 
 		if err != nil {
