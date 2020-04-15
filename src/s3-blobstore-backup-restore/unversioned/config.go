@@ -22,7 +22,7 @@ type BackupBucketConfig struct {
 	Region string `json:"region"`
 }
 
-type NewBucket func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile bool) (Bucket, error)
+type NewBucket func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, usePathStyle bool) (Bucket, error)
 
 func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket NewBucket) (map[string]incremental.BackupToStart, error) {
 	backupsToStart := make(map[string]incremental.BackupToStart)
@@ -37,6 +37,7 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket N
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
+			s3bucket.UsePathStyleDuringTheRefactor,
 		)
 		if err != nil {
 			return nil, err
@@ -55,6 +56,7 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket N
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
+			s3bucket.UsePathStyleDuringTheRefactor,
 		)
 		if err != nil {
 			return nil, err
@@ -183,6 +185,7 @@ func BuildRestoreBucketPairs(
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
+			s3bucket.UsePathStyleDuringTheRefactor,
 		)
 
 		if err != nil {
@@ -202,6 +205,7 @@ func BuildRestoreBucketPairs(
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
+			s3bucket.UsePathStyleDuringTheRefactor,
 		)
 
 		if err != nil {
