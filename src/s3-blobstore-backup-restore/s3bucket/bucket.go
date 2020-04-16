@@ -246,8 +246,9 @@ func (b Bucket) copyVersion(blobKey, versionID, destinationKey, originBucketName
 	}
 }
 
+var injectableNewS3Client = newS3Client
 func (b Bucket) getBlobSize(bucketName, bucketRegion, blobKey, versionID string) (int64, error) {
-	s3Client, err := newS3Client(bucketRegion, b.endpoint, b.accessKey, b.useIAMProfile, true)
+	s3Client, err := injectableNewS3Client(bucketRegion, b.endpoint, b.accessKey, b.useIAMProfile, *b.s3Client.Client.Config.S3ForcePathStyle)
 	if err != nil {
 		return 0, err
 	}
