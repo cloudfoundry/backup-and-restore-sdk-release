@@ -60,7 +60,7 @@ func main() {
 			exitWithError("Failed to parse config", err)
 		}
 
-		buckets, err := versioned.BuildVersionedBuckets(bucketsConfig)
+		buckets, err := versioned.BuildVersionedBuckets(bucketsConfig, versioned.NewVersionedBucket)
 		if err != nil {
 			exitWithError("Failed to establish build versioned buckets", err)
 		}
