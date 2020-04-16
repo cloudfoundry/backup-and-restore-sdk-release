@@ -29,7 +29,7 @@ func BuildVersionedBuckets(config map[string]BucketConfig, newbucket NewBucket) 
 				Secret: bucketConfig.AwsSecretAccessKey,
 			},
 			bucketConfig.UseIAMProfile,
-			s3bucket.ForcePathStyleDuringTheRefactor,
+			bucketConfig.ForcePathStyle,
 		)
 		if err != nil {
 			return nil, err
