@@ -28,7 +28,7 @@ var _ = Describe("Versioned", func() {
 				},
 			}
 
-			buckets, err := versioned.BuildVersionedBuckets(configs)
+			buckets, err := versioned.BuildVersionedBuckets(configs, versioned.NewVersionedBucket)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(buckets).To(HaveLen(2))
