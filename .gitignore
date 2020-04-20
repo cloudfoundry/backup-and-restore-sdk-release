@@ -34,3 +34,4 @@ bin/
 pkg/
 **/secrets.yml
 .envrc*
+src/s3-blobstore-backup-restore/cmd/s3-blobstore-backup-restore/s3-blobstore-backup-restore

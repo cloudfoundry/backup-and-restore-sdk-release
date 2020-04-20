@@ -11,9 +11,10 @@ import (
 
 	"s3-blobstore-backup-restore/s3bucket"
 
-	"s3-blobstore-backup-restore/incremental"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+	"s3-blobstore-backup-restore/incremental"
 )
 
 var _ = Describe("Unversioned", func() {
@@ -111,10 +112,9 @@ var _ = Describe("Unversioned", func() {
 			))
 		})
 
-		It("passes the appropriate path/vhost information from the config to the bucket builder", func() {
-			configs := map[string]unversioned.UnversionedBucketConfig{
-				"bucket1": unversioned.UnversionedBucketConfig{ ForcePathStyle: true },
-				"bucket2": unversioned.UnversionedBucketConfig{ ForcePathStyle: false},
+		DescribeTable("passes the appropriate path/vhost information from the config to the bucket builder", func(forcePathStyle bool) {
+			config := map[string]unversioned.UnversionedBucketConfig{
+				"bucket": unversioned.UnversionedBucketConfig{ForcePathStyle: forcePathStyle},
 			}
 
 			forcePathStyles := []bool{}
@@ -123,14 +123,14 @@ var _ = Describe("Unversioned", func() {
 				return fakeLiveBucket1, nil
 			}
 
-			_, err := unversioned.BuildBackupsToStart(configs, newBucketSpy)
+			_, err := unversioned.BuildBackupsToStart(config, newBucketSpy)
 			Expect(err).NotTo(HaveOccurred())
-
-			Expect(forcePathStyles[0]).To(BeTrue(), "forcePathStyle param to newBucket for live bucket1 should match bucket config")
-			Expect(forcePathStyles[1]).To(BeTrue(), "forcePathStyle param to newBucket for backup bucket1 should match bucket config")
-			Expect(forcePathStyles[2]).To(BeFalse(), "forcePathStyle param to newBucket for live bucket2 should match bucket config")
-			Expect(forcePathStyles[3]).To(BeFalse(), "forcePathStyle param to newBucket for backup bucket2 should match bucket config")
-		})
+			Expect(forcePathStyles[0]).To(Equal(forcePathStyle), "forcePathStyle param to newBucket for live bucket should match bucket config")
+			Expect(forcePathStyles[1]).To(Equal(forcePathStyle), "forcePathStyle param to newBucket for backup bucket should match bucket config")
+		},
+			Entry("we force the path style", true),
+			Entry("we allow vhost style", false),
+		)
 
 		Context("when bucket initialisation fails", func() {
 			var (
