@@ -187,7 +187,7 @@ func BuildRestoreBucketPairs(
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
-			s3bucket.ForcePathStyleDuringTheRefactor,
+			config.ForcePathStyle,
 		)
 
 		if err != nil {
@@ -207,7 +207,7 @@ func BuildRestoreBucketPairs(
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
-			s3bucket.ForcePathStyleDuringTheRefactor,
+			config.ForcePathStyle,
 		)
 
 		if err != nil {
