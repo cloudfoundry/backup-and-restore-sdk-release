@@ -96,6 +96,7 @@ func bucketIsVersioned(bucket Bucket) error {
 func BuildBackupsToComplete(
 	configs map[string]UnversionedBucketConfig,
 	existingBlobsArtifact incremental.Artifact,
+	newBucket NewBucket,
 ) (map[string]incremental.BackupToComplete, error) {
 	backupsToComplete := map[string]incremental.BackupToComplete{}
 
@@ -117,7 +118,7 @@ func BuildBackupsToComplete(
 			continue
 		}
 
-		backupBucket, err := s3bucket.NewBucket(
+		backupBucket, err := newBucket(
 			config.Backup.Name,
 			config.Backup.Region,
 			config.Endpoint,
@@ -126,7 +127,7 @@ func BuildBackupsToComplete(
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
-			s3bucket.ForcePathStyleDuringTheRefactor,
+			config.ForcePathStyle,
 		)
 		if err != nil {
 			return nil, err

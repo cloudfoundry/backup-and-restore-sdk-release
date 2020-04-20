@@ -11,10 +11,11 @@ import (
 
 	"s3-blobstore-backup-restore/s3bucket"
 
+	"s3-blobstore-backup-restore/incremental"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
-	"s3-blobstore-backup-restore/incremental"
 )
 
 var _ = Describe("Unversioned", func() {
@@ -275,6 +276,7 @@ var _ = Describe("Unversioned", func() {
 			backupsToComplete, err := unversioned.BuildBackupsToComplete(
 				configs,
 				existingBlobsArtifact,
+				unversioned.NewUnversionedBucket,
 			)
 
 			Expect(err).NotTo(HaveOccurred())
@@ -302,7 +304,6 @@ var _ = Describe("Unversioned", func() {
 				))
 			}
 		})
-
 		It("builds backups to complete marked same", func() {
 			existingBlobsArtifact.LoadReturns(map[string]incremental.Backup{
 				"bucket1": {
@@ -321,6 +322,7 @@ var _ = Describe("Unversioned", func() {
 			backupsToComplete, err := unversioned.BuildBackupsToComplete(
 				configs,
 				existingBlobsArtifact,
+				unversioned.NewUnversionedBucket,
 			)
 
 			Expect(err).NotTo(HaveOccurred())
@@ -330,12 +332,36 @@ var _ = Describe("Unversioned", func() {
 			}))
 		})
 
+		DescribeTable("passes the appropriate path/vhost information from the config to the bucket builder", func(forcePathStyle bool) {
+			config := map[string]unversioned.UnversionedBucketConfig{
+				"bucket": unversioned.UnversionedBucketConfig{ForcePathStyle: forcePathStyle},
+			}
+			existingBlobsArtifact.LoadReturns(map[string]incremental.Backup{
+				"bucket": {},
+			}, nil)
+
+			forcePathStyles := []bool{}
+			newBucketSpy := func(_, _, _ string, _ s3bucket.AccessKey, _, forcePathStyle bool) (unversioned.Bucket, error) {
+				forcePathStyles = append(forcePathStyles, forcePathStyle)
+				return fakeLiveBucket1, nil
+			}
+
+			_, err := unversioned.BuildBackupsToComplete(config, existingBlobsArtifact, newBucketSpy)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(forcePathStyles).To(HaveLen(1))
+			Expect(forcePathStyles[0]).To(Equal(forcePathStyle), "forcePathStyle param to newBucket for live bucket should match bucket config")
+		},
+			Entry("we force the path style", true),
+			Entry("we allow vhost style", false),
+		)
+
 		It("returns error when it cannot load existing blobs artifact", func() {
 			existingBlobsArtifact.LoadReturns(nil, errors.New("fake load error"))
 
 			_, err := unversioned.BuildBackupsToComplete(
 				configs,
 				existingBlobsArtifact,
+				unversioned.NewUnversionedBucket,
 			)
 
 			Expect(err).To(MatchError(ContainSubstring("fake load error")))
@@ -347,6 +373,7 @@ var _ = Describe("Unversioned", func() {
 			_, err := unversioned.BuildBackupsToComplete(
 				configs,
 				existingBlobsArtifact,
+				unversioned.NewUnversionedBucket,
 			)
 
 			Expect(err).To(Or(
