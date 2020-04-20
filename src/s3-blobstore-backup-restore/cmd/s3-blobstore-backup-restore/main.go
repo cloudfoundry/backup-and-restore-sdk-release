@@ -89,7 +89,7 @@ func main() {
 			runner = incremental.NewBackupStarter(backupsToStart, clock{}, backupArtifact, existingBackupBlobsArtifact)
 		} else if *flags.UnversionedBackupComplete {
 			existingBackupBlobsArtifact := incremental.NewArtifact(flags.ExistingBackupBlobsArtifactFilePath)
-			backupsToComplete, err := unversioned.BuildBackupsToComplete(bucketsConfig, existingBackupBlobsArtifact)
+			backupsToComplete, err := unversioned.BuildBackupsToComplete(bucketsConfig, existingBackupBlobsArtifact, unversioned.NewUnversionedBucket)
 			if err != nil {
 				exitWithError("Failed to build backups to complete", err)
 			}
