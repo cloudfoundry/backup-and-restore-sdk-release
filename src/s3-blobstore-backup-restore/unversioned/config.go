@@ -15,7 +15,7 @@ type UnversionedBucketConfig struct {
 	Endpoint           string             `json:"endpoint"`
 	UseIAMProfile      bool               `json:"use_iam_profile"`
 	Backup             BackupBucketConfig `json:"backup"`
-	ForcePathStyle			 bool								`json:"force_path_style"`
+	ForcePathStyle     bool               `json:"force_path_style"`
 }
 
 type BackupBucketConfig struct {
