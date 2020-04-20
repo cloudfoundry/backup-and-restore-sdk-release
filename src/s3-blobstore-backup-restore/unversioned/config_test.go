@@ -421,6 +421,30 @@ var _ = Describe("Unversioned", func() {
 			))
 		})
 
+		DescribeTable("passes the appropriate path/vhost information from the config to the bucket builder", func(forcePathStyle bool) {
+			config := map[string]unversioned.UnversionedBucketConfig{
+				"bucket": unversioned.UnversionedBucketConfig{ForcePathStyle: forcePathStyle},
+			}
+			artifact.LoadReturns(map[string]incremental.Backup{
+				"bucket": {},
+			}, nil)
+
+			forcePathStyles := []bool{}
+			newBucketSpy := func(_, _, _ string, _ s3bucket.AccessKey, _, forcePathStyle bool) (unversioned.Bucket, error) {
+				forcePathStyles = append(forcePathStyles, forcePathStyle)
+				return fakeLiveBucket1, nil
+			}
+
+			_, err := unversioned.BuildRestoreBucketPairs(config, artifact, newBucketSpy)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(forcePathStyles).To(HaveLen(2))
+			Expect(forcePathStyles[0]).To(Equal(forcePathStyle), "forcePathStyle param to newBucket for live bucket should match bucket config")
+			Expect(forcePathStyles[1]).To(Equal(forcePathStyle), "forcePathStyle param to newBucket for backup bucket should match bucket config")
+		},
+			Entry("we force the path style", true),
+			Entry("we allow vhost style", false),
+		)
+
 		Context("when checking if the bucket is versioned", func() {
 
 			Context("when it fails to check if a live bucket is versioned", func() {
