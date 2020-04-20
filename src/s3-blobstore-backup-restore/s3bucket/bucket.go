@@ -42,8 +42,6 @@ type Version struct {
 	IsLatest bool
 }
 
-const ForcePathStyleDuringTheRefactor = true
-
 func NewBucket(bucketName, bucketRegion, endpoint string, accessKey AccessKey, useIAMProfile, forcePathStyle bool) (Bucket, error) {
 	s3Client, err := newS3Client(bucketRegion, endpoint, accessKey, useIAMProfile, forcePathStyle)
 	if err != nil {
@@ -247,6 +245,7 @@ func (b Bucket) copyVersion(blobKey, versionID, destinationKey, originBucketName
 }
 
 var injectableNewS3Client = newS3Client
+
 func (b Bucket) getBlobSize(bucketName, bucketRegion, blobKey, versionID string) (int64, error) {
 	s3Client, err := injectableNewS3Client(bucketRegion, b.endpoint, b.accessKey, b.useIAMProfile, *b.s3Client.Client.Config.S3ForcePathStyle)
 	if err != nil {
@@ -365,6 +364,7 @@ func formatErrors(contextString string, errors []error) error {
 }
 
 var injectableCredIAMProvider = ec2rolecreds.NewCredentials
+
 func newS3Client(regionName, endpoint string, accessKey AccessKey, useIAMProfile, forcePathStyle bool) (*s3.S3, error) {
 	var creds = credentials.NewStaticCredentials(accessKey.Id, accessKey.Secret, "")
 
@@ -378,11 +378,11 @@ func newS3Client(regionName, endpoint string, accessKey AccessKey, useIAMProfile
 	}
 
 	awsSession, err := session.NewSession(&aws.Config{
-			Region: &regionName,
-			Credentials: creds,
-			Endpoint: aws.String(endpoint),
-			S3ForcePathStyle: aws.Bool(forcePathStyle),
-		})
+		Region:           &regionName,
+		Credentials:      creds,
+		Endpoint:         aws.String(endpoint),
+		S3ForcePathStyle: aws.Bool(forcePathStyle),
+	})
 
 	if err != nil {
 		return nil, err
@@ -390,4 +390,3 @@ func newS3Client(regionName, endpoint string, accessKey AccessKey, useIAMProfile
 
 	return s3.New(awsSession), nil
 }
-
