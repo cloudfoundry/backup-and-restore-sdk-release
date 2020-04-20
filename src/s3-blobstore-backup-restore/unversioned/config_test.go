@@ -140,11 +140,11 @@ var _ = Describe("Unversioned", func() {
 			)
 
 			JustBeforeEach(func() {
-				newBucketFails = func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, _ bool) (unversioned.Bucket, error) {
+				newBucketFails = func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (unversioned.Bucket, error) {
 					if bucketName == bucketToFail {
 						return nil, errors.New("oups")
 					} else {
-						return newBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile, s3bucket.ForcePathStyleDuringTheRefactor)
+						return newBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile, forcePathStyle)
 					}
 				}
 			})
@@ -499,11 +499,11 @@ var _ = Describe("Unversioned", func() {
 			)
 
 			JustBeforeEach(func() {
-				newBucketFails = func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, _ bool) (unversioned.Bucket, error) {
+				newBucketFails = func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (unversioned.Bucket, error) {
 					if bucketName == bucketToFail {
 						return nil, errors.New("oups")
 					} else {
-						return newBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile, s3bucket.ForcePathStyleDuringTheRefactor)
+						return newBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile, forcePathStyle)
 					}
 				}
 			})
