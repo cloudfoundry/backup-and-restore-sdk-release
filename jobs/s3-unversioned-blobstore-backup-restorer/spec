@@ -46,6 +46,9 @@ properties:
         backup:
           name: "the_backup_droplets_bucket"
           region: "eu-west-2"
+  force_path_style:
+    default: true
+    description: "Use path-style access for S3 buckets" #Path style access will be deprecated from September 2020
   bpm.enabled:
     description: "Enable Bosh Process Manager"
     default: false
