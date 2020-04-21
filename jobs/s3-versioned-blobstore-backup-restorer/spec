@@ -42,7 +42,6 @@ properties:
         aws_secret_access_key: "AWS_SECRET_ACCESS_KEY"
         endpoint: "endpoint_to_s3_compatible_blobstore" # only configure if connecting to non-aws s3-compatible blobstore. e.g. ecs
         use_iam_profile: false # only set to true if using AWS IAM instance profile to connect to the bucket instead of AWS access keys
-        force_path_style: true
   bpm.enabled:
     description: "Enable Bosh Process Manager"
     default: false
