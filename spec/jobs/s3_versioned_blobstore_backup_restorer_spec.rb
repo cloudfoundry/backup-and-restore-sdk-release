@@ -71,36 +71,12 @@ describe 's3-versioned-blobstore-backup-restorer job' do
                 "backup" => {
                   "name" => "the_backup_droplets_bucket",
                   "region" => "eu-west-2",
-                },
-                "force_path_style" => true
+                }
               }
             }
           }
           expect { backup_template.render(manifest) }.to_not(raise_error)
           expect { buckets_template.render(manifest) }.to_not(raise_error)
-        end
-      end
-
-      context 'and force_path_style has not been configured' do
-        it 'errors' do
-          manifest = {
-            "enabled" => true,
-            "buckets" => {
-              "droplets"  => {
-                "name" => "the_droplets_bucket",
-                "region" => "eu-west-1",
-                "aws_access_key_id" => "AWS_ACCESS_KEY_ID",
-                "aws_secret_access_key" => "AWS_SECRET_ACCESS_KEY",
-                "endpoint" => "endpoint_to_s3_compatible_blobstore",
-                "use_iam_profile" => false,
-                "backup" => {
-                  "name" => "the_backup_droplets_bucket",
-                  "region" => "eu-west-2",
-                }
-              }
-            }
-          }
-          expect { buckets_template.render(manifest) }.to(raise_error(RuntimeError, 'Invalid configuration for droplets, bucket must choose path-style or vhost-style bucket address'))
         end
       end
 
