@@ -1,11 +1,12 @@
 package versioned_test
 
 import (
-
-	"s3-blobstore-backup-restore/versioned"
 	"s3-blobstore-backup-restore/s3bucket"
+	"s3-blobstore-backup-restore/versioned"
 	"s3-blobstore-backup-restore/versioned/fakes"
+
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -42,12 +43,11 @@ var _ = Describe("Versioned", func() {
 			}
 		})
 
-		It("passes the appropriate path/vhost information from the config to the bucket builder", func() {
+		DescribeTable("passes the appropriate path/vhost information from the config to the bucket builder", func(forcePathStyle bool) {
 			fakeBucket := new(fakes.FakeBucket)
 
-			configs := map[string]versioned.BucketConfig{
-				"bucket1": versioned.BucketConfig{ ForcePathStyle: true },
-				"bucket2": versioned.BucketConfig{ ForcePathStyle: false},
+			config := map[string]versioned.BucketConfig{
+				"bucket": versioned.BucketConfig{ForcePathStyle: forcePathStyle},
 			}
 
 			forcePathStyles := []bool{}
@@ -56,11 +56,13 @@ var _ = Describe("Versioned", func() {
 				return fakeBucket, nil
 			}
 
-			_, err := versioned.BuildVersionedBuckets(configs, newBucketSpy)
+			_, err := versioned.BuildVersionedBuckets(config, newBucketSpy)
 			Expect(err).NotTo(HaveOccurred())
-
-			Expect(forcePathStyles[0]).To(BeTrue(), "forcePathStyle param to newBucket for bucket1 should match bucket config")
-			Expect(forcePathStyles[1]).To(BeFalse(), "forcePathStyle param to newBucket for bucket2 should match bucket config")
-		})
+			Expect(forcePathStyles).To(HaveLen(1))
+			Expect(forcePathStyles[0]).To(Equal(forcePathStyle), "forcePathStyle param to newBucket for bucket should match bucket config")
+		},
+			Entry("we force path style", true),
+			Entry("we allow vhost style", false),
+		)
 	})
 })
