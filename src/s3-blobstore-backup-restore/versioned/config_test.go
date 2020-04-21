@@ -1,8 +1,12 @@
 package versioned_test
 
 import (
+	"s3-blobstore-backup-restore/s3bucket"
 	"s3-blobstore-backup-restore/versioned"
+	"s3-blobstore-backup-restore/versioned/fakes"
+
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -38,5 +42,27 @@ var _ = Describe("Versioned", func() {
 				Expect(buckets["bucket"+n].Region()).To(Equal("live-region" + n))
 			}
 		})
+
+		DescribeTable("passes the appropriate path/vhost information from the config to the bucket builder", func(forcePathStyle bool) {
+			fakeBucket := new(fakes.FakeBucket)
+
+			config := map[string]versioned.BucketConfig{
+				"bucket": versioned.BucketConfig{ForcePathStyle: forcePathStyle},
+			}
+
+			forcePathStyles := []bool{}
+			newBucketSpy := func(_, _, _ string, _ s3bucket.AccessKey, _, forcePathStyle bool) (versioned.Bucket, error) {
+				forcePathStyles = append(forcePathStyles, forcePathStyle)
+				return fakeBucket, nil
+			}
+
+			_, err := versioned.BuildVersionedBuckets(config, newBucketSpy)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(forcePathStyles).To(HaveLen(1))
+			Expect(forcePathStyles[0]).To(Equal(forcePathStyle), "forcePathStyle param to newBucket for bucket should match bucket config")
+		},
+			Entry("we force path style", true),
+			Entry("we allow vhost style", false),
+		)
 	})
 })
