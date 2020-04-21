@@ -46,7 +46,6 @@ properties:
         backup:
           name: "the_backup_droplets_bucket"
           region: "eu-west-2"
-        force_path_style: true
   bpm.enabled:
     description: "Enable Bosh Process Manager"
     default: false
