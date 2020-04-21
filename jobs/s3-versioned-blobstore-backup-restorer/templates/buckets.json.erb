@@ -4,6 +4,11 @@
       if bucket['aws_access_key_id'] && bucket['aws_secret_access_key'] && bucket['use_iam_profile']
         raise "Invalid configuration, both the access key ID and the secret key pair and an IAM profile were used for bucket " + name
       end
+
+      if not bucket['force_path_style']
+        raise "Invalid configuration for "+name+", bucket must choose path-style or vhost-style bucket address"
+      end
+
     end
   end
 
