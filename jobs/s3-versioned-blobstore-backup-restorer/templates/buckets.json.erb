@@ -7,9 +7,15 @@
     end
   end
 
+  def add_force_path_style_property(buckets)
+    buckets.each do |name, bucket|
+      bucket['force_path_style'] = p('force_path_style')
+    end
+  end
 
   if p('enabled')
     buckets = p('buckets')
+    add_force_path_style_property(buckets)
     validate_buckets(buckets)
     buckets.to_json
   end
