@@ -60,7 +60,7 @@ func main() {
 			exitWithError("Failed to parse config", err)
 		}
 
-		buckets, err := versioned.BuildVersionedBuckets(bucketsConfig, versioned.NewVersionedBucket)
+		buckets, err := versioned.BuildVersionedBuckets(bucketsConfig)
 		if err != nil {
 			exitWithError("Failed to establish build versioned buckets", err)
 		}
@@ -89,7 +89,7 @@ func main() {
 			runner = incremental.NewBackupStarter(backupsToStart, clock{}, backupArtifact, existingBackupBlobsArtifact)
 		} else if *flags.UnversionedBackupComplete {
 			existingBackupBlobsArtifact := incremental.NewArtifact(flags.ExistingBackupBlobsArtifactFilePath)
-			backupsToComplete, err := unversioned.BuildBackupsToComplete(bucketsConfig, existingBackupBlobsArtifact, unversioned.NewUnversionedBucket)
+			backupsToComplete, err := unversioned.BuildBackupsToComplete(bucketsConfig, existingBackupBlobsArtifact)
 			if err != nil {
 				exitWithError("Failed to build backups to complete", err)
 			}

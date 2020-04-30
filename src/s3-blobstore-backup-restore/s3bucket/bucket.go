@@ -42,8 +42,8 @@ type Version struct {
 	IsLatest bool
 }
 
-func NewBucket(bucketName, bucketRegion, endpoint string, accessKey AccessKey, useIAMProfile, forcePathStyle bool) (Bucket, error) {
-	s3Client, err := newS3Client(bucketRegion, endpoint, accessKey, useIAMProfile, forcePathStyle)
+func NewBucket(bucketName, bucketRegion, endpoint string, accessKey AccessKey, useIAMProfile bool) (Bucket, error) {
+	s3Client, err := newS3Client(bucketRegion, endpoint, accessKey, useIAMProfile)
 	if err != nil {
 		return Bucket{}, err
 	}
@@ -244,10 +244,8 @@ func (b Bucket) copyVersion(blobKey, versionID, destinationKey, originBucketName
 	}
 }
 
-var injectableNewS3Client = newS3Client
-
 func (b Bucket) getBlobSize(bucketName, bucketRegion, blobKey, versionID string) (int64, error) {
-	s3Client, err := injectableNewS3Client(bucketRegion, b.endpoint, b.accessKey, b.useIAMProfile, *b.s3Client.Client.Config.S3ForcePathStyle)
+	s3Client, err := newS3Client(bucketRegion, b.endpoint, b.accessKey, b.useIAMProfile)
 	if err != nil {
 		return 0, err
 	}
@@ -363,9 +361,7 @@ func formatErrors(contextString string, errors []error) error {
 	return fmt.Errorf("%s: %s", contextString, strings.Join(errorStrings, "\n"))
 }
 
-var injectableCredIAMProvider = ec2rolecreds.NewCredentials
-
-func newS3Client(regionName, endpoint string, accessKey AccessKey, useIAMProfile, forcePathStyle bool) (*s3.S3, error) {
+func newS3Client(regionName string, endpoint string, accessKey AccessKey, useIAMProfile bool) (*s3.S3, error) {
 	var creds = credentials.NewStaticCredentials(accessKey.Id, accessKey.Secret, "")
 
 	if useIAMProfile {
@@ -374,14 +370,14 @@ func newS3Client(regionName, endpoint string, accessKey AccessKey, useIAMProfile
 			return nil, err
 		}
 
-		creds = injectableCredIAMProvider(s)
+		creds = ec2rolecreds.NewCredentials(s)
 	}
 
 	awsSession, err := session.NewSession(&aws.Config{
 		Region:           &regionName,
 		Credentials:      creds,
 		Endpoint:         aws.String(endpoint),
-		S3ForcePathStyle: aws.Bool(forcePathStyle),
+		S3ForcePathStyle: aws.Bool(true),
 	})
 
 	if err != nil {

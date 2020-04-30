@@ -27,7 +27,7 @@ var _ = Describe("IncrementalBucket", func() {
 			uploadFile(liveBucketName, S3Endpoint, "path2/blob2", "", creds)
 
 			var err error
-			liveBucket, err = s3bucket.NewBucket(liveBucketName, LiveRegion, S3Endpoint, creds, false, false)
+			liveBucket, err = s3bucket.NewBucket(liveBucketName, LiveRegion, S3Endpoint, creds, false)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -50,7 +50,7 @@ var _ = Describe("IncrementalBucket", func() {
 
 				Context("when s3 list-objects errors", func() {
 					It("errors", func() {
-						bucketObjectUnderTest, err := s3bucket.NewBucket("does-not-exist", LiveRegion, S3Endpoint, creds, false, false)
+						bucketObjectUnderTest, err := s3bucket.NewBucket("does-not-exist", LiveRegion, S3Endpoint, creds, false)
 						Expect(err).NotTo(HaveOccurred())
 
 						_, err = bucketObjectUnderTest.ListBlobs("")
@@ -61,7 +61,7 @@ var _ = Describe("IncrementalBucket", func() {
 
 				Context("when the bucket has a lot of blobs", func() {
 					It("works", func() {
-						bucketObjectUnderTest, err := s3bucket.NewBucket("sdk-unversioned-big-bucket-integration-test", LiveRegion, S3Endpoint, creds, false, false)
+						bucketObjectUnderTest, err := s3bucket.NewBucket("sdk-unversioned-big-bucket-integration-test", LiveRegion, S3Endpoint, creds, false)
 						Expect(err).NotTo(HaveOccurred())
 
 						blobs, err := bucketObjectUnderTest.ListBlobs("")
@@ -99,7 +99,7 @@ var _ = Describe("IncrementalBucket", func() {
 
 			Context("when s3 list-objects errors", func() {
 				It("errors", func() {
-					bucketObjectUnderTest, err := s3bucket.NewBucket("does-not-exist", LiveRegion, S3Endpoint, creds, false, false)
+					bucketObjectUnderTest, err := s3bucket.NewBucket("does-not-exist", LiveRegion, S3Endpoint, creds, false)
 					Expect(err).NotTo(HaveOccurred())
 
 					_, err = bucketObjectUnderTest.ListDirectories()
@@ -144,7 +144,7 @@ var _ = Describe("IncrementalBucket", func() {
 					disableBucketVersioning(previouslyVersionedLiveBucketName, S3Endpoint, creds)
 
 					var err error
-					previouslyVersionedLiveBucket, err = s3bucket.NewBucket(previouslyVersionedLiveBucketName, LiveRegion, S3Endpoint, creds, false, false)
+					previouslyVersionedLiveBucket, err = s3bucket.NewBucket(previouslyVersionedLiveBucketName, LiveRegion, S3Endpoint, creds, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -176,7 +176,7 @@ var _ = Describe("IncrementalBucket", func() {
 				creds = s3bucket.AccessKey{Id: AccessKey, Secret: SecretKey}
 				backupBucketName = setUpUnversionedBucket(BackupRegion, S3Endpoint, creds)
 				var err error
-				backupBucket, err = s3bucket.NewBucket(backupBucketName, BackupRegion, S3Endpoint, creds, false, false)
+				backupBucket, err = s3bucket.NewBucket(backupBucketName, BackupRegion, S3Endpoint, creds, false)
 
 				Expect(err).NotTo(HaveOccurred())
 			})
@@ -219,7 +219,7 @@ var _ = Describe("IncrementalBucket", func() {
 
 			Context("when the bucket does not exist", func() {
 				It("errors", func() {
-					bucket, err := s3bucket.NewBucket("does-not-exist", LiveRegion, S3Endpoint, creds, false, false)
+					bucket, err := s3bucket.NewBucket("does-not-exist", LiveRegion, S3Endpoint, creds, false)
 					Expect(err).NotTo(HaveOccurred())
 
 					err = bucket.UploadBlob("some/blob", "blob contents")
@@ -250,7 +250,7 @@ var _ = Describe("IncrementalBucket", func() {
 
 			Context("when the bucket does not exist", func() {
 				It("errors", func() {
-					bucket, err := s3bucket.NewBucket("does-not-exist", LiveRegion, S3Endpoint, creds, false, false)
+					bucket, err := s3bucket.NewBucket("does-not-exist", LiveRegion, S3Endpoint, creds, false)
 					Expect(err).NotTo(HaveOccurred())
 					_, err = bucket.HasBlob("does-not-exist-blob")
 
@@ -280,10 +280,10 @@ var _ = Describe("IncrementalBucket", func() {
 		})
 
 		It("works", func() {
-			bucket, err := s3bucket.NewBucket(bucketName, LiveRegion, S3Endpoint, creds, false, false)
+			bucket, err := s3bucket.NewBucket(bucketName, LiveRegion, S3Endpoint, creds, false)
 			Expect(err).NotTo(HaveOccurred())
 
-			srcBucket, err := s3bucket.NewBucket(PreExistingBigFileBucketName, LiveRegion, S3Endpoint, creds, false, false)
+			srcBucket, err := s3bucket.NewBucket(PreExistingBigFileBucketName, LiveRegion, S3Endpoint, creds, false)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = bucket.CopyBlobFromBucket(srcBucket, "big_file", "path/to/big_file")

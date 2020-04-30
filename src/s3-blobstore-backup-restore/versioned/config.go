@@ -11,16 +11,13 @@ type BucketConfig struct {
 	AwsSecretAccessKey string `json:"aws_secret_access_key"`
 	Endpoint           string `json:"endpoint"`
 	UseIAMProfile      bool   `json:"use_iam_profile"`
-	ForcePathStyle		 bool		`json:"force_path_style"`
 }
 
-type NewBucket func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (Bucket, error)
-
-func BuildVersionedBuckets(config map[string]BucketConfig, newbucket NewBucket) (map[string]Bucket, error) {
+func BuildVersionedBuckets(config map[string]BucketConfig) (map[string]Bucket, error) {
 	var buckets = map[string]Bucket{}
 
 	for identifier, bucketConfig := range config {
-		s3Bucket, err := newbucket(
+		s3Bucket, err := s3bucket.NewBucket(
 			bucketConfig.Name,
 			bucketConfig.Region,
 			bucketConfig.Endpoint,
@@ -29,7 +26,6 @@ func BuildVersionedBuckets(config map[string]BucketConfig, newbucket NewBucket) 
 				Secret: bucketConfig.AwsSecretAccessKey,
 			},
 			bucketConfig.UseIAMProfile,
-			bucketConfig.ForcePathStyle,
 		)
 		if err != nil {
 			return nil, err
