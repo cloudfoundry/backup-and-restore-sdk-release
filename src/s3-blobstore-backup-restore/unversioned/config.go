@@ -15,6 +15,7 @@ type UnversionedBucketConfig struct {
 	Endpoint           string             `json:"endpoint"`
 	UseIAMProfile      bool               `json:"use_iam_profile"`
 	Backup             BackupBucketConfig `json:"backup"`
+	ForcePathStyle     bool               `json:"force_path_style"`
 }
 
 type BackupBucketConfig struct {
@@ -22,7 +23,7 @@ type BackupBucketConfig struct {
 	Region string `json:"region"`
 }
 
-type NewBucket func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile bool) (Bucket, error)
+type NewBucket func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (Bucket, error)
 
 func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket NewBucket) (map[string]incremental.BackupToStart, error) {
 	backupsToStart := make(map[string]incremental.BackupToStart)
@@ -37,6 +38,7 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket N
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
+			config.ForcePathStyle,
 		)
 		if err != nil {
 			return nil, err
@@ -55,6 +57,7 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket N
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
+			config.ForcePathStyle,
 		)
 		if err != nil {
 			return nil, err
@@ -93,6 +96,7 @@ func bucketIsVersioned(bucket Bucket) error {
 func BuildBackupsToComplete(
 	configs map[string]UnversionedBucketConfig,
 	existingBlobsArtifact incremental.Artifact,
+	newBucket NewBucket,
 ) (map[string]incremental.BackupToComplete, error) {
 	backupsToComplete := map[string]incremental.BackupToComplete{}
 
@@ -114,7 +118,7 @@ func BuildBackupsToComplete(
 			continue
 		}
 
-		backupBucket, err := s3bucket.NewBucket(
+		backupBucket, err := newBucket(
 			config.Backup.Name,
 			config.Backup.Region,
 			config.Endpoint,
@@ -123,6 +127,7 @@ func BuildBackupsToComplete(
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
+			config.ForcePathStyle,
 		)
 		if err != nil {
 			return nil, err
@@ -182,6 +187,7 @@ func BuildRestoreBucketPairs(
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
+			config.ForcePathStyle,
 		)
 
 		if err != nil {
@@ -201,6 +207,7 @@ func BuildRestoreBucketPairs(
 				Secret: config.AwsSecretAccessKey,
 			},
 			config.UseIAMProfile,
+			config.ForcePathStyle,
 		)
 
 		if err != nil {

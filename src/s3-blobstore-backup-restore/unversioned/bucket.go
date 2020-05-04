@@ -11,6 +11,6 @@ type Bucket interface {
 	IsVersioned() (bool, error)
 }
 
-func NewUnversionedBucket(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile bool) (bucket Bucket, e error) {
-	return s3bucket.NewBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile)
+func NewUnversionedBucket(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (bucket Bucket, e error) {
+	return s3bucket.NewBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile, forcePathStyle)
 }

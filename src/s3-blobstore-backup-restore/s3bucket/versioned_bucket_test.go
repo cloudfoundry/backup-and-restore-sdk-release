@@ -1,10 +1,11 @@
 package s3bucket_test
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"s3-blobstore-backup-restore/s3bucket"
 	"s3-blobstore-backup-restore/versioned"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("VersionedBucket", func() {
@@ -33,7 +34,7 @@ var _ = Describe("VersionedBucket", func() {
 			firstVersionOfFile2 = uploadFile(bucketName, S3Endpoint, "test-2", "2-A", creds)
 			deleteFile(bucketName, S3Endpoint, "test-2", creds)
 
-			bucketObjectUnderTest, err = s3bucket.NewBucket(bucketName, LiveRegion, S3Endpoint, creds, false)
+			bucketObjectUnderTest, err = s3bucket.NewBucket(bucketName, LiveRegion, S3Endpoint, creds, false, false)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -68,6 +69,7 @@ var _ = Describe("VersionedBucket", func() {
 						S3Endpoint,
 						s3bucket.AccessKey{Id: "NOT RIGHT", Secret: "NOT RIGHT"},
 						false,
+						true,
 					)
 					Expect(err).NotTo(HaveOccurred())
 				})
@@ -85,7 +87,7 @@ var _ = Describe("VersionedBucket", func() {
 					unversionedBucketName = setUpUnversionedBucket(LiveRegion, S3Endpoint, creds)
 					uploadFile(unversionedBucketName, S3Endpoint, "unversioned-test", "UNVERSIONED-TEST", creds)
 
-					bucketObjectUnderTest, err = s3bucket.NewBucket(unversionedBucketName, LiveRegion, S3Endpoint, creds, false)
+					bucketObjectUnderTest, err = s3bucket.NewBucket(unversionedBucketName, LiveRegion, S3Endpoint, creds, false, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -100,7 +102,7 @@ var _ = Describe("VersionedBucket", func() {
 
 			Context("when the bucket has a lot of files", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest, err = s3bucket.NewBucket("sdk-big-bucket-integration-test", LiveRegion, S3Endpoint, creds, false)
+					bucketObjectUnderTest, err = s3bucket.NewBucket("sdk-big-bucket-integration-test", LiveRegion, S3Endpoint, creds, false, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -133,7 +135,7 @@ var _ = Describe("VersionedBucket", func() {
 					unversionedBucketName = setUpVersionedBucket(LiveRegion, S3Endpoint, creds)
 					uploadFile(unversionedBucketName, S3Endpoint, "unversioned-test", "UNVERSIONED-TEST", creds)
 
-					bucketObjectUnderTest, err = s3bucket.NewBucket(unversionedBucketName, LiveRegion, S3Endpoint, creds, false)
+					bucketObjectUnderTest, err = s3bucket.NewBucket(unversionedBucketName, LiveRegion, S3Endpoint, creds, false, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -153,7 +155,7 @@ var _ = Describe("VersionedBucket", func() {
 					unversionedBucketName = setUpUnversionedBucket(LiveRegion, S3Endpoint, creds)
 					uploadFile(unversionedBucketName, S3Endpoint, "unversioned-test", "UNVERSIONED-TEST", creds)
 
-					bucketObjectUnderTest, err = s3bucket.NewBucket(unversionedBucketName, LiveRegion, S3Endpoint, creds, false)
+					bucketObjectUnderTest, err = s3bucket.NewBucket(unversionedBucketName, LiveRegion, S3Endpoint, creds, false, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -170,7 +172,7 @@ var _ = Describe("VersionedBucket", func() {
 
 			Context("when it fails to check the version", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest, err = s3bucket.NewBucket("does-not-exist", LiveRegion, S3Endpoint, creds, false)
+					bucketObjectUnderTest, err = s3bucket.NewBucket("does-not-exist", LiveRegion, S3Endpoint, creds, false, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -195,7 +197,7 @@ var _ = Describe("VersionedBucket", func() {
 
 			Context("when putting versions fails", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest, err = s3bucket.NewBucket(bucketName, LiveRegion, S3Endpoint, s3bucket.AccessKey{}, false)
+					bucketObjectUnderTest, err = s3bucket.NewBucket(bucketName, LiveRegion, S3Endpoint, s3bucket.AccessKey{}, false, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -254,7 +256,7 @@ var _ = Describe("VersionedBucket", func() {
 
 			destinationBucketName = setUpVersionedBucket(LiveRegion, S3Endpoint, creds)
 
-			bucketObjectUnderTest, err = s3bucket.NewBucket(destinationBucketName, LiveRegion, S3Endpoint, creds, false)
+			bucketObjectUnderTest, err = s3bucket.NewBucket(destinationBucketName, LiveRegion, S3Endpoint, creds, false, false)
 			Expect(err).NotTo(HaveOccurred())
 		})
 

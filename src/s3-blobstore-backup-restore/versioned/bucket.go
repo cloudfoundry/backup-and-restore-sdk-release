@@ -10,3 +10,7 @@ type Bucket interface {
 	ListVersions() ([]s3bucket.Version, error)
 	IsVersioned() (bool, error)
 }
+
+func NewVersionedBucket(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (bucket Bucket, e error) {
+	return s3bucket.NewBucket(bucketName, bucketRegion, endpoint, accessKey, useIAMProfile, forcePathStyle)
+}
