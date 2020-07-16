@@ -40,6 +40,7 @@ instance_groups:
   - name: default
   jobs:
   - name: s3-versioned-blobstore-backup-restorer
+    release: backup-and-restore-sdk
     properties:
       enabled: true
       buckets:
