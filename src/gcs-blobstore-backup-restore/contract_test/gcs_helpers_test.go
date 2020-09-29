@@ -22,12 +22,12 @@ func MustHaveEnv(keyname string) string {
 	return val
 }
 
-func Authenticate(serviceAccountKey string) {
+func Authenticate(serviceAccountKey, projectName string) {
 	tmpFile, err := ioutil.TempFile("", "gcp_service_account_key_")
 	Expect(err).NotTo(HaveOccurred())
 	err = ioutil.WriteFile(tmpFile.Name(), []byte(serviceAccountKey), 0644)
 	Expect(err).NotTo(HaveOccurred())
-	runSuccessfully("gcloud", "auth", "activate-service-account", "--key-file", tmpFile.Name())
+	runSuccessfully("gcloud", "auth", "activate-service-account", "--key-file", tmpFile.Name(), "--project", projectName)
 }
 
 func CreateBucketWithTimestampedName(prefix string) string {
