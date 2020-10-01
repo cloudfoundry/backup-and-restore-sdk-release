@@ -12,10 +12,11 @@ import (
 
 	"strconv"
 
+	"s3-blobstore-backup-restore/s3bucket"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"s3-blobstore-backup-restore/s3bucket"
 )
 
 type PutResponse struct {
@@ -102,7 +103,7 @@ func downloadFileToTmp(bucket, endpoint, key string, creds s3bucket.AccessKey) s
 		"--key", key,
 		bodyFile.Name())
 
-	runAwsCommandWithTimeout(creds.Id, creds.Secret, baseCmd, 10*time.Minute)
+	runAwsCommandWithTimeout(creds.Id, creds.Secret, baseCmd, 15*time.Minute)
 
 	return bodyFile.Name()
 }

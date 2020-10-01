@@ -278,6 +278,6 @@ var _ = Describe("VersionedBucket", func() {
 
 			localFilePath := downloadFileToTmp(destinationBucketName, S3Endpoint, "big_file", creds)
 			Expect(shasum(localFilePath)).To(Equal("188f500de28479d67e7375566750472e58e4cec1"))
-		}, 1000)
+		})
 	})
 })

@@ -296,8 +296,7 @@ var _ = Describe("IncrementalBucket", func() {
 
 			By("not corrupting the large file")
 			Expect(
-				shasum(downloadFileToTmp(bucketName, S3Endpoint, "path/to/big_file", creds))).To(
-				Equal("91d50642dd930e9542c39d36f0516d45f4e1af0d"))
-		}, 1000)
+				shasum(downloadFileToTmp(bucketName, S3Endpoint, "path/to/big_file", creds))).To(Equal("91d50642dd930e9542c39d36f0516d45f4e1af0d"))
+		})
 	})
 })
