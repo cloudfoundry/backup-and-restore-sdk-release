@@ -135,6 +135,7 @@ func (c *PostgresConnection) Close() {
 
 	if c.proxySession != nil {
 		c.proxySession.Kill()
+		time.Sleep(5 * time.Second)
 	}
 }
 
@@ -188,7 +189,7 @@ func startTunnel(localPort int, remoteHost string, remotePort int, proxyUsername
 		"StrictHostKeyChecking=no",
 	), ginkgo.GinkgoWriter, ginkgo.GinkgoWriter)
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	return proxySession, err
 }
