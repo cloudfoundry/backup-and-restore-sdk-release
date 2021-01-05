@@ -1,0 +1,37 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  # Ruby dependencies
+  - package-ecosystem: "bundler"
+    directory: "/"
+    schedule:
+      interval: "daily"
+  # Go module dependencies - azure-blobstore-backup-restore
+  - package-ecosystem: "gomod"
+    directory: "/src/azure-blobstore-backup-restore"
+    schedule:
+      interval: "daily"
+  # Go module dependencies - database-backup-restore
+  - package-ecosystem: "gomod"
+    directory: "/src/database-backup-restore"
+    schedule:
+      interval: "daily"
+  # Go module dependencies - gcs-blobstore-backup-restore
+  - package-ecosystem: "gomod"
+    directory: "/src/gcs-blobstore-backup-restore"
+    schedule:
+      interval: "daily"
+  # Go module dependencies - s3-blobstore-backup-restore
+  - package-ecosystem: "gomod"
+    directory: "/src/s3-blobstore-backup-restore"
+    schedule:
+      interval: "daily"
+  # Go module dependencies - system-tests
+  - package-ecosystem: "gomod"
+    directory: "/src/system-tests"
+    schedule:
+      interval: "daily"
