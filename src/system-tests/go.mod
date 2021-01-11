@@ -2,7 +2,7 @@ module system-tests
 
 require (
 	github.com/onsi/ginkgo v1.14.2
-	github.com/onsi/gomega v1.10.1
+	github.com/onsi/gomega v1.10.4
 	s3-blobstore-backup-restore v0.0.0
 )
 
