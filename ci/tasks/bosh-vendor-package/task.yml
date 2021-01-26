@@ -1,0 +1,25 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: pcfplatformrecovery/backup-and-restore-minimal
+
+inputs:
+- name: release
+- name: vendored-package-repo
+
+outputs:
+- name: updated-release
+
+params:
+  PACKAGE_NAME:
+  COMMIT_BRANCH:
+  COMMIT_USER_NAME:
+  COMMIT_USER_EMAIL:
+  AWS_ACCESS_KEY_ID:
+  AWS_SECRET_ACCESS_KEY:
+
+run:
+  path: release/ci/tasks/bosh-vendor-package/task.sh
