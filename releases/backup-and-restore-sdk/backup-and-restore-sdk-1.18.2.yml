@@ -1,6 +1,6 @@
 name: backup-and-restore-sdk
 version: 1.18.2
-commit_hash: 51e92264
+commit_hash: 51fb2414
 uncommitted_changes: false
 jobs:
 - name: azure-blobstore-backup-restorer
