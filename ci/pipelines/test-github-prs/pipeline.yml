@@ -49,6 +49,7 @@ jobs:
       TRACKER_PROJECT_ID: ((tracker.project_id))
       GIT_REPOSITORY: cloudfoundry-incubator/backup-and-restore-sdk-release
   - task: start-story
+    attempts: 5
     file: backup-and-restore-sdk-release/ci/tasks/start-story/task.yml
     params:
       TRACKER_API_TOKEN: ((tracker.api_token))
@@ -59,21 +60,26 @@ jobs:
       status: pending
   - in_parallel:
     - task: sdk-template-unit-tests
+      attempts: 5
       file: backup-and-restore-ci/tasks/sdk-template-unit-tests/task.yml
     - task: databases-unit-tests
+      attempts: 5
       file: backup-and-restore-ci/tasks/database-unit-tests/task.yml
       privileged: true
     - task: s3-blobstore-unit-tests
+      attempts: 5
       file: backup-and-restore-ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: s3-blobstore-backup-restore
         GINKGO_EXTRA_FLAGS: -p --skipPackage s3bucket
     - task: azure-blobstore-unit-tests
+      attempts: 5
       file: backup-and-restore-ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: azure-blobstore-backup-restore
         GINKGO_EXTRA_FLAGS: -p --skipPackage contract_test
     - task: gcs-blobstore-unit-tests
+      attempts: 5
       file: backup-and-restore-ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: gcs-blobstore-backup-restore
