@@ -1,0 +1,91 @@
+resource_types:
+- name: pull-request
+  type: docker-image
+  source:
+    repository: teliaoss/github-pr-resource
+
+resources:
+- name: backup-and-restore-sdk-release
+  type: pull-request
+  check_every: 1m
+  source:
+    repository: cloudfoundry-incubator/backup-and-restore-sdk-release
+    access_token: ((github.access_token))
+    labels: ["dependencies"]
+    base_branch: develop
+
+- name: backup-and-restore-ci
+  type: git
+  icon: github
+  source:
+    uri: git@github.com:cloudfoundry-incubator/backup-and-restore-ci.git
+    private_key: ((github.ssh_token))
+    branch: master
+  
+- name: bosh-backup-and-restore-meta
+  type: git
+  source:
+    uri: git@github.com:pivotal-cf/bosh-backup-and-restore-meta.git
+    private_key: ((github.ssh_token))
+    git_crypt_key: ((github.crypt_key))
+    branch: master
+
+jobs:
+- name: test-and-merge
+  serial: true
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release
+      trigger: true
+      version: every
+    - get: backup-and-restore-ci
+    - get: bosh-backup-and-restore-meta
+    - get: pr
+      version: every
+  - task: find-pr-story
+    file: backup-and-restore-sdk-release/ci/tasks/find-pr-story/task.yml
+    params:
+      TRACKER_API_TOKEN: ((tracker.api_token))
+      TRACKER_PROJECT_ID: ((tracker.project_id))
+      GIT_REPOSITORY: cloudfoundry-incubator/backup-and-restore-sdk-release
+  - task: start-story
+    file: backup-and-restore-sdk-release/ci/tasks/start-story/task.yml
+    params:
+      TRACKER_API_TOKEN: ((tracker.api_token))
+      TRACKER_PROJECT_ID: ((tracker.project_id))
+  - put: backup-and-restore-sdk-release
+    params:
+      path: backup-and-restore-sdk-release
+      status: pending
+  - in_parallel:
+    - task: sdk-template-unit-tests
+      file: backup-and-restore-ci/tasks/sdk-template-unit-tests/task.yml
+    - task: databases-unit-tests
+      file: backup-and-restore-ci/tasks/database-unit-tests/task.yml
+      privileged: true
+    - task: s3-blobstore-unit-tests
+      file: backup-and-restore-ci/tasks/sdk-unit-blobstore/task.yml
+      params:
+        PACKAGE_NAME: s3-blobstore-backup-restore
+        GINKGO_EXTRA_FLAGS: -p --skipPackage s3bucket
+    - task: azure-blobstore-unit-tests
+      file: backup-and-restore-ci/tasks/sdk-unit-blobstore/task.yml
+      params:
+        PACKAGE_NAME: azure-blobstore-backup-restore
+        GINKGO_EXTRA_FLAGS: -p --skipPackage contract_test
+    - task: gcs-blobstore-unit-tests
+      file: backup-and-restore-ci/tasks/sdk-unit-blobstore/task.yml
+      params:
+        PACKAGE_NAME: gcs-blobstore-backup-restore
+        GINKGO_EXTRA_FLAGS: -p --skipPackage contract_test
+    on_failure:
+      put: backup-and-restore-sdk-release
+      params:
+        path: backup-and-restore-sdk-release
+        status: failure
+  - put: backup-and-restore-sdk-release
+    params:
+        path: backup-and-restore-sdk-release
+        status: success
+        comment: "@dependabot merge"
+      
