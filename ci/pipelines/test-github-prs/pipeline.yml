@@ -19,14 +19,14 @@ resources:
   icon: github
   source:
     uri: git@github.com:cloudfoundry-incubator/backup-and-restore-ci.git
-    private_key: ((github.ssh_token))
+    private_key: ((github.ssh_key))
     branch: master
   
 - name: bosh-backup-and-restore-meta
   type: git
   source:
     uri: git@github.com:pivotal-cf/bosh-backup-and-restore-meta.git
-    private_key: ((github.ssh_token))
+    private_key: ((github.ssh_key))
     git_crypt_key: ((github.crypt_key))
     branch: master
 
