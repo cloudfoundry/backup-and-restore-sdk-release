@@ -40,8 +40,6 @@ jobs:
       version: every
     - get: backup-and-restore-ci
     - get: bosh-backup-and-restore-meta
-    - get: pr
-      version: every
   - task: find-pr-story
     file: backup-and-restore-sdk-release/ci/tasks/find-pr-story/task.yml
     params:
