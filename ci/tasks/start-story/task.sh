@@ -8,6 +8,10 @@ API_TOKEN=${TRACKER_API_TOKEN}
 PROJECT_ID=${TRACKER_PROJECT_ID}
 STORY_ID=$(cat ./tracker-story/id)
 
+echo $API_TOKEN
+echo $PROJECT_ID
+echo $STORY_ID
+
 err=$(
     curl \
         -X PUT \
