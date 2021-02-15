@@ -1,8 +1,8 @@
 code.cloudfoundry.org/clock v1.0.0/go.mod h1:QD9Lzhd/ux6eNQVUDVRJX/RKTigpewimNYBi7ivZKY8=
 code.cloudfoundry.org/tlsconfig v0.0.0-20200131000646-bbe0f8da39b3/go.mod h1:eTbFJpyXRGuFVyg5+oaj9B2eIbIc+0/kZjH8ftbtdew=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/aws/aws-sdk-go v1.37.9 h1:sgRbr+heubkgSwkn9fQMF80l9xjXkmhzk9DLdsaYh+c=
-github.com/aws/aws-sdk-go v1.37.9/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
+github.com/aws/aws-sdk-go v1.37.10 h1:LRwl+97B4D69Z7tz+eRUxJ1C7baBaIYhgrn5eLtua+Q=
+github.com/aws/aws-sdk-go v1.37.10/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/bmatcuk/doublestar v1.3.3/go.mod h1:wiQtGV+rzVYxB7WIlirSN++5HPtPlXEo9MEoZQC/PmE=
 github.com/charlievieth/fs v0.0.1/go.mod h1:74vroF06jvR8XMafvi2CYzs8WruHL1axh/qFx7XN5Xw=
 github.com/cheggaaa/pb v1.0.29/go.mod h1:W40334L7FMC5JKWldsTWbdGjLo0RxUKK73K+TuPxX30=
