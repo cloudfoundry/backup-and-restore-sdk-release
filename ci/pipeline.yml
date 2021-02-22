@@ -131,13 +131,6 @@ resources:
     private_key: ((github.ssh_key))
     branch: golang-vendor-updates
 
-- name: backup-and-restore-ci
-  type: git
-  source:
-    uri: git@github.com:cloudfoundry-incubator/backup-and-restore-ci.git
-    private_key: ((github.ssh_key))
-    branch: master
-
 - name: version
   type: semver
   source:
