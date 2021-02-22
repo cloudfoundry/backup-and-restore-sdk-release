@@ -1,0 +1,78 @@
+# Copyright (C) 2017-Present Pivotal Software, Inc. All rights reserved.
+#
+# This program and the accompanying materials are made available under
+# the terms of the under the Apache License, Version 2.0 (the "License”);
+# you may not use this file except in compliance with the License.
+#
+# You may obtain a copy of the License at
+# http:#www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+platform: linux
+
+image_resource:
+  type: registry-image
+  source: {repository: pcfplatformrecovery/backup-and-restore}
+
+inputs:
+- name: backup-and-restore-sdk-release
+
+run:
+  path: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.sh
+
+params:
+  TEST_SUITE_NAME:
+
+  FOCUS_SPEC:
+
+  BOSH_DEPLOYMENT:
+  BOSH_ENVIRONMENT:
+  BOSH_CLIENT_SECRET:
+  BOSH_CLIENT:
+  BOSH_GW_PRIVATE_KEY:
+  BOSH_CA_CERT:
+  BOSH_GW_USER:
+  BOSH_GW_HOST:
+
+  AWS_ACCESS_KEY_ID:
+  AWS_SECRET_ACCESS_KEY:
+  AWS_TEST_BUCKET_NAME:
+  AWS_TEST_CLONE_BUCKET_NAME:
+  AWS_TEST_UNVERSIONED_BUCKET_NAME:
+  AWS_TEST_BUCKET_REGION:
+  AWS_TEST_CLONE_BUCKET_REGION:
+  AWS_TEST_UNVERSIONED_BUCKET_REGION:
+
+  S3_UNVERSIONED_BUCKET_NAME:
+  S3_UNVERSIONED_BUCKET_REGION:
+  S3_UNVERSIONED_BACKUP_BUCKET_NAME:
+  S3_UNVERSIONED_BACKUP_BUCKET_REGION:
+
+  S3_UNVERSIONED_BPM_BUCKET_NAME:
+  S3_UNVERSIONED_BPM_BUCKET_REGION:
+  S3_UNVERSIONED_BPM_BACKUP_BUCKET_NAME:
+  S3_UNVERSIONED_BPM_BACKUP_BUCKET_REGION:
+
+  S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BUCKET_NAME:
+  S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BUCKET_REGION:
+  S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BACKUP_BUCKET_NAME:
+  S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BACKUP_BUCKET_REGION:
+
+  AZURE_STORAGE_ACCOUNT:
+  AZURE_STORAGE_KEY:
+  AZURE_CONTAINER_NAME:
+  AZURE_DIFFERENT_STORAGE_ACCOUNT:
+  AZURE_DIFFERENT_STORAGE_KEY:
+  AZURE_DIFFERENT_CONTAINER_NAME:
+
+  GCP_SERVICE_ACCOUNT_KEY:
+  GCP_PROJECT_NAME:
+  GCS_BUCKET_NAME:
+  GCS_CLONE_BUCKET_NAME:
