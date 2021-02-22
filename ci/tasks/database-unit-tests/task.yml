@@ -26,4 +26,4 @@ inputs:
 - name: github-sdk-key
 
 run:
-  path: backup-and-restore-ci/tasks/database-unit-tests/task.sh
+  path: backup-and-restore-sdk-release/ci/tasks/database-unit-tests/task.sh

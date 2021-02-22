@@ -22,24 +22,16 @@ image_resource:
   source: {repository: pcfplatformrecovery/backup-and-restore}
 
 inputs:
+- name: version
 - name: backup-and-restore-sdk-release
 
+outputs:
+- name: backup-and-restore-sdk-release-build
+
 params:
-  PACKAGE_NAME:
-  GINKGO_EXTRA_FLAGS:
-  GCP_SERVICE_ACCOUNT_KEY:
-  AZURE_STORAGE_ACCOUNT:
-  AZURE_STORAGE_KEY:
-  AZURE_STORAGE_ACCOUNT_NO_SOFT_DELETE:
-  AZURE_STORAGE_KEY_NO_SOFT_DELETE:
-  AZURE_DIFFERENT_STORAGE_ACCOUNT:
-  AZURE_DIFFERENT_STORAGE_KEY:
-  AZURE_CONTAINER_NAME_MANY_FILES:
-  S3_LIVE_REGION:
-  S3_BACKUP_REGION:
-  S3_ENDPOINT:
-  S3_ACCESS_KEY_ID:
-  S3_SECRET_ACCESS_KEY:
-  S3_BIG_FILE_BUCKET:
+  AWS_ACCESS_KEY_ID:
+  AWS_SECRET_ACCESS_KEY:
+  RELEASE_NAME:
+
 run:
-  path: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.sh
+  path: backup-and-restore-sdk-release/ci/tasks/create-dev-release/task.sh

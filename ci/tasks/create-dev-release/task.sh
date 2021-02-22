@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Copyright (C) 2017-Present Pivotal Software, Inc. All rights reserved.
 #
 # This program and the accompanying materials are made available under
@@ -14,32 +16,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
----
-platform: linux
+set -e
+set -x
 
-image_resource:
-  type: registry-image
-  source: {repository: pcfplatformrecovery/backup-and-restore}
+VERSION=$(cat version/number)
+export VERSION
 
-inputs:
-- name: backup-and-restore-sdk-release
+if [ -z "$RELEASE_NAME" ]; then
+  export RELEASE_NAME="backup-and-restore-sdk"
+fi
 
-params:
-  PACKAGE_NAME:
-  GINKGO_EXTRA_FLAGS:
-  GCP_SERVICE_ACCOUNT_KEY:
-  AZURE_STORAGE_ACCOUNT:
-  AZURE_STORAGE_KEY:
-  AZURE_STORAGE_ACCOUNT_NO_SOFT_DELETE:
-  AZURE_STORAGE_KEY_NO_SOFT_DELETE:
-  AZURE_DIFFERENT_STORAGE_ACCOUNT:
-  AZURE_DIFFERENT_STORAGE_KEY:
-  AZURE_CONTAINER_NAME_MANY_FILES:
-  S3_LIVE_REGION:
-  S3_BACKUP_REGION:
-  S3_ENDPOINT:
-  S3_ACCESS_KEY_ID:
-  S3_SECRET_ACCESS_KEY:
-  S3_BIG_FILE_BUCKET:
-run:
-  path: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.sh
+pushd backup-and-restore-sdk-release
+  bosh create-release \
+    --version "$VERSION" \
+    --name=${RELEASE_NAME} \
+    --tarball="../backup-and-restore-sdk-release-build/${RELEASE_NAME}-$VERSION.tgz" --force
+popd
