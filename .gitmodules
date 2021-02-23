@@ -1,0 +1,4 @@
+[submodule ".devcontainer"]
+	path = .devcontainer
+	url = https://github.com/pivotal-cf/cryogenics-icebox.git
+	branch = main

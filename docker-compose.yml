@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  icebox:
+    image: cryogenics/your-custom-icebox:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on: ["cryogenics"]
+    volumes:
+      - custom-settings:/home/cryogenist
+      - .:/home/cryogenist/workspace:cached
+
+volumes:
+  custom-settings:
