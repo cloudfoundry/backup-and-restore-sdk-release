@@ -124,13 +124,6 @@ resources:
     private_key: ((github.ssh_key))
     branch: master
 
-- name: backup-and-restore-sdk-release-vendoring
-  type: git
-  source:
-    uri: git@github.com:cloudfoundry-incubator/backup-and-restore-sdk-release.git
-    private_key: ((github.ssh_key))
-    branch: golang-vendor-updates
-
 - name: version
   type: semver
   source:
@@ -226,12 +219,6 @@ resources:
   type: bosh-io-stemcell
   source:
     name: bosh-warden-boshlite-ubuntu-xenial-go_agent
-
-- name: golang-release
-  type: git
-  source:
-    uri: https://github.com/bosh-packages/golang-release.git
-    tag_filter: v*
 
 - name: slack-cryo-notification
   type: slack-notification
@@ -1271,44 +1258,3 @@ jobs:
     params:
       repository: backup-and-restore-sdk-release-master
       merge: true
-
-- name: bump-golang
-  plan:
-  - in_parallel:
-    - get: cryogenics-meta
-    - get: golang-release
-      trigger: true
-    - get: backup-and-restore-sdk-release
-  - task: bosh-vendor-package
-    file: cryogenics-meta/ci/tasks/bosh-vendor-package/task.yml
-    input_mapping:
-      release: backup-and-restore-sdk-release
-      vendored-package-release: golang-release
-    params:
-      VENDORED_PACKAGE_NAME: golang-1-linux
-      VENDOR_UPDATES_BRANCH: golang-vendor-updates
-      COMMIT_USERNAME: bump-golang CI job
-      COMMIT_USEREMAIL: mapbu-cryogenics@groups.vmware.com
-      AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
-      AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
-  - put: backup-and-restore-sdk-release-vendoring
-    params:
-      repository: release-with-updated-vendored-package
-      branch: golang-vendor-updates
-      force: true
-  - task: create-golang-vendor-pull-request
-    file: cryogenics-meta/tasks/create-pr/task.yml
-    params:
-      GITHUB_TOKEN: ((github.access_token))
-      BASE: develop
-      BRANCH: golang-vendor-updates
-      TITLE: Update vendored package golang-1-linux
-      MESSAGE:
-        This is an automatically generated Pull Request from the Cryogenics CI Bot.
-
-        I have detected a new version of [golang-release](https://github.com/bosh-packages/golang-release) and automatically bumped
-        this package to benefit from the latest changes.
-
-        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
-    input_mapping:
-      repo: backup-and-restore-sdk-release-vendoring
