@@ -2,7 +2,7 @@ version: '3'
 
 services:
   icebox:
-    image: cryogenics/your-custom-icebox:latest
+    image: cryogenics/bbr-sdk-icebox:latest
     build:
       context: .
       dockerfile: Dockerfile
