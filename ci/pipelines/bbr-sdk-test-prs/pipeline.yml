@@ -1246,15 +1246,3 @@ jobs:
         A new release for $BUILD_PIPELINE_NAME has been published!
         Release `((.:version-tag))` is now available <((.:github-release-url))|here>
         View the pipeline <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|here>
-
-- name: merge-master-into-develop
-  serial: true
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release
-    - get: backup-and-restore-sdk-release-master
-      trigger: true
-  - put: backup-and-restore-sdk-release
-    params:
-      repository: backup-and-restore-sdk-release-master
-      merge: true
