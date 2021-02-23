@@ -117,13 +117,6 @@ resources:
     private_key: ((github.ssh_key))
     branch: develop
 
-- name: backup-and-restore-sdk-release-master
-  type: git
-  source:
-    uri: git@github.com:cloudfoundry-incubator/backup-and-restore-sdk-release.git
-    private_key: ((github.ssh_key))
-    branch: master
-
 - name: version
   type: semver
   source:
@@ -141,14 +134,6 @@ resources:
     region_name: *aws-region
     access_key_id: ((aws_credentials.access_key_id))
     secret_access_key: ((aws_credentials.secret_access_key))
-
-- name: github-release
-  type: github-release
-  source:
-    user: cloudfoundry-incubator
-    repository: backup-and-restore-sdk-release
-    drafts: true
-    access_token: ((github.ssh_key))
 
 - name: s3-backuper-with-iam-instance-profile-deployment
   type: bosh-deployment
@@ -219,11 +204,6 @@ resources:
   type: bosh-io-stemcell
   source:
     name: bosh-warden-boshlite-ubuntu-xenial-go_agent
-
-- name: slack-cryo-notification
-  type: slack-notification
-  source:
-    url: ((slack.webhook))
 
 - name: cryogenics-meta
   type: git
@@ -1192,57 +1172,3 @@ jobs:
       TRACKER_API_TOKEN: ((tracker.api_token))
       TRACKER_PROJECT_ID: ((tracker.project_id))
       GIT_REPOSITORY: cloudfoundry-incubator/backup-and-restore-sdk-release
-
-- name: create-final-patch
-  serial: true
-  serial_groups: [version]
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release
-      passed: [update-tracker]
-    - get: backup-and-restore-sdk-release-master
-    - get: version
-      params: {bump: patch}
-    - get: cryogenics-meta
-  - task: create-final-release
-    file: cryogenics-meta/ci/tasks/create-final-release/task.yml
-    params:
-      AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
-      AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
-  - task: generate-release-notes
-    file: cryogenics-meta/ci/tasks/generate-release-notes/task.yml
-    input_mapping:
-      repo: backup-and-restore-sdk-release
-      template-folder: cryogenics-meta
-    params:
-      TEMPLATE_PATH: ci/release-templates/release-notes.md.erb
-  - put: backup-and-restore-sdk-release-master
-    params:
-      repository: backup-and-restore-sdk-final-release
-      merge: true
-      tag: version/number
-      tag_prefix: v
-  - put: release
-    params:
-      file: backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
-  - put: github-release
-    params:
-      name: version/number
-      tag: version/number
-      body: release-notes/release-notes.md
-      tag_prefix: v
-      commitish: backup-and-restore-sdk-release/.git/refs/heads/develop
-      globs:
-      - backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
-  - put: version
-    params: {file: version/number}
-  - load_var: version-tag
-    file: version/number
-  - load_var: github-release-url
-    file: github-release/url
-  - put: slack-cryo-notification
-    params:
-      text: |
-        A new release for $BUILD_PIPELINE_NAME has been published!
-        Release `((.:version-tag))` is now available <((.:github-release-url))|here>
-        View the pipeline <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|here>
