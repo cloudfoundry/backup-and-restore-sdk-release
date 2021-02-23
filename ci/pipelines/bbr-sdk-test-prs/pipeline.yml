@@ -233,14 +233,6 @@ resources:
     uri: https://github.com/bosh-packages/golang-release.git
     tag_filter: v*
 
-- name: every6h
-  type: time
-  source:
-    interval: 6h
-    start: 9:00 AM
-    stop: 5:00 PM
-    days: [Monday, Tuesday, Wednesday, Thursday, Friday]
-
 - name: slack-cryo-notification
   type: slack-notification
   source:
@@ -284,8 +276,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
     - get: backup-and-restore-sdk-release
       trigger: true
     - get: github-sdk-key
@@ -315,9 +305,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [unit-tests]
     - get: backup-and-restore-sdk-release
       passed: [unit-tests]
       trigger: true
@@ -355,9 +342,6 @@ jobs:
   serial_groups: [version]
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [contract-tests]
     - get: backup-and-restore-sdk-release
       passed: [contract-tests]
       trigger: true
@@ -378,9 +362,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
     - get: backup-and-restore-sdk-release
       passed: [create-release]
       trigger: true
@@ -409,9 +390,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
     - get: backup-and-restore-sdk-release
       passed: [create-release]
       trigger: true
@@ -489,9 +467,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
     - get: backup-and-restore-sdk-release
       passed: [create-release]
       trigger: true
@@ -524,9 +499,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
     - get: backup-and-restore-sdk-release
       passed: [create-release]
       trigger: true
@@ -556,9 +528,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
     - get: backup-and-restore-sdk-release
       passed: [create-release]
       trigger: true
@@ -592,9 +561,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
     - get: backup-and-restore-sdk-release
       passed: [create-release]
       trigger: true
@@ -647,9 +613,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
     - get: backup-and-restore-sdk-release
       passed: [create-release]
       trigger: true
@@ -681,9 +644,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
     - get: backup-and-restore-sdk-release
       passed: [create-release]
       trigger: true
@@ -717,11 +677,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-postgres
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-database-sdk
@@ -795,11 +750,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-external-gcp-dbs
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-database-sdk
@@ -863,11 +813,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-external-rds-dbs
     - get: backup-and-restore-sdk-release
       trigger: true
       passed:
@@ -967,11 +912,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-mariadb
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-database-sdk
@@ -996,11 +936,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-external-rds-dbs
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-database-sdk
@@ -1035,11 +970,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-external-rds-dbs
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-database-sdk
@@ -1074,11 +1004,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-external-gcp-dbs
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-database-sdk
@@ -1115,9 +1040,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [deploy-s3-blobstore-sdk]
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-s3-blobstore-sdk
@@ -1155,9 +1077,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [deploy-s3-blobstore-sdk-with-iam-instance-profile]
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-s3-blobstore-sdk-with-iam-instance-profile
@@ -1188,9 +1107,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [deploy-azure-blobstore-sdk]
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-azure-blobstore-sdk
@@ -1212,9 +1128,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
     - get: backup-and-restore-sdk-release
       passed:
       - create-release
@@ -1247,9 +1160,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [deploy-gcs-blobstore-sdk]
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-gcs-blobstore-sdk
