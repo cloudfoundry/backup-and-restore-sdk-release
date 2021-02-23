@@ -244,6 +244,11 @@ resources:
     <<: *vault_creds
     path: /concourse/bosh-backup-restore/github-sdk
 
+- name: slack-cryo-notification
+  type: slack-notification
+  source:
+    url: ((slack.webhook))
+
 jobs:
 - name: mark-pr-as-pending
   plan:
@@ -1159,3 +1164,49 @@ jobs:
       GCS_CLONE_BUCKET_NAME: bbr-system-test-gcs-clone-bucket
       BOSH_DEPLOYMENT: gcs-backuper
       <<: *bosh-lite-creds
+
+- name: merge-pull-request
+  serial: true
+  plan:
+  - get: backup-and-restore-sdk-release
+    trigger: true
+    passed:
+    - azure-blobstore-backuper-system-tests
+    - gcs-blobstore-backuper-system-tests
+    - postgres-system-tests
+    - postgres-system-tests-rds
+    - postgres-system-tests-gcp
+    - mariadb-system-tests
+    - mysql-system-tests-rds
+    - mysql-system-tests-gcp
+    - s3-blobstore-backuper-system-tests
+    - s3-blobstore-system-tests-with-iam-instance-profile
+
+  - put: backup-and-restore-sdk-release
+    params:
+      path: backup-and-restore-sdk-release
+      status: success
+
+  - load_var: pr-url
+    file: backup-and-restore-sdk-release/.git/resource/url
+
+  - task: merge-golang-vendor-pull-request
+    file: backup-and-restore-sdk-release/ci/tasks/merge-pr/task.yml
+    params:
+      GITHUB_TOKEN: ((github.access_token))
+      URL: ((.:pr-url))
+      METHOD: SQUASH
+    on_failure:
+      put: slack-cryo-notification
+      params:
+        text: |
+          A new PR failed to be merged automatically.
+          All tests were passing successfully though.
+          You can review it <((.:pr-url))|*here*>.
+    on_success:
+      put: slack-cryo-notification
+      params:
+        text: |
+          A new PR has been merged automatically.
+          All tests were passing successfully.
+          You can review it  <((.:pr-url))|*here*>.
