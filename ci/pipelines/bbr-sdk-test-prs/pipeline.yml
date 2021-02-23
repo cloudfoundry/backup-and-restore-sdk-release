@@ -1165,7 +1165,7 @@ jobs:
       BOSH_DEPLOYMENT: gcs-backuper
       <<: *bosh-lite-creds
 
-- name: merge-pull-request
+- name: mark-pr-as-successful
   serial: true
   plan:
   - get: backup-and-restore-sdk-release
@@ -1187,10 +1187,18 @@ jobs:
       path: backup-and-restore-sdk-release
       status: success
 
+- name: merge-pull-request
+  serial: true
+  plan:
+  - get: backup-and-restore-sdk-release
+    trigger: true
+    passed:
+    - mark-pr-as-successful
+
   - load_var: pr-url
     file: backup-and-restore-sdk-release/.git/resource/url
 
-  - task: merge-golang-vendor-pull-request
+  - task: merge-pull-request
     file: backup-and-restore-sdk-release/ci/tasks/merge-pr/task.yml
     params:
       GITHUB_TOKEN: ((github.access_token))
