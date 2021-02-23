@@ -117,7 +117,7 @@ resources:
 
 - name: backup-and-restore-sdk-release
   type: pull-request
-  check_every: 1h
+  check_every: 1m
   source:
     repository: cloudfoundry-incubator/backup-and-restore-sdk-release
     disable_forks: true
@@ -245,12 +245,23 @@ resources:
     path: /concourse/bosh-backup-restore/github-sdk
 
 jobs:
+- name: mark-pr-as-pending
+  plan:
+  - get: backup-and-restore-sdk-release
+    trigger: true
+    version: every
+  - put: backup-and-restore-sdk-release
+    params:
+      path: backup-and-restore-sdk-release
+      status: pending
+
 - name: unit-tests
   serial: true
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release
       trigger: true
+      passed: [mark-pr-as-pending]
     - get: github-sdk-key
   - in_parallel:
     - task: sdk-template-unit-tests
