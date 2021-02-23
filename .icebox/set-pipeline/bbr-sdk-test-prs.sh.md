@@ -1,22 +1,15 @@
 ```bash
 #!/usr/bin/env bash
-set -euo pipefail
-```
-## Determining ```project root folder``` according to git
-This is useful to avoid complex relative paths, and to avoid absolute paths
-that may break the script when run in a different system.
-
-```bash
-PROJECT_ROOT=$(git rev-parse --show-toplevel)
+set -euox pipefail
+echo $CONCOURSE_URL
 ```
 
 ## Setting Pipelines
 ```bash
 fly --target=concourse                      \
     login                                   \
-    --username=cryo                         \
-    --password=cryo                         \
-    --concourse-url=http://concourse:8080
+    --concourse-url=${CONCOURSE_URL}        \
+    --team-name=${CONCOURSE_TEAM}
 
 fly --target=concourse sync
 
