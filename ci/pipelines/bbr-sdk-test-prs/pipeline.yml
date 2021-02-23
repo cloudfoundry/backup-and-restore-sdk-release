@@ -92,6 +92,11 @@ resource_types:
     repository: wfernandes/vault-resource
     tag: latest
 
+- name: pull-request
+  type: docker-image
+  source:
+    repository: teliaoss/github-pr-resource
+
 resources:
 - name: rds-ca-bundle
   type: file-url
@@ -111,11 +116,12 @@ resources:
       region: *aws-region
 
 - name: backup-and-restore-sdk-release
-  type: git
+  type: pull-request
+  check_every: 1h
   source:
-    uri: git@github.com:cloudfoundry-incubator/backup-and-restore-sdk-release.git
-    private_key: ((github.ssh_key))
-    branch: develop
+    repository: cloudfoundry-incubator/backup-and-restore-sdk-release
+    disable_forks: true
+    access_token: ((github.access_token))
 
 - name: version
   type: semver
