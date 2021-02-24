@@ -1387,7 +1387,7 @@ jobs:
       branch: golang-vendor-updates
       force: true
   - task: create-golang-vendor-pull-request
-    file: cryogenics-meta/tasks/create-pr/task.yml
+    file: cryogenics-meta/ci/tasks/create-pr/task.yml
     params:
       GITHUB_TOKEN: ((github.access_token))
       BASE: develop
