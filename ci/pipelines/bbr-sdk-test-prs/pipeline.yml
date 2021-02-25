@@ -92,6 +92,11 @@ resource_types:
     repository: wfernandes/vault-resource
     tag: latest
 
+- name: pull-request
+  type: docker-image
+  source:
+    repository: teliaoss/github-pr-resource
+
 resources:
 - name: rds-ca-bundle
   type: file-url
@@ -111,25 +116,13 @@ resources:
       region: *aws-region
 
 - name: backup-and-restore-sdk-release
-  type: git
+  type: pull-request
+  check_every: 1m
   source:
-    uri: git@github.com:cloudfoundry-incubator/backup-and-restore-sdk-release.git
-    private_key: ((github.ssh_key))
-    branch: develop
-
-- name: backup-and-restore-sdk-release-master
-  type: git
-  source:
-    uri: git@github.com:cloudfoundry-incubator/backup-and-restore-sdk-release.git
-    private_key: ((github.ssh_key))
-    branch: master
-
-- name: backup-and-restore-sdk-release-vendoring
-  type: git
-  source:
-    uri: git@github.com:cloudfoundry-incubator/backup-and-restore-sdk-release.git
-    private_key: ((github.ssh_key))
-    branch: golang-vendor-updates
+    repository: cloudfoundry-incubator/backup-and-restore-sdk-release
+    disable_forks: true
+    access_token: ((github.access_token))
+    labels: ["bump-golang"]
 
 - name: version
   type: semver
@@ -148,14 +141,6 @@ resources:
     region_name: *aws-region
     access_key_id: ((aws_credentials.access_key_id))
     secret_access_key: ((aws_credentials.secret_access_key))
-
-- name: github-release
-  type: github-release
-  source:
-    user: cloudfoundry-incubator
-    repository: backup-and-restore-sdk-release
-    drafts: true
-    access_token: ((github.ssh_key))
 
 - name: s3-backuper-with-iam-instance-profile-deployment
   type: bosh-deployment
@@ -227,25 +212,6 @@ resources:
   source:
     name: bosh-warden-boshlite-ubuntu-xenial-go_agent
 
-- name: golang-release
-  type: git
-  source:
-    uri: https://github.com/bosh-packages/golang-release.git
-    tag_filter: v*
-
-- name: every6h
-  type: time
-  source:
-    interval: 6h
-    start: 9:00 AM
-    stop: 5:00 PM
-    days: [Monday, Tuesday, Wednesday, Thursday, Friday]
-
-- name: slack-cryo-notification
-  type: slack-notification
-  source:
-    url: ((slack.webhook))
-
 - name: cryogenics-meta
   type: git
   source:
@@ -279,15 +245,29 @@ resources:
     <<: *vault_creds
     path: /concourse/bosh-backup-restore/github-sdk
 
+- name: slack-cryo-notification
+  type: slack-notification
+  source:
+    url: ((slack.webhook))
+
 jobs:
+- name: mark-pr-as-pending
+  plan:
+  - get: backup-and-restore-sdk-release
+    trigger: true
+    version: every
+  - put: backup-and-restore-sdk-release
+    params:
+      path: backup-and-restore-sdk-release
+      status: pending
+
 - name: unit-tests
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
     - get: backup-and-restore-sdk-release
       trigger: true
+      passed: [mark-pr-as-pending]
     - get: github-sdk-key
   - in_parallel:
     - task: sdk-template-unit-tests
@@ -315,9 +295,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [unit-tests]
     - get: backup-and-restore-sdk-release
       passed: [unit-tests]
       trigger: true
@@ -355,9 +332,6 @@ jobs:
   serial_groups: [version]
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [contract-tests]
     - get: backup-and-restore-sdk-release
       passed: [contract-tests]
       trigger: true
@@ -378,9 +352,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
     - get: backup-and-restore-sdk-release
       passed: [create-release]
       trigger: true
@@ -409,9 +380,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
     - get: backup-and-restore-sdk-release
       passed: [create-release]
       trigger: true
@@ -489,9 +457,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
     - get: backup-and-restore-sdk-release
       passed: [create-release]
       trigger: true
@@ -524,9 +489,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
     - get: backup-and-restore-sdk-release
       passed: [create-release]
       trigger: true
@@ -556,9 +518,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
     - get: backup-and-restore-sdk-release
       passed: [create-release]
       trigger: true
@@ -592,9 +551,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
     - get: backup-and-restore-sdk-release
       passed: [create-release]
       trigger: true
@@ -647,9 +603,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
     - get: backup-and-restore-sdk-release
       passed: [create-release]
       trigger: true
@@ -681,9 +634,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
     - get: backup-and-restore-sdk-release
       passed: [create-release]
       trigger: true
@@ -717,11 +667,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-postgres
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-database-sdk
@@ -795,11 +740,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-external-gcp-dbs
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-database-sdk
@@ -863,11 +803,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-external-rds-dbs
     - get: backup-and-restore-sdk-release
       trigger: true
       passed:
@@ -967,11 +902,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-mariadb
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-database-sdk
@@ -996,11 +926,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-external-rds-dbs
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-database-sdk
@@ -1035,11 +960,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-external-rds-dbs
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-database-sdk
@@ -1074,11 +994,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-external-gcp-dbs
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-database-sdk
@@ -1115,9 +1030,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [deploy-s3-blobstore-sdk]
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-s3-blobstore-sdk
@@ -1155,9 +1067,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [deploy-s3-blobstore-sdk-with-iam-instance-profile]
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-s3-blobstore-sdk-with-iam-instance-profile
@@ -1188,9 +1097,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [deploy-azure-blobstore-sdk]
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-azure-blobstore-sdk
@@ -1212,9 +1118,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
     - get: backup-and-restore-sdk-release
       passed:
       - create-release
@@ -1247,9 +1150,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [deploy-gcs-blobstore-sdk]
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-gcs-blobstore-sdk
@@ -1266,140 +1166,56 @@ jobs:
       BOSH_DEPLOYMENT: gcs-backuper
       <<: *bosh-lite-creds
 
-- name: update-tracker
-  plan:
-  - in_parallel:
-    - get: cryogenics-meta
-    - get: backup-and-restore-sdk-release
-      trigger: true
-      passed:
-      - azure-blobstore-backuper-system-tests
-      - gcs-blobstore-backuper-system-tests
-      - postgres-system-tests
-      - postgres-system-tests-rds
-      - postgres-system-tests-gcp
-      - mariadb-system-tests
-      - mysql-system-tests-rds
-      - mysql-system-tests-gcp
-      - s3-blobstore-backuper-system-tests
-      - s3-blobstore-system-tests-with-iam-instance-profile
-  - task: deliver-stories
-    file: backup-and-restore-sdk-release/ci/tasks/deliver-stories/task.yml
-    params:
-      TRACKER_API_TOKEN: ((tracker.api_token))
-      TRACKER_PROJECT_ID: ((tracker.project_id))
-      GIT_REPOSITORY: cloudfoundry-incubator/backup-and-restore-sdk-release
-  - task: accept-stories
-    file: backup-and-restore-sdk-release/ci/tasks/accept-stories/task.yml
-    params:
-      TRACKER_API_TOKEN: ((tracker.api_token))
-      TRACKER_PROJECT_ID: ((tracker.project_id))
-      GIT_REPOSITORY: cloudfoundry-incubator/backup-and-restore-sdk-release
-
-- name: create-final-patch
-  serial: true
-  serial_groups: [version]
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release
-      passed: [update-tracker]
-    - get: backup-and-restore-sdk-release-master
-    - get: version
-      params: {bump: patch}
-    - get: cryogenics-meta
-  - task: create-final-release
-    file: cryogenics-meta/ci/tasks/create-final-release/task.yml
-    params:
-      AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
-      AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
-  - task: generate-release-notes
-    file: cryogenics-meta/ci/tasks/generate-release-notes/task.yml
-    input_mapping:
-      repo: backup-and-restore-sdk-release
-      template-folder: cryogenics-meta
-    params:
-      TEMPLATE_PATH: ci/release-templates/release-notes.md.erb
-  - put: backup-and-restore-sdk-release-master
-    params:
-      repository: backup-and-restore-sdk-final-release
-      merge: true
-      tag: version/number
-      tag_prefix: v
-  - put: release
-    params:
-      file: backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
-  - put: github-release
-    params:
-      name: version/number
-      tag: version/number
-      body: release-notes/release-notes.md
-      tag_prefix: v
-      commitish: backup-and-restore-sdk-release/.git/refs/heads/develop
-      globs:
-      - backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
-  - put: version
-    params: {file: version/number}
-  - load_var: version-tag
-    file: version/number
-  - load_var: github-release-url
-    file: github-release/url
-  - put: slack-cryo-notification
-    params:
-      text: |
-        A new release for $BUILD_PIPELINE_NAME has been published!
-        Release `((.:version-tag))` is now available <((.:github-release-url))|here>
-        View the pipeline <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|here>
-
-- name: merge-master-into-develop
+- name: mark-pr-as-successful
   serial: true
   plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release
-    - get: backup-and-restore-sdk-release-master
-      trigger: true
+  - get: backup-and-restore-sdk-release
+    trigger: true
+    passed:
+    - azure-blobstore-backuper-system-tests
+    - gcs-blobstore-backuper-system-tests
+    - postgres-system-tests
+    - postgres-system-tests-rds
+    - postgres-system-tests-gcp
+    - mariadb-system-tests
+    - mysql-system-tests-rds
+    - mysql-system-tests-gcp
+    - s3-blobstore-backuper-system-tests
+    - s3-blobstore-system-tests-with-iam-instance-profile
+
   - put: backup-and-restore-sdk-release
     params:
-      repository: backup-and-restore-sdk-release-master
-      merge: true
+      path: backup-and-restore-sdk-release
+      status: success
 
-- name: bump-golang
+- name: merge-pull-request
+  serial: true
   plan:
-  - in_parallel:
-    - get: cryogenics-meta
-    - get: golang-release
-      trigger: true
-    - get: backup-and-restore-sdk-release
-  - task: bosh-vendor-package
-    file: cryogenics-meta/ci/tasks/bosh-vendor-package/task.yml
-    input_mapping:
-      release: backup-and-restore-sdk-release
-      vendored-package-release: golang-release
+  - get: backup-and-restore-sdk-release
+    trigger: true
+    passed:
+    - mark-pr-as-successful
+
+  - load_var: pr-url
+    file: backup-and-restore-sdk-release/.git/resource/url
+
+  - task: merge-pull-request
+    file: backup-and-restore-sdk-release/ci/tasks/merge-pr/task.yml
     params:
-      VENDORED_PACKAGE_NAME: golang-1-linux
-      VENDOR_UPDATES_BRANCH: golang-vendor-updates
-      COMMIT_USERNAME: bump-golang CI job
-      COMMIT_USEREMAIL: mapbu-cryogenics@groups.vmware.com
-      AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
-      AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
-  - put: backup-and-restore-sdk-release-vendoring
-    params:
-      repository: release-with-updated-vendored-package
-      branch: golang-vendor-updates
-      force: true
-  - task: create-golang-vendor-pull-request
-    file: cryogenics-meta/ci/tasks/create-pr/task.yml
-    params:
-      LABELS: ci, bump-golang
       GITHUB_TOKEN: ((github.access_token))
-      BASE: develop
-      BRANCH: golang-vendor-updates
-      TITLE: Update vendored package golang-1-linux
-      MESSAGE:
-        This is an automatically generated Pull Request from the Cryogenics CI Bot.
-
-        I have detected a new version of [golang-release](https://github.com/bosh-packages/golang-release) and automatically bumped
-        this package to benefit from the latest changes.
-
-        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
-    input_mapping:
-      repo: backup-and-restore-sdk-release-vendoring
+      URL: ((.:pr-url))
+      METHOD: SQUASH
+    on_failure:
+      put: slack-cryo-notification
+      params:
+        text: |
+          A new PR failed to be merged automatically.
+          All tests were passing successfully though.
+          You can review it <((.:pr-url))|*here*>.
+    on_success:
+      put: slack-cryo-notification
+      params:
+        text: |
+          A new PR has been merged automatically.
+          All tests were passing successfully.
+          You can review it  <((.:pr-url))|*here*>.
