@@ -1389,6 +1389,7 @@ jobs:
   - task: create-golang-vendor-pull-request
     file: cryogenics-meta/ci/tasks/create-pr/task.yml
     params:
+      LABELS: ci, bump-golang
       GITHUB_TOKEN: ((github.access_token))
       BASE: develop
       BRANCH: golang-vendor-updates

@@ -122,6 +122,7 @@ resources:
     repository: cloudfoundry-incubator/backup-and-restore-sdk-release
     disable_forks: true
     access_token: ((github.access_token))
+    labels: ["bump-golang"]
 
 - name: version
   type: semver
