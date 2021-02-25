@@ -13,14 +13,6 @@ resources:
     access_token: ((github.access_token))
     labels: ["dependencies"]
     base_branch: develop
-
-- name: backup-and-restore-ci
-  type: git
-  icon: github
-  source:
-    uri: git@github.com:cloudfoundry-incubator/backup-and-restore-ci.git
-    private_key: ((github.ssh_key))
-    branch: master
   
 - name: bosh-backup-and-restore-meta
   type: git
@@ -38,7 +30,6 @@ jobs:
     - get: backup-and-restore-sdk-release
       trigger: true
       version: every
-    - get: backup-and-restore-ci
     - get: bosh-backup-and-restore-meta
   - task: find-pr-story
     file: backup-and-restore-sdk-release/ci/tasks/find-pr-story/task.yml
@@ -59,26 +50,26 @@ jobs:
   - in_parallel:
     - task: sdk-template-unit-tests
       attempts: 5
-      file: backup-and-restore-ci/tasks/sdk-template-unit-tests/task.yml
+      file: backup-and-restore-sdk-release/ci/tasks/sdk-template-unit-tests/task.yml
     - task: databases-unit-tests
       attempts: 5
-      file: backup-and-restore-ci/tasks/database-unit-tests/task.yml
+      file: backup-and-restore-sdk-release/ci/tasks/database-unit-tests/task.yml
       privileged: true
     - task: s3-blobstore-unit-tests
       attempts: 5
-      file: backup-and-restore-ci/tasks/sdk-unit-blobstore/task.yml
+      file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: s3-blobstore-backup-restore
         GINKGO_EXTRA_FLAGS: -p --skipPackage s3bucket
     - task: azure-blobstore-unit-tests
       attempts: 5
-      file: backup-and-restore-ci/tasks/sdk-unit-blobstore/task.yml
+      file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: azure-blobstore-backup-restore
         GINKGO_EXTRA_FLAGS: -p --skipPackage contract_test
     - task: gcs-blobstore-unit-tests
       attempts: 5
-      file: backup-and-restore-ci/tasks/sdk-unit-blobstore/task.yml
+      file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: gcs-blobstore-backup-restore
         GINKGO_EXTRA_FLAGS: -p --skipPackage contract_test
