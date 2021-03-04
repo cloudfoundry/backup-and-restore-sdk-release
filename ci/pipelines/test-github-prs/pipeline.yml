@@ -1,8 +1,18 @@
+vault_creds: &vault_creds
+  url: ((vault/server.url))
+  role_id: ((vault/resource_credentials.role_id))
+  secret_id: ((vault/resource_credentials.secret_id))
+
 resource_types:
 - name: pull-request
   type: docker-image
   source:
     repository: teliaoss/github-pr-resource
+- name: vault
+  type: docker-image
+  source:
+    repository: wfernandes/vault-resource
+    tag: latest
 
 resources:
 - name: backup-and-restore-sdk-release
@@ -21,6 +31,11 @@ resources:
     private_key: ((github.ssh_key))
     git_crypt_key: ((github-bbr.crypt_key))
     branch: master
+- name: github-sdk-key
+  type: vault
+  source:
+    <<: *vault_creds
+    path: /concourse/bosh-backup-restore/github-sdk
 
 jobs:
 - name: test-and-merge
@@ -31,6 +46,7 @@ jobs:
       trigger: true
       version: every
     - get: bosh-backup-and-restore-meta
+    - get: github-sdk-key
   - task: find-pr-story
     file: backup-and-restore-sdk-release/ci/tasks/find-pr-story/task.yml
     params:
