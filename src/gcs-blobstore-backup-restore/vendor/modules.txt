@@ -30,13 +30,13 @@ github.com/googleapis/gax-go/v2
 github.com/jstemmer/go-junit-report
 github.com/jstemmer/go-junit-report/formatter
 github.com/jstemmer/go-junit-report/parser
-# github.com/nxadm/tail v1.4.5
+# github.com/nxadm/tail v1.4.8
 github.com/nxadm/tail
 github.com/nxadm/tail/ratelimiter
 github.com/nxadm/tail/util
 github.com/nxadm/tail/watch
 github.com/nxadm/tail/winfile
-# github.com/onsi/ginkgo v1.15.0
+# github.com/onsi/ginkgo v1.15.1
 ## explicit
 github.com/onsi/ginkgo
 github.com/onsi/ginkgo/config
