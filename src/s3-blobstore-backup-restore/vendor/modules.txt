@@ -56,13 +56,13 @@ github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor
 github.com/fsnotify/fsnotify
 # github.com/jmespath/go-jmespath v0.4.0
 github.com/jmespath/go-jmespath
-# github.com/nxadm/tail v1.4.5
+# github.com/nxadm/tail v1.4.8
 github.com/nxadm/tail
 github.com/nxadm/tail/ratelimiter
 github.com/nxadm/tail/util
 github.com/nxadm/tail/watch
 github.com/nxadm/tail/winfile
-# github.com/onsi/ginkgo v1.15.0
+# github.com/onsi/ginkgo v1.15.1
 ## explicit
 github.com/onsi/ginkgo
 github.com/onsi/ginkgo/config
