@@ -155,7 +155,7 @@ resources:
     user: cloudfoundry-incubator
     repository: backup-and-restore-sdk-release
     drafts: true
-    access_token: ((github.ssh_key))
+    access_token: ((github.access_token))
 
 - name: s3-backuper-with-iam-instance-profile-deployment
   type: bosh-deployment
@@ -1389,7 +1389,7 @@ jobs:
   - task: create-golang-vendor-pull-request
     file: cryogenics-meta/ci/tasks/create-pr/task.yml
     params:
-      LABELS: ci, bump-golang
+      LABELS: ci,bump-golang
       GITHUB_TOKEN: ((github.access_token))
       BASE: develop
       BRANCH: golang-vendor-updates
