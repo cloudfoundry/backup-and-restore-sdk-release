@@ -92,7 +92,20 @@ resource_types:
     repository: wfernandes/vault-resource
     tag: latest
 
+- name: gitgat
+  type: docker-image
+  source:
+    repository: cryogenics/concourse-gitgat-resource
+    tag: latest
+
 resources:
+- name: sdk-biweekly-gate
+  type: gitgat
+  source:
+    uri: https://github.com/cloudfoundry-incubator/backup-and-restore-sdk-release.git
+    branch: develop
+    since: 2 weeks
+
 - name: rds-ca-bundle
   type: file-url
   source:
@@ -1296,11 +1309,23 @@ jobs:
       TRACKER_PROJECT_ID: ((tracker.project_id))
       GIT_REPOSITORY: cloudfoundry-incubator/backup-and-restore-sdk-release
 
+- name: release-gate
+  serial: true
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release
+      passed: [update-tracker]
+    - get: sdk-biweekly-gate
+      trigger: true
+
 - name: create-final-patch
   serial: true
   serial_groups: [version]
   plan:
   - in_parallel:
+    - get: sdk-biweekly-gate
+      passed: [release-gate]
+      trigger: true
     - get: backup-and-restore-sdk-release
       passed: [update-tracker]
     - get: backup-and-restore-sdk-release-master
