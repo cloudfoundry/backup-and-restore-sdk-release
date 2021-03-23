@@ -45,6 +45,12 @@ postgres-11-port: &postgres-11-port 5432
 postgres-11-username: &postgres-11-username test_user
 postgres-11-password: &postgres-11-password postgres_password
 
+postgres-13-deployment-name: &postgres-13-deployment-name postgres-13-dev
+postgres-13-host: &postgres-13-host 10.244.1.14
+postgres-13-port: &postgres-13-port 5432
+postgres-13-username: &postgres-13-username test_user
+postgres-13-password: &postgres-13-password postgres_password
+
 gcp-mysql-5-7-ca-cert-path: &gcp-mysql-5-7-ca-cert-path "gcp-mysql_5_7-test-server-cert.pem"
 gcp-mysql-5-7-client-cert-path: &gcp-mysql-5-7-client-cert-path "gcp-mysql_5_7-test-client-cert.pem"
 gcp-mysql-5-7-client-key-path: &gcp-mysql-5-7-client-key-path "gcp-mysql_5_7-test-client-key.pem"
@@ -204,6 +210,12 @@ resources:
   type: bosh-deployment
   source:
     deployment: *postgres-11-deployment-name
+    skip_check: true
+
+- name: postgres-13-dev-deployment
+  type: bosh-deployment
+  source:
+    deployment: *postgres-13-deployment-name
     skip_check: true
 
 - name: database-backup-restorer-deployment
@@ -492,6 +504,18 @@ jobs:
           db_host: *postgres-11-host
           availability_zone: z1
         source_file: source-file/source-file.yml
+    - put: postgres-13-dev-deployment
+      params:
+        manifest: backup-and-restore-sdk-release/ci/manifests/postgres-13.yml
+        stemcells:
+        - xenial-stemcell/*.tgz
+        vars:
+          deployment-name: *postgres-13-deployment-name
+          db_username: *postgres-13-username
+          db_password: *postgres-13-password
+          db_host: *postgres-13-host
+          availability_zone: z1
+        source_file: source-file/source-file.yml
   - task: create-ssl-user
     file: backup-and-restore-sdk-release/ci/tasks/create-ssl-user/task.yml
     params:
@@ -561,6 +585,7 @@ jobs:
           postgres_9_6_password: ((backup-and-restore-sdk-release.rds_postgres_9_6_password))
           postgres_10_password: ((backup-and-restore-sdk-release.rds_postgres_10_password))
           postgres_11_password: ((backup-and-restore-sdk-release.rds_postgres_11_password))
+          postgres_13_password: ((backup-and-restore-sdk-release.rds_postgres_13_password))
           mariadb_10_password: ((backup-and-restore-sdk-release.rds_mariadb_10_password))
       get_params:
         output_statefile: true
@@ -779,6 +804,15 @@ jobs:
         POSTGRES_USERNAME: *postgres-11-username
         POSTGRES_PORT: *postgres-11-port
         <<: *bosh-lite-creds
+    - task: postgres-system-tests-13
+      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
+      params:
+        TEST_SUITE_NAME: postgresql
+        POSTGRES_PASSWORD: *postgres-13-password
+        POSTGRES_HOSTNAME: *postgres-13-host
+        POSTGRES_USERNAME: *postgres-13-username
+        POSTGRES_PORT: *postgres-13-port
+        <<: *bosh-lite-creds
   - task: postgres-tls-system-tests-9.6
     file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
     params:
@@ -932,6 +966,18 @@ jobs:
         POSTGRES_PORT: 5432
         DB_TYPE: postgres
         DB_PREFIX: postgres_11
+    - task: postgres-system-tests-13
+      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+      input_mapping:
+        terraform-state: terraform-aws
+      params:
+        TEST_SUITE_NAME: postgresql
+        <<: *bosh-lite-creds
+        POSTGRES_PASSWORD: ((backup-and-restore-sdk-release.rds_postgres_13_password))
+        POSTGRES_USERNAME: root
+        POSTGRES_PORT: 5432
+        DB_TYPE: postgres
+        DB_PREFIX: postgres_13
   - in_parallel:
     - task: postgres-tls-system-tests-9.6
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
@@ -975,6 +1021,20 @@ jobs:
         TEST_SSL_USER_REQUIRES_SSL: false
         DB_TYPE: postgres
         DB_PREFIX: postgres_11
+    - task: postgres-tls-system-tests-13
+      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+      input_mapping:
+        terraform-state: terraform-aws
+      params:
+        TEST_SUITE_NAME: postgresql_tls
+        <<: *bosh-lite-creds
+        POSTGRES_PASSWORD: ((backup-and-restore-sdk-release.rds_postgres_13_password))
+        POSTGRES_USERNAME: root
+        POSTGRES_PORT: 5432
+        POSTGRES_CA_CERT_PATH: rds-combined-ca-bundle.pem
+        TEST_SSL_USER_REQUIRES_SSL: false
+        DB_TYPE: postgres
+        DB_PREFIX: postgres_13
 
 - name: mariadb-system-tests
   serial: true

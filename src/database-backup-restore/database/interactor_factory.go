@@ -164,6 +164,11 @@ func (f InteractorFactory) getUtilitiesForPostgres(postgresVersion version.Datab
 			f.utilitiesConfig.Postgres11.Dump,
 			f.utilitiesConfig.Postgres11.Restore,
 			nil
+	} else if semVer.MajorVersionMatches(version.SemVer("13", "x", "x")) {
+		return f.utilitiesConfig.Postgres13.Client,
+			f.utilitiesConfig.Postgres13.Dump,
+			f.utilitiesConfig.Postgres13.Restore,
+			nil
 	}
 
 	return "", "", "", fmt.Errorf("unsupported version of postgresql: %s.%s", semVer.Major, semVer.Minor)

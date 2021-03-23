@@ -35,6 +35,11 @@ var _ = Describe("InteractorFactory", func() {
 			Restore: "pg_p_11_restore",
 			Client:  "pg_p_11_client",
 		},
+		Postgres13: config.UtilityPaths{
+			Dump:    "pg_p_13_dump",
+			Restore: "pg_p_13_restore",
+			Client:  "pg_p_13_client",
+		},
 		Mariadb: config.UtilityPaths{
 			Dump:    "mariadb_dump",
 			Restore: "mariadb_restore",
@@ -168,6 +173,28 @@ var _ = Describe("InteractorFactory", func() {
 				})
 			})
 
+			Context("when the version is detected as 13", func() {
+				BeforeEach(func() {
+					postgresServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "13", Minor: "2", Patch: "1"}},
+						nil)
+				})
+
+				It("builds a database.TableCheckingInteractor", func() {
+					Expect(factoryError).NotTo(HaveOccurred())
+					Expect(interactor).To(Equal(
+						database.NewTableCheckingInteractor(connectionConfig,
+							postgres.NewTableChecker(connectionConfig, "pg_p_13_client"),
+							postgres.NewBackuper(
+								connectionConfig,
+								tempFolderManager,
+								"pg_p_13_dump",
+							),
+						),
+					))
+				})
+			})
+
 			Context("when the version is detected as 9.5", func() {
 				BeforeEach(func() {
 					postgresServerVersionDetector.GetVersionReturns(
@@ -237,6 +264,25 @@ var _ = Describe("InteractorFactory", func() {
 							connectionConfig,
 							tempFolderManager,
 							"pg_p_10_restore",
+						),
+					))
+					Expect(factoryError).NotTo(HaveOccurred())
+				})
+			})
+
+			Context("when the version is detected as 13", func() {
+				BeforeEach(func() {
+					postgresServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "13", Minor: "2", Patch: "1"}},
+						nil)
+				})
+
+				It("builds a database.TableCheckingInteractor", func() {
+					Expect(interactor).To(Equal(
+						postgres.NewRestorer(
+							connectionConfig,
+							tempFolderManager,
+							"pg_p_13_restore",
 						),
 					))
 					Expect(factoryError).NotTo(HaveOccurred())
