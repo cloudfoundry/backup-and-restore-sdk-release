@@ -1,3 +1,9 @@
+resource_types:
+- name: mysql-releases
+  type: docker-image
+  source:
+    repository: cryogenics/mysql-releases-resource
+
 resources:
 - name: backup-and-restore-sdk-release
   type: git
@@ -25,6 +31,11 @@ resources:
     uri: git@github.com:pivotal-cf/cryogenics-meta.git
     private_key: ((github.ssh_key))
     branch: main
+
+- name: mysql-5.6-release
+  type: mysql-releases
+  source:
+    product: MySQL Community Server 5.6
 
 jobs:
 - name: bump-golang
@@ -68,3 +79,9 @@ jobs:
         If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
     input_mapping:
       repo: backup-and-restore-sdk-release-vendoring
+- name: bump-mysql
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release
+    - get: mysql-5.6-release
+      trigger: true
