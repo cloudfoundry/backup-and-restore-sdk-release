@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0">
+  <channel>
+    <title>MySQL - New Product Releases</title>
+    <link>https://dev.mysql.com/downloads/</link>
+    <description></description>
+    <copyright>Copyright 2021, Oracle Corporation and/or its affiliates.</copyright>
+    <item>
+      <title>MySQL Community Server 5.6</title>
+      <link>https://dev.mysql.com/downloads/mysql/5.6.html</link>
+      <pubDate>Wed, 20 Jan 2021 00:00:00 +0000</pubDate>
+      <description>MySQL Community Server 5.6 (5.6.51 GA, published on Wednesday, 20 Jan 2021)</description>
+    </item>
+    <item>
+      <title>MySQL Installer 5.6</title>
+      <link>https://dev.mysql.com/downloads/windows/installer/5.6.html</link>
+      <pubDate>Wed, 20 Jan 2021 00:00:00 +0000</pubDate>
+      <description>MySQL Installer 5.6 (5.6.51 GA, published on Wednesday, 20 Jan 2021)</description>
+    </item>
+    <item>
+      <title>MySQL Cluster 7.6</title>
+      <link>https://dev.mysql.com/downloads/cluster/7.6.html</link>
+      <pubDate>Tue, 19 Jan 2021 00:00:00 +0000</pubDate>
+      <description>MySQL Cluster 7.6 (7.6.17 GA, published on Tuesday, 19 Jan 2021)</description>
+    </item>
+    <item>
+      <title>MySQL Cluster 7.5</title>
+      <link>https://dev.mysql.com/downloads/cluster/7.5.html</link>
+      <pubDate>Tue, 19 Jan 2021 00:00:00 +0000</pubDate>
+      <description>MySQL Cluster 7.5 (7.5.21 GA, published on Tuesday, 19 Jan 2021)</description>
+    </item>
+    <item>
+      <title>MySQL Cluster 7.4</title>
+      <link>https://dev.mysql.com/downloads/cluster/7.4.html</link>
+      <pubDate>Tue, 19 Jan 2021 00:00:00 +0000</pubDate>
+      <description>MySQL Cluster 7.4 (7.4.31 GA, published on Tuesday, 19 Jan 2021)</description>
+    </item>
+    <item>
+      <title>MySQL Cluster 7.3</title>
+      <link>https://dev.mysql.com/downloads/cluster/7.3.html</link>
+      <pubDate>Tue, 19 Jan 2021 00:00:00 +0000</pubDate>
+      <description>MySQL Cluster 7.3 (7.3.32 GA, published on Tuesday, 19 Jan 2021)</description>
+    </item>
+    <item>
+      <title>MySQL Installer 8.0</title>
+      <link>https://dev.mysql.com/downloads/windows/installer/8.0.html</link>
+      <pubDate>Mon, 18 Jan 2021 00:00:00 +0000</pubDate>
+      <description>MySQL Installer 8.0 (8.0.23 GA, published on Monday, 18 Jan 2021)</description>
+    </item>
+    <item>
+      <title>Connector/C++ 8.0</title>
+      <link>https://dev.mysql.com/downloads/connector/cpp/8.0.html</link>
+      <pubDate>Mon, 18 Jan 2021 00:00:00 +0000</pubDate>
+      <description>Connector/C++ 8.0 (8.0.23 GA, published on Monday, 18 Jan 2021)</description>
+    </item>
+    <item>
+      <title>Connector/ODBC 8.0</title>
+      <link>https://dev.mysql.com/downloads/connector/odbc/8.0.html</link>
+      <pubDate>Mon, 18 Jan 2021 00:00:00 +0000</pubDate>
+      <description>Connector/ODBC 8.0 (8.0.23 GA, published on Monday, 18 Jan 2021)</description>
+    </item>
+    <item>
+      <title>MySQL Cluster 8.0</title>
+      <link>https://dev.mysql.com/downloads/cluster/8.0.html</link>
+      <pubDate>Mon, 18 Jan 2021 00:00:00 +0000</pubDate>
+      <description>MySQL Cluster 8.0 (8.0.23 GA, published on Monday, 18 Jan 2021)</description>
+    </item>
+    <item>
+      <title>Connector/J 8.0</title>
+      <link>https://dev.mysql.com/downloads/connector/j/8.0.html</link>
+      <pubDate>Mon, 18 Jan 2021 00:00:00 +0000</pubDate>
+      <description>Connector/J 8.0 (8.0.23 GA, published on Monday, 18 Jan 2021)</description>
+    </item>
+    <item>
+      <title>Connector/NET 8.0</title>
+      <link>https://dev.mysql.com/downloads/connector/net/8.0.html</link>
+      <pubDate>Mon, 18 Jan 2021 00:00:00 +0000</pubDate>
+      <description>Connector/NET 8.0 (8.0.23 GA, published on Monday, 18 Jan 2021)</description>
+    </item>
+    <item>
+      <title>MySQL Workbench 8.0</title>
+      <link>https://dev.mysql.com/downloads/workbench/8.0.html</link>
+      <pubDate>Mon, 18 Jan 2021 00:00:00 +0000</pubDate>
+      <description>MySQL Workbench 8.0 (8.0.23 GA, published on Monday, 18 Jan 2021)</description>
+    </item>
+    <item>
+      <title>Connector/Node.js 8.0</title>
+      <link>https://dev.mysql.com/downloads/connector/nodejs/8.0.html</link>
+      <pubDate>Mon, 18 Jan 2021 00:00:00 +0000</pubDate>
+      <description>Connector/Node.js 8.0 (8.0.23 GA, published on Monday, 18 Jan 2021)</description>
+    </item>
+    <item>
+      <title>MySQL Community Server 8.0</title>
+      <link>https://dev.mysql.com/downloads/mysql/8.0.html</link>
+      <pubDate>Mon, 18 Jan 2021 00:00:00 +0000</pubDate>
+      <description>MySQL Community Server 8.0 (8.0.23 GA, published on Monday, 18 Jan 2021)</description>
+    </item>
+    <item>
+      <title>MySQL Shell 8.0</title>
+      <link>https://dev.mysql.com/downloads/shell/8.0.html</link>
+      <pubDate>Mon, 18 Jan 2021 00:00:00 +0000</pubDate>
+      <description>MySQL Shell 8.0 (8.0.23 GA, published on Monday, 18 Jan 2021)</description>
+    </item>
+    <item>
+      <title>MySQL Router 8.0</title>
+      <link>https://dev.mysql.com/downloads/router/8.0.html</link>
+      <pubDate>Mon, 18 Jan 2021 00:00:00 +0000</pubDate>
+      <description>MySQL Router 8.0 (8.0.23 GA, published on Monday, 18 Jan 2021)</description>
+    </item>
+    <item>
+      <title>Connector/Python 8.0</title>
+      <link>https://dev.mysql.com/downloads/connector/python/8.0.html</link>
+      <pubDate>Mon, 18 Jan 2021 00:00:00 +0000</pubDate>
+      <description>Connector/Python 8.0 (8.0.23 GA, published on Monday, 18 Jan 2021)</description>
+    </item>
+    <item>
+      <title>MySQL Community Server 5.7</title>
+      <link>https://dev.mysql.com/downloads/mysql/5.7.html</link>
+      <pubDate>Mon, 18 Jan 2021 00:00:00 +0000</pubDate>
+      <description>MySQL Community Server 5.7 (5.7.33 GA, published on Monday, 18 Jan 2021)</description>
+    </item>
+    <item>
+      <title>MySQL Installer 5.7</title>
+      <link>https://dev.mysql.com/downloads/windows/installer/5.7.html</link>
+      <pubDate>Mon, 18 Jan 2021 00:00:00 +0000</pubDate>
+      <description>MySQL Installer 5.7 (5.7.33 GA, published on Monday, 18 Jan 2021)</description>
+    </item>
+  </channel>
+</rss>
