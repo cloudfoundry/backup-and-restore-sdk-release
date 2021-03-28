@@ -17,5 +17,5 @@ download_file() {
 build_output() {
     local version="${1:?version not specified}"
 
-    echo "[{\"version\": {\"ref\": \"$version\"}}]"
+    echo "{\"version\": {\"ref\": \"$version\"}}"
 }

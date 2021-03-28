@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source check.bash
+source $(dirname $0)/check.bash
 
 input=$(timeout 0.5s cat)
 
