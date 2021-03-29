@@ -19,6 +19,13 @@ resources:
     private_key: ((github.ssh_key))
     branch: golang-vendor-updates
 
+- name: backup-and-restore-sdk-mysql-blob-updates
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry-incubator/backup-and-restore-sdk-release.git
+    private_key: ((github.ssh_key))
+    branch: mysql-blob-updates
+
 - name: golang-release
   type: git
   source:
@@ -82,6 +89,37 @@ jobs:
 - name: bump-mysql
   plan:
   - in_parallel:
+    - get: cryogenics-meta
     - get: backup-and-restore-sdk-release
     - get: mysql-5.6-release
       trigger: true
+  - task: bump-mysql-5.6
+    file: backup-and-restore-sdk-release/ci/tasks/bump-mysql-5.6/task.yml
+    params:
+      VENDOR_UPDATES_BRANCH: mysql-blob-updates
+      COMMIT_USERNAME: bump-mysql CI job
+      COMMIT_USEREMAIL: mapbu-cryogenics@groups.vmware.com
+      AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
+      AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
+  - put: backup-and-restore-sdk-mysql-blob-updates
+    params:
+      repository: release-with-updated-mysql-release
+      branch: mysql-blob-updates
+      force: true
+  - task: create-golang-vendor-pull-request
+    file: cryogenics-meta/ci/tasks/create-pr/task.yml
+    params:
+      LABELS: ci,bump-mysql,dependencies
+      GITHUB_TOKEN: ((github.access_token))
+      BASE: develop
+      BRANCH: mysql-blob-updates
+      TITLE: Update blob mysql-5.6
+      MESSAGE:
+        This is an automatically generated Pull Request from the Cryogenics CI Bot.
+
+        I have detected a new version of [mysql 5.6](https://dev.mysql.com/doc/relnotes/mysql/5.6/en/) and automatically bumped
+        this package to benefit from the latest changes.
+
+        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+    input_mapping:
+      repo: backup-and-restore-sdk-mysql-blob-updates
