@@ -109,7 +109,7 @@ jobs:
   - task: create-golang-vendor-pull-request
     file: cryogenics-meta/ci/tasks/create-pr/task.yml
     params:
-      LABELS: ci,bump-mysql,dependencies
+      LABELS: ci,bump-mysql
       GITHUB_TOKEN: ((github.access_token))
       BASE: develop
       BRANCH: mysql-blob-updates
