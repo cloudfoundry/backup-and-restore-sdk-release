@@ -55,4 +55,4 @@ blobstore:
   fi
 popd
 
-cp -r backup-and-restore-sdk-release/. release-with-updated-vendored-package
+cp -r backup-and-restore-sdk-release/. release-with-updated-mysql-release
