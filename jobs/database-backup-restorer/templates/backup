@@ -30,7 +30,10 @@ export PG_RESTORE_10_PATH="/var/vcap/packages/database-backup-restorer-postgres-
 export PG_DUMP_11_PATH="/var/vcap/packages/database-backup-restorer-postgres-11/bin/pg_dump"
 export PG_RESTORE_11_PATH="/var/vcap/packages/database-backup-restorer-postgres-11/bin/pg_restore"
 
-export PG_CLIENT_PATH="/var/vcap/packages/database-backup-restorer-postgres-11/bin/psql"
+export PG_DUMP_13_PATH="/var/vcap/packages/database-backup-restorer-postgres-13/bin/pg_dump"
+export PG_RESTORE_13_PATH="/var/vcap/packages/database-backup-restorer-postgres-13/bin/pg_restore"
+
+export PG_CLIENT_PATH="/var/vcap/packages/database-backup-restorer-postgres-13/bin/psql"
 
 export MARIADB_DUMP_PATH="/var/vcap/packages/database-backup-restorer-mariadb/bin/mysqldump"
 export MARIADB_CLIENT_PATH="/var/vcap/packages/database-backup-restorer-mariadb/bin/mysql"
