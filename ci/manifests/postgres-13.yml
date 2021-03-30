@@ -41,12 +41,14 @@ instance_groups:
     static_ips: [((db_host))]
   jobs:
   - name: postgres
-    release: bosh
+    release: postgres
     properties:
-      postgres:
-        user: ((db_username))
-        password: ((db_password))
-        listen_address: 0.0.0.0
+      databases:
+        roles:
+        - name: ((db_username))
+          password: ((db_password))
+          permissions:
+          - "CREATEDB"
   - name: bpm
     release: bpm
   azs: [((availability_zone))]
