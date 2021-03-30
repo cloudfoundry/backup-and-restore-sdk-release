@@ -19,7 +19,7 @@ name: ((deployment-name))
 
 releases:
 - name: bosh
-  version: 268.6.0
+  version: 271.7.0
   url: https://bosh.io/d/github.com/cloudfoundry/bosh?v=271.7.0
 - name: bpm
   version: latest
@@ -41,14 +41,12 @@ instance_groups:
     static_ips: [((db_host))]
   jobs:
   - name: postgres
-    release: postgres
+    release: bosh
     properties:
-      databases:
-        roles:
-        - name: ((db_username))
-          password: ((db_password))
-          permissions:
-          - "CREATEDB"
+      postgres:
+        user: ((db_username))
+        password: ((db_password))
+        listen_address: 0.0.0.0
   - name: bpm
     release: bpm
   azs: [((availability_zone))]
