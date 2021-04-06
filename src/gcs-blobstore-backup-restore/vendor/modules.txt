@@ -9,7 +9,7 @@ cloud.google.com/go/internal/version
 # cloud.google.com/go/storage v1.14.0
 ## explicit
 cloud.google.com/go/storage
-# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.5
+# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.6
 ## explicit
 github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor
 # github.com/fsnotify/fsnotify v1.4.9
