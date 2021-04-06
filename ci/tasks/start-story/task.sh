@@ -18,7 +18,7 @@ current_state=$(
         | jq '.current_state'
     )
 
-if [[ "$current_state" != "unstarted" ]]; then
+if [[ "$current_state" != "unstarted" || "$current_state" != "unscheduled" ]]; then
     echo "Story with ID: $STORY_ID has already been started, refusing to reset it's state to 'started'"
     exit 0
 fi
