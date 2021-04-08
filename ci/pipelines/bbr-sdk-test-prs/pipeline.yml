@@ -510,6 +510,7 @@ jobs:
           postgres_9_6_password: ((backup-and-restore-sdk-release.rds_postgres_9_6_password))
           postgres_10_password: ((backup-and-restore-sdk-release.rds_postgres_10_password))
           postgres_11_password: ((backup-and-restore-sdk-release.rds_postgres_11_password))
+          postgres_13_password: ((backup-and-restore-sdk-release.rds_postgres_13_password))
           mariadb_10_password: ((backup-and-restore-sdk-release.rds_mariadb_10_password))
       get_params:
         output_statefile: true
