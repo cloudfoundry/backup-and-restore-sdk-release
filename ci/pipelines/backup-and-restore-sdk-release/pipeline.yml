@@ -1374,13 +1374,18 @@ jobs:
     params:
       AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
       AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
-  - task: generate-release-notes
-    file: cryogenics-meta/ci/tasks/generate-release-notes/task.yml
+  - task: create-release-notes
+    file: cryogenics-meta/ci/tasks/release-automation/release-notes/task.yml
     input_mapping:
-      repo: backup-and-restore-sdk-release
+      git-repo: backup-and-restore-sdk-release
+    params:
+      USE_LATEST_PUBLISHED_TAG: true
+  - task: format-release-notes
+    file: cryogenics-meta/ci/tasks/release-automation/format-release-notes/task.yml
+    input_mapping:
       template-folder: cryogenics-meta
     params:
-      TEMPLATE_PATH: ci/release-templates/release-notes.md.erb
+      TEMPLATE_PATH: ci/release-templates/release-notes-auto.md.erb
   - put: backup-and-restore-sdk-release-master
     params:
       repository: backup-and-restore-sdk-final-release
