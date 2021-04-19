@@ -9,14 +9,14 @@ cloud.google.com/go/internal/version
 # cloud.google.com/go/storage v1.14.0
 ## explicit
 cloud.google.com/go/storage
-# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.6
+# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.7
 ## explicit
 github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor
 # github.com/fsnotify/fsnotify v1.4.9
 github.com/fsnotify/fsnotify
 # github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 github.com/golang/groupcache/lru
-# github.com/golang/protobuf v1.5.1
+# github.com/golang/protobuf v1.5.2
 github.com/golang/protobuf/internal/gengogrpc
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/protoc-gen-go
@@ -97,7 +97,7 @@ golang.org/x/lint/golint
 # golang.org/x/mod v0.4.1
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4
+# golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
 ## explicit
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
