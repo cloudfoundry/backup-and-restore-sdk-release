@@ -23,6 +23,7 @@ jobs:
       id: autocommit
       with:
         commit_message: Auto-fix go.sum changes in dependent modules
+        commit_author: Cryogenics-CI <>mapbu-cryogenics@groups.vmware.com>
     - name: changes
       run: |
         echo "Changes detected: ${{ steps.autocommit.outputs.changes_detected }}"
