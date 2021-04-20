@@ -17,8 +17,8 @@ jobs:
     - uses: evantorrie/mott-the-tidier@v1-beta
       id: modtidy
       with:
-        gomods: |
-          src/azure-blobstore-backup-restore/go.mod
+        gomods: '**/go.mod'
+        gomodsum_only: false
     - uses: stefanzweifel/git-auto-commit-action@v4
       id: autocommit
       with:
