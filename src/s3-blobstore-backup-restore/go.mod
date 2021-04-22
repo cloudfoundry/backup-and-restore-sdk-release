@@ -3,7 +3,7 @@ module s3-blobstore-backup-restore
 go 1.14
 
 require (
-	github.com/aws/aws-sdk-go v1.38.22
+	github.com/aws/aws-sdk-go v1.38.23
 	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.7
 	github.com/onsi/ginkgo v1.16.1
 	github.com/onsi/gomega v1.11.0
