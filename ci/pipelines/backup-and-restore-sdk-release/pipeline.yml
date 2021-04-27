@@ -169,82 +169,6 @@ resources:
     drafts: true
     access_token: ((github.access_token))
 
-- name: s3-backuper-with-iam-instance-profile-deployment
-  type: bosh-deployment
-  source:
-    deployment: s3-backuper
-    skip_check: true
-
-- name: mysql-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *mysql-deployment-name
-    skip_check: true
-
-- name: postgres-9.4-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *postgres-9-4-deployment-name
-    skip_check: true
-
-- name: postgres-9.6-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *postgres-9-6-deployment-name
-    skip_check: true
-
-- name: postgres-10-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *postgres-10-deployment-name
-    skip_check: true
-
-- name: postgres-11-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *postgres-11-deployment-name
-    skip_check: true
-
-- name: postgres-13-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *postgres-13-deployment-name
-    skip_check: true
-
-- name: database-backup-restorer-deployment
-  type: bosh-deployment
-  source:
-    deployment: database-backup-restorer
-    skip_check: true
-
-- name: aws-blobstore-sdk-deployment
-  type: bosh-deployment
-  source:
-    deployment: s3-backuper
-    skip_check: true
-
-- name: gcs-blobstore-sdk-deployment
-  type: bosh-deployment
-  source:
-    deployment: gcs-backuper
-    skip_check: true
-
-- name: azure-blobstore-sdk-deployment
-  type: bosh-deployment
-  source:
-    deployment: azure-backuper
-    skip_check: true
-
-- name: xenial-stemcell-aws
-  type: bosh-io-stemcell
-  source:
-    name: bosh-aws-xen-hvm-ubuntu-xenial-go_agent
-
-- name: xenial-stemcell
-  type: bosh-io-stemcell
-  source:
-    name: bosh-warden-boshlite-ubuntu-xenial-go_agent
-
 - name: every6h
   type: time
   source:
@@ -264,20 +188,6 @@ resources:
     uri: git@github.com:pivotal-cf/cryogenics-meta.git
     private_key: ((github.ssh_key))
     branch: main
-
-- name: bbl-state-bosh-lite
-  type: vault
-  source:
-    <<: *vault_creds
-    path: /concourse/common/infrastructure/bosh/maru-lite
-    tarball: true
-
-- name: bbl-state-director-with-iam-profile
-  type: vault
-  source:
-    <<: *vault_creds
-    path: /concourse/common/infrastructure/bosh/aws-ec2
-    tarball: true
 
 - name: gcp-db-certs
   type: vault
@@ -386,371 +296,13 @@ jobs:
   - put: version
     params: {file: version/number}
 
-- name: deploy-database-sdk
-  serial: true
-  plan:
-  - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
-    - get: backup-and-restore-sdk-release
-      passed: [create-release]
-      trigger: true
-    - get: release-tarball
-      resource: release
-      passed: [create-release]
-    - get: bbl-state-bosh-lite
-    - get: xenial-stemcell
-  - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-    params:
-      BBL_STATE: .
-  - put: database-backup-restorer-deployment
-    params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/database-backup-restorer.yml
-      stemcells:
-      - xenial-stemcell/*.tgz
-      releases:
-      - release-tarball/backup-and-restore-sdk-*.tgz
-      vars:
-        deployment-name: database-backup-restorer
-        availability_zone: z1
-      source_file: source-file/source-file.yml
-
-- name: deploy-postgres
-  serial: true
-  plan:
-  - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
-    - get: backup-and-restore-sdk-release
-      passed: [create-release]
-      trigger: true
-    - get: release-tarball
-      resource: release
-      passed: [create-release]
-    - get: xenial-stemcell
-    - get: bbl-state-bosh-lite
-  - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-    params:
-      BBL_STATE: .
-  - in_parallel:
-    - put: postgres-9.4-dev-deployment
-      params:
-        manifest: backup-and-restore-sdk-release/ci/manifests/postgres-9.4.yml
-        stemcells:
-        - xenial-stemcell/*.tgz
-        vars:
-          deployment-name: *postgres-9-4-deployment-name
-          db_username: *postgres-9-4-username
-          db_password: *postgres-9-4-password
-          db_host: *postgres-9-4-host
-          availability_zone: z1
-        source_file: source-file/source-file.yml
-    - put: postgres-9.6-dev-deployment
-      params:
-        manifest: backup-and-restore-sdk-release/ci/manifests/postgres-9.6.yml
-        vars:
-          deployment-name: *postgres-9-6-deployment-name
-          db_username: *postgres-9-6-username
-          db_password: *postgres-9-6-password
-          ssl_username: *postgres-9-6-ssl-username
-          ssl_password: *postgres-9-6-ssl-password
-          tls_username: *postgres-9-6-tls-username
-          tls_common_name: *postgres-9-6-tls-common-name
-          db_host: *postgres-9-6-host
-          db_port: *postgres-9-6-port
-          availability_zone: z1
-          databases.ca: ((backup-and-restore-sdk-release-db-certs.postgres_96_ca_cert))
-          databases.certificate: ((backup-and-restore-sdk-release-db-certs.postgres_96_client_cert))
-          databases.private_key: ((backup-and-restore-sdk-release-db-certs.postgres_96_client_key))
-        source_file: source-file/source-file.yml
-    - put: postgres-10-dev-deployment
-      params:
-        manifest: backup-and-restore-sdk-release/ci/manifests/postgres-10.yml
-        stemcells:
-        - xenial-stemcell/*.tgz
-        vars:
-          deployment-name: *postgres-10-deployment-name
-          db_username: *postgres-10-username
-          db_password: *postgres-10-password
-          db_host: *postgres-10-host
-          availability_zone: z1
-        source_file: source-file/source-file.yml
-    - put: postgres-11-dev-deployment
-      params:
-        manifest: backup-and-restore-sdk-release/ci/manifests/postgres-11.yml
-        stemcells:
-        - xenial-stemcell/*.tgz
-        vars:
-          deployment-name: *postgres-11-deployment-name
-          db_username: *postgres-11-username
-          db_password: *postgres-11-password
-          db_host: *postgres-11-host
-          availability_zone: z1
-        source_file: source-file/source-file.yml
-    - put: postgres-13-dev-deployment
-      params:
-        manifest: backup-and-restore-sdk-release/ci/manifests/postgres-13.yml
-        stemcells:
-        - xenial-stemcell/*.tgz
-        vars:
-          deployment-name: *postgres-13-deployment-name
-          db_username: *postgres-13-username
-          db_password: *postgres-13-password
-          db_host: *postgres-13-host
-          availability_zone: z1
-        source_file: source-file/source-file.yml
-  - task: create-ssl-user
-    file: backup-and-restore-sdk-release/ci/tasks/create-ssl-user/task.yml
-    params:
-      <<: *bosh-lite-creds
-      BOSH_DEPLOYMENT: *postgres-9-6-deployment-name
-
-- name: deploy-mariadb
-  serial: true
-  plan:
-  - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
-    - get: backup-and-restore-sdk-release
-      passed: [create-release]
-      trigger: true
-    - get: release-tarball
-      resource: release
-      passed: [create-release]
-    - get: xenial-stemcell
-    - get: bbl-state-bosh-lite
-  - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-    params:
-      BBL_STATE: .
-  - put: mysql-dev-deployment
-    attempts: 3
-    params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/mysql.yml
-      stemcells:
-      - xenial-stemcell/*.tgz
-      vars:
-        deployment-name: *mysql-deployment-name
-        db_password: *mysql-password
-        db_host: *mysql-host
-        availability_zone: z1
-        databases.ca: ((backup-and-restore-sdk-release-db-certs.mysql_ca_cert))
-        databases.certificate: ((backup-and-restore-sdk-release-db-certs.mysql_client_cert))
-        databases.private_key: ((backup-and-restore-sdk-release-db-certs.mysql_client_key))
-      source_file: source-file/source-file.yml
-
-- name: deploy-external-rds-dbs
-  serial: true
-  plan:
-  - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
-    - get: backup-and-restore-sdk-release
-      passed: [create-release]
-      trigger: true
-    - get: release-tarball
-      resource: release
-      passed: [create-release]
-    - get: cryogenics-meta
-  - in_parallel:
-    - put: terraform
-      params:
-        terraform_source: cryogenics-meta/ci/pipelines/backup-and-restore-sdk-release/terraform/bbr-sdk-system-tests/aws/
-        env_name: bbr-sdk-external-rds-dbs
-        delete_on_failure: true
-        vars:
-          aws_access_key: ((aws_credentials.access_key_id))
-          aws_secret_key: ((aws_credentials.secret_access_key))
-          aws_region: *aws-region
-          mysql_5_7_password: ((backup-and-restore-sdk-release.rds_5_7_password))
-          postgres_9_6_password: ((backup-and-restore-sdk-release.rds_postgres_9_6_password))
-          postgres_10_password: ((backup-and-restore-sdk-release.rds_postgres_10_password))
-          postgres_11_password: ((backup-and-restore-sdk-release.rds_postgres_11_password))
-          postgres_13_password: ((backup-and-restore-sdk-release.rds_postgres_13_password))
-          mariadb_10_password: ((backup-and-restore-sdk-release.rds_mariadb_10_password))
-      get_params:
-        output_statefile: true
-
-- name: deploy-external-gcp-dbs
-  serial: true
-  plan:
-  - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
-    - get: backup-and-restore-sdk-release
-      passed: [create-release]
-      trigger: true
-    - get: cryogenics-meta
-    - get: gcp-db-certs
-  - put: terraform
-    params:
-      terraform_source: cryogenics-meta/ci/pipelines/backup-and-restore-sdk-release/terraform/bbr-sdk-system-tests/gcp/
-      env_name: bbr-sdk-external-gcp-dbs
-      delete_on_failure: true
-      vars:
-        mysql-5-7-password: ((backup-and-restore-sdk-release.gcp_mysql_5_7_password))
-        postgres-9-6-password: ((backup-and-restore-sdk-release.gcp_postgres_9_6_password))
-        director-external-ip: ((infrastructure/bosh-lite-director.director_external_ip))
-        director-jumpbox-ip: ((infrastructure/bosh-lite-director.jumpbox_host))
-        gcp-key: ((gcp/service_accounts/owner_role.json_key))
-    get_params:
-      output_statefile: true
-  - task: create-gcp-db-certs
-    file: backup-and-restore-sdk-release/ci/tasks/create-gcp-db-certs/task.yml
-    input_mapping:
-      terraform-state: terraform
-    params:
-      GCP_SERVICE_ACCOUNT_KEY: ((gcp/service_accounts/owner_role.json_key))
-    ensure:
-      put: gcp-db-certs
-      params:
-        data: gcp-db-certs
-
-- name: deploy-s3-blobstore-sdk
-  serial: true
-  plan:
-  - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
-    - get: backup-and-restore-sdk-release
-      passed: [create-release]
-      trigger: true
-    - get: release-tarball
-      resource: release
-      passed: [create-release]
-    - get: xenial-stemcell
-    - get: bbl-state-bosh-lite
-  - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-    params:
-      BBL_STATE: .
-  - put: aws-blobstore-sdk-deployment
-    params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/s3-backuper.yml
-      stemcells:
-      - xenial-stemcell/*.tgz
-      releases:
-      - release-tarball/backup-and-restore-sdk-*.tgz
-      vars:
-        deployment-name: s3-backuper
-        availability_zone: z1
-        aws-access-key-id: ((aws_credentials.access_key_id))
-        aws-secret-access-key: ((aws_credentials.secret_access_key))
-        s3-bucket-name: bbr-system-test-bucket
-        s3-cloned-bucket-name: bbr-system-test-bucket-clone
-        s3-region: *aws-region
-        s3-cloned-bucket-region: *aws-backup-region
-        s3-unversioned-bucket-name-for-versioned-backuper: bbr-system-test-bucket-unversioned
-        s3-unversioned-bucket-region-for-versioned-backuper: *aws-region
-        s3-unversioned-bucket-name: bbr-system-test-s3-unversioned-bucket
-        s3-unversioned-bucket-region: *aws-region
-        s3-unversioned-backup-bucket-name: bbr-system-test-s3-unversioned-backup-bucket
-        s3-unversioned-backup-bucket-region: us-east-1
-        minio-access-key: ((backup-and-restore-sdk-release.minio_access_key))
-        minio-secret-key: ((backup-and-restore-sdk-release.minio_secret_key))
-        s3-unversioned-bpm-bucket-name: sdk-system-test-unversioned-bpm
-        s3-unversioned-bpm-bucket-region: *aws-region
-        s3-unversioned-bpm-backup-bucket-name: sdk-system-test-unversioned-bpm-backup
-        s3-unversioned-bpm-backup-bucket-region: *aws-region
-        s3-unversioned-large-number-of-files-bucket-name: sdk-large-number-of-files
-        s3-unversioned-large-number-of-files-bucket-region: *aws-region
-        s3-unversioned-large-number-of-files-backup-bucket-name: sdk-large-number-of-files-backup
-        s3-unversioned-large-number-of-files-backup-bucket-region: *aws-region
-        s3-unversioned-clone-bucket-name: sdk-unversioned-clone
-        s3-unversioned-clone-bucket-region: us-east-1
-      source_file: source-file/source-file.yml
-
-- name: deploy-s3-blobstore-sdk-with-iam-instance-profile
-  serial: true
-  plan:
-  - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
-    - get: backup-and-restore-sdk-release
-      passed: [create-release]
-      trigger: true
-    - get: release-tarball
-      resource: release
-      passed: [create-release]
-    - get: xenial-stemcell-aws
-    - get: bbl-state-director-with-iam-profile
-  - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-    input_mapping:
-      bbl-state-bosh-lite: bbl-state-director-with-iam-profile
-    params:
-      BBL_STATE: .
-  - put: s3-backuper-with-iam-instance-profile-deployment
-    params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/s3-backuper-with-iam-instance-profile.yml
-      stemcells:
-      - xenial-stemcell-aws/*.tgz
-      releases:
-      - release-tarball/backup-and-restore-sdk-*.tgz
-      vars:
-        deployment-name: s3-backuper
-        s3-bucket-name: iam-instance-role-test
-        s3-region: *aws-region
-      source_file: source-file/source-file.yml
-
-- name: deploy-azure-blobstore-sdk
-  serial: true
-  plan:
-  - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
-    - get: backup-and-restore-sdk-release
-      passed: [create-release]
-      trigger: true
-    - get: release-tarball
-      resource: release
-      passed: [create-release]
-    - get: xenial-stemcell
-    - get: bbl-state-bosh-lite
-  - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-    params:
-      BBL_STATE: .
-  - put: azure-blobstore-sdk-deployment
-    params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/azure-backuper.yml
-      stemcells:
-      - xenial-stemcell/*.tgz
-      releases:
-      - release-tarball/backup-and-restore-sdk-*.tgz
-      vars:
-        deployment-name: azure-backuper
-        azure-container-name: bbr-system-test-azure-container
-        azure-storage-account: ((azure_credentials.storage_account_1))
-        azure-storage-key: ((azure_credentials.storage_key_1))
-        azure-different-storage-account: ((azure_credentials.storage_account_2))
-        azure-different-storage-key: ((azure_credentials.storage_key_2))
-        azure-different-container-name: bbr-system-test-azure-different-container
-      source_file: source-file/source-file.yml
-
 - name: postgres-system-tests
   serial: true
   plan:
   - in_parallel:
     - get: every6h
       trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-postgres
     - get: backup-and-restore-sdk-release
-      passed:
-      - deploy-database-sdk
-      - deploy-postgres
       trigger: true
     - get: cert-store
       resource: gcp-db-certs
@@ -831,18 +383,10 @@ jobs:
   - in_parallel:
     - get: every6h
       trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-external-gcp-dbs
     - get: backup-and-restore-sdk-release
-      passed:
-      - deploy-database-sdk
-      - deploy-external-gcp-dbs
       trigger: true
     - get: terraform-gcp
       resource: terraform
-      passed:
-      - deploy-external-gcp-dbs
       params:
         env_name: bbr-sdk-external-gcp-dbs
         output_statefile: true
@@ -899,18 +443,10 @@ jobs:
   - in_parallel:
     - get: every6h
       trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-external-rds-dbs
     - get: backup-and-restore-sdk-release
       trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-external-rds-dbs
     - get: terraform-aws
       resource: terraform
-      passed:
-      - deploy-external-rds-dbs
       params:
         env_name: bbr-sdk-external-rds-dbs
         output_statefile: true
@@ -1029,13 +565,7 @@ jobs:
   - in_parallel:
     - get: every6h
       trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-mariadb
     - get: backup-and-restore-sdk-release
-      passed:
-      - deploy-database-sdk
-      - deploy-mariadb
       trigger: true
   - task: mariadb-system-tests
     file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
@@ -1058,17 +588,10 @@ jobs:
   - in_parallel:
     - get: every6h
       trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-external-rds-dbs
     - get: backup-and-restore-sdk-release
-      passed:
-      - deploy-database-sdk
-      - deploy-external-rds-dbs
       trigger: true
     - get: terraform-aws
       resource: terraform
-      passed: [deploy-external-rds-dbs]
       params:
         env_name: bbr-sdk-external-rds-dbs
         output_statefile: true
@@ -1097,18 +620,10 @@ jobs:
   - in_parallel:
     - get: every6h
       trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-external-rds-dbs
     - get: backup-and-restore-sdk-release
-      passed:
-      - deploy-database-sdk
-      - deploy-external-rds-dbs
       trigger: true
     - get: terraform-aws
       resource: terraform
-      passed:
-      - deploy-external-rds-dbs
       params:
         env_name: bbr-sdk-external-rds-dbs
         output_statefile: true
@@ -1136,18 +651,10 @@ jobs:
   - in_parallel:
     - get: every6h
       trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-external-gcp-dbs
     - get: backup-and-restore-sdk-release
-      passed:
-      - deploy-database-sdk
-      - deploy-external-gcp-dbs
       trigger: true
     - get: terraform-gcp
       resource: terraform
-      passed:
-      - deploy-external-gcp-dbs
       params:
         env_name: bbr-sdk-external-gcp-dbs
         output_statefile: true
@@ -1177,10 +684,7 @@ jobs:
   - in_parallel:
     - get: every6h
       trigger: true
-      passed: [deploy-s3-blobstore-sdk]
     - get: backup-and-restore-sdk-release
-      passed:
-      - deploy-s3-blobstore-sdk
       trigger: true
   - task: s3-blobstore-backuper-system-tests
     file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
@@ -1217,10 +721,7 @@ jobs:
   - in_parallel:
     - get: every6h
       trigger: true
-      passed: [deploy-s3-blobstore-sdk-with-iam-instance-profile]
     - get: backup-and-restore-sdk-release
-      passed:
-      - deploy-s3-blobstore-sdk-with-iam-instance-profile
       trigger: true
   - task: s3-blobstore-backuper-system-tests
     file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
@@ -1250,10 +751,7 @@ jobs:
   - in_parallel:
     - get: every6h
       trigger: true
-      passed: [deploy-azure-blobstore-sdk]
     - get: backup-and-restore-sdk-release
-      passed:
-      - deploy-azure-blobstore-sdk
       trigger: true
   - task: azure-blobstore-backuper-system-tests
     file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
@@ -1268,51 +766,13 @@ jobs:
       AZURE_DIFFERENT_STORAGE_KEY: ((azure_credentials.storage_key_2))
       AZURE_DIFFERENT_CONTAINER_NAME: bbr-system-test-azure-different-container
 
-- name: deploy-gcs-blobstore-sdk
-  serial: true
-  plan:
-  - in_parallel:
-    - get: every6h
-      trigger: true
-      passed: [create-release]
-    - get: backup-and-restore-sdk-release
-      passed:
-      - create-release
-      trigger: true
-    - get: release-tarball
-      resource: release
-      passed:
-      - create-release
-    - get: xenial-stemcell
-    - get: bbl-state-bosh-lite
-  - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-    params:
-      BBL_STATE: .
-  - put: gcs-blobstore-sdk-deployment
-    params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/gcs-backuper.yml
-      stemcells:
-      - xenial-stemcell/*.tgz
-      releases:
-      - release-tarball/backup-and-restore-sdk-*.tgz
-      vars:
-        deployment-name: gcs-backuper
-        gcp-service-account-key: ((gcp/service_accounts/owner_role.json_key))
-        gcs-bucket-name: bbr-system-test-gcs-bucket
-        gcs-backup-bucket-name: bbr-system-test-gcs-backup-bucket
-      source_file: source-file/source-file.yml
-
 - name: gcs-blobstore-backuper-system-tests
   serial: true
   plan:
   - in_parallel:
     - get: every6h
       trigger: true
-      passed: [deploy-gcs-blobstore-sdk]
     - get: backup-and-restore-sdk-release
-      passed:
-      - deploy-gcs-blobstore-sdk
       trigger: true
   - task: gcs-blobstore-backuper-system-tests
     file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
