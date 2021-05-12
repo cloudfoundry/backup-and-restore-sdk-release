@@ -20,7 +20,7 @@ save_server_certs() {
 (
   pushd gcp-db-certs
     gcloud auth activate-service-account --key-file=<(echo "$GCP_SERVICE_ACCOUNT_KEY")
-    gcloud config set project cf-backup-and-restore
+    gcloud config set project "${PROJECT_NAME:-"cf-backup-and-restore"}"
 
     save_server_certs "mysql_5_7"
     save_server_certs "postgres_9_6"
