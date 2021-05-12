@@ -118,13 +118,12 @@ resources:
 - name: terraform
   type: custom-terraform
   source:
-    backend_type: s3
+    backend_type: gcs
     backend_config:
       bucket: bbr-terraform-states
-      key: terraform-state.tfstate
-      access_key: ((aws_credentials.access_key_id))
-      secret_key: ((aws_credentials.secret_access_key))
-      region: *aws-region
+      prefix: bbr-sdk-pr-tests
+      credentials: ((gcp/service_accounts/bucket_owner.json_key))
+
 - name: gcp-db-certs
   type: vault
   source:
@@ -392,7 +391,7 @@ jobs:
         postgres-9-6-password: ((backup-and-restore-sdk-release.gcp_postgres_9_6_password))
         director-external-ip: ((infrastructure/bosh-lite-director.director_external_ip))
         director-jumpbox-ip: ((infrastructure/bosh-lite-director.jumpbox_host))
-        gcp-key: ((gcp/service_accounts/owner_role.json_key))
+        gcp-key: ((gcp/service_accounts/owner.json_key))
     get_params:
       output_statefile: true
   - task: create-gcp-db-certs
@@ -400,7 +399,8 @@ jobs:
     input_mapping:
       terraform-state: terraform
     params:
-      GCP_SERVICE_ACCOUNT_KEY: ((gcp/service_accounts/owner_role.json_key))
+      GCP_SERVICE_ACCOUNT_KEY: ((gcp/service_accounts/owner.json_key))
+      PROJECT_NAME: mapbu-cryogenics
     ensure:
       put: gcp-db-certs
       params:
