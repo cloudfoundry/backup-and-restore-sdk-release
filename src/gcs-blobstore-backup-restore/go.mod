@@ -7,7 +7,7 @@ require (
 	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.7
 	github.com/onsi/ginkgo v1.16.2
 	github.com/onsi/gomega v1.13.0
-	golang.org/x/net v0.0.0-20210428140749-89ef3d95e781
-	golang.org/x/oauth2 v0.0.0-20210413134643-5e61552d6c78
-	google.golang.org/api v0.45.0
+	golang.org/x/net v0.0.0-20210503060351-7fd8e65b6420
+	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
+	google.golang.org/api v0.47.0
 )
