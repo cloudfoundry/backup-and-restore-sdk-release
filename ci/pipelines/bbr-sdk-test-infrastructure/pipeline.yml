@@ -81,18 +81,12 @@ resources:
     start: 9:00 AM
     stop: 5:00 PM
     days: [Monday, Tuesday, Wednesday, Thursday, Friday]
-- name: cryogenics-meta
-  type: git
-  source:
-    uri: git@github.com:pivotal-cf/cryogenics-meta.git
-    private_key: ((github.ssh_key))
-    branch: main
 - name: backup-and-restore-sdk-release
   type: git
   source:
     uri: git@github.com:cloudfoundry-incubator/backup-and-restore-sdk-release.git
     private_key: ((github.ssh_key))
-    branch: develop
+    branch: main
 - name: release
   type: s3
   source:
@@ -115,20 +109,6 @@ resources:
     <<: *vault_creds
     path: /concourse/common/infrastructure/bosh/maru-lite
     tarball: true
-- name: terraform
-  type: custom-terraform
-  source:
-    backend_type: gcs
-    backend_config:
-      bucket: bbr-terraform-states
-      prefix: bbr-sdk-pr-tests
-      credentials: ((gcp/service_accounts/bucket_owner.json_key))
-
-- name: gcp-db-certs
-  type: vault
-  source:
-    <<: *vault_creds
-    path: /concourse/bosh-backup-restore/gcp-db-certs
 - name: mysql-dev-deployment
   type: bosh-deployment
   source:
@@ -340,71 +320,6 @@ jobs:
         databases.certificate: ((backup-and-restore-sdk-release-db-certs.mysql_client_cert))
         databases.private_key: ((backup-and-restore-sdk-release-db-certs.mysql_client_key))
       source_file: source-file/source-file.yml
-
-- name: deploy-external-rds-dbs
-  serial: true
-  plan:
-  - in_parallel:
-    - get: every6h
-      trigger: true
-    - get: backup-and-restore-sdk-release
-      trigger: true
-    - get: release-tarball
-      resource: release
-    - get: cryogenics-meta
-  - in_parallel:
-    - put: terraform
-      params:
-        terraform_source: cryogenics-meta/ci/pipelines/backup-and-restore-sdk-release/terraform/bbr-sdk-system-tests/aws/
-        env_name: bbr-sdk-external-rds-dbs
-        delete_on_failure: true
-        vars:
-          aws_access_key: ((aws_credentials.access_key_id))
-          aws_secret_key: ((aws_credentials.secret_access_key))
-          aws_region: *aws-region
-          mysql_5_7_password: ((backup-and-restore-sdk-release.rds_5_7_password))
-          postgres_9_6_password: ((backup-and-restore-sdk-release.rds_postgres_9_6_password))
-          postgres_10_password: ((backup-and-restore-sdk-release.rds_postgres_10_password))
-          postgres_11_password: ((backup-and-restore-sdk-release.rds_postgres_11_password))
-          postgres_13_password: ((backup-and-restore-sdk-release.rds_postgres_13_password))
-          mariadb_10_password: ((backup-and-restore-sdk-release.rds_mariadb_10_password))
-      get_params:
-        output_statefile: true
-
-- name: deploy-external-gcp-dbs
-  serial: true
-  plan:
-  - in_parallel:
-    - get: every6h
-      trigger: true
-    - get: backup-and-restore-sdk-release
-      trigger: true
-    - get: cryogenics-meta
-    - get: gcp-db-certs
-  - put: terraform
-    params:
-      terraform_source: cryogenics-meta/ci/pipelines/backup-and-restore-sdk-release/terraform/bbr-sdk-system-tests/gcp/
-      env_name: bbr-sdk-external-gcp-dbs
-      delete_on_failure: true
-      vars:
-        mysql-5-7-password: ((backup-and-restore-sdk-release.gcp_mysql_5_7_password))
-        postgres-9-6-password: ((backup-and-restore-sdk-release.gcp_postgres_9_6_password))
-        director-external-ip: ((infrastructure/bosh-lite-director.director_external_ip))
-        director-jumpbox-ip: ((infrastructure/bosh-lite-director.jumpbox_host))
-        gcp-key: ((gcp/service_accounts/owner.json_key))
-    get_params:
-      output_statefile: true
-  - task: create-gcp-db-certs
-    file: backup-and-restore-sdk-release/ci/tasks/create-gcp-db-certs/task.yml
-    input_mapping:
-      terraform-state: terraform
-    params:
-      GCP_SERVICE_ACCOUNT_KEY: ((gcp/service_accounts/owner.json_key))
-      PROJECT_NAME: mapbu-cryogenics
-    ensure:
-      put: gcp-db-certs
-      params:
-        data: gcp-db-certs
 
 - name: deploy-s3-blobstore-sdk
   serial: true
