@@ -61,6 +61,7 @@ vault_creds: &vault_creds
 groups:
 - name: build
   jobs:
+  - set-pipeline
   - unit-tests
   - system-tests-internal-dbs
   - system-tests-external-dbs-gcp
@@ -68,12 +69,12 @@ groups:
   - system-tests-blobstore-backuper
   - contract-tests
   - merge-pr
-  - create-release
 - name: dependencies
   jobs:
   - bump-golang
 - name: shipit
   jobs:
+  - build-rc
   - create-final-patch
 
 resource_types:
@@ -147,7 +148,6 @@ resources:
     repository: &repo cloudfoundry-incubator/backup-and-restore-sdk-release
     disable_forks: true
     access_token: ((github.access_token))
-    labels: ["bump-golang", "bump-mysql", "dependencies"]
 
 - name: version
   type: semver
@@ -238,6 +238,16 @@ resources:
     tag_filter: v*
 
 jobs:
+- name: set-pipeline
+  serial: true
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release
+      trigger: true
+      version: every
+  - set_pipeline: backup-and-restore-sdk-release
+    file: backup-and-restore-sdk-release/ci/pipelines/backup-and-restore-sdk-release/pipeline.yml
+
 - name: unit-tests
   serial: true
   plan:
@@ -245,8 +255,29 @@ jobs:
     - get: backup-and-restore-sdk-release
       trigger: true
       version: every
+      passed: [set-pipeline]
     - get: github-sdk-key
+    - get: cryogenics-concourse-tasks
   - in_parallel:
+    - do:
+      - task: find-pr-story
+        attempts: 5
+        file: cryogenics-concourse-tasks/tracker-automation/find-pr-story/task.yml
+        input_mapping:
+          pr: backup-and-restore-sdk-release
+        params:
+          TRACKER_API_TOKEN: ((tracker.api_token))
+          TRACKER_PROJECT_ID: ((tracker.project_id))
+          GIT_REPOSITORY: cloudfoundry-incubator/backup-and-restore-sdk-release
+      - task: start-story
+        attempts: 5
+        file: cryogenics-concourse-tasks/tracker-automation/start-story/task.yml
+        input_mapping:
+          pr: backup-and-restore-sdk-release
+        params:
+          TRACKER_API_TOKEN: ((tracker.api_token))
+          TRACKER_PROJECT_ID: ((tracker.project_id))
+          ESTIMATE: 1
     - put: backup-and-restore-sdk-release
       params:
         path: backup-and-restore-sdk-release
@@ -732,19 +763,20 @@ jobs:
       TRACKER_PROJECT_ID: ((tracker.project_id))
       GIT_REPOSITORY: *repo
 
-- name: create-release
+- name: build-rc
   serial: true
   serial_groups: [version]
   plan:
   - in_parallel:
-    - get: backup-and-restore-sdk-release
-      passed: [merge-pr]
+    - get: backup-and-restore-sdk-release-main
       trigger: true
       version: every
     - get: version
       params: {pre: rc}
   - task: create-dev-release
-    file: backup-and-restore-sdk-release/ci/tasks/create-dev-release/task.yml
+    file: backup-and-restore-sdk-release-main/ci/tasks/create-dev-release/task.yml
+    input_mapping:
+      backup-and-restore-sdk-release: backup-and-restore-sdk-release-main
     params:
       AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
       AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
@@ -762,12 +794,15 @@ jobs:
     - get: sdk-biweekly-gate
       trigger: true
     - get: backup-and-restore-sdk-release-main
+      passed: [build-rc]
     - get: version
-      passed: [create-release]
+      passed: [build-rc]
       params: {bump: patch}
     - get: cryogenics-meta
   - task: create-final-release
     file: cryogenics-meta/ci/tasks/create-final-release/task.yml
+    input_mapping:
+      backup-and-restore-sdk-release: backup-and-restore-sdk-release-main
     params:
       AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
       AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
