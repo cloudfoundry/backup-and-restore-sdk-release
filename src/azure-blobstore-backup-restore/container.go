@@ -12,7 +12,7 @@ import (
 
 	"strings"
 
-	"github.com/Azure/azure-storage-blob-go/2017-07-29/azblob"
+	"github.com/Azure/azure-storage-blob-go/azblob"
 )
 
 //go:generate counterfeiter -o fakes/fake_container.go . Container
