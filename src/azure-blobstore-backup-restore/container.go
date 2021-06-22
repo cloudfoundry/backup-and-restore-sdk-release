@@ -98,7 +98,7 @@ func (c SDKContainer) copyBlobs(sourceContainerName string, sourceContainerURL a
 			return fmt.Errorf("no \"%s\" blob with \"%s\" ETag found in container \"%s\"", blobId.Name, blobId.ETag, sourceContainerName)
 		}
 
-		go func(blob azblob.Blob) {
+		go func(blob azblob.BlobItemInternal) {
 			errs <- c.copyBlob(sourceContainerName, sourceContainerURL, sourceBlob)
 		}(sourceBlob)
 	}
@@ -121,7 +121,7 @@ func (c SDKContainer) copyBlobs(sourceContainerName string, sourceContainerURL a
 	return nil
 }
 
-func (c SDKContainer) copyBlob(sourceContainerName string, sourceContainerURL azblob.ContainerURL, blob azblob.Blob) error {
+func (c SDKContainer) copyBlob(sourceContainerName string, sourceContainerURL azblob.ContainerURL, blob azblob.BlobItemInternal) error {
 	ctx := context.Background()
 
 	sourceBlobURL := sourceContainerURL.NewBlobURL(blob.Name)
@@ -137,8 +137,10 @@ func (c SDKContainer) copyBlob(sourceContainerName string, sourceContainerURL az
 		ctx,
 		sourceBlobURL.WithSnapshot(blob.Snapshot).URL(),
 		azblob.Metadata{},
+		azblob.ModifiedAccessConditions{},
 		azblob.BlobAccessConditions{},
-		azblob.BlobAccessConditions{},
+    azblob.AccessTierNone,
+   azblob.BlobTagsMap{},
 	)
 	if err != nil {
 		return err
@@ -148,7 +150,7 @@ func (c SDKContainer) copyBlob(sourceContainerName string, sourceContainerURL az
 
 	for copyStatus == azblob.CopyStatusPending {
 		time.Sleep(time.Second * 2)
-		getMetadata, err := destinationBlobURL.GetProperties(ctx, azblob.BlobAccessConditions{})
+		getMetadata, err := destinationBlobURL.GetProperties(ctx, azblob.BlobAccessConditions{}, azblob.ClientProvidedKeyOptions{})
 		if err != nil {
 			return err
 		}
@@ -180,13 +182,16 @@ func (c SDKContainer) buildSASQueryString(containerName string, storageAccount S
 		return "", err
 	}
 
-	sasQueryParameters := sasSignatureValues.NewSASQueryParameters(sourceCredential)
+	sasQueryParameters, err := sasSignatureValues.NewSASQueryParameters(sourceCredential)
+	if err != nil {
+		return "", err
+	}
 
 	return sasQueryParameters.Encode(), nil
 }
 
-func (c SDKContainer) fetchBlobs(sourceContainerURL azblob.ContainerURL) (map[BlobId]azblob.Blob, error) {
-	var blobs = map[BlobId]azblob.Blob{}
+func (c SDKContainer) fetchBlobs(sourceContainerURL azblob.ContainerURL) (map[BlobId]azblob.BlobItemInternal, error) {
+	var blobs = map[BlobId]azblob.BlobItemInternal{}
 
 	for marker := (azblob.Marker{}); marker.NotDone(); {
 		page, err := sourceContainerURL.ListBlobsFlatSegment(
@@ -205,7 +210,7 @@ func (c SDKContainer) fetchBlobs(sourceContainerURL azblob.ContainerURL) (map[Bl
 
 		marker = page.NextMarker
 
-		for _, blob := range page.Blobs.Blob {
+		for _, blob := range page.Segment.BlobItems {
 			blobId := BlobId{Name: blob.Name, ETag: string(blob.Properties.Etag)}
 			blobs[blobId] = blob
 		}
@@ -239,7 +244,7 @@ func (c SDKContainer) ListBlobs() ([]BlobId, error) {
 
 		marker = page.NextMarker
 
-		for _, blobInfo := range page.Blobs.Blob {
+		for _, blobInfo := range page.Segment.BlobItems {
 			blobs = append(blobs, BlobId{Name: blobInfo.Name, ETag: string(blobInfo.Properties.Etag)})
 		}
 	}
@@ -253,7 +258,7 @@ func buildCredential(storageAccount StorageAccount) (*azblob.SharedKeyCredential
 		return nil, fmt.Errorf("invalid storage key: '%s'", err)
 	}
 
-	return azblob.NewSharedKeyCredential(storageAccount.Name, storageAccount.Key), nil
+	return azblob.NewSharedKeyCredential(storageAccount.Name, storageAccount.Key)
 }
 
 func formatErrors(contextString string, errors []error) error {
