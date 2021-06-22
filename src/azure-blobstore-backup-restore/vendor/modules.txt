@@ -1,12 +1,13 @@
-# github.com/Azure/azure-pipeline-go v0.2.1
-## explicit
+# github.com/Azure/azure-pipeline-go v0.2.3
 github.com/Azure/azure-pipeline-go/pipeline
-# github.com/Azure/azure-storage-blob-go v0.0.0-20180507052152-66ba96e49ebb
+# github.com/Azure/azure-storage-blob-go v0.12.0
 ## explicit
-github.com/Azure/azure-storage-blob-go/2017-07-29/azblob
+github.com/Azure/azure-storage-blob-go/azblob
 # github.com/fsnotify/fsnotify v1.4.9
 github.com/fsnotify/fsnotify
-# github.com/mattn/go-ieproxy v0.0.0-20190610004146-91bb50d98149
+# github.com/google/uuid v1.1.1
+github.com/google/uuid
+# github.com/mattn/go-ieproxy v0.0.1
 github.com/mattn/go-ieproxy
 # github.com/nxadm/tail v1.4.8
 github.com/nxadm/tail
