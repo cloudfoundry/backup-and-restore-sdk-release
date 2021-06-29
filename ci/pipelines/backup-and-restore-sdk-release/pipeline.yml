@@ -237,15 +237,6 @@ resources:
     uri: https://github.com/bosh-packages/golang-release.git
     tag_filter: v*
 
-- name: six-hours
-  type: time
-  icon: timer-outline
-  source:
-    interval: 6h
-    start: 9:00 AM
-    stop: 5:00 PM
-    days: [Monday, Tuesday, Wednesday, Thursday, Friday]
-
 jobs:
 - name: set-pipeline
   serial: true
@@ -265,8 +256,6 @@ jobs:
       trigger: true
       version: every
       passed: [set-pipeline]
-    - get: six-hours
-      trigger: true
     - get: github-sdk-key
     - get: cryogenics-concourse-tasks
   - in_parallel:
@@ -322,9 +311,6 @@ jobs:
       passed: [unit-tests]
       version: every
       trigger: true
-    - get: six-hours
-      trigger: true
-      passed: [unit-tests]
   - in_parallel:
     - task: aws-s3-blobstore-contract-tests
       file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
@@ -364,9 +350,6 @@ jobs:
       version: every
     - get: cryogenics-meta
     - get: gcp-db-certs
-    - get: six-hours
-      trigger: true
-      passed: [ unit-tests ]
   - in_parallel:
     - do:
       - put: gcp-terraform
@@ -460,9 +443,6 @@ jobs:
     - get: cryogenics-meta
     - get: cert-store
       resource: rds-ca-bundle
-    - get: six-hours
-      trigger: true
-      passed: [ unit-tests ]
   - in_parallel:
     - put: terraform
       params:
@@ -584,9 +564,6 @@ jobs:
       passed: [unit-tests]
     - get: cert-store
       resource: gcp-db-certs
-    - get: six-hours
-      trigger: true
-      passed: [ unit-tests ]
   - in_parallel:
     - task: postgres-system-tests-9.4
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
@@ -661,9 +638,6 @@ jobs:
       trigger: true
       version: every
       passed: [unit-tests]
-    - get: six-hours
-      trigger: true
-      passed: [ unit-tests ]
   - in_parallel:
     - task: s3
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
