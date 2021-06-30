@@ -265,10 +265,10 @@ jobs:
       trigger: true
       version: every
       passed: [set-pipeline]
-    - get: six-hours
-      trigger: true
     - get: github-sdk-key
     - get: cryogenics-concourse-tasks
+    - get: six-hours
+      trigger: true
   - in_parallel:
     - do:
       - task: find-pr-story
@@ -324,7 +324,7 @@ jobs:
       trigger: true
     - get: six-hours
       trigger: true
-      passed: [unit-tests]
+      passed: [ unit-tests ]
   - in_parallel:
     - task: aws-s3-blobstore-contract-tests
       file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
