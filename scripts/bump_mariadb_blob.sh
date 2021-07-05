@@ -60,13 +60,24 @@ function replace_blobstore_version() {
   bosh upload-blobs "--dir=${SDK_ROOT}"
   rm "${NEW_BLOB_FILE}"
 }
+
+function ensure_blobstoreid_exists() {
+  BLOBSTORE_ID="$(bosh blobs | grep "mariadb" | cut -f3 | xargs)"
+
+  if [[ "${BLOBSTORE_ID}" == "(local)" ]];
+  then
+    echo "But its Blobstore ID was not found. Uploading..."
+    replace_blobstore_version "$(current_blob_version)"
+  fi
+}
+
 # TODO : Allow bumping only PATCH/MINORs
 VERSION="$(get_latest_update)"
 CURRENT="$(current_blob_version)"
 if [[ -z "${VERSION}" ]];
 then
   echo "MariaDB ${CURRENT} is the latest stable"
-  # TODO : Warn/Fail if the blob is local and can't be uploaded
+  ensure_blobstoreid_exists
 else
   echo "Updating MariaDB from ${CURRENT} to ${VERSION}"
   replace_blobstore_version "${VERSION}"
