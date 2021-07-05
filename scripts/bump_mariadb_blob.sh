@@ -6,6 +6,21 @@ SDK_ROOT="$(cd "${SCRIPT_DIR}/.." &>/dev/null && pwd)"
 
 pushd "${SDK_ROOT}" >/dev/null
 
+function check_requirements() {
+  if ! command -v bosh &> /dev/null; then
+      echo "bosh could not be found"; exit
+  fi
+  if ! command -v xmllint &> /dev/null; then
+      echo "xmllint could not be found"; exit
+  fi
+  if ! command -v wget &> /dev/null; then
+      echo "wget could not be found"; exit
+  fi
+  if ! command -v sed &> /dev/null; then
+      echo "sed could not be found"; exit
+  fi
+}
+
 function current_blob_name() {
   bosh blobs | grep 'mariadb' | cut -f1 | xargs
 }
@@ -26,7 +41,7 @@ function last_major_release() {
 }
 
 function last_patch_release() {
-  CURRENT="$(current_blob_version | cut -d '.' -f1 -f2)"
+  CURRENT="$(current_blob_version | cut -d '.' -f1,2)"
   stable_releases | (grep "^${CURRENT}" || true) | sort -t "." -k1,1n -k2,2n -k3,3n | tail -n 1
 }
 
@@ -101,12 +116,13 @@ function fetch_requested_semver_level() {
   elif [[ "${SEMVER_LEVEL}" == "major" ]]; then
     VERSION="$(last_major_release)"
   else
-    echo "'${SEMVER_LEVEL}' is not a valid option: 'patch' 'minor' 'major'"
+    >&2 echo "'${SEMVER_LEVEL}' is not a valid option: 'patch' 'minor' 'major'"
     exit 1
   fi
   echo "${VERSION}"
 }
 
+check_requirements
 SEMVER_LEVEL="${1:-patch}" # 'patch' 'minor' 'major'
 echo "Checking latest ${SEMVER_LEVEL} release"
 
