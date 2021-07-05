@@ -69,6 +69,18 @@ function replace_blobstore_version() {
   rm "${NEW_BLOB_FILE}"
 }
 
+function replace_references_in_files() {
+  NEW_BLOB_VERSION="$1"
+
+  REPLACED="$(sed -e "s/mariadb-.*.tar.gz/mariadb-${NEW_BLOB_VERSION}.tar.gz/" \
+      "${SDK_ROOT}/packages/database-backup-restorer-mariadb/spec")"
+  echo "${REPLACED}" > "${SDK_ROOT}/packages/database-backup-restorer-mariadb/spec"
+
+  REPLACED="$(sed -e "s/MARIADB_VERSION=.*$/MARIADB_VERSION=${NEW_BLOB_VERSION}/" \
+      "${SDK_ROOT}/packages/database-backup-restorer-mariadb/packaging")"
+  echo "${REPLACED}" > "${SDK_ROOT}/packages/database-backup-restorer-mariadb/packaging"
+}
+
 function ensure_blobstoreid_exists() {
   BLOBSTORE_ID="$(bosh blobs | grep "mariadb" | cut -f3 | xargs)"
 
@@ -107,8 +119,8 @@ then
   ensure_blobstoreid_exists
 else
   echo "Updating MariaDB from ${CURRENT} to ${VERSION}"
+  replace_references_in_files "${VERSION}"
   replace_blobstore_version "${VERSION}"
 fi
-# TODO : Update hardcoded references to mariadb version
 # TODO : PR workflow and blob removal if PR doesn't pass the tests
 popd >/dev/null
