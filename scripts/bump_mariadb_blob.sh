@@ -21,8 +21,18 @@ function stable_releases() {
   echo "${VERSIONS}"
 }
 
-function last_stable_release() {
+function last_major_release() {
   stable_releases | sort -t "." -k1,1n -k2,2n -k3,3n | tail -n 1
+}
+
+function last_patch_release() {
+  CURRENT="$(current_blob_version | cut -d '.' -f1 -f2)"
+  stable_releases | (grep "^${CURRENT}" || true) | sort -t "." -k1,1n -k2,2n -k3,3n | tail -n 1
+}
+
+function last_minor_release() {
+  CURRENT="$(current_blob_version | cut -d '.' -f1)"
+  stable_releases | (grep "^${CURRENT}" || true) | sort -t "." -k1,1n -k2,2n -k3,3n | tail -n 1
 }
 
 function download_version() {
@@ -32,21 +42,19 @@ function download_version() {
   echo "${OUTFILE}"
 }
 
-function get_latest_update() {
-  LAST="$(last_stable_release)"
+function current_blob_newer_than() {
+  VERSION="${1}"
   CURRENT="$(current_blob_version)"
-  NEWEST="$(echo "${LAST}"$'\n'"${CURRENT}" | sort -t "." -k1,1n -k2,2n -k3,3n | tail -n 1)"
+  NEWEST="$(echo "${VERSION}"$'\n'"${CURRENT}" | sort -t "." -k1,1n -k2,2n -k3,3n | tail -n 1)"
 
   if [[ "${NEWEST}" == "${CURRENT}" ]];
   then
-    # No updates found
-    :
-  elif [[ "${NEWEST}" == "${LAST}" ]];
+    echo "TRUE"
+  elif [[ "${NEWEST}" == "${VERSION}" ]];
   then
-    # New updates found
-    echo "${LAST}"
+    echo "FALSE"
   else
-    echo "Bad execution flow. Reached an invalid state. This is a bug."
+    echo "Impossible state reached. This is a bug."
     exit 1
   fi
 }
@@ -71,10 +79,29 @@ function ensure_blobstoreid_exists() {
   fi
 }
 
-# TODO : Allow bumping only PATCH/MINORs
-VERSION="$(get_latest_update)"
+function fetch_requested_semver_level() {
+  SEMVER_LEVEL="$1"
+
+  if [[ "${SEMVER_LEVEL}" == "patch" ]]; then
+    VERSION="$(last_patch_release)"
+  elif [[ "${SEMVER_LEVEL}" == "minor" ]]; then
+    VERSION="$(last_minor_release)"
+  elif [[ "${SEMVER_LEVEL}" == "major" ]]; then
+    VERSION="$(last_major_release)"
+  else
+    echo "'${SEMVER_LEVEL}' is not a valid option: 'patch' 'minor' 'major'"
+    exit 1
+  fi
+  echo "${VERSION}"
+}
+
+SEMVER_LEVEL="${1:-patch}" # 'patch' 'minor' 'major'
+echo "Checking latest ${SEMVER_LEVEL} release"
+
 CURRENT="$(current_blob_version)"
-if [[ -z "${VERSION}" ]];
+VERSION="$(fetch_requested_semver_level "${SEMVER_LEVEL}")"
+
+if [[ "$(current_blob_newer_than "${VERSION}")" == "TRUE" ]];
 then
   echo "MariaDB ${CURRENT} is the latest stable"
   ensure_blobstoreid_exists
