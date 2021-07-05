@@ -32,8 +32,27 @@ function download_version() {
   echo "${OUTFILE}"
 }
 
-function update_blobstore() {
-  NEW_BLOB_VERSION="$(last_stable_release)"
+function get_latest_update() {
+  LAST="$(last_stable_release)"
+  CURRENT="$(current_blob_version)"
+  NEWEST="$(echo "${LAST}"$'\n'"${CURRENT}" | sort -t "." -k1,1n -k2,2n -k3,3n | tail -n 1)"
+
+  if [[ "${NEWEST}" == "${CURRENT}" ]];
+  then
+    # No updates found
+    :
+  elif [[ "${NEWEST}" == "${LAST}" ]];
+  then
+    # New updates found
+    echo "${LAST}"
+  else
+    echo "Bad execution flow. Reached an invalid state. This is a bug."
+    exit 1
+  fi
+}
+
+function replace_blobstore_version() {
+  NEW_BLOB_VERSION="$1"
   NEW_BLOB_FILE=$(download_version "${NEW_BLOB_VERSION}")
 
   bosh remove-blob "--dir=${SDK_ROOT}" "$(current_blob_name)"
@@ -41,11 +60,17 @@ function update_blobstore() {
   bosh upload-blobs "--dir=${SDK_ROOT}"
   rm "${NEW_BLOB_FILE}"
 }
-
-# TODO : Check if last-stable-release is newer than existing blob
-# TODO : Only update blobstore if the last-stable-release is newer
 # TODO : Allow bumping only PATCH/MINORs
-update_blobstore
+VERSION="$(get_latest_update)"
+CURRENT="$(current_blob_version)"
+if [[ -z "${VERSION}" ]];
+then
+  echo "MariaDB ${CURRENT} is the latest stable"
+  # TODO : Warn/Fail if the blob is local and can't be uploaded
+else
+  echo "Updating MariaDB from ${CURRENT} to ${VERSION}"
+  replace_blobstore_version "${VERSION}"
+fi
 # TODO : Update hardcoded references to mariadb version
 # TODO : PR workflow and blob removal if PR doesn't pass the tests
 popd >/dev/null
