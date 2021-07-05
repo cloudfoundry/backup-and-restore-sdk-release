@@ -35,11 +35,11 @@ CI Status:
 CI Status: [![Blobstore test
 badge](https://ci.cryo.cf-app.com/api/v1/teams/bosh-backup-restore/pipelines/backup-and-restore-sdk-release/jobs/system-tests-blobstore-backuper/badge)](https://ci.cryo.cf-app.com/teams/bosh-backup-restore/pipelines/backup-and-restore-sdk-release/jobs/system-tests-blobstore-backuper/)
 
-| Name                 | Status                                                                                                                                                                                                                                                                                                          |
-|:---------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| S3-Compatible        | [![S3 Badge](https://ci.cryo.cf-app.com/api/v1/teams/bosh-backup-restore/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests/badge)](https://ci.cryo.cf-app.com/api/v1/teams/bosh-backup-restore/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests)          |
-| Azure                | [![Azure Badge](https://ci.cryo.cf-app.com/api/v1/teams/bosh-backup-restore/pipelines/backup-and-restore-sdk-release/jobs/azure-blobstore-backuper-system-tests/badge)](https://ci.cryo.cf-app.com/api/v1/teams/bosh-backup-restore/pipelines/backup-and-restore-sdk-release/jobs/azure-blobstore-backuper-system-tests) |
-| Google Cloud Storage | [![GCS Badge](https://ci.cryo.cf-app.com/api/v1/teams/bosh-backup-restore/pipelines/backup-and-restore-sdk-release/jobs/s3-blobstore-backuper-system-tests/badge)](https://ci.cryo.cf-app.com/api/v1/teams/bosh-backup-restore/pipelines/backup-and-restore-sdk-release/jobs/gcs-blobstore-backuper-system-tests)        |
+| Name                 |
+|:---------------------|
+| S3-Compatible        | 
+| Azure                | 
+| Google Cloud Storage | 
 
 ## Developing
 
