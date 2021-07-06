@@ -55,6 +55,7 @@ function ensure_blobstoreid_exists() {
 
 NEW_BLOB_FILE="${1}"
 NEW_VERSION="$(basename "${NEW_BLOB_FILE}"| sed -n 's/^mariadb-\([0-9]*\.[0-9]*\.[0-9]*\)\.tar\.gz$/\1/p')"
+NEW_BLOB_ABS_PATH="$(realpath ${NEW_BLOB_FILE})"
 
 if [[ -z "${NEW_VERSION}" ]];
 then
@@ -80,6 +81,6 @@ then
 else
   echo "Updating MariaDB from ${CURRENT} to ${NEW_VERSION}"
   replace_references_in_files "${NEW_VERSION}"
-  replace_blobstore_version "${CURRENT}" "${NEW_BLOB_FILE}"
+  replace_blobstore_version "${CURRENT}" "${NEW_BLOB_ABS_PATH}"
 fi
 popd >/dev/null
