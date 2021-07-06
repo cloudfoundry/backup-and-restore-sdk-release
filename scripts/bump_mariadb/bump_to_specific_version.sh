@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
-SDK_ROOT="$(git rev-parse --show-toplevel)"
+SDK_ROOT="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel)"
 
 function get_newest_version() {
   VERSION1="${1}"
@@ -54,7 +54,7 @@ function ensure_blobstoreid_exists() {
 }
 
 NEW_BLOB_FILE="${1}"
-NEW_VERSION="$(echo "${NEW_BLOB_FILE}"| sed -n 's/^mariadb-\([0-9]*\.[0-9]*\.[0-9]*\)\.tar\.gz$/\1/p')"
+NEW_VERSION="$(basename "${NEW_BLOB_FILE}"| sed -n 's/^mariadb-\([0-9]*\.[0-9]*\.[0-9]*\)\.tar\.gz$/\1/p')"
 
 if [[ -z "${NEW_VERSION}" ]];
 then
