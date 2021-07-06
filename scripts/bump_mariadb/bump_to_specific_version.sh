@@ -23,12 +23,12 @@ function get_newest_version() {
 
 function replace_blobstore_version() {
   CUR_BLOB_VERSION="$1"
-  NEW_BLOB_FILE="$2"
+  NEW_BLOB_FILEPATH="$2"
+  NEW_BLOB_FILENAME="$(basedir "${NEW_BLOB_FILEPATH}")"
 
   bosh remove-blob "--dir=${SDK_ROOT}" "mariadb/mariadb-${CUR_BLOB_VERSION}.tar.gz"
-  bosh add-blob "--dir=${SDK_ROOT}" "${SDK_ROOT}/${NEW_BLOB_FILE}" "mariadb/${NEW_BLOB_FILE}"
+  bosh add-blob "--dir=${SDK_ROOT}" "${NEW_BLOB_FILEPATH}" "mariadb/${NEW_BLOB_FILENAME}"
   bosh upload-blobs "--dir=${SDK_ROOT}"
-  rm "${NEW_BLOB_FILE}"
 }
 
 function replace_references_in_files() {
