@@ -24,7 +24,7 @@ function get_newest_version() {
 function replace_blobstore_version() {
   CUR_BLOB_VERSION="$1"
   NEW_BLOB_FILEPATH="$2"
-  NEW_BLOB_FILENAME="$(basedir "${NEW_BLOB_FILEPATH}")"
+  NEW_BLOB_FILENAME="$(basename "${NEW_BLOB_FILEPATH}")"
 
   bosh remove-blob "--dir=${SDK_ROOT}" "mariadb/mariadb-${CUR_BLOB_VERSION}.tar.gz"
   bosh add-blob "--dir=${SDK_ROOT}" "${NEW_BLOB_FILEPATH}" "mariadb/${NEW_BLOB_FILENAME}"
