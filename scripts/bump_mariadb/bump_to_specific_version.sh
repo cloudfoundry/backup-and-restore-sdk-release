@@ -4,13 +4,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
 SDK_ROOT="$(git rev-parse --show-toplevel)"
 
-function download_version() {
-  VERSION="$1"
-  OUTFILE="mariadb-${VERSION}.tar.gz"
-  wget -q -O "${OUTFILE}" "https://downloads.mariadb.org/interstitial/mariadb-${VERSION}/source/mariadb-${VERSION}.tar.gz"
-  echo "${OUTFILE}"
-}
-
 function get_newest_version() {
   VERSION1="${1}"
   VERSION2="${2}"
@@ -30,11 +23,10 @@ function get_newest_version() {
 
 function replace_blobstore_version() {
   CUR_BLOB_VERSION="$1"
-  NEW_BLOB_VERSION="$2"
-  NEW_BLOB_FILE=$(download_version "${NEW_BLOB_VERSION}")
+  NEW_BLOB_FILE="$2"
 
   bosh remove-blob "--dir=${SDK_ROOT}" "mariadb/mariadb-${CUR_BLOB_VERSION}.tar.gz"
-  bosh add-blob "--dir=${SDK_ROOT}" "${SDK_ROOT}/${NEW_BLOB_FILE}" "mariadb/mariadb-${NEW_BLOB_VERSION}.tar.gz"
+  bosh add-blob "--dir=${SDK_ROOT}" "${SDK_ROOT}/${NEW_BLOB_FILE}" "mariadb/${NEW_BLOB_FILE}"
   bosh upload-blobs "--dir=${SDK_ROOT}"
   rm "${NEW_BLOB_FILE}"
 }
@@ -61,7 +53,15 @@ function ensure_blobstoreid_exists() {
   fi
 }
 
-VERSION="${1}"
+NEW_BLOB_FILE="${1}"
+NEW_VERSION="$(echo "${NEW_BLOB_FILE}"| sed -n 's/^mariadb-\([0-9]*\.[0-9]*\.[0-9]*\)\.tar\.gz$/\1/p')"
+
+if [[ -z "${NEW_VERSION}" ]];
+then
+  echo "Provided file ${NEW_BLOB_FILE} doesn't match the required naming convention:"
+  echo "mariadb-{SEMVER_NUMBER}.tar.gz"
+  exit 1
+fi
 
 pushd "${SCRIPT_DIR}" >/dev/null
 CURRENT="$(./current_version.sh)"
@@ -69,17 +69,17 @@ popd >/dev/null
 
 pushd "${SDK_ROOT}" >/dev/null
 
-if [[ "${CURRENT}" == "${VERSION}" ]];
+if [[ "${CURRENT}" == "${NEW_VERSION}" ]];
 then
-  echo "Already at version ${VERSION}"
+  echo "Already at version ${NEW_VERSION}"
   ensure_blobstoreid_exists "${CURRENT}"
-elif [[ "$(get_newest_version "${CURRENT}" "${VERSION}")" == "${CURRENT}" ]];
+elif [[ "$(get_newest_version "${CURRENT}" "${NEW_VERSION}")" == "${CURRENT}" ]];
 then
-  echo "Current version '${CURRENT}' is more recent than '${VERSION}'"
+  echo "Current version '${CURRENT}' is more recent than '${NEW_VERSION}'"
   ensure_blobstoreid_exists "${CURRENT}"
 else
-  echo "Updating MariaDB from ${CURRENT} to ${VERSION}"
-  replace_references_in_files "${VERSION}"
-  replace_blobstore_version "${CURRENT}" "${VERSION}"
+  echo "Updating MariaDB from ${CURRENT} to ${NEW_VERSION}"
+  replace_references_in_files "${NEW_VERSION}"
+  replace_blobstore_version "${CURRENT}" "${NEW_BLOB_FILE}"
 fi
 popd >/dev/null
