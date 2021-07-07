@@ -11,7 +11,7 @@ blobstore:
 " > config/private.yml
 
   current_blob_name="$(scripts/bump_mariadb/current_blob_name.sh)"
-  scripts/bump_mariadb/bump_to_specific_version.sh mariadb-release/*
+  scripts/bump_mariadb/bump_to_specific_version.sh ../mariadb-release/*
   new_blob_name="$(scripts/bump_mariadb/current_blob_name.sh)"
 
   git add .
