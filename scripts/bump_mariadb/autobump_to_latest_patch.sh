@@ -7,6 +7,7 @@ pushd "${SCRIPT_DIR}" &>/dev/null
 
 echo "Checking latest patch release"
 LATEST_PATCH_RELEASE="$(./list_new_patch_releases.sh  | tail -n 1)"
-./bump_to_specific_version.sh "${LATEST_PATCH_RELEASE}"
+NEWVERSION="$(./download_specific_version.sh "${LATEST_PATCH_RELEASE}")"
+./bump_to_specific_version.sh "${NEWVERSION}"
 
 popd &>/dev/null

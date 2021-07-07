@@ -8,7 +8,7 @@ function download_version() {
   VERSION="$1"
   OUTFILE="mariadb-${VERSION}.tar.gz"
   wget -q -O "${OUTFILE}" "https://downloads.mariadb.org/interstitial/mariadb-${VERSION}/source/mariadb-${VERSION}.tar.gz"
-  echo "${OUTFILE}"
+  realpath "${OUTFILE}"
 }
 
 VERSION="${1}"
