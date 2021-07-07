@@ -2,10 +2,10 @@ boost/boost_1_59_0.tar.gz:
   size: 83709983
   object_id: 2bb21a57-51e9-471f-660a-edc788238fee
   sha: 5123209db194d66d69a9cfa5af8ff473d5941d97
-mariadb/mariadb-10.2.26.tar.gz:
-  size: 73037655
-  object_id: 58884c84-f59f-4893-6898-37a3f5d265fa
-  sha: sha256:152fe941c4f2a352b2b3a4db1ef64e70235fd9ff055af62ad7bda9f2b2191528
+mariadb/mariadb-10.6.3.tar.gz:
+  size: 82053322
+  object_id: 6b5ed810-1135-4075-7603-7223c3001943
+  sha: sha256:5bc125606af5ec1fda80f594c1ddfacef8b305c158ecf8b1ca7a3f01cd0b18db
 mysql/mysql-5.6.51.tar.gz:
   size: 32411131
   object_id: a8edb89b-908d-41d2-564a-d3fef5ad21cf
