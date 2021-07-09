@@ -36,8 +36,8 @@ blobstore:
         git config user.email "${COMMIT_USEREMAIL}"
   fi
 
-  if git commit -m "Update blobs from ${updated_blobs_old_version} to ${updated_blobs_new_version}"; then
-    echo "Updated blobs from ${updated_blobs_old_version} to ${updated_blobs_new_version}"
+  if git commit -m "Update mysql blobs from ${updated_blobs_old_version} to ${updated_blobs_new_version}"; then
+    echo "Updated mysql blobs from ${updated_blobs_old_version} to ${updated_blobs_new_version}"
   else
     echo "No change to blobs ${current_blobs_version}"
   fi
