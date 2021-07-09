@@ -13,6 +13,7 @@ do
     LATEST_PATCH_RELEASE="$(./list_new_patch_releases.sh "${BLOB_VERSION}"  | tail -n 1)"
     NEWVERSION="$(./download_specific_version.sh "${LATEST_PATCH_RELEASE}")"
     ./bump_to_specific_version.sh "${NEWVERSION}"
+    rm -f "${NEWVERSION}"
 done
 
 popd &>/dev/null

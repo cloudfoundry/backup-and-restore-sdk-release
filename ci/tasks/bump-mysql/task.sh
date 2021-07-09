@@ -14,8 +14,8 @@ blobstore:
   scripts/bump_mysql/autobump_to_latest_patch.sh
   new_blobs_version="$(scripts/bump_mysql/current_blobs_version.sh)"
 
-  updated_blobs_old_version=$(diff <(echo "$current_blobs_version") <(echo "$new_blobs_version") | grep "<" | sed 's/</ /g' | tr '\n' ' ')
-  updated_blobs_new_version=$(diff <(echo "$current_blobs_version") <(echo "$new_blobs_version") | grep ">" | sed 's/>/ /g' | tr '\n' ' ')
+  updated_blobs_old_version="$(diff <(echo "$current_blobs_version") <(echo "$new_blobs_version") | { grep "<" || true; } | sed 's/</ /g' | tr '\n' ' ' | xargs || true)"
+  updated_blobs_new_version="$(diff <(echo "$current_blobs_version") <(echo "$new_blobs_version") | { grep ">" || true; } | sed 's/>/ /g' | tr '\n' ' ' | xargs || true)"
 
   git add .
 
