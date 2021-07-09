@@ -73,6 +73,7 @@ groups:
   jobs:
   - bump-golang
   - bump-mariadb
+  - bump-mysql
 - name: shipit
   jobs:
   - build-rc
@@ -276,6 +277,11 @@ resources:
                       , hashes: [{ type : "sha-256", hash : .checksum.sha256sum }]
                       }]
                     }'
+
+- name: daily-trigger
+  type: time
+  source:
+    days: [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday' ]
 
 jobs:
 - name: set-pipeline
@@ -984,6 +990,47 @@ jobs:
         This is an automatically generated Pull Request from the Cryogenics CI Bot.
 
         I have detected a new version of [mariadb](https://downloads.mariadb.org/mariadb/+releases/) and automatically bumped
+        this package to benefit from the latest changes.
+
+        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+    input_mapping:
+      source-repo: backup-and-restore-sdk-release-main
+
+- name: bump-mysql
+  plan:
+  - in_parallel:
+    - get: cryogenics-concourse-tasks
+    - get: backup-and-restore-sdk-release-main
+    - get: daily-trigger
+      trigger: true
+
+  - task: bump-mysql
+    file: backup-and-restore-sdk-release-main/ci/tasks/bump-mysql/task.yml
+    input_mapping:
+      backup-and-restore-sdk-release: backup-and-restore-sdk-release-main
+    params:
+      VENDOR_UPDATES_BRANCH: bump-mysql
+      COMMIT_USERNAME: bump-mysql CI job
+      COMMIT_USEREMAIL: mapbu-cryogenics@groups.vmware.com
+      AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
+      AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
+
+  - put: backup-and-restore-sdk-release-main
+    params:
+      repository: updated-backup-and-restore-sdk-release
+      branch: mysql-autobump
+
+  - task: create-bump-mysql-pull-request
+    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
+    params:
+      BASE: main
+      BRANCH: mysql-autobump
+      LABELS: ci
+      TITLE: Update mysql
+      MESSAGE: |
+        This is an automatically generated Pull Request from the Cryogenics CI Bot.
+
+        I have detected a new version of [mysql](https://downloads.mysql.com/archives/community/) and automatically bumped
         this package to benefit from the latest changes.
 
         If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
