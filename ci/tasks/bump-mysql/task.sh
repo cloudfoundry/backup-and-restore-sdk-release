@@ -10,9 +10,12 @@ blobstore:
     secret_access_key: ${AWS_SECRET_ACCESS_KEY:-}
 " > config/private.yml
 
-  current_blobs_name="$(scripts/bump_mysql/current_blobs_name.sh)"
+  current_blobs_version="$(scripts/bump_mysql/current_blobs_version.sh)"
   scripts/bump_mysql/autobump_to_latest_patch.sh
-  new_blobs_name="$(scripts/bump_mysql/current_blobs_name.sh)"
+  new_blobs_version="$(scripts/bump_mysql/current_blobs_version.sh)"
+
+  updated_blobs_old_version=$(diff <(echo "$current_blobs_version") <(echo "$new_blobs_version") | grep "<" | sed 's/</ /g' | tr '\n' ' ')
+  updated_blobs_new_version=$(diff <(echo "$current_blobs_version") <(echo "$new_blobs_version") | grep ">" | sed 's/>/ /g' | tr '\n' ' ')
 
   git add .
 
@@ -33,10 +36,10 @@ blobstore:
         git config user.email "${COMMIT_USEREMAIL}"
   fi
 
-  if git commit -m "Update blobs from ${current_blobs_name} to ${new_blobs_name}"; then
-    echo "Updated blobs from ${current_blobs_name} to ${new_blobs_name}"
+  if git commit -m "Update blobs from ${updated_blobs_old_version} to ${updated_blobs_new_version}"; then
+    echo "Updated blobs from ${updated_blobs_old_version} to ${updated_blobs_new_version}"
   else
-    echo "No change to blobs ${current_blobs_name}"
+    echo "No change to blobs ${current_blobs_version}"
   fi
 popd > /dev/null
 
