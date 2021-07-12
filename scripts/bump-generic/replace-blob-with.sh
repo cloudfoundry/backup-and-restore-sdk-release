@@ -32,8 +32,9 @@ FILES_WITH_REFS="$(grep -rnwl '.' -e "${CUR_BLOB_ID}")"
 
 for file in $FILES_WITH_REFS;
 do
-  sed -i '' "s#${CUR_BLOB_ID}#${NEW_BLOB_ID}#g" "$file"
-  sed -i '' "s#${CUR_VERSION}#${NEW_VERSION}#g" "$file"
+  sed -i.bak "s#${CUR_BLOB_ID}#${NEW_BLOB_ID}#g" "$file"
+  sed -i.bak "s#${CUR_VERSION}#${NEW_VERSION}#g" "$file"
+  rm "$file".bak
 done
 
 popd >/dev/null
