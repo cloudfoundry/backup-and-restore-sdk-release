@@ -1,0 +1,22 @@
+---
+platform: linux
+
+image_resource:
+  type: registry-image
+  source: {repository: pcfplatformrecovery/backup-and-restore}
+
+inputs:
+- name: backup-and-restore-sdk-release
+
+outputs:
+- name: updated-backup-and-restore-sdk-release
+
+params:
+  AWS_ACCESS_KEY_ID:
+  AWS_SECRET_ACCESS_KEY:
+  VENDOR_UPDATES_BRANCH:
+  COMMIT_USERNAME:
+  COMMIT_USEREMAIL:
+  AUTOBUMP_SCRIPT:
+run:
+  path: backup-and-restore-sdk-release/ci/tasks/bump-generic/task.sh
