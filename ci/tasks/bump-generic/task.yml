@@ -30,4 +30,5 @@ params:
   PR_MESSAGE:
 
 run:
-  path: task-repo/ci/tasks/bump-generic/task.sh "bump-repo/${DESCRIPTOR_PATH}"
+  path: task-repo/ci/tasks/bump-generic/task.sh
+  args: bump-repo/((bump-script))
