@@ -74,6 +74,7 @@ groups:
   - bump-golang
   - bump-mariadb
   - bump-mysql
+  - bump-postgresql
 - name: shipit
   jobs:
   - build-rc
@@ -1035,3 +1036,25 @@ jobs:
         If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
     input_mapping:
       source-repo: backup-and-restore-sdk-release-main
+
+- name: bump-postgresql
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release-main
+    - get: daily-trigger
+      trigger: true
+
+  - task: bump-postgresql
+    file: backup-and-restore-sdk-release-main/ci/tasks/bump-generic/task.yml
+    input_mapping:
+      task-repo: backup-and-restore-sdk-release-main
+      bump-repo: backup-and-restore-sdk-release-main
+    vars:
+      bump-script: scripts/autobump-postgresql.sh
+    params:
+      PR_BASE: main
+      PR_LABELS: ci
+
+      GH_TOKEN: ((github.access_token))
+      AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
+      AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
