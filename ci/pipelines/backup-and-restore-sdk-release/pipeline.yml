@@ -1002,7 +1002,6 @@ jobs:
     - get: cryogenics-concourse-tasks
     - get: backup-and-restore-sdk-release-main
     - get: daily-trigger
-      trigger: true
 
   - task: bump-mysql
     file: backup-and-restore-sdk-release-main/ci/tasks/bump-mysql/task.yml
