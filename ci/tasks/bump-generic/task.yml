@@ -31,4 +31,4 @@ params:
 
 run:
   path: task-repo/ci/tasks/bump-generic/task.sh
-  args: bump-repo/((bump-script))
+  args: [ "bump-repo/((bump-script))" ]
