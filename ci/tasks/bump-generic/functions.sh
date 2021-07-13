@@ -18,12 +18,11 @@ this package to benefit from the latest changes.
 If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
 '}
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
-REPO_ROOT="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel)"
+REPO_ROOT="$(git -C "$(realpath "$(dirname "${AUTOBUMP_DESCRIPTOR}")")" rev-parse --show-toplevel)"
 
 function setup_private_blobstore_config() {
-    AWS_ACCESS_KEY_ID="$1"
-    AWS_SECRET_ACCESS_KEY="$2"
+    local AWS_ACCESS_KEY_ID="$1"
+    local AWS_SECRET_ACCESS_KEY="$2"
 
     pushd "${REPO_ROOT}" > /dev/null
     echo "---
@@ -33,14 +32,15 @@ function setup_private_blobstore_config() {
         access_key_id: ${AWS_ACCESS_KEY_ID:-}
         secret_access_key: ${AWS_SECRET_ACCESS_KEY:-}
     " > config/private.yml
+    popd >/dev/null
 }
 
 
 function current_blobs_names() {
-    BLOBS_PREFIX="$1"
+    local BLOBS_PREFIX="$1"
 
     pushd "${REPO_ROOT}" >/dev/null
-    CURRENT_BLOBS_NAMES="$(bosh blobs | grep "^${BLOBS_PREFIX}/" | cut -f1)"
+    local CURRENT_BLOBS_NAMES="$(bosh blobs | grep "^${BLOBS_PREFIX}/" | cut -f1)"
     for BLOB_NAME in  $CURRENT_BLOBS_NAMES;
     do
         echo "${BLOB_NAME}" | xargs
@@ -50,7 +50,7 @@ function current_blobs_names() {
 
 
 function download_version() {
-    VERSION="$1"
+    local VERSION="$1"
     eval DOWNLOAD_URL="$2"
     eval DOWNLOAD_DESTINATION="$3"
 
@@ -61,43 +61,43 @@ function download_version() {
 
 
 function pick_cadidate_version() {
-    CUR_VERSION="$1"
-    ALL_VERSIONS="$2"
+    local CUR_VERSION="$1"
+    local ALL_VERSIONS="$2"
 
     if echo "${CUR_VERSION}" | grep -Eo '^[0-9]+$' >/dev/null;
     then # Autobump majors
-        AUTOBUMP_PREFIX=""
+        local AUTOBUMP_PREFIX=""
 
     elif echo "${CUR_VERSION}" | grep -Eo '^[0-9]+\.[0-9]+$' >/dev/null;
     then # Autobump minors
-        AUTOBUMP_PREFIX="$(echo "${CUR_VERSION}" | cut -d '.' -f1)"
+        local AUTOBUMP_PREFIX="$(echo "${CUR_VERSION}" | cut -d '.' -f1)"
 
     elif echo "${CUR_VERSION}" | grep -Eo '^[0-9]+\.[0-9]+\.[0-9]+$' >/dev/null;
     then # Autobump patches
-        AUTOBUMP_PREFIX="$(echo "${CUR_VERSION}" | cut -d '.' -f1,2)"
+        local AUTOBUMP_PREFIX="$(echo "${CUR_VERSION}" | cut -d '.' -f1,2)"
 
     else
         echo "Unsupported naming convention: ${CUR_VERSION}"
         exit 1
     fi
 
-    ALL_VERSIONS_SORTED="$(echo "${CUR_VERSION}"$'\n'"${ALL_VERSIONS}" | sort -t "." -k1,1n -k2,2n -k3,3n | uniq)"
-    AUTOBUMP_CANDIDATES="$(echo "${ALL_VERSIONS_SORTED}" | grep "^${AUTOBUMP_PREFIX}" || true)"
+    local ALL_VERSIONS_SORTED="$(echo "${CUR_VERSION}"$'\n'"${ALL_VERSIONS}" | sort -t "." -k1,1n -k2,2n -k3,3n | uniq)"
+    local AUTOBUMP_CANDIDATES="$(echo "${ALL_VERSIONS_SORTED}" | grep "^${AUTOBUMP_PREFIX}" || true)"
 
     # The following sed expression returns all lines after "CUR_VERSION" is found
-    NEWER_CANDIDATES="$(echo "${AUTOBUMP_CANDIDATES}" | sed -n '/^'"${CUR_VERSION}"'$/,$p')"
-    NEWEST_CANDIDATE="$(echo "${NEWER_CANDIDATES}" | tail -n 1)"
+    local NEWER_CANDIDATES="$(echo "${AUTOBUMP_CANDIDATES}" | sed -n '/^'"${CUR_VERSION}"'$/,$p')"
+    local NEWEST_CANDIDATE="$(echo "${NEWER_CANDIDATES}" | tail -n 1)"
 
     echo "${NEWEST_CANDIDATE}"
 }
 
 
 function blobs_are_equal() {
-    CUR_BLOB_ID="${1}"
-    NEW_BLOB_ID="${2}"
-    CUR_VERSION="${3}"
-    NEW_VERSION="${4}"
-    NEW_TARFILE="${5}"
+    local CUR_BLOB_ID="${1}"
+    local NEW_BLOB_ID="${2}"
+    local CUR_VERSION="${3}"
+    local NEW_VERSION="${4}"
+    local NEW_TARFILE="${5}"
 
     # TODO: Extend this check to also compare shasum and id
     if [[ "${CUR_VERSION}" == "${NEW_VERSION}" ]];
@@ -110,11 +110,12 @@ function blobs_are_equal() {
 
 
 function replace_blob() {
-    CUR_BLOB_ID="${1}"
-    NEW_BLOB_ID="${2}"
-    CUR_VERSION="${3}"
-    NEW_VERSION="${4}"
-    NEW_TARFILE="${5}"
+    local CUR_BLOB_ID="${1}"
+    local NEW_BLOB_ID="${2}"
+    local CUR_VERSION="${3}"
+    local NEW_VERSION="${4}"
+    local NEW_TARFILE="${5}"
+    local BLOBS_PREFIX="${6}"
 
     pushd "${REPO_ROOT}" >/dev/null
 
@@ -127,7 +128,7 @@ function replace_blob() {
 
     # Replace references in files
     # Following steps **SHOULD NEVER BE PERFORMED BEFORE** the blobstore replacement commands listed above
-    FILES_WITH_REFS="$(grep -rnwl '.' -e "${CUR_BLOB_ID}")"
+    local FILES_WITH_REFS="$(grep -rnwl '.' -e "${CUR_VERSION}" | grep "${BLOBS_PREFIX}")"
 
     for file in $FILES_WITH_REFS;
     do
@@ -141,67 +142,66 @@ function replace_blob() {
 
 
 function committed_changes() {
-    BRANCH_NAME="${1:?}"
-    COMMIT_MESSAGE="${2:?}"
-    COMMIT_USERNAME="${3:?}"
-    COMMIT_USEREMAIL="${4:?}"
-    GH_USER="${5:?}"
-    GH_TOKEN="${6:?}"
+    local BRANCH_NAME="${1:?}"
+    local COMMIT_MESSAGE="${2:?}"
+    local COMMIT_USERNAME="${3:?}"
+    local COMMIT_USEREMAIL="${4:?}"
+    local GH_USER="${5:?}"
+    local GH_TOKEN="${6:?}"
+
+    pushd "${REPO_ROOT}" >/dev/null
 
     git checkout -b "${BRANCH_NAME}"
     echo "Pushing updates to the configured branch '${BRANCH_NAME}'"
 
     git config user.name "${COMMIT_USERNAME}"
     git config user.email "${COMMIT_USEREMAIL}"
-
+    git add -A
     if git commit -m "${COMMIT_MESSAGE}"; then
         echo "${COMMIT_MESSAGE}"
 
-        origin_url="$(git remote get-url origin | grep -Eo 'github.com.*' | sed 's/github.com:/github.com\//g')"
-        git remote set-url --push autobump "https://${GH_USER}:${GH_TOKEN}@${origin_url}/"
+        local origin_url="$(git remote get-url origin | grep -Eo 'github.com.*' | sed 's/github.com:/github.com\//g')"
+        git remote add autobump "https://${GH_USER}:${GH_TOKEN}@${origin_url}/"
         git push -u autobump "${BRANCH_NAME}" --force
         git remote remove autobump
-        return 1
+        return 0
     else
         echo "No change to be committed"
-        return 0
+        return 1
     fi
+
+    popd >/dev/null
 }
 
 
 function create_pr() {
-    PR_BRANCH="${1:?}"
-    PR_BASE="${2:?}"
-    PR_TITLE="${3:?}"
-    PR_MESSAGE="${4:?}"
-    PR_LABELS="${5:?}"
-    GH_USER="${6:?}"
-    GH_TOKEN="${7:?}"
+    local PR_BRANCH="${1:?}"
+    local PR_BASE="${2:?}"
+    local PR_TITLE="${3:?}"
+    local PR_MESSAGE="${4:?}"
+    local PR_LABELS="${5:?}"
+    local GH_USER="${6:?}"
+    local GH_TOKEN="${7:?}"
 
     pushd "${REPO_ROOT}"
     git checkout "${PR_BRANCH}"
 
-    set +e
-    output="$(gh pr create \
+    local output="$(gh pr create \
         --base "${PR_BASE}" \
         --title "${PR_TITLE}" \
         --body "${PR_MESSAGE}" \
-        --label "${PR_LABELS}" 2>&1)"
-    pr_exit_status=$?
-    set -e
+        --label "${PR_LABELS}" \
+        --head "${PR_BRANCH}" 2>&1)"
 
     if [[ "${output}" =~ "No commits between" ]]; then
         echo "No commits were made between the branches"
-        exit 0
     fi
     popd
-
-    exit $pr_exit_status
 }
 
 
 function safely_expand_variables() {
-    TEXT_TO_EXPAND="$1"
+    local TEXT_TO_EXPAND="$1"
 
     export BLOBS_PREFIX
     export PREV_VERSION
