@@ -6,17 +6,28 @@ image_resource:
   source: {repository: pcfplatformrecovery/backup-and-restore}
 
 inputs:
-- name: backup-and-restore-sdk-release
-
-outputs:
-- name: updated-backup-and-restore-sdk-release
+- name: task-repo
+- name: bump-repo
 
 params:
+  DESCRIPTOR_PATH:
+  # Mandatory params without defaults
+  GH_TOKEN:
+  PR_BASE:
   AWS_ACCESS_KEY_ID:
   AWS_SECRET_ACCESS_KEY:
-  VENDOR_UPDATES_BRANCH:
+
+  # Optional params without defaults
+  PR_LABELS:
+
+  # Optional params with sane defaults for cryogenics
+  # Default values are set in the script itself
+  GH_USER:
   COMMIT_USERNAME:
   COMMIT_USEREMAIL:
-  AUTOBUMP_SCRIPT:
+  COMMIT_MESSAGE:
+  PR_TITLE:
+  PR_MESSAGE:
+
 run:
-  path: backup-and-restore-sdk-release/ci/tasks/bump-generic/task.sh
+  path: task-repo/ci/tasks/bump-generic/task.sh "bump-repo/${DESCRIPTOR_PATH}"

@@ -1,47 +1,56 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-pushd backup-and-restore-sdk-release > /dev/null
-  echo "---
-blobstore:
-  provider: s3
-  options:
-    access_key_id: ${AWS_ACCESS_KEY_ID:-}
-    secret_access_key: ${AWS_SECRET_ACCESS_KEY:-}
-" > config/private.yml
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
 
-  blobs_before_autobump="$(bosh blobs | cut -f1 | grep -Eo '[0-9]+(\.[0-9]+)*')"
-  ./"${AUTOBUMP_SCRIPT}"
-  blobs_after_autobump="$(bosh blobs | cut -f1 | grep -Eo '[0-9]+(\.[0-9]+)*')"
+# Check mandatory params without defaults
+: "${GH_TOKEN:?}"
+: "${PR_BASE:?}"
+: "${AWS_ACCESS_KEY_ID:?}"
+: "${AWS_SECRET_ACCESS_KEY:?}"
 
-  updated_blobs_old_version="$(diff <(echo "$blobs_before_autobump") <(echo "$blobs_after_autobump") | { grep "<" || true; } | sed 's/</ /g' | tr '\n' ' ' | xargs || true)"
-  updated_blobs_new_version="$(diff <(echo "$blobs_before_autobump") <(echo "$blobs_after_autobump") | { grep ">" || true; } | sed 's/>/ /g' | tr '\n' ' ' | xargs || true)"
+AUTOBUMP_DESCRIPTOR="$1"
+source "${AUTOBUMP_DESCRIPTOR}"
 
-  git add .
+# Check params coming from AUTOBUMP_DESCRIPTOR
+: "${BLOBS_PREFIX:?}"
+: "${VERSIONS_URL:?}"
+: "${DOWNLOAD_URL:?}"
+: "${DOWNLOADED_FILENAME:?}"
+: "${ALL_VERSIONS:?}"
 
-  if [ -z "$VENDOR_UPDATES_BRANCH" ]
-  then
-        curr_branch=$(git rev-parse --abbrev-ref HEAD)
-        echo "Pushing package updates to the same branch '${curr_branch}'"
-  else
-        git checkout -b "${VENDOR_UPDATES_BRANCH}"
-        echo "Pushing package updates to the configured branch '${VENDOR_UPDATES_BRANCH}'"
-  fi
+source "${SCRIPT_DIR}/functions.sh"
 
-  if [ -z "${COMMIT_USERNAME}" ] || [ -z "${COMMIT_USEREMAIL}" ]
-  then
-        echo "Unspecified user.name or user.email. Using defaults."
-  else
-        git config user.name "${COMMIT_USERNAME}"
-        git config user.email "${COMMIT_USEREMAIL}"
-  fi
 
-  if git commit -m "Update blobs from ${updated_blobs_old_version} to ${updated_blobs_new_version}"; then
-    echo "Updated blobs from ${updated_blobs_old_version} to ${updated_blobs_new_version}"
-  else
-    echo "No change to blobs ${blobs_before_autobump}"
-  fi
-  exit 1
-popd > /dev/null
+COMMIT_SAVEPOINT="$(git rev-parse HEAD)"
+for BLOB_ID in $(current_blobs_names "${BLOBS_PREFIX}");
+do
+    setup_private_blobstore_config "${AWS_ACCESS_KEY_ID}" "${AWS_SECRET_ACCESS_KEY}"
 
-cp -r backup-and-restore-sdk-release/. updated-backup-and-restore-sdk-release
+    PREV_VERSION="$(echo "${BLOB_ID}" | grep -Eo '[0-9]+(\.[0-9]+)*')"
+    NEW_VERSION="$(pick_cadidate_version "${PREV_VERSION}" "${ALL_VERSIONS}")"
+    NEW_TARFILE="$(download_version "${NEW_VERSION}" "${DOWNLOAD_URL}" "${SDK_ROOT}/${DOWNLOADED_FILENAME}")"
+    NEW_BLOB_ID="$(echo "${BLOB_ID}" | grep "${PREV_VERSION}" | sed "s/${PREV_VERSION}/${NEW_VERSION}/")"
+
+    if blobs_are_equal "${BLOB_ID}" "${NEW_BLOB_ID}" "${PREV_VERSION}" "${NEW_VERSION}" "${NEW_TARFILE}";
+    then
+        echo "${BLOB_ID} is up-to-date"
+    else
+        replace_blob "${BLOB_ID}" "${NEW_BLOB_ID}" "${PREV_VERSION}" "${NEW_VERSION}" "${NEW_TARFILE}"
+        rm -f "${NEW_TARFILE}"
+
+        COMMIT_MESSAGE="$(safely_expand_variables "${COMMIT_MESSAGE}")"
+        PR_MESSAGE="$(safely_expand_variables "${PR_MESSAGE}")"
+        PR_TITLE="$(safely_expand_variables "${PR_TITLE}")"
+        BRANCH_NAME="${BLOB_ID}"
+
+        if committed_changes "${BRANCH_NAME}" "${COMMIT_MESSAGE}" "${COMMIT_USERNAME}" "${COMMIT_USEREMAIL}" "${GH_USER}" "${GH_TOKEN}";
+        then
+            create_pr "${BRANCH_NAME}" "${PR_BASE}" "${PR_TITLE}" "${PR_MESSAGE}" "${PR_LABELS}" "${GH_USER}" "${GH_TOKEN}"
+        else
+            echo ""
+        fi
+
+        #git stash && git checkout "${COMMIT_SAVEPOINT}"
+    fi
+done
