@@ -1,0 +1,7 @@
+---
+name: libpcre2
+
+dependencies: []
+
+files:
+- libpcre2/pcre2-10.37.tar.gz # from https://ftp.pcre.org/pub/pcre/
