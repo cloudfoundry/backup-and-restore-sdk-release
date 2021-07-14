@@ -15,12 +15,10 @@ source "${AUTOBUMP_DESCRIPTOR}"
 # Check params coming from AUTOBUMP_DESCRIPTOR
 : "${BLOBS_PREFIX:?}"
 : "${VERSIONS_URL:?}"
-: "${DOWNLOAD_URL:?}"
 : "${DOWNLOADED_FILENAME:?}"
 : "${ALL_VERSIONS:?}"
 
 source "${SCRIPT_DIR}/functions.sh"
-
 
 REPO_ROOT="$(git -C "$(realpath "$(dirname "${AUTOBUMP_DESCRIPTOR}")")" rev-parse --show-toplevel)"
 
@@ -31,6 +29,7 @@ do
 
     PREV_VERSION="$(echo "${BLOB_ID}" | grep -Eo '[0-9]+(\.[0-9]+)*')"
     NEW_VERSION="$(pick_cadidate_version "${PREV_VERSION}" "${ALL_VERSIONS}")"
+    DOWNLOAD_URL="$(download_url_callback "${NEW_VERSION}")"
     NEW_TARFILE="$(download_version "${NEW_VERSION}" "${DOWNLOAD_URL}" "${DOWNLOADED_FILENAME}")"
     NEW_BLOB_ID="$(echo "${BLOB_ID}" | grep "${PREV_VERSION}" | sed "s/${PREV_VERSION}/${NEW_VERSION}/")"
 

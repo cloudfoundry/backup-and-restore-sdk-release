@@ -9,7 +9,6 @@ ALL_VERSIONS="$(echo "${VALUES}" | grep -Eo '[0-9]+(\.[0-9]+){1,2}')"
 
 export BLOBS_PREFIX="mariadb"
 export ALL_VERSIONS
-export DOWNLOAD_URL='https://downloads.mariadb.org/interstitial/mariadb-${VERSION}/source/mariadb-${VERSION}.tar.gz'
 export DOWNLOADED_FILENAME='mariadb-${VERSION}.tar.gz'
 
 function checksum_callback() {
@@ -20,4 +19,9 @@ function checksum_callback() {
     CHECKSUM_JSON="$(curl -s -L "https://downloads.mariadb.org/rest-api/mariadb/${MAJOR_MINOR}/")"
     EXPECTED_SHA256="$(echo "${CHECKSUM_JSON}" | jq -r --arg v "${VERSION}" '.releases[$v].files[] | select(.os == "Source").checksum.sha256sum')"
     echo "${EXPECTED_SHA256}  ${DOWNLOADED_FILE}" | sha256sum -c - || exit 1
+}
+
+function download_url_callback() {
+    local VERSION="${1}"
+    echo "https://downloads.mariadb.org/interstitial/mariadb-${VERSION}/source/mariadb-${VERSION}.tar.gz"
 }

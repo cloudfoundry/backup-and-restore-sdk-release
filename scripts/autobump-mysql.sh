@@ -9,7 +9,6 @@ ALL_VERSIONS="$(echo "${VALUES}" | grep -Eo '[0-9]+(\.[0-9]+){1,2}[a-zA-Z]?')"
 
 export BLOBS_PREFIX="mysql"
 export ALL_VERSIONS
-export DOWNLOAD_URL='https://downloads.mysql.com/archives/get/p/23/file/mysql-${VERSION}.tar.gz'
 export DOWNLOADED_FILENAME='mysql-${VERSION}.tar.gz'
 
 function checksum_callback() {
@@ -19,4 +18,9 @@ function checksum_callback() {
     CHECKSUM_HTML="$(curl -s -L "https://downloads.mysql.com/archives/community/?version=${VERSION}&os=src&osva=Generic+Linux+%28Architecture+Independent%29#downloads")"
     EXPECTED_MD5="$(echo "${CHECKSUM_HTML}" | xmllint --html --xpath "//td[a/@href='/archives/gpg/?file=mysql-${VERSION}.tar.gz&p=23']/code/text()" - 2>/dev/null)"
     echo "${EXPECTED_MD5}  ${DOWNLOADED_FILE}" | md5sum -c - || exit 1
+}
+
+function download_url_callback() {
+    local VERSION="${1}"
+    echo "https://downloads.mysql.com/archives/get/p/23/file/mysql-${VERSION}.tar.gz"
 }
