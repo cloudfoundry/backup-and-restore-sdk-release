@@ -26,10 +26,10 @@ postgres/postgresql-9.6.22.tar.gz:
   size: 24664093
   object_id: 615fbd06-3877-4433-6ebc-5d6da3f8cc34
   sha: sha256:f87eb4d0334d8736e61bc59383a802162a0897268b18e16138f6a2d7d218e705
-postgres/postgresql-10.12.tar.gz:
-  size: 24940708
-  object_id: ac1c2ee7-6a96-4277-48e4-348cdd830c03
-  sha: sha256:a1a32c2b91bc5e3cb46b56f44d6b6baf82cd27eff973d6c1785f4ab93e34d23b
+postgres/postgresql-10.17.tar.gz:
+  size: 25102288
+  object_id: cf5e4ff6-146d-40fe-5f71-293635fdfa22
+  sha: sha256:debc598e41a679ee4db4ed209aaf6f995edaa4c38c8e4e8b3dc81675ef1ad0a2
 postgres/postgresql-11.12.tar.gz:
   size: 26282000
   object_id: 668b7977-987f-47ba-49cb-8f57f8117905
