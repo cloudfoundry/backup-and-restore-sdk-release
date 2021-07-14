@@ -1000,42 +1000,24 @@ jobs:
 - name: bump-mysql
   plan:
   - in_parallel:
-    - get: cryogenics-concourse-tasks
     - get: backup-and-restore-sdk-release-main
     - get: daily-trigger
+      trigger: true
 
   - task: bump-mysql
-    file: backup-and-restore-sdk-release-main/ci/tasks/bump-mysql/task.yml
+    file: backup-and-restore-sdk-release-main/ci/tasks/bump-generic/task.yml
     input_mapping:
-      backup-and-restore-sdk-release: backup-and-restore-sdk-release-main
+      task-repo: backup-and-restore-sdk-release-main
+      bump-repo: backup-and-restore-sdk-release-main
+    vars:
+      bump-script: scripts/autobump-mysql.sh
     params:
-      VENDOR_UPDATES_BRANCH: bump-mysql
-      COMMIT_USERNAME: bump-mysql CI job
-      COMMIT_USEREMAIL: mapbu-cryogenics@groups.vmware.com
+      PR_BASE: main
+      PR_LABELS: ci
+
+      GH_TOKEN: ((github.access_token))
       AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
       AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
-
-  - put: backup-and-restore-sdk-release-main
-    params:
-      repository: updated-backup-and-restore-sdk-release
-      branch: mysql-autobump
-
-  - task: create-bump-mysql-pull-request
-    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
-    params:
-      BASE: main
-      BRANCH: mysql-autobump
-      LABELS: ci
-      TITLE: Update mysql
-      MESSAGE: |
-        This is an automatically generated Pull Request from the Cryogenics CI Bot.
-
-        I have detected a new version of [mysql](https://downloads.mysql.com/archives/community/) and automatically bumped
-        this package to benefit from the latest changes.
-
-        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
-    input_mapping:
-      source-repo: backup-and-restore-sdk-release-main
 
 - name: bump-postgresql
   plan:

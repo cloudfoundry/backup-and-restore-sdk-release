@@ -210,3 +210,15 @@ function safely_expand_variables() {
 
     echo "${TEXT_TO_EXPAND}" | envsubst '${BLOBS_PREFIX} ${PREV_VERSION} ${NEW_VERSION} ${VERSIONS_URL}'
 }
+
+
+function callback_defined() {
+    CALLBACK_NAME="${1}"
+
+    if [[ "$(type -t "${CALLBACK_NAME}")" = "function" ]];
+    then
+        return 0
+    else
+        return 1
+    fi
+}

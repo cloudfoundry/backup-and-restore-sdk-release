@@ -34,6 +34,11 @@ do
     NEW_TARFILE="$(download_version "${NEW_VERSION}" "${DOWNLOAD_URL}" "${DOWNLOADED_FILENAME}")"
     NEW_BLOB_ID="$(echo "${BLOB_ID}" | grep "${PREV_VERSION}" | sed "s/${PREV_VERSION}/${NEW_VERSION}/")"
 
+    if callback_defined "checksum_callback";
+    then # Callback for verifying checksum is defined in AUTOBUMP_DESCRIPTOR script. Let's call it!"
+        checksum_callback "${NEW_VERSION}" "${NEW_TARFILE}"
+    fi
+
     if blobs_are_equal "${BLOB_ID}" "${NEW_BLOB_ID}" "${PREV_VERSION}" "${NEW_VERSION}" "${NEW_TARFILE}";
     then
         echo "${BLOB_ID} is up-to-date"
