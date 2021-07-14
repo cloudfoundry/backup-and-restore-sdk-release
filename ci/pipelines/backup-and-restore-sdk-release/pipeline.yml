@@ -254,31 +254,6 @@ resources:
     stop: 5:00 PM
     days: [Monday, Tuesday, Wednesday, Thursday, Friday]
 
-- name: mariadb-release
-  type: dynamic-metalink
-  source:
-    version: '>=10, <11'
-    version_check: |
-      major_releases="$(curl -s https://downloads.mariadb.org/rest-api/mariadb/ | jq -r '.major_releases[] | select(.release_status == "Stable" or .release_status == "Old Stable" ) | .release_id')"
-      all_releases=""
-      for rel in ${major_releases};
-      do
-        all_releases+=$'\n'"$(curl -s "https://downloads.mariadb.org/rest-api/mariadb/${rel}/" | jq -r '.releases | to_entries[] | select(.value.release_name == "MariaDB Server \(.value.release_id)").key')"
-      done
-      # Return removing empty lines
-      echo "${all_releases}" | grep "[^ ]"
-
-    metalink_get: |
-      curl -s https://downloads.mariadb.org/rest-api/mariadb/${version}/ \
-          | jq -r '.release_data.files[]
-                  | select(.os == "Source")
-                  | { files : [
-                      { name  : .file_name
-                      , urls  : [{ url  : "https://downloads.mariadb.org/rest-api/\(.file_id)" }]
-                      , hashes: [{ type : "sha-256", hash : .checksum.sha256sum }]
-                      }]
-                    }'
-
 - name: daily-trigger
   type: time
   source:
@@ -957,45 +932,24 @@ jobs:
 - name: bump-mariadb
   plan:
   - in_parallel:
-    - get: cryogenics-concourse-tasks
-    - get: mariadb-release
-      trigger: true
-      attempts: 10
     - get: backup-and-restore-sdk-release-main
+    - get: daily-trigger
+      trigger: true
 
   - task: bump-mariadb
-    file: backup-and-restore-sdk-release-main/ci/tasks/bump-mariadb/task.yml
+    file: backup-and-restore-sdk-release-main/ci/tasks/bump-generic/task.yml
     input_mapping:
-      backup-and-restore-sdk-release: backup-and-restore-sdk-release-main
-      mariadb-release: mariadb-release
+      task-repo: backup-and-restore-sdk-release-main
+      bump-repo: backup-and-restore-sdk-release-main
+    vars:
+      bump-script: scripts/autobump-mariadb.sh
     params:
-      VENDOR_UPDATES_BRANCH: bump-mariadb
-      COMMIT_USERNAME: bump-mariadb CI job
-      COMMIT_USEREMAIL: mapbu-cryogenics@groups.vmware.com
+      PR_BASE: main
+      PR_LABELS: ci
+
+      GH_TOKEN: ((github.access_token))
       AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
       AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
-
-  - put: backup-and-restore-sdk-release-main
-    params:
-      repository: updated-backup-and-restore-sdk-release
-      branch: mariadb-autobump
-
-  - task: create-bump-mariadb-pull-request
-    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
-    params:
-      BASE: main
-      BRANCH: mariadb-autobump
-      LABELS: ci
-      TITLE: Update mariadb
-      MESSAGE: |
-        This is an automatically generated Pull Request from the Cryogenics CI Bot.
-
-        I have detected a new version of [mariadb](https://downloads.mariadb.org/mariadb/+releases/) and automatically bumped
-        this package to benefit from the latest changes.
-
-        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
-    input_mapping:
-      source-repo: backup-and-restore-sdk-release-main
 
 - name: bump-mysql
   plan:
