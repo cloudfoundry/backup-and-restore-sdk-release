@@ -18,10 +18,10 @@ mysql/mysql-5.7.33.tar.gz:
   size: 56179381
   object_id: 83b9aa6b-de0f-4990-4b56-6ee9ead37f62
   sha: sha256:ad3b8d80d7b6e307cdf9eb061cbecccfe78bb5ecef24f2b17818d8e3ea2063ad
-postgres/postgresql-9.4.23.tar.gz:
-  size: 21943235
-  object_id: 3cf98c54-a09e-4ddf-65b5-90a7fb36034f
-  sha: sha256:82e29128463bfb1961c4119d9da893baaa437620a29bc53ce08bf735b5810ea4
+postgres/postgresql-9.4.26.tar.gz:
+  size: 22001828
+  object_id: e89adb5b-a26e-4dc2-5898-616fa1f5d2b6
+  sha: sha256:b9206526343ba71f79aafb6b786a80d6e4777f64d3c8c0be6e5d47e1138a7d7e
 postgres/postgresql-9.6.22.tar.gz:
   size: 24664093
   object_id: 615fbd06-3877-4433-6ebc-5d6da3f8cc34
