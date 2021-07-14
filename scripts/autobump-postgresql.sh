@@ -11,3 +11,11 @@ export BLOBS_PREFIX="postgres"
 export ALL_VERSIONS
 export DOWNLOAD_URL='https://ftp.postgresql.org/pub/source/v${VERSION}/postgresql-${VERSION}.tar.gz'
 export DOWNLOADED_FILENAME='postgresql-${VERSION}.tar.gz'
+
+function checksum_callback() {
+    VERSION="${1}"
+    DOWNLOADED_FILE="${2}"
+
+    EXPECTED_SHA256="$(curl -s -L "https://ftp.postgresql.org/pub/source/v${VERSION}/postgresql-${VERSION}.tar.gz.sha256" | cut -d ' ' -f1)"
+    echo "${EXPECTED_SHA256}  ${DOWNLOADED_FILE}" | sha256sum -c - || exit 1
+}
