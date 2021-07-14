@@ -97,7 +97,6 @@ function blobs_are_equal() {
     local NEW_BLOB_ID="${2}"
     local CUR_VERSION="${3}"
     local NEW_VERSION="${4}"
-    local NEW_TARFILE="${5}"
 
     # TODO: Extend this check to also compare shasum and id
     if [[ "${CUR_VERSION}" == "${NEW_VERSION}" ]];
@@ -119,7 +118,7 @@ function replace_blob() {
 
     pushd "${REPO_ROOT}" >/dev/null
 
-    echo "Replacing Postgresql ${CUR_VERSION} with ${NEW_VERSION}"
+    echo "Replacing ${BLOBS_PREFIX} ${CUR_VERSION} with ${NEW_VERSION}"
 
     # Replace blobstore blob
     bosh remove-blob "--dir=${REPO_ROOT}" "${CUR_BLOB_ID}"
