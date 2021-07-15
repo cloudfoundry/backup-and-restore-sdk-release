@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euxo pipefail
+set -euo pipefail
 
 export VERSIONS_URL='https://ftp.pcre.org/pub/pcre/'
 
