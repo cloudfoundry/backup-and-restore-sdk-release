@@ -17,7 +17,9 @@
 ---
 name: database-backup-restorer-mysql-5.7
 
-dependencies: [database-backup-restorer-boost]
+dependencies:
+- database-backup-restorer-boost
+- libpcre2
 
 files:
 - mysql/mysql-5.7.33.tar.gz
