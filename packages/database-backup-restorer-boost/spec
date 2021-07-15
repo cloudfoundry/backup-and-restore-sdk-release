@@ -20,4 +20,4 @@ name: database-backup-restorer-boost
 dependencies: []
 
 files:
-- boost/boost_1_76_0.tar.gz
+- boost/boost_1_59_0.tar.gz

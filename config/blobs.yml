@@ -1,7 +1,7 @@
-boost/boost_1_76_0.tar.gz:
-  size: 130274594
-  object_id: 5cfdd20f-16ff-4dfd-467a-3d31864ac73c
-  sha: sha256:7bd7ddceec1a1dfdcbdb3e609b60d01739c38390a5f956385a12f3122049f0ca
+boost/boost_1_59_0.tar.gz:
+  size: 83709983
+  object_id: 2bb21a57-51e9-471f-660a-edc788238fee
+  sha: 5123209db194d66d69a9cfa5af8ff473d5941d97
 libpcre2/pcre2-10.37.tar.gz:
   size: 2299767
   object_id: 8430a2b5-c852-413d-4286-3d1a44e8e61d
