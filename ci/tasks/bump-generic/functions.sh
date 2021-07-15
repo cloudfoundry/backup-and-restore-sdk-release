@@ -63,21 +63,38 @@ function download_version() {
 function pick_cadidate_version() {
     local CUR_VERSION="$1"
     local ALL_VERSIONS="$2"
+    local BUMP_STRATEGY="$3"
 
-    if echo "${CUR_VERSION}" | grep -Eo '^[0-9]+$' >/dev/null;
-    then # Autobump majors
-        local AUTOBUMP_PREFIX=""
+    if [[ "${BUMP_STRATEGY}" == "MAJOR" ]];
+    then local AUTOBUMP_PREFIX=""
 
-    elif echo "${CUR_VERSION}" | grep -Eo '^[0-9]+\.[0-9]+$' >/dev/null;
-    then # Autobump minors
-        local AUTOBUMP_PREFIX="$(echo "${CUR_VERSION}" | cut -d '.' -f1)"
+    elif [[ "${BUMP_STRATEGY}" == "MINOR" ]];
+    then local AUTOBUMP_PREFIX="$(echo "${CUR_VERSION}" | cut -d '.' -f1)"
 
-    elif echo "${CUR_VERSION}" | grep -Eo '^[0-9]+\.[0-9]+\.[0-9]+$' >/dev/null;
-    then # Autobump patches
-        local AUTOBUMP_PREFIX="$(echo "${CUR_VERSION}" | cut -d '.' -f1,2)"
+    elif [[ "${BUMP_STRATEGY}" == "PATCH" ]];
+    then local AUTOBUMP_PREFIX="$(echo "${CUR_VERSION}" | cut -d '.' -f1,2)"
 
+    elif [[ "${BUMP_STRATEGY}" == "AUTO" ]];
+    then
+        if echo "${CUR_VERSION}" | grep -Eo '^[0-9]+$' >/dev/null;
+        then # Autobump majors
+            local AUTOBUMP_PREFIX=""
+
+        elif echo "${CUR_VERSION}" | grep -Eo '^[0-9]+\.[0-9]+$' >/dev/null;
+        then # Autobump minors
+            local AUTOBUMP_PREFIX="$(echo "${CUR_VERSION}" | cut -d '.' -f1)"
+
+        elif echo "${CUR_VERSION}" | grep -Eo '^[0-9]+\.[0-9]+\.[0-9]+$' >/dev/null;
+        then # Autobump patches
+            local AUTOBUMP_PREFIX="$(echo "${CUR_VERSION}" | cut -d '.' -f1,2)"
+
+        else
+            echo "Unsupported naming convention: ${CUR_VERSION}"
+            exit 1
+        fi
     else
-        echo "Unsupported naming convention: ${CUR_VERSION}"
+        echo "Unsupported option: ${BUMP_STRATEGY}"
+        echo "Only MAJOR, MINOR, PATCH or AUTO are supported"
         exit 1
     fi
 
@@ -125,8 +142,18 @@ function replace_blob() {
     bosh add-blob "--dir=${REPO_ROOT}" "$(realpath "${NEW_TARFILE}")" "${NEW_BLOB_ID}"
     bosh upload-blobs "--dir=${REPO_ROOT}"
 
-    # Replace references in files
-    # Following steps **SHOULD NEVER BE PERFORMED BEFORE** the blobstore replacement commands listed above
+    popd >/dev/null
+}
+
+
+function replace_references() {
+    local CUR_BLOB_ID="${1}"
+    local NEW_BLOB_ID="${2}"
+    local CUR_VERSION="${3}"
+    local NEW_VERSION="${4}"
+    local NEW_TARFILE="${5}"
+    local BLOBS_PREFIX="${6}"
+
     local FILES_WITH_REFS="$(grep -rnwl '.' -e "${CUR_VERSION}" | grep "${BLOBS_PREFIX}")"
 
     for file in $FILES_WITH_REFS;
@@ -135,8 +162,6 @@ function replace_blob() {
     sed -i.bak "s#${CUR_VERSION}#${NEW_VERSION}#g" "$file"
     rm "$file".bak
     done
-
-    popd >/dev/null
 }
 
 
@@ -178,7 +203,7 @@ function create_pr() {
     local PR_BASE="${2:?}"
     local PR_TITLE="${3:?}"
     local PR_MESSAGE="${4:?}"
-    local PR_LABELS="${5:?}"
+    local PR_LABELS="${5}"
     local GH_USER="${6:?}"
     local GH_TOKEN="${7:?}"
 
