@@ -75,6 +75,7 @@ groups:
   - bump-mariadb
   - bump-mysql
   - bump-postgresql
+  - bump-boost
 - name: shipit
   jobs:
   - build-rc
