@@ -180,8 +180,8 @@ jobs:
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release
-      trigger: true
     - get: release-tarball
+      trigger: true
       resource: release
     - get: bbl-state-bosh-lite
     - get: xenial-stemcell
@@ -207,9 +207,9 @@ jobs:
     - get: every6h
       trigger: true
     - get: backup-and-restore-sdk-release
-      trigger: true
     - get: release-tarball
       resource: release
+      trigger: true
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
   - task: generate-bosh-deployment-source-file
@@ -296,8 +296,8 @@ jobs:
     - get: every6h
       trigger: true
     - get: backup-and-restore-sdk-release
-      trigger: true
     - get: release-tarball
+      trigger: true
       resource: release
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
@@ -328,8 +328,8 @@ jobs:
     - get: every6h
       trigger: true
     - get: backup-and-restore-sdk-release
-      trigger: true
     - get: release-tarball
+      trigger: true
       resource: release
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
@@ -380,8 +380,8 @@ jobs:
     - get: every6h
       trigger: true
     - get: backup-and-restore-sdk-release
-      trigger: true
     - get: release-tarball
+      trigger: true
       resource: release
     - get: xenial-stemcell-aws
     - get: bbl-state-director-with-iam-profile
@@ -411,8 +411,8 @@ jobs:
     - get: every6h
       trigger: true
     - get: backup-and-restore-sdk-release
-      trigger: true
     - get: release-tarball
+      trigger: true
       resource: release
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
@@ -442,8 +442,8 @@ jobs:
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release
-      trigger: true
     - get: release-tarball
+      trigger: true
       resource: release
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
