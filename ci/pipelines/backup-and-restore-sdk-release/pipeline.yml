@@ -781,6 +781,7 @@ jobs:
       AUTHOR: dependabot
       GH_TOKEN: ((github.access_token))
       PR_REF: ((.:pr-url))
+      PROJECT_NAME: BBR-SDK
     on_failure:
       put: slack-cryo-notification
       params:
@@ -789,8 +790,7 @@ jobs:
     on_success:
       put: slack-cryo-notification
       params:
-        text: |
-          *BBR-SDK:* A PR has been merged automatically. You can review it <((.:pr-url))|*here*>.
+        text_file: merge-output/result
   - task: deliver-stories
     file: cryogenics-concourse-tasks/tracker-automation/deliver-stories/task.yml
     params:
