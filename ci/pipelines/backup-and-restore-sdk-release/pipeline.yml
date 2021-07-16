@@ -790,7 +790,7 @@ jobs:
     on_success:
       put: slack-cryo-notification
       params:
-        text_file: merge-output/result
+        text_file: merge-output/notification
   - task: deliver-stories
     file: cryogenics-concourse-tasks/tracker-automation/deliver-stories/task.yml
     params:
