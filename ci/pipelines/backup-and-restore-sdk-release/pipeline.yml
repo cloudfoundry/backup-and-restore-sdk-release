@@ -223,7 +223,7 @@ resources:
     private_key: ((github.ssh_key))
     branch: main
 
-- name: sdk-biweekly-gate
+- name: biweekly-gate
   type: gitgat
   icon: gate-and
   source:
@@ -832,7 +832,7 @@ jobs:
   serial_groups: [version]
   plan:
   - in_parallel:
-    - get: sdk-biweekly-gate
+    - get: biweekly-gate
       trigger: true
     - get: backup-and-restore-sdk-release-main
       passed: [build-rc]
@@ -841,7 +841,7 @@ jobs:
       params: {bump: patch}
     - get: cryogenics-concourse-tasks
   - task: create-final-release
-    file: cryogenics-concourse-tasks/bosh-tasks/create-final-release/task.yml
+    file: cryogenics-concourse-tasks/bosh-tasks/create-release/task.yml
     input_mapping:
       release-repo: backup-and-restore-sdk-release-main
     output_mapping:
@@ -853,6 +853,7 @@ jobs:
       GIT_USERNAME: Backup & Restore Concourse
       GIT_EMAIL: cf-lazarus@pivotal.io
       FINAL: true
+      RELEASE_NAME: backup-and-restore-sdk
   - task: create-release-notes
     file: cryogenics-concourse-tasks/release-automation/release-notes/task.yml
     input_mapping:
