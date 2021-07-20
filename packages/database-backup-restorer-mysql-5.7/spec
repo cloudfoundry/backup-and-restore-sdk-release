@@ -22,4 +22,4 @@ dependencies:
 - libpcre2
 
 files:
-- mysql/mysql-5.7.33.tar.gz
+- mysql/mysql-5.7.34.tar.gz
