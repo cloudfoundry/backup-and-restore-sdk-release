@@ -21,6 +21,6 @@ LIBPCRE2_VERSION=10.37
 tar xzf libpcre2/pcre2-${LIBPCRE2_VERSION}.tar.gz
 
 cd pcre2-${LIBPCRE2_VERSION}
-./configure
+CFLAGS="-Dregcomp=PCRE2regcomp" ./configure --prefix=${BOSH_INSTALL_TARGET}
 make
 make install
