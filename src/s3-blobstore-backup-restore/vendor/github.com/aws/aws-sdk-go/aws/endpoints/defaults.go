@@ -5563,6 +5563,17 @@ var awsPartition = partition{
 				},
 			},
 		},
+		"route53-recovery-control-config": service{
+
+			Endpoints: endpoints{
+				"aws-global": endpoint{
+					Hostname: "route53-recovery-control-config.us-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-2",
+					},
+				},
+			},
+		},
 		"route53domains": service{
 
 			Endpoints: endpoints{
@@ -8009,7 +8020,8 @@ var awscnPartition = partition{
 		"gamelift": service{
 
 			Endpoints: endpoints{
-				"cn-north-1": endpoint{},
+				"cn-north-1":     endpoint{},
+				"cn-northwest-1": endpoint{},
 			},
 		},
 		"glacier": service{
