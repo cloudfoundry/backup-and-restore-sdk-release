@@ -1,4 +1,6 @@
-package internal
+// untested sections: 2
+
+package asyncassertion
 
 import (
 	"errors"
@@ -7,6 +9,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/onsi/gomega/internal/oraclematcher"
 	"github.com/onsi/gomega/types"
 )
 
@@ -18,82 +21,39 @@ const (
 )
 
 type AsyncAssertion struct {
-	asyncType AsyncAssertionType
-
-	actualIsFunc bool
-	actualValue  interface{}
-	actualFunc   func() ([]reflect.Value, error)
-
+	asyncType       AsyncAssertionType
+	actualInput     interface{}
 	timeoutInterval time.Duration
 	pollingInterval time.Duration
+	failWrapper     *types.GomegaFailWrapper
 	offset          int
-	g               *Gomega
 }
 
-func NewAsyncAssertion(asyncType AsyncAssertionType, actualInput interface{}, g *Gomega, timeoutInterval time.Duration, pollingInterval time.Duration, offset int) *AsyncAssertion {
-	out := &AsyncAssertion{
+func New(asyncType AsyncAssertionType, actualInput interface{}, failWrapper *types.GomegaFailWrapper, timeoutInterval time.Duration, pollingInterval time.Duration, offset int) *AsyncAssertion {
+	actualType := reflect.TypeOf(actualInput)
+	if actualType.Kind() == reflect.Func {
+		if actualType.NumIn() != 0 {
+			panic("Expected a function with no arguments and zero or more return values.")
+		}
+	}
+
+	return &AsyncAssertion{
 		asyncType:       asyncType,
+		actualInput:     actualInput,
+		failWrapper:     failWrapper,
 		timeoutInterval: timeoutInterval,
 		pollingInterval: pollingInterval,
 		offset:          offset,
-		g:               g,
 	}
-
-	switch actualType := reflect.TypeOf(actualInput); {
-	case actualType.Kind() != reflect.Func:
-		out.actualValue = actualInput
-	case actualType.NumIn() == 0 && actualType.NumOut() > 0:
-		out.actualIsFunc = true
-		out.actualFunc = func() ([]reflect.Value, error) {
-			return reflect.ValueOf(actualInput).Call([]reflect.Value{}), nil
-		}
-	case actualType.NumIn() == 1 && actualType.In(0).Implements(reflect.TypeOf((*types.Gomega)(nil)).Elem()):
-		out.actualIsFunc = true
-		out.actualFunc = func() (values []reflect.Value, err error) {
-			var assertionFailure error
-			assertionCapturingGomega := NewGomega(g.DurationBundle).ConfigureWithFailHandler(func(message string, callerSkip ...int) {
-				skip := 0
-				if len(callerSkip) > 0 {
-					skip = callerSkip[0]
-				}
-				_, file, line, _ := runtime.Caller(skip + 1)
-				assertionFailure = fmt.Errorf("Assertion in callback at %s:%d failed:\n%s", file, line, message)
-				panic("stop execution")
-			})
-
-			defer func() {
-				if actualType.NumOut() == 0 {
-					if assertionFailure == nil {
-						values = []reflect.Value{reflect.Zero(reflect.TypeOf((*error)(nil)).Elem())}
-					} else {
-						values = []reflect.Value{reflect.ValueOf(assertionFailure)}
-					}
-				} else {
-					err = assertionFailure
-				}
-				if e := recover(); e != nil && assertionFailure == nil {
-					panic(e)
-				}
-			}()
-
-			values = reflect.ValueOf(actualInput).Call([]reflect.Value{reflect.ValueOf(assertionCapturingGomega)})
-			return
-		}
-	default:
-		msg := fmt.Sprintf("The function passed to Gomega's async assertions should either take no arguments and return values, or take a single Gomega interface that it can use to make assertions within the body of the function.  When taking a Gomega interface the function can optionally return values or return nothing.  The function you passed takes %d arguments and returns %d values.", actualType.NumIn(), actualType.NumOut())
-		g.Fail(msg, offset+4)
-	}
-
-	return out
 }
 
 func (assertion *AsyncAssertion) Should(matcher types.GomegaMatcher, optionalDescription ...interface{}) bool {
-	assertion.g.THelper()
+	assertion.failWrapper.TWithHelper.Helper()
 	return assertion.match(matcher, true, optionalDescription...)
 }
 
 func (assertion *AsyncAssertion) ShouldNot(matcher types.GomegaMatcher, optionalDescription ...interface{}) bool {
-	assertion.g.THelper()
+	assertion.failWrapper.TWithHelper.Helper()
 	return assertion.match(matcher, false, optionalDescription...)
 }
 
@@ -109,32 +69,74 @@ func (assertion *AsyncAssertion) buildDescription(optionalDescription ...interfa
 	return fmt.Sprintf(optionalDescription[0].(string), optionalDescription[1:]...) + "\n"
 }
 
+func (assertion *AsyncAssertion) actualInputIsAFunction() bool {
+	actualType := reflect.TypeOf(assertion.actualInput)
+	return actualType.Kind() == reflect.Func && actualType.NumIn() == 0
+}
+
 func (assertion *AsyncAssertion) pollActual() (interface{}, error) {
-	if !assertion.actualIsFunc {
-		return assertion.actualValue, nil
+	if !assertion.actualInputIsAFunction() {
+		return assertion.actualInput, nil
+	}
+	var capturedAssertionFailure string
+	var values []reflect.Value
+
+	numOut := reflect.TypeOf(assertion.actualInput).NumOut()
+
+	func() {
+		originalHandler := assertion.failWrapper.Fail
+		assertion.failWrapper.Fail = func(message string, callerSkip ...int) {
+			skip := 0
+			if len(callerSkip) > 0 {
+				skip = callerSkip[0]
+			}
+			_, file, line, _ := runtime.Caller(skip + 1)
+			capturedAssertionFailure = fmt.Sprintf("Assertion in callback at %s:%d failed:\n%s", file, line, message)
+			panic("stop execution")
+		}
+
+		defer func() {
+			assertion.failWrapper.Fail = originalHandler
+			if e := recover(); e != nil && capturedAssertionFailure == "" {
+				panic(e)
+			}
+		}()
+
+		values = reflect.ValueOf(assertion.actualInput).Call([]reflect.Value{})
+	}()
+
+	if capturedAssertionFailure != "" {
+		if numOut == 0 {
+			return errors.New(capturedAssertionFailure), nil
+		} else {
+			return nil, errors.New(capturedAssertionFailure)
+		}
 	}
 
-	values, err := assertion.actualFunc()
-	if err != nil {
-		return nil, err
-	}
-	extras := []interface{}{}
-	for _, value := range values[1:] {
-		extras = append(extras, value.Interface())
-	}
-	success, message := vetExtras(extras)
-	if !success {
-		return nil, errors.New(message)
+	if numOut > 0 {
+		extras := []interface{}{}
+		for _, value := range values[1:] {
+			extras = append(extras, value.Interface())
+		}
+
+		success, message := vetExtras(extras)
+
+		if !success {
+			return nil, errors.New(message)
+		}
+
+		return values[0].Interface(), nil
 	}
 
-	return values[0].Interface(), nil
+	return nil, nil
 }
 
 func (assertion *AsyncAssertion) matcherMayChange(matcher types.GomegaMatcher, value interface{}) bool {
-	if assertion.actualIsFunc {
+	if assertion.actualInputIsAFunction() {
 		return true
 	}
-	return types.MatchMayChangeInTheFuture(matcher, value)
+
+	return oraclematcher.MatchMayChangeInTheFuture(matcher, value)
 }
 
 func (assertion *AsyncAssertion) match(matcher types.GomegaMatcher, desiredMatch bool, optionalDescription ...interface{}) bool {
@@ -150,7 +152,7 @@ func (assertion *AsyncAssertion) match(matcher types.GomegaMatcher, desiredMatch
 		matches, err = matcher.Match(value)
 	}
 
-	assertion.g.THelper()
+	assertion.failWrapper.TWithHelper.Helper()
 
 	fail := func(preamble string) {
 		errMsg := ""
@@ -164,9 +166,9 @@ func (assertion *AsyncAssertion) match(matcher types.GomegaMatcher, desiredMatch
 				message = matcher.NegatedFailureMessage(value)
 			}
 		}
-		assertion.g.THelper()
+		assertion.failWrapper.TWithHelper.Helper()
 		description := assertion.buildDescription(optionalDescription...)
-		assertion.g.Fail(fmt.Sprintf("%s after %.3fs.\n%s%s%s", preamble, time.Since(timer).Seconds(), description, message, errMsg), 3+assertion.offset)
+		assertion.failWrapper.Fail(fmt.Sprintf("%s after %.3fs.\n%s%s%s", preamble, time.Since(timer).Seconds(), description, message, errMsg), 3+assertion.offset)
 	}
 
 	if assertion.asyncType == AsyncAssertionTypeEventually {
@@ -217,4 +219,17 @@ func (assertion *AsyncAssertion) match(matcher types.GomegaMatcher, desiredMatch
 	}
 
 	return false
+}
+
+func vetExtras(extras []interface{}) (bool, string) {
+	for i, extra := range extras {
+		if extra != nil {
+			zeroValue := reflect.Zero(reflect.TypeOf(extra)).Interface()
+			if !reflect.DeepEqual(zeroValue, extra) {
+				message := fmt.Sprintf("Unexpected non-nil/non-zero extra argument at index %d:\n\t<%T>: %#v", i+1, extra, extra)
+				return false, message
+			}
+		}
+	}
+	return true, ""
 }
