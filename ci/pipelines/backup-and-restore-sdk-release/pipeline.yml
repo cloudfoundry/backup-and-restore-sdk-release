@@ -612,6 +612,7 @@ jobs:
         POSTGRES_USERNAME: *postgres-9-4-username
         TEST_SUITE_NAME: postgresql
     - task: postgres-system-tests-9.6
+      attempts: 4
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
       params:
         POSTGRES_HOSTNAME: *postgres-9-6-host
