@@ -199,14 +199,6 @@ resources:
   source:
     url: ((slack.webhook))
 
-- name: cryogenics-meta
-  type: git
-  icon: github
-  source:
-    uri: git@github.com:pivotal-cf/cryogenics-meta.git
-    private_key: ((github.ssh_key))
-    branch: main
-
 - name: cryogenics-concourse-tasks
   type: git
   icon: github
@@ -377,7 +369,7 @@ jobs:
       passed: [unit-tests]
       trigger: true
       version: every
-    - get: cryogenics-meta
+    - get: cryogenics-concourse-tasks
     - get: gcp-db-certs
     - get: six-hours
       trigger: true
@@ -387,7 +379,7 @@ jobs:
       - put: gcp-terraform
         resource: terraform
         params:
-          terraform_source: cryogenics-meta/ci/pipelines/backup-and-restore-sdk-release/terraform/bbr-sdk-system-tests/gcp
+          terraform_source: cryogenics-concourse-tasks/pipelines/backup-and-restore-sdk-release/terraform/bbr-sdk-system-tests/gcp
           env_name: bbr-sdk-external-gcp-dbs
           delete_on_failure: true
           vars:
@@ -472,7 +464,7 @@ jobs:
       trigger: true
       version: every
       passed: [unit-tests]
-    - get: cryogenics-meta
+    - get: cryogenics-concourse-tasks
     - get: cert-store
       resource: rds-ca-bundle
     - get: six-hours
@@ -481,7 +473,7 @@ jobs:
   - in_parallel:
     - put: terraform
       params:
-        terraform_source: cryogenics-meta/ci/pipelines/backup-and-restore-sdk-release/terraform/bbr-sdk-system-tests/aws/
+        terraform_source: cryogenics-concourse-tasks/pipelines/backup-and-restore-sdk-release/terraform/bbr-sdk-system-tests/aws/
         env_name: bbr-sdk-external-rds-dbs
         delete_on_failure: true
         vars:
