@@ -296,10 +296,10 @@ jobs:
           TRACKER_API_TOKEN: ((tracker.api_token))
           TRACKER_PROJECT_ID: ((tracker.project_id))
           ESTIMATE: 1
-    - put: backup-and-restore-sdk-release
-      params:
-        path: backup-and-restore-sdk-release
-        status: pending
+    # - put: backup-and-restore-sdk-release
+    #   params:
+    #     path: backup-and-restore-sdk-release
+    #     status: pending
     - task: sdk-template-unit-tests
       file: backup-and-restore-sdk-release/ci/tasks/sdk-template-unit-tests/task.yml
     - task: databases-unit-tests
