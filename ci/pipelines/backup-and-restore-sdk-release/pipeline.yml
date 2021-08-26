@@ -766,6 +766,7 @@ jobs:
       status: success
   - load_var: pr-url
     file: backup-and-restore-sdk-release/.git/resource/url
+
   - task: merge-pr
     file: cryogenics-concourse-tasks/github-automation/merge-pr/task.yml
     input_mapping:
@@ -785,6 +786,7 @@ jobs:
       put: slack-cryo-notification
       params:
         text_file: merge-output/notification
+
   - task: deliver-stories
     file: cryogenics-concourse-tasks/tracker-automation/deliver-stories/task.yml
     params:
@@ -936,11 +938,12 @@ jobs:
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
+    - get: cryogenics-concourse-tasks
     - get: daily-trigger
       trigger: true
 
   - task: bump-mariadb
-    file: backup-and-restore-sdk-release-main/ci/tasks/bump-generic/task.yml
+    file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
     input_mapping:
       task-repo: backup-and-restore-sdk-release-main
       bump-repo: backup-and-restore-sdk-release-main
@@ -958,11 +961,12 @@ jobs:
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
+    - get: cryogenics-concourse-tasks
     - get: daily-trigger
       trigger: true
 
   - task: bump-mysql
-    file: backup-and-restore-sdk-release-main/ci/tasks/bump-generic/task.yml
+    file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
     input_mapping:
       task-repo: backup-and-restore-sdk-release-main
       bump-repo: backup-and-restore-sdk-release-main
@@ -980,11 +984,12 @@ jobs:
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
+    - get: cryogenics-concourse-tasks
     - get: daily-trigger
       trigger: true
 
   - task: bump-postgresql
-    file: backup-and-restore-sdk-release-main/ci/tasks/bump-generic/task.yml
+    file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
     input_mapping:
       task-repo: backup-and-restore-sdk-release-main
       bump-repo: backup-and-restore-sdk-release-main
@@ -1002,11 +1007,12 @@ jobs:
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
+    - get: cryogenics-concourse-tasks
     - get: daily-trigger
       trigger: true
 
   - task: bump-boost
-    file: backup-and-restore-sdk-release-main/ci/tasks/bump-generic/task.yml
+    file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
     input_mapping:
       task-repo: backup-and-restore-sdk-release-main
       bump-repo: backup-and-restore-sdk-release-main
@@ -1024,11 +1030,12 @@ jobs:
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
+    - get: cryogenics-concourse-tasks
     - get: daily-trigger
       trigger: true
 
   - task: bump-libpcre2
-    file: backup-and-restore-sdk-release-main/ci/tasks/bump-generic/task.yml
+    file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
     input_mapping:
       task-repo: backup-and-restore-sdk-release-main
       bump-repo: backup-and-restore-sdk-release-main
