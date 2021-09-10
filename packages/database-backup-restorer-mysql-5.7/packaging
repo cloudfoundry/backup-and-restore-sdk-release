@@ -17,7 +17,7 @@
 # abort script on any command that exits with a non zero value
 set -e
 
-MYSQL_VERSION=5.7.34
+MYSQL_VERSION=8.0.25
 MY_DIR=$(pwd)
 
 patch_file="$( mktemp )"
