@@ -15,7 +15,7 @@ T_get_latest_release_returns_empty_string_on_emtpy_input() {
 T_get_latest_release_returns_version_number() {
     local xml=$(cat test_assets/test_rss.xml)
     local output="$(echo $xml | get_latest_release 'MySQL Community Server 5.6')"
-    local expected='5.6.51'
+    local expected='8.0.25'
 
     if [[ "$output" != "$expected" ]]
     then
@@ -25,8 +25,8 @@ T_get_latest_release_returns_version_number() {
 }
 
 T_build_output_returns_json() {
-    local output=$(build_output '5.6.51')
-    local expected='[{"ref": "5.6.51"}]'
+    local output=$(build_output '8.0.25')
+    local expected='[{"ref": "8.0.25"}]'
 
     if [[ "$output" != "$expected" ]]
     then
@@ -43,7 +43,7 @@ T_check_script() {
 
     local input=$(cat test_assets/test_input.json)
     local output=$(echo $input | ./check)
-    local expected='[{"ref": "5.6.51"}]'
+    local expected='[{"ref": "8.0.25"}]'
 
     if [[ "$output" != "$expected" ]]
     then

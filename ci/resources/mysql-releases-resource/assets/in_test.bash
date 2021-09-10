@@ -8,8 +8,8 @@ clean () {
 }
 
 T_get_download_url_generates_url_for_version() {
-    local output="$(get_download_url '5.6.51')"
-    local expected='https://downloads.mysql.com/archives/get/p/23/file/mysql-5.6.51.tar.gz'
+    local output="$(get_download_url '8.0.25')"
+    local expected='https://downloads.mysql.com/archives/get/p/23/file/mysql-8.0.25.tar.gz'
 
     if [[ "$output" != "$expected" ]]
     then
@@ -19,8 +19,8 @@ T_get_download_url_generates_url_for_version() {
 }
 
 T_build_output_returns_json() {
-    local output=$(build_output '5.6.51')
-    local expected='{"version": {"ref": "5.6.51"}}'
+    local output=$(build_output '8.0.25')
+    local expected='{"version": {"ref": "8.0.25"}}'
 
     if [[ "$output" != "$expected" ]]
     then
@@ -31,7 +31,7 @@ T_build_output_returns_json() {
 
 T_download_file_calls_wget_with_correct_url() {
     wget() {
-        if [[ "$1" != 'https://downloads.mysql.com/archives/get/p/23/file/mysql-5.6.51.tar.gz' ]]
+        if [[ "$1" != 'https://downloads.mysql.com/archives/get/p/23/file/mysql-8.0.25.tar.gz' ]]
         then
             $T_fail "wget called with wrong url: $1"
             return 0
@@ -42,7 +42,7 @@ T_download_file_calls_wget_with_correct_url() {
         return 0
     }
 
-    download_file 'https://downloads.mysql.com/archives/get/p/23/file/mysql-5.6.51.tar.gz' 'test_assets'
+    download_file 'https://downloads.mysql.com/archives/get/p/23/file/mysql-8.0.25.tar.gz' 'test_assets'
 
     clean
 }
@@ -60,7 +60,7 @@ T_download_file_cds_to_directory() {
         return 0
     }
 
-    download_file 'https://downloads.mysql.com/archives/get/p/23/file/mysql-5.6.51.tar.gz' 'test_assets'
+    download_file 'https://downloads.mysql.com/archives/get/p/23/file/mysql-8.0.25.tar.gz' 'test_assets'
 
     clean
 }
