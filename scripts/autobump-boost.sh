@@ -43,7 +43,11 @@ function new_version_callback() {
 
     local MAJOR="$(echo "${VERSION}" | grep -Eo '^[0-9]+')"
     local NEW_VERSION="$(echo "${ALL_VERSIONS}" |  sort -t "." -k1,1n -k2,2n -k3,3n | grep -Eo "^${MAJOR}.*" | tail -n 1)"
-    echo "${NEW_VERSION}"
+
+    # https://3.basecamp.com/4415260/buckets/20872488/question_answers/3963970683
+    # MySQL 5.7 needs boost, and it needs it at 1.59.0 specifically
+    echo "1.59.0"
+    # echo "${NEW_VERSION}"
 }
 
 function new_blobid_callback() {
