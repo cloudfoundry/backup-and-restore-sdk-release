@@ -23,3 +23,7 @@ function download_url_callback() {
     local VERSION="${1}"
     echo "https://ftp.postgresql.org/pub/source/v${VERSION}/postgresql-${VERSION}.tar.gz"
 }
+
+function new_version_callback() {
+  echo "AUTO"
+}

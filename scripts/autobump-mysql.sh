@@ -24,3 +24,7 @@ function download_url_callback() {
     local VERSION="${1}"
     echo "https://downloads.mysql.com/archives/get/p/23/file/mysql-${VERSION}.tar.gz"
 }
+
+function new_version_callback() {
+  echo "AUTO"
+}

@@ -25,3 +25,7 @@ function download_url_callback() {
     local VERSION="${1}"
     echo "https://downloads.mariadb.org/interstitial/mariadb-${VERSION}/source/mariadb-${VERSION}.tar.gz"
 }
+
+function new_version_callback() {
+  echo "AUTO"
+}
