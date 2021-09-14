@@ -20,3 +20,7 @@ function extract_version_callback() {
     local BLOB_ID="${1}"
     echo "${BLOB_ID}" | grep -Eo '[0-9]+\.[0-9]+'
 }
+
+function new_version_callback() {
+  echo "AUTO"
+}
