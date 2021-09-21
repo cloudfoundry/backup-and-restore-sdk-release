@@ -49,7 +49,7 @@ github.com/aws/aws-sdk-go/service/sso
 github.com/aws/aws-sdk-go/service/sso/ssoiface
 github.com/aws/aws-sdk-go/service/sts
 github.com/aws/aws-sdk-go/service/sts/stsiface
-# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.12
+# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.13
 ## explicit
 github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor
 # github.com/fsnotify/fsnotify v1.4.9
