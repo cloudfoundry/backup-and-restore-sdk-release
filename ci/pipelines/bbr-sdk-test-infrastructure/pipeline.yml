@@ -184,6 +184,7 @@ jobs:
       trigger: true
       resource: release
     - get: bbl-state-bosh-lite
+      trigger: true
     - get: xenial-stemcell
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
@@ -212,6 +213,7 @@ jobs:
       trigger: true
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
+      trigger: true
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
     params:
@@ -301,6 +303,7 @@ jobs:
       resource: release
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
+      trigger: true
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
     params:
@@ -333,6 +336,7 @@ jobs:
       resource: release
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
+      trigger: true
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
     params:
@@ -385,6 +389,7 @@ jobs:
       resource: release
     - get: xenial-stemcell-aws
     - get: bbl-state-director-with-iam-profile
+      trigger: true
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
     input_mapping:
@@ -416,6 +421,7 @@ jobs:
       resource: release
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
+      trigger: true
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
     params:
@@ -447,6 +453,7 @@ jobs:
       resource: release
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
+      trigger: true
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
     params:
