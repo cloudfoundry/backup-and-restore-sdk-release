@@ -834,7 +834,7 @@ jobs:
       passed: [build-rc]
     - get: version
       passed: [build-rc]
-      params: {bump: patch}
+      params: {bump: final}
     - get: cryogenics-concourse-tasks
   - task: create-final-release
     file: cryogenics-concourse-tasks/bosh-tasks/create-release/task.yml
@@ -879,8 +879,6 @@ jobs:
       tag_prefix: v
       globs:
       - backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
-  - put: version
-    params: {file: version/number}
   - load_var: version-tag
     file: version/number
   - load_var: github-release-url
@@ -891,6 +889,9 @@ jobs:
         A new release for $BUILD_PIPELINE_NAME has been published!
         Release `((.:version-tag))` is now available <((.:github-release-url))|here>
         View the pipeline <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|here>
+  - put: version
+    params:
+      bump: patch
 
 # Dependency bumps
 - name: bump-golang
