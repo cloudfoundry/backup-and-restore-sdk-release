@@ -80,6 +80,7 @@ groups:
 - name: shipit
   jobs:
   - build-rc
+  - check-for-changes
   - create-final-patch
 
 resource_types:
@@ -215,13 +216,10 @@ resources:
     private_key: ((github.ssh_key))
     branch: main
 
-- name: biweekly-gate
-  type: gitgat
-  icon: gate-and
-  source:
-    uri: https://github.com/cloudfoundry-incubator/backup-and-restore-sdk-release.git
-    branch: main
-    since: 2 weeks
+- name: every-2-weeks
+  type: time
+  source: 
+    interval: 20160m # 60*24*7*2
 
 - name: github-release
   type: github-release
@@ -823,17 +821,26 @@ jobs:
   - put: version
     params: {file: version/number}
 
-- name: create-final-patch
-  serial: true
-  serial_groups: [version]
+- name: check-for-changes
   plan:
   - in_parallel:
-    - get: biweekly-gate
+    - get: every-2-weeks
       trigger: true
     - get: backup-and-restore-sdk-release-main
       passed: [build-rc]
     - get: version
       passed: [build-rc]
+
+- name: create-final-patch
+  serial: true
+  serial_groups: [version]
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release-main
+      passed: [check-for-changes]
+      trigger: true
+    - get: version
+      passed: [check-for-changes]
       params: {bump: final}
     - get: cryogenics-concourse-tasks
   - task: create-final-release
