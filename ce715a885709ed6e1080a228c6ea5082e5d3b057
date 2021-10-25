@@ -1,0 +1,7 @@
+{
+  "pr": "408",
+  "repository": "cloudfoundry/backup-and-restore-sdk-release",
+  "base_branch": "main",
+  "head_branch": "dependabot/go_modules/src/database-backup-restore/github.com/onsi/ginkgo-1.16.5",
+  "branch_tip": "ce715a885709ed6e1080a228c6ea5082e5d3b057"
+}
