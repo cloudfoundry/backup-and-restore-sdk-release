@@ -4,7 +4,7 @@ set -euo pipefail
 export VERSIONS_URL='https://downloads.mariadb.org/mariadb/+releases/'
 
 HTML="$(curl -s -L "${VERSIONS_URL}")"
-VALUES="$(echo "${HTML}" | xmllint --html --xpath "//table[@id='download']/tbody/tr[td[3]='Stable']/td[1]/a/@href" - 2>/dev/null)"
+VALUES="$(echo "${HTML}" | xmllint --html --xpath "//table/tbody/tr[td[3]='Stable']/td[1]/a/@href" - 2>/dev/null)"
 ALL_VERSIONS="$(echo "${VALUES}" | grep -Eo '[0-9]+(\.[0-9]+){1,2}')"
 
 export BLOBS_PREFIX="mariadb"
