@@ -1,0 +1,7 @@
+{
+  "pr": "422",
+  "repository": "cloudfoundry/backup-and-restore-sdk-release",
+  "base_branch": "main",
+  "head_branch": "dependabot/go_modules/src/gcs-blobstore-backup-restore/cloud.google.com/go/storage-1.18.2",
+  "branch_tip": "ab64971bd18cef34cab4b7e00ce78d1316c93184"
+}
