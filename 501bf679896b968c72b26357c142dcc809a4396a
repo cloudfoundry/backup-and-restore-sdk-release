@@ -1,0 +1,7 @@
+{
+  "pr": "420",
+  "repository": "cloudfoundry/backup-and-restore-sdk-release",
+  "base_branch": "main",
+  "head_branch": "mysql/mysql-5.7.34.tar.gz",
+  "branch_tip": "501bf679896b968c72b26357c142dcc809a4396a"
+}
