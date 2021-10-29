@@ -156,7 +156,7 @@ resources:
   check_every: 1m
   icon: source-pull
   source:
-    repository: &repo cloudfoundry-incubator/backup-and-restore-sdk-release
+    repository: &repo cloudfoundry/backup-and-restore-sdk-release
     disable_forks: true
     access_token: ((github.access_token))
 
@@ -212,7 +212,7 @@ resources:
   type: git
   icon: github
   source:
-    uri: git@github.com:cloudfoundry-incubator/backup-and-restore-sdk-release.git
+    uri: git@github.com:cloudfoundry/backup-and-restore-sdk-release.git
     private_key: ((github.ssh_key))
     branch: main
 
@@ -225,7 +225,7 @@ resources:
   type: github-release
   icon: rocket
   source:
-    user: cloudfoundry-incubator
+    user: cloudfoundry
     repository: backup-and-restore-sdk-release
     drafts: true
     access_token: ((github.access_token))
@@ -284,7 +284,7 @@ jobs:
         params:
           TRACKER_API_TOKEN: ((tracker.api_token))
           TRACKER_PROJECT_ID: ((tracker.project_id))
-          GIT_REPOSITORY: cloudfoundry-incubator/backup-and-restore-sdk-release
+          GIT_REPOSITORY: cloudfoundry/backup-and-restore-sdk-release
       - task: start-story
         attempts: 5
         file: cryogenics-concourse-tasks/tracker-automation/start-story/task.yml
