@@ -61,7 +61,6 @@ vault_creds: &vault_creds
 groups:
 - name: build
   jobs:
-  - set-pipeline
   - unit-tests
   - system-tests-internal-dbs
   - system-tests-external-dbs-gcp
@@ -120,7 +119,7 @@ resource_types:
 - name: pull-request
   type: docker-image
   source:
-    repository: teliaoss/github-pr-resource
+    repository: cryogenics/pr-queue-resource
 
 - name: gitgat
   type: docker-image
@@ -157,6 +156,7 @@ resources:
   icon: source-pull
   source:
     repository: &repo cloudfoundry/backup-and-restore-sdk-release
+    base_branch: main
     disable_forks: true
     access_token: ((github.access_token))
 
@@ -252,52 +252,17 @@ resources:
     days: [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday' ]
 
 jobs:
-- name: set-pipeline
-  serial: true
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release
-      trigger: true
-      version: every
-  - set_pipeline: backup-and-restore-sdk-release
-    file: backup-and-restore-sdk-release/ci/pipelines/backup-and-restore-sdk-release/pipeline.yml
-
 - name: unit-tests
   serial: true
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release
       trigger: true
-      version: every
-      passed: [set-pipeline]
     - get: github-sdk-key
     - get: cryogenics-concourse-tasks
     - get: six-hours
       trigger: true
   - in_parallel:
-    - do:
-      - task: find-pr-story
-        attempts: 5
-        file: cryogenics-concourse-tasks/tracker-automation/find-pr-story/task.yml
-        input_mapping:
-          pr: backup-and-restore-sdk-release
-        params:
-          TRACKER_API_TOKEN: ((tracker.api_token))
-          TRACKER_PROJECT_ID: ((tracker.project_id))
-          GIT_REPOSITORY: cloudfoundry/backup-and-restore-sdk-release
-      - task: start-story
-        attempts: 5
-        file: cryogenics-concourse-tasks/tracker-automation/start-story/task.yml
-        input_mapping:
-          pr: backup-and-restore-sdk-release
-        params:
-          TRACKER_API_TOKEN: ((tracker.api_token))
-          TRACKER_PROJECT_ID: ((tracker.project_id))
-          ESTIMATE: 1
-    - put: backup-and-restore-sdk-release
-      params:
-        path: backup-and-restore-sdk-release
-        status: pending
     - task: sdk-template-unit-tests
       file: backup-and-restore-sdk-release/ci/tasks/sdk-template-unit-tests/task.yml
     - task: databases-unit-tests
@@ -325,7 +290,6 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release
       passed: [unit-tests]
-      version: every
       trigger: true
     - get: six-hours
       trigger: true
@@ -366,7 +330,6 @@ jobs:
     - get: backup-and-restore-sdk-release
       passed: [unit-tests]
       trigger: true
-      version: every
     - get: cryogenics-concourse-tasks
     - get: gcp-db-certs
     - get: six-hours
@@ -460,7 +423,6 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release
       trigger: true
-      version: every
       passed: [unit-tests]
     - get: cryogenics-concourse-tasks
     - get: cert-store
@@ -585,7 +547,6 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release
       trigger: true
-      version: every
       passed: [unit-tests]
     - get: cert-store
       resource: gcp-db-certs
@@ -666,7 +627,6 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release
       trigger: true
-      version: every
       passed: [unit-tests]
     - get: six-hours
       trigger: true
@@ -751,7 +711,6 @@ jobs:
   - get: cryogenics-concourse-tasks
   - get: backup-and-restore-sdk-release
     trigger: true
-    version: every
     passed:
     - contract-tests
     - system-tests-internal-dbs
@@ -760,43 +719,8 @@ jobs:
     - system-tests-blobstore-backuper
   - put: backup-and-restore-sdk-release
     params:
-      path: backup-and-restore-sdk-release
-      status: success
-  - load_var: pr-url
-    file: backup-and-restore-sdk-release/.git/resource/url
-
-  - task: merge-pr
-    file: cryogenics-concourse-tasks/github-automation/merge-pr/task.yml
-    input_mapping:
-      source-repo: backup-and-restore-sdk-release
-    params:
-      DELETE: TRUE
-      AUTHOR: dependabot
-      GH_TOKEN: ((github.access_token))
-      PR_REF: ((.:pr-url))
-      PROJECT_NAME: BBR-SDK
-    on_failure:
-      put: slack-cryo-notification
-      params:
-        text: |
-          *BBR-SDK:* A PR failed to be merged automatically (tests passed; probably merging conflicts?). You can review it <((.:pr-url))|*here*>.
-    on_success:
-      put: slack-cryo-notification
-      params:
-        text_file: merge-output/notification
-
-  - task: deliver-stories
-    file: cryogenics-concourse-tasks/tracker-automation/deliver-stories/task.yml
-    params:
-      TRACKER_API_TOKEN: ((tracker.api_token))
-      TRACKER_PROJECT_ID: ((tracker.project_id))
-      GIT_REPOSITORY: *repo
-  - task: accept-stories
-    file: cryogenics-concourse-tasks/tracker-automation/accept-stories/task.yml
-    params:
-      TRACKER_API_TOKEN: ((tracker.api_token))
-      TRACKER_PROJECT_ID: ((tracker.project_id))
-      GIT_REPOSITORY: *repo
+      merge: true
+      repository: backup-and-restore-sdk-release
 
 - name: build-rc
   serial: true
@@ -805,7 +729,6 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
       trigger: true
-      version: every
     - get: version
       params: {pre: rc}
   - task: create-dev-release
@@ -875,9 +798,6 @@ jobs:
       merge: true
       tag: version/number
       tag_prefix: v
-  - put: release
-    params:
-      file: backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
   - put: github-release
     params:
       name: version/number
@@ -886,6 +806,9 @@ jobs:
       tag_prefix: v
       globs:
       - backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
+  - put: release
+    params:
+      file: backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
   - load_var: version-tag
     file: version/number
   - load_var: github-release-url
