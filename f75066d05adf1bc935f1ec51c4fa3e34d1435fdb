@@ -1,0 +1,7 @@
+{
+  "pr": "443",
+  "repository": "cloudfoundry/backup-and-restore-sdk-release",
+  "base_branch": "main",
+  "head_branch": "golang-vendor-updates",
+  "branch_tip": "f75066d05adf1bc935f1ec51c4fa3e34d1435fdb"
+}
