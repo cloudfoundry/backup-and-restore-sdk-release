@@ -1,0 +1,7 @@
+{
+  "pr": "447",
+  "repository": "cloudfoundry/backup-and-restore-sdk-release",
+  "base_branch": "main",
+  "head_branch": "dependabot/go_modules/src/system-tests/github.com/onsi/gomega-1.17.0",
+  "branch_tip": "f8414ac64701f710f6494f4b2f37be4f7ec71f4d"
+}
