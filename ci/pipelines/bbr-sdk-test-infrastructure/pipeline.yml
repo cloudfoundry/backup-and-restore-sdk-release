@@ -114,12 +114,12 @@ resources:
   source:
     deployment: *mysql-deployment-name
     skip_check: true
-- name: postgres-9.4-dev-deployment
+- name: postgres-9-4-dev-deployment
   type: bosh-deployment
   source:
     deployment: *postgres-9-4-deployment-name
     skip_check: true
-- name: postgres-9.6-dev-deployment
+- name: postgres-9-6-dev-deployment
   type: bosh-deployment
   source:
     deployment: *postgres-9-6-deployment-name
@@ -219,7 +219,7 @@ jobs:
     params:
       BBL_STATE: .
   - in_parallel:
-    - put: postgres-9.4-dev-deployment
+    - put: postgres-9-4-dev-deployment
       params:
         manifest: backup-and-restore-sdk-release/ci/manifests/postgres-9.4.yml
         stemcells:
@@ -231,7 +231,7 @@ jobs:
           db_host: *postgres-9-4-host
           availability_zone: z1
         source_file: source-file/source-file.yml
-    - put: postgres-9.6-dev-deployment
+    - put: postgres-9-6-dev-deployment
       params:
         manifest: backup-and-restore-sdk-release/ci/manifests/postgres-9.6.yml
         vars:
