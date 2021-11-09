@@ -1,0 +1,7 @@
+{
+  "pr": "452",
+  "repository": "cloudfoundry/backup-and-restore-sdk-release",
+  "base_branch": "main",
+  "head_branch": "dependabot/go_modules/src/database-backup-restore/github.com/lib/pq-1.10.4",
+  "branch_tip": "07446225e6595d8fcf1aa2a86af667fe8eb62179"
+}
