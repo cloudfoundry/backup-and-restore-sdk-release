@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+set -x
+
 export VERSIONS_URL='https://downloads.mariadb.org/mariadb/+releases/'
 
 HTML="$(curl -s -L "${VERSIONS_URL}")"
@@ -17,13 +19,14 @@ function checksum_callback() {
 
     MAJOR_MINOR="$(echo "${VERSION}" | grep -Eo '[0-9]+\.[0-9]+')"
     CHECKSUM_JSON="$(curl -s -L "https://downloads.mariadb.org/rest-api/mariadb/${MAJOR_MINOR}/")"
+    echo "$CHECKSUM_JSON" > mariadb.json
     EXPECTED_SHA256="$(echo "${CHECKSUM_JSON}" | jq -r --arg v "${VERSION}" '.releases[$v].files[] | select(.os == "Source").checksum.sha256sum')"
     echo "${EXPECTED_SHA256}  ${DOWNLOADED_FILE}" | sha256sum -c - || exit 1
 }
 
 function download_url_callback() {
     local VERSION="${1}"
-    echo "https://downloads.mariadb.org/interstitial/mariadb-${VERSION}/source/mariadb-${VERSION}.tar.gz"
+    echo "https://archive.mariadb.org//mariadb-${VERSION}/source/mariadb-${VERSION}.tar.gz"
 }
 
 function new_version_callback() {
