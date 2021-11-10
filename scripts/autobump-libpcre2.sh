@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export VERSIONS_URL='https://ftp.pcre.org/pub/pcre/'
+export VERSIONS_URL='https://api.github.com/repos/PhilipHazel/pcre2/releases'
 
 HTML="$(curl -s -L "${VERSIONS_URL}")"
 VALUES="$(echo "${HTML}" | grep -Eo 'pcre2-[0-9]+\.[0-9]+\.tar.gz' | uniq)"
