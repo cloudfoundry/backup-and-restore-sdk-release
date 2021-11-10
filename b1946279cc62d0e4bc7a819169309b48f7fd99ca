@@ -1,0 +1,7 @@
+{
+  "pr": "455",
+  "repository": "cloudfoundry/backup-and-restore-sdk-release",
+  "base_branch": "main",
+  "head_branch": "mariadb/mariadb-10.6.4.tar.gz",
+  "branch_tip": "b1946279cc62d0e4bc7a819169309b48f7fd99ca"
+}
