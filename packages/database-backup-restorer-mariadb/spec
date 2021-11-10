@@ -21,4 +21,4 @@ dependencies:
 - libpcre2
 
 files:
-- mariadb/mariadb-10.6.4.tar.gz
+- mariadb/mariadb-10.6.5.tar.gz
