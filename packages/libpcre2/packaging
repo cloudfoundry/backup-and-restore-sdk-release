@@ -18,9 +18,10 @@ set -e
 
 LIBPCRE2_VERSION=10.39
 
-tar xzf libpcre2/pcre2-${LIBPCRE2_VERSION}.tar.gz
+mkdir -p pcre2-${LIBPCRE2_VERSION} && tar xzf libpcre2/pcre2-${LIBPCRE2_VERSION}.tar.gz -C pcre2-${LIBPCRE2_VERSION}  --strip-components=1
 
 cd pcre2-${LIBPCRE2_VERSION}
-CFLAGS="-Dregcomp=PCRE2regcomp" ./configure --prefix=${BOSH_INSTALL_TARGET}
+./autogen.sh
+CFLAGS="-Dregcomp=PCRE2regcomp" ./configure --prefix="${BOSH_INSTALL_TARGET}"
 make
 make install
