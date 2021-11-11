@@ -13,7 +13,7 @@ export DOWNLOADED_FILENAME='pcre2-${VERSION}.tar.gz'
 
 function download_url_callback() {
     local VERSION="${1}"
-    echo "https://ftp.pcre.org/pub/pcre/pcre2-${VERSION}.tar.gz"
+    echo "https://api.github.com/repos/PhilipHazel/pcre2/tarball/pcre2-${VERSION}"
 }
 
 function extract_version_callback() {
