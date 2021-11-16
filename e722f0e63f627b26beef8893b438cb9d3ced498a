@@ -1,0 +1,7 @@
+{
+  "pr": "472",
+  "repository": "cloudfoundry/backup-and-restore-sdk-release",
+  "base_branch": "main",
+  "head_branch": "revert-459-libpcre2/pcre2-10.37.tar.gz",
+  "branch_tip": "e722f0e63f627b26beef8893b438cb9d3ced498a"
+}
