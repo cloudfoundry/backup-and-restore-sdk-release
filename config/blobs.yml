@@ -3,9 +3,9 @@ boost/boost_1_59_0.tar.gz:
   object_id: 2bb21a57-51e9-471f-660a-edc788238fee
   sha: 5123209db194d66d69a9cfa5af8ff473d5941d97
 libpcre2/pcre2-10.39.tar.gz:
-  size: 2383381
-  object_id: 60f14b40-0833-49f6-5abf-310de0b52d66
-  sha: sha256:e26ca0c1105acb5e0f7061c28e07c7721a6a34b8a795709fbb8ccbac831cb680
+  size: 2309964
+  object_id: f3b818ce-0e2a-40ff-7fb6-edf0cfcb7b90
+  sha: sha256:0781bd2536ef5279b1943471fdcdbd9961a2845e1d2c9ad849b9bd98ba1a9bd4
 mariadb/mariadb-10.6.5.tar.gz:
   size: 85061860
   object_id: d0880acd-8e5c-4647-41e2-81eb1fdae3ed
@@ -22,19 +22,19 @@ postgres/postgresql-9.4.26.tar.gz:
   size: 22001828
   object_id: e89adb5b-a26e-4dc2-5898-616fa1f5d2b6
   sha: sha256:b9206526343ba71f79aafb6b786a80d6e4777f64d3c8c0be6e5d47e1138a7d7e
-postgres/postgresql-9.6.23.tar.gz:
-  size: 24705627
-  object_id: eac3e8b7-8cc0-4fdb-5c05-4c1972e12e68
-  sha: sha256:679a7004871d3af4fd70144a6f885db00a8337bd384504527e7b579e81f35926
+postgres/postgresql-9.6.24.tar.gz:
+  size: 24739272
+  object_id: a1248b2f-d48d-48c2-4403-ae27e3cace4a
+  sha: sha256:52947ecc119846eace5164399d173576c0d4a47ec116ae58a46a8fd0c576c7c3
 postgres/postgresql-10.19.tar.gz:
   size: 25216304
   object_id: 3b8b6896-d635-49e2-7d98-b3f6b87cc589
   sha: sha256:94bf9f5c96c1863888a1b92014907b49fdaf4b37dafc50f71a90ea98a053ac7d
-postgres/postgresql-11.13.tar.gz:
-  size: 26333483
-  object_id: 5a69ea14-47fe-4efb-66e4-46e8d42d2f7e
-  sha: sha256:89caabd42c0069d4fabe75e13f06e702754dcb1527c2ef9f728e2cb74584e03f
-postgres/postgresql-13.4.tar.gz:
-  size: 27687091
-  object_id: 01e4ddf1-3261-4c8b-5c94-06277a97ac9f
-  sha: sha256:59d7bc523e78570c549876fed297ec3e46dd307e90f5b1d22f49181191cf203e
+postgres/postgresql-11.14.tar.gz:
+  size: 26409946
+  object_id: 38d4ac42-4d36-4549-6350-4b0d1971bb1f
+  sha: sha256:2ef6895169a9152c6bd97d21d130d9b056a7ba07bfa8b6ce184f0c74bb6fbf58
+postgres/postgresql-13.5.tar.gz:
+  size: 27767272
+  object_id: 7829ef1f-7bbe-4c28-5ef8-41c3624d250f
+  sha: sha256:616ed6a2cecd1ca8ef31a18726a4774ffcec8a5f131ec89fec560f3fde45ef92
