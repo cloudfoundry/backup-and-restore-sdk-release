@@ -1,0 +1,7 @@
+{
+  "pr": "475",
+  "repository": "cloudfoundry/backup-and-restore-sdk-release",
+  "base_branch": "main",
+  "head_branch": "dependabot/go_modules/src/gcs-blobstore-backup-restore/github.com/cloudfoundry-incubator/bosh-backup-and-restore-1.9.19",
+  "branch_tip": "6fe7a5b768c9ded31fff7afde13f20d91d699e15"
+}
