@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+[ -z "$DEBUG" ] || set -x
+
+set -euo pipefail
+
+if [ $# -eq 0 ]
+then
+  echo "Usage: ${0} [--stemcell|-s xenial|bionic] <package name>"
+  exit 1
+fi
+
+STEMCELL='bionic'
+
+while [[ $# -gt 0 ]]
+do
+  param="$1"
+
+  case "$param" in
+    -s|--stemcell)
+      STEMCELL="$2"
+      shift
+      shift
+      ;;
+    *)
+      PACKAGE="$param"
+      shift
+      ;;
+  esac
+done
+
+docker \
+  run \
+    -v "${PWD}:/release" \
+    -w /release/blobs \
+    -it \
+    "cryogenics/bosh-docker-boshlite-ubuntu-${STEMCELL}" \
+    /bin/bash "../packages/${PACKAGE}/packaging"
