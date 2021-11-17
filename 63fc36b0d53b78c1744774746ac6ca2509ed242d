@@ -1,0 +1,7 @@
+{
+  "pr": "468",
+  "repository": "cloudfoundry/backup-and-restore-sdk-release",
+  "base_branch": "main",
+  "head_branch": "add-script-to-test-bosh-compilation",
+  "branch_tip": "63fc36b0d53b78c1744774746ac6ca2509ed242d"
+}
