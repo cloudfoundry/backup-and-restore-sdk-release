@@ -1,0 +1,7 @@
+{
+  "pr": "482",
+  "repository": "cloudfoundry/backup-and-restore-sdk-release",
+  "base_branch": "main",
+  "head_branch": "dependabot/go_modules/src/s3-blobstore-backup-restore/github.com/aws/aws-sdk-go-1.42.12",
+  "branch_tip": "67056fe38dc1e3c45a3040af1e3c0a64e9f4b715"
+}
