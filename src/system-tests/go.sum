@@ -1,8 +1,8 @@
 code.cloudfoundry.org/clock v1.0.0/go.mod h1:QD9Lzhd/ux6eNQVUDVRJX/RKTigpewimNYBi7ivZKY8=
 code.cloudfoundry.org/tlsconfig v0.0.0-20211123175040-23cc9f05b6b3/go.mod h1:CKI5CV+3MlfcohVSuU3FxXubFyC52lYJGMLnZ2ltvks=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/aws/aws-sdk-go v1.42.38 h1:/fNQTB4ZUQOa8+cfX7C7F0zyXRdiN1jGKKXt3+5nmzM=
-github.com/aws/aws-sdk-go v1.42.38/go.mod h1:OGr6lGMAKGlG9CVrYnWYDKIyb829c6EVBRjxqjmPepc=
+github.com/aws/aws-sdk-go v1.42.42 h1:2K61yu5BApC9ExAwC5Vk6ljWzBGbiRGRQYLW7adhP5U=
+github.com/aws/aws-sdk-go v1.42.42/go.mod h1:OGr6lGMAKGlG9CVrYnWYDKIyb829c6EVBRjxqjmPepc=
 github.com/bmatcuk/doublestar v1.3.4/go.mod h1:wiQtGV+rzVYxB7WIlirSN++5HPtPlXEo9MEoZQC/PmE=
 github.com/charlievieth/fs v0.0.2/go.mod h1:74vroF06jvR8XMafvi2CYzs8WruHL1axh/qFx7XN5Xw=
 github.com/cheggaaa/pb v1.0.29/go.mod h1:W40334L7FMC5JKWldsTWbdGjLo0RxUKK73K+TuPxX30=
@@ -93,8 +93,9 @@ github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7J
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.11.0/go.mod h1:azGKhqFUon9Vuj0YmTfLSmx0FUwqXYSTl5re8lQLTUg=
 github.com/onsi/gomega v1.17.0/go.mod h1:HnhC7FXeEQY45zxNK3PPoIUhzk/80Xly9PcubAlGdZY=
-github.com/onsi/gomega v1.18.0 h1:ngbYoRctxjl8SiF7XgP0NxBFbfHcg3wfHMMaFHWwMTM=
 github.com/onsi/gomega v1.18.0/go.mod h1:0q+aL8jAiMXy9hbwj2mr5GziHiwhAIQpFmmtT5hitRs=
+github.com/onsi/gomega v1.18.1 h1:M1GfJqGRrBrrGGsbxzV5dqM2U2ApXefZCQpkukxYRLE=
+github.com/onsi/gomega v1.18.1/go.mod h1:0q+aL8jAiMXy9hbwj2mr5GziHiwhAIQpFmmtT5hitRs=
 github.com/pivotal-cf-experimental/cf-webmock v0.0.0-20190222120028-6bf93e3bc5ed/go.mod h1:DEHca28ocAPwhwC1trOrUzwjjSnQhxHAtNrvU9RNcj8=
 github.com/pivotal-cf/paraphernalia v0.0.0-20180203224945-a64ae2051c20/go.mod h1:Y3IqE20LKprEpLkXb7gXinJf4vvDdQe/BS8E4kL/dgE=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
