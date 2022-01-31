@@ -9,5 +9,5 @@ require (
 	github.com/onsi/gomega v1.18.1
 	golang.org/x/net v0.0.0-20220107192237-5cfca573fb4d
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
-	google.golang.org/api v0.65.0
+	google.golang.org/api v0.66.0
 )
