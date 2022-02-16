@@ -111,6 +111,8 @@ builds:
     version: 1.18.2
   c352b5a2-cd6a-4c13-792d-b1d801e984dd:
     version: 1.18.10
+  cd56ae75-6ce1-4929-65ad-ad0ae71ecf1e:
+    version: 1.18.34
   cd5acff5-b95f-48c6-706c-d6ee037f2e94:
     version: 1.18.3
   d3ba8fa8-ffd5-4887-618b-7550ba6640ad:
