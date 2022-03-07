@@ -58,6 +58,7 @@ func (c AzureClient) WriteFileInContainer(container, blobName, body string) stri
 		"storage",
 		"blob",
 		"upload",
+		"--overwrite",
 		"--container-name", container,
 		"--name", blobName,
 		"--file", bodyFile.Name())
