@@ -1,7 +1,7 @@
 package config_test
 
 import (
-	. "database-backup-restore/config"
+	. "github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/config"
 
 	"io/ioutil"
 
