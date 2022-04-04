@@ -3,8 +3,8 @@ package mysql
 import (
 	"fmt"
 
-	"database-backup-restore/config"
-	"database-backup-restore/runner"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/config"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/runner"
 )
 
 func NewMysqlCommand(config config.ConnectionConfig, cmd string, sslOptionsProvider SSLOptionsProvider) runner.Command {

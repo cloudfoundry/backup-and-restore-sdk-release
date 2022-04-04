@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"gcs-blobstore-backup-restore"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/gcs-blobstore-backup-restore"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

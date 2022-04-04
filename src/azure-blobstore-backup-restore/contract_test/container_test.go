@@ -6,7 +6,7 @@ import (
 
 	"fmt"
 
-	"azure-blobstore-backup-restore"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/azure-blobstore-backup-restore"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "system-tests/azure"

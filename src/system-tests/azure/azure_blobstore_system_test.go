@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	. "system-tests"
-	. "system-tests/azure"
+	. "github.com/cloudfoundry/backup-and-restore-sdk-release/src/system-tests"
+	. "github.com/cloudfoundry/backup-and-restore-sdk-release/src/system-tests/azure"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

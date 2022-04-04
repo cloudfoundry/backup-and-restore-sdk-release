@@ -3,8 +3,8 @@ package gcs_test
 import (
 	"fmt"
 
-	"gcs-blobstore-backup-restore"
-	"gcs-blobstore-backup-restore/fakes"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/gcs-blobstore-backup-restore"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/gcs-blobstore-backup-restore/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

@@ -4,14 +4,14 @@ import (
 	"errors"
 	"fmt"
 
-	"s3-blobstore-backup-restore/unversioned"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/unversioned"
 
-	"s3-blobstore-backup-restore/incremental/fakes"
-	unversionedFakes "s3-blobstore-backup-restore/unversioned/fakes"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/incremental/fakes"
+	unversionedFakes "github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/unversioned/fakes"
 
-	"s3-blobstore-backup-restore/s3bucket"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/s3bucket"
 
-	"s3-blobstore-backup-restore/incremental"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/incremental"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"

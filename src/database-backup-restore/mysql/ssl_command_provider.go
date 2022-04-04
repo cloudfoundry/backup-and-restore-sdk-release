@@ -3,7 +3,7 @@ package mysql
 import (
 	"strings"
 
-	"database-backup-restore/config"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/config"
 )
 
 type SSLOptionsProvider interface {

@@ -1,7 +1,7 @@
 package postgres_test
 
 import (
-	"database-backup-restore/postgres"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/postgres"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

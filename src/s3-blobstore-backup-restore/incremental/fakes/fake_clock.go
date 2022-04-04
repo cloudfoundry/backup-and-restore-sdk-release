@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	"s3-blobstore-backup-restore/incremental"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/incremental"
 )
 
 type FakeClock struct {

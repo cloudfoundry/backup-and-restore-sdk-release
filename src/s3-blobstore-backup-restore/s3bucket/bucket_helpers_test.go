@@ -12,7 +12,7 @@ import (
 
 	"strconv"
 
-	"s3-blobstore-backup-restore/s3bucket"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/s3bucket"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

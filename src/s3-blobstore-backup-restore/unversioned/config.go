@@ -3,8 +3,8 @@ package unversioned
 import (
 	"fmt"
 
-	"s3-blobstore-backup-restore/incremental"
-	"s3-blobstore-backup-restore/s3bucket"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/incremental"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/s3bucket"
 )
 
 type UnversionedBucketConfig struct {

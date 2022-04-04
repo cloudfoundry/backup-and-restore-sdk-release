@@ -19,10 +19,10 @@ package main
 import (
 	"log"
 
-	"database-backup-restore/config"
-	"database-backup-restore/database"
-	"database-backup-restore/mysql"
-	"database-backup-restore/postgres"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/config"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/database"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/mysql"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/postgres"
 )
 
 func main() {
