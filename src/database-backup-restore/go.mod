@@ -1,4 +1,4 @@
-module database-backup-restore
+module github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore
 
 require (
 	github.com/go-sql-driver/mysql v1.6.0

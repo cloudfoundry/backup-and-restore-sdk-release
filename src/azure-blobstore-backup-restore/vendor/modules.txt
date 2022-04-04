@@ -87,7 +87,7 @@ gopkg.in/tomb.v1
 gopkg.in/yaml.v2
 # system-tests v0.0.0 => ../system-tests
 ## explicit
-system-tests/azure
+github.com/cloudfoundry/backup-and-restore-sdk-release/src/system-tests/azure
 # system-tests => ../system-tests
 # azure-blobstore-backup-restore => ./
 # s3-blobstore-backup-restore => ../s3-blobstore-backup-restore

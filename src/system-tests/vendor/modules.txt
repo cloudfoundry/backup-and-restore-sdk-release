@@ -75,7 +75,7 @@ gopkg.in/tomb.v1
 gopkg.in/yaml.v2
 # s3-blobstore-backup-restore v0.0.0 => ../s3-blobstore-backup-restore
 ## explicit
-s3-blobstore-backup-restore/blobpath
-s3-blobstore-backup-restore/incremental
+github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/blobpath
+github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/incremental
 # system-tests => ./
 # s3-blobstore-backup-restore => ../s3-blobstore-backup-restore

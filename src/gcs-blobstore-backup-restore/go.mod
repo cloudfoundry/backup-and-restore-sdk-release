@@ -1,4 +1,4 @@
-module gcs-blobstore-backup-restore
+module github.com/cloudfoundry/backup-and-restore-sdk-release/src/gcs-blobstore-backup-restore
 
 go 1.16
 
