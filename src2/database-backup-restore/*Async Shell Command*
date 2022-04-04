@@ -1,0 +1,220 @@
+Will skip:
+  ./system_tests/mysql
+  ./system_tests/postgresql
+  ./system_tests/postgresql_mutual_tls
+  ./system_tests/postgresql_tls
+Running Suite: Config Suite
+===========================
+Random Seed: 1649081944
+Will run 2 of 2 specs
+
+TempFolderManager WriteTempFile 
+  creates a temp file with specified contents
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/config/temp_folder_manager_test.go:28
+•
+------------------------------
+TempFolderManager Cleanup 
+  removes any temp files created so far
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/config/temp_folder_manager_test.go:37
+•
+Ran 2 of 2 Specs in 0.001 seconds
+SUCCESS! -- 2 Passed | 0 Failed | 0 Pending | 0 Skipped
+PASS
+
+Running Suite: Database Suite
+=============================
+Random Seed: 1649081944
+Will run 26 of 26 specs
+
+InteractorFactory when the configured adapter is postgres when the action is 'backup' when the version is detected as 9.6 
+  builds a database.TableCheckingInteractor
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:95
+•
+------------------------------
+InteractorFactory when the configured adapter is postgres when the action is 'backup' when the version is detected as 9.4 
+  builds a database.TableCheckingInteractor
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:117
+•
+------------------------------
+InteractorFactory when the configured adapter is postgres when the action is 'backup' when the version is detected as 10.6 
+  builds a database.TableCheckingInteractor
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:139
+•
+------------------------------
+InteractorFactory when the configured adapter is postgres when the action is 'backup' when the version is detected as 11 
+  builds a database.TableCheckingInteractor
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:161
+•
+------------------------------
+InteractorFactory when the configured adapter is postgres when the action is 'backup' when the version is detected as 13 
+  builds a database.TableCheckingInteractor
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:183
+•
+------------------------------
+InteractorFactory when the configured adapter is postgres when the action is 'backup' when the version is detected as 9.5 
+  fails to build database.TableCheckingInteractor
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:205
+•
+------------------------------
+InteractorFactory when the configured adapter is postgres when the action is 'restore' when the version is detected as 9.6 
+  builds a database.TableCheckingInteractor
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:223
+•
+------------------------------
+InteractorFactory when the configured adapter is postgres when the action is 'restore' when the version is detected as 9.4 
+  builds a database.TableCheckingInteractor
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:242
+•
+------------------------------
+InteractorFactory when the configured adapter is postgres when the action is 'restore' when the version is detected as 10.6 
+  builds a database.TableCheckingInteractor
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:261
+•
+------------------------------
+InteractorFactory when the configured adapter is postgres when the action is 'restore' when the version is detected as 13 
+  builds a database.TableCheckingInteractor
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:280
+•
+------------------------------
+InteractorFactory when the configured adapter is postgres when the action is 'restore' when the version is detected as 9.5 
+  fails to build database.TableCheckingInteractor
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:299
+•
+------------------------------
+InteractorFactory when the configured adapter is postgres when the server version detection fails 
+  fails
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:314
+•
+------------------------------
+InteractorFactory when the configured adapter is mysql when the action is 'backup' when the version is detected as MariaDB 10.* 
+  builds a mysql.Backuper
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:337
+•
+------------------------------
+InteractorFactory when the configured adapter is mysql when the action is 'backup' when the version is detected as MySQL 5.6.37 
+  builds a mysql.Backuper
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:354
+•
+------------------------------
+InteractorFactory when the configured adapter is mysql when the action is 'backup' when the version is detected as MySQL 5.7.19 
+  builds a mysql.Backuper
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:378
+•
+------------------------------
+InteractorFactory when the configured adapter is mysql when the action is 'backup' when the version is detected as the not supported MariaDB 5.5.58 
+  errors
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:395
+•
+------------------------------
+InteractorFactory when the configured adapter is mysql when the action is 'restore' when the version is detected as MariaDB 10.* 
+  builds a mysql.Restorer
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:414
+•
+------------------------------
+InteractorFactory when the configured adapter is mysql when the action is 'restore' when the version is detected as MySQL 5.6.37 
+  builds a mysql.Restorer
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:432
+•
+------------------------------
+InteractorFactory when the configured adapter is mysql when the action is 'restore' when the version is detected as MySQL 5.7.19 
+  builds a mysql.Restorer
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:450
+•
+------------------------------
+InteractorFactory when the configured adapter is mysql when the action is 'restore' when the version is detected as the not supported MariaDB 5.5.58 
+  errors
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:468
+•
+------------------------------
+InteractorFactory when the configured adapter is not supported 
+  fails
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:481
+•
+------------------------------
+InteractorFactory when the action is not supported 
+  fails
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/interactor_factory_test.go:493
+•
+------------------------------
+TableCheckingInteractor when tables are specified when the tables exist 
+  delegates to the wrapped interactor
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/table_checking_interactor_test.go:48
+STEP: passing the right tables to the TableChecker
+STEP: calling its Action method
+STEP: returning its return value
+•
+------------------------------
+TableCheckingInteractor when tables are specified when some tables don't exist 
+  fails
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/table_checking_interactor_test.go:69
+STEP: passing the right tables to the TableChecker
+STEP: not calling its Action method
+STEP: returning an informative error
+•
+------------------------------
+TableCheckingInteractor when tables are specified when find missing tables returns an error 
+  fails
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/table_checking_interactor_test.go:89
+STEP: passing the right tables to the TableChecker
+STEP: not calling its Action method
+STEP: returning an informative error
+•
+------------------------------
+TableCheckingInteractor when no tables specified 
+  delegates to the wrapped interactor
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/database/table_checking_interactor_test.go:113
+STEP: not calling the TableChecker
+STEP: calling its Action method
+STEP: returning its return value
+•
+Ran 26 of 26 Specs in 0.003 seconds
+SUCCESS! -- 26 Passed | 0 Failed | 0 Pending | 0 Skipped
+PASS
+
+Running Suite: DatabaseBackupAndRestore Suite
+=============================================
+Random Seed: 1649081944
+Will run 110 of 110 specs
+
+Failure [0.052 seconds]
+[BeforeSuite] BeforeSuite 
+/home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/integration_tests/database_backup_and_restore_suite_test.go:56
+
+  Unexpected error:
+      <*errors.errorString | 0xc00006e6e0>: {
+          s: "Failed to build ../cmd/database-backup-restore:\n\nError:\nexit status 1\n\nOutput:\n../cmd/database-backup-restore/main.go:22:2: package database-backup-restore/config is not in GOROOT (/home/gds/.local/go1.17.7/src/database-backup-restore/config)\n../cmd/database-backup-restore/main.go:23:2: package database-backup-restore/database is not in GOROOT (/home/gds/.local/go1.17.7/src/database-backup-restore/database)\n../cmd/database-backup-restore/main.go:24:2: package database-backup-restore/mysql is not in GOROOT (/home/gds/.local/go1.17.7/src/database-backup-restore/mysql)\n../cmd/database-backup-restore/main.go:25:2: package database-backup-restore/postgres is not in GOROOT (/home/gds/.local/go1.17.7/src/database-backup-restore/postgres)\n",
+      }
+      Failed to build ../cmd/database-backup-restore:
+      
+      Error:
+      exit status 1
+      
+      Output:
+      ../cmd/database-backup-restore/main.go:22:2: package database-backup-restore/config is not in GOROOT (/home/gds/.local/go1.17.7/src/database-backup-restore/config)
+      ../cmd/database-backup-restore/main.go:23:2: package database-backup-restore/database is not in GOROOT (/home/gds/.local/go1.17.7/src/database-backup-restore/database)
+      ../cmd/database-backup-restore/main.go:24:2: package database-backup-restore/mysql is not in GOROOT (/home/gds/.local/go1.17.7/src/database-backup-restore/mysql)
+      ../cmd/database-backup-restore/main.go:25:2: package database-backup-restore/postgres is not in GOROOT (/home/gds/.local/go1.17.7/src/database-backup-restore/postgres)
+      
+  occurred
+
+  /home/gds/workspace/backup-and-restore-sdk-release/src2/database-backup-restore/integration_tests/database_backup_and_restore_suite_test.go:60
+------------------------------
+
+Ran 110 of 0 Specs in 0.053 seconds
+FAIL! -- 0 Passed | 110 Failed | 0 Pending | 0 Skipped
+--- FAIL: TestDatabaseBackupAndRestore (0.12s)
+FAIL
+
+Ginkgo ran 3 suites in 1.869929274s
+Test Suite Failed
+
+Ginkgo 2.0 is coming soon!
+==========================
+Ginkgo 2.0 is under active development and will introduce several new features, improvements, and a small handful of breaking changes.
+A release candidate for 2.0 is now available and 2.0 should GA in Fall 2021.  Please give the RC a try and send us feedback!
+  - To learn more, view the migration guide at https://github.com/onsi/ginkgo/blob/ver2/docs/MIGRATING_TO_V2.md
+  - For instructions on using the Release Candidate visit https://github.com/onsi/ginkgo/blob/ver2/docs/MIGRATING_TO_V2.md#using-the-beta
+  - To comment, chime in at https://github.com/onsi/ginkgo/issues/711
+
+To silence this notice, set the environment variable: ACK_GINKGO_RC=true
+Alternatively you can: touch $HOME/.ack-ginkgo-rc
