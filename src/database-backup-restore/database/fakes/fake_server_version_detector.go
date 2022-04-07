@@ -2,9 +2,9 @@
 package fakes
 
 import (
-	"database-backup-restore/config"
-	"database-backup-restore/database"
-	"database-backup-restore/version"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/config"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/database"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/version"
 	"sync"
 )
 

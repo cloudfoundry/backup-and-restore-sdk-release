@@ -4,7 +4,7 @@ import (
 	"flag"
 	"log"
 
-	"gcs-blobstore-backup-restore"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/gcs-blobstore-backup-restore"
 )
 
 func main() {

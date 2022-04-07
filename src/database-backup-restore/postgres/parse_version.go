@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"database-backup-restore/version"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/version"
 )
 
 func ParseVersion(str string) (version.SemanticVersion, error) {

@@ -3,12 +3,12 @@ package database_test
 import (
 	"fmt"
 
-	"database-backup-restore/config"
-	"database-backup-restore/database"
-	"database-backup-restore/database/fakes"
-	"database-backup-restore/mysql"
-	"database-backup-restore/postgres"
-	"database-backup-restore/version"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/config"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/database"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/database/fakes"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/mysql"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/postgres"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/version"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

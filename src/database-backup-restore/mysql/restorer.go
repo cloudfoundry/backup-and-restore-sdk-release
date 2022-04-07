@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"database-backup-restore/config"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/config"
 )
 
 type Restorer struct {

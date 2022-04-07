@@ -1,7 +1,7 @@
 package postgres
 
 import (
-	"database-backup-restore/version"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/version"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

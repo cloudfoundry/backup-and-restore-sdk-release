@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 
-	. "database-backup-restore/system_tests/utils"
+	. "github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/system_tests/utils"
 )
 
 var _ = Describe("mysql", func() {

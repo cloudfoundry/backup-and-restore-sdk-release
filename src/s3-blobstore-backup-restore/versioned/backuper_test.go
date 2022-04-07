@@ -6,9 +6,9 @@ import (
 
 	"errors"
 
-	"s3-blobstore-backup-restore/s3bucket"
-	"s3-blobstore-backup-restore/versioned"
-	"s3-blobstore-backup-restore/versioned/fakes"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/s3bucket"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/versioned"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/versioned/fakes"
 )
 
 var _ = Describe("Backuper", func() {

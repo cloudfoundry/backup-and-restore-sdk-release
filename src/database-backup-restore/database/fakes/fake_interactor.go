@@ -2,7 +2,7 @@
 package fakes
 
 import (
-	"database-backup-restore/database"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/database"
 	"sync"
 )
 

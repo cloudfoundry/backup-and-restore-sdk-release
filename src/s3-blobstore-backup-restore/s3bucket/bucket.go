@@ -5,11 +5,11 @@ import (
 	"math"
 	"sort"
 
-	"s3-blobstore-backup-restore/blobpath"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/blobpath"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 
-	"s3-blobstore-backup-restore/incremental"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/incremental"
 
 	"strings"
 

@@ -1,8 +1,8 @@
 package database
 
 import (
-	"database-backup-restore/config"
-	"database-backup-restore/version"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/config"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/version"
 )
 
 //go:generate counterfeiter -o fakes/fake_interactor.go . Interactor

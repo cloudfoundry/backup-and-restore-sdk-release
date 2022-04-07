@@ -3,8 +3,8 @@ package postgres
 import (
 	"fmt"
 
-	"database-backup-restore/config"
-	"database-backup-restore/runner"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/config"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/runner"
 )
 
 func NewPostgresCommand(config config.ConnectionConfig, tempFolderManager config.TempFolderManager, cmd string) runner.Command {

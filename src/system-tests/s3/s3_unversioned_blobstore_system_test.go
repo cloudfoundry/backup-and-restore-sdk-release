@@ -18,7 +18,7 @@ package s3_test
 
 import (
 	"encoding/json"
-	"s3-blobstore-backup-restore/incremental"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/incremental"
 	"time"
 
 	. "github.com/onsi/gomega/gexec"
@@ -31,7 +31,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "system-tests"
+	. "github.com/cloudfoundry/backup-and-restore-sdk-release/src/system-tests"
 )
 
 var _ = Describe("S3 unversioned backup and restore", func() {

@@ -3,8 +3,8 @@ package postgres
 import (
 	"log"
 
-	"database-backup-restore/config"
-	"database-backup-restore/version"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/config"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/version"
 )
 
 type ServerVersionDetector struct {

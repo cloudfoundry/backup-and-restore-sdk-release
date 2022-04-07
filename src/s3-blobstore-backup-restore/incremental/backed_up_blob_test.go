@@ -1,7 +1,7 @@
 package incremental_test
 
 import (
-	"s3-blobstore-backup-restore/incremental"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/incremental"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

@@ -6,9 +6,9 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"database-backup-restore/config"
-	"database-backup-restore/database"
-	"database-backup-restore/database/fakes"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/config"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/database"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/database/fakes"
 )
 
 var _ = Describe("TableCheckingInteractor", func() {

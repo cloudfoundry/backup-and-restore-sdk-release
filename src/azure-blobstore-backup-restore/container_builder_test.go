@@ -4,7 +4,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"azure-blobstore-backup-restore"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/azure-blobstore-backup-restore"
 )
 
 var _ = Describe("ContainerBuilder", func() {

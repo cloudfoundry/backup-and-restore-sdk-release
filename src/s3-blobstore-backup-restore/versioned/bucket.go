@@ -1,6 +1,6 @@
 package versioned
 
-import "s3-blobstore-backup-restore/s3bucket"
+import "github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/s3bucket"
 
 //go:generate counterfeiter -o fakes/fake_bucket.go . Bucket
 type Bucket interface {

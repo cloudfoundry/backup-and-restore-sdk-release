@@ -2,7 +2,7 @@
 package fakes
 
 import (
-	gcs "gcs-blobstore-backup-restore"
+	gcs "github.com/cloudfoundry/backup-and-restore-sdk-release/src/gcs-blobstore-backup-restore"
 	"sync"
 )
 

@@ -7,7 +7,7 @@ import (
 
 	"os/exec"
 
-	. "system-tests"
+	. "github.com/cloudfoundry/backup-and-restore-sdk-release/src/system-tests"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"

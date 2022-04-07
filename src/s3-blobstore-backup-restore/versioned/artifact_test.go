@@ -7,7 +7,7 @@ import (
 
 	"path/filepath"
 
-	"s3-blobstore-backup-restore/versioned"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/versioned"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

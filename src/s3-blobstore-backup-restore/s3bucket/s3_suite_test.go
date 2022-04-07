@@ -5,7 +5,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "system-tests"
+	. "github.com/cloudfoundry/backup-and-restore-sdk-release/src/system-tests"
 
 	"testing"
 )

@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 
-	. "database-backup-restore/system_tests/utils"
+	. "github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/system_tests/utils"
 )
 
 var _ = Describe("postgres with tls", func() {

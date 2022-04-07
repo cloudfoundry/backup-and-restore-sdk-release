@@ -4,8 +4,8 @@ package fakes
 import (
 	"sync"
 
-	"s3-blobstore-backup-restore/incremental"
-	"s3-blobstore-backup-restore/unversioned"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/incremental"
+	"github.com/cloudfoundry/backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/unversioned"
 )
 
 type FakeBucket struct {

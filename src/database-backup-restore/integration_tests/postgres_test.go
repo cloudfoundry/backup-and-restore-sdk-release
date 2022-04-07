@@ -41,7 +41,7 @@ var _ = Describe("Postgres", func() {
 
 	BeforeEach(func() {
 		compiledSDKPath, err = gexec.Build(
-			"database-backup-restore/cmd/database-backup-restore")
+			"github.com/cloudfoundry/backup-and-restore-sdk-release/src/database-backup-restore/cmd/database-backup-restore")
 		Expect(err).NotTo(HaveOccurred())
 
 		artifactFile = tempFilePath()
