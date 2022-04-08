@@ -215,6 +215,7 @@ resources:
     uri: git@github.com:cloudfoundry/backup-and-restore-sdk-release.git
     private_key: ((github.ssh_key))
     branch: main
+    disable_ci_skip: true
 
 - name: every-2-weeks
   type: time
