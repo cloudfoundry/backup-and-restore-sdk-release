@@ -132,4 +132,3 @@ gopkg.in/yaml.v2
 ## explicit
 system-tests
 # system-tests => ../system-tests
-# s3-blobstore-backup-restore => ./

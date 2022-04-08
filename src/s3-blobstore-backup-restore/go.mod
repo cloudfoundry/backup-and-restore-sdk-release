@@ -12,4 +12,3 @@ require (
 
 replace system-tests => ../system-tests
 
-replace s3-blobstore-backup-restore => ./

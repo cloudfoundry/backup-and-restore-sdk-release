@@ -8,6 +8,4 @@ require (
 	s3-blobstore-backup-restore v0.0.0
 )
 
-replace system-tests => ./
-
 replace s3-blobstore-backup-restore => ../s3-blobstore-backup-restore

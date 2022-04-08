@@ -11,6 +11,4 @@ require (
 
 replace system-tests => ../system-tests
 
-replace azure-blobstore-backup-restore => ./
-
 replace s3-blobstore-backup-restore => ../s3-blobstore-backup-restore
