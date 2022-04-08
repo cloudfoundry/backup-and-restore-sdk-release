@@ -89,5 +89,4 @@ gopkg.in/yaml.v2
 ## explicit
 system-tests/azure
 # system-tests => ../system-tests
-# azure-blobstore-backup-restore => ./
 # s3-blobstore-backup-restore => ../s3-blobstore-backup-restore

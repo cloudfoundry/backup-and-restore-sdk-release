@@ -77,5 +77,4 @@ gopkg.in/yaml.v2
 ## explicit
 s3-blobstore-backup-restore/blobpath
 s3-blobstore-backup-restore/incremental
-# system-tests => ./
 # s3-blobstore-backup-restore => ../s3-blobstore-backup-restore
