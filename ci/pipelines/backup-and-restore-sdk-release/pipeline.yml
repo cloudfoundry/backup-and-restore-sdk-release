@@ -850,9 +850,23 @@ jobs:
     - get: every-2-weeks
       trigger: true
     - get: backup-and-restore-sdk-release-main
-      passed: [build-rc]
+      passed:
+      - deploy-database-sdk
+      - deploy-postgres
+      - deploy-mariadb
+      - deploy-s3-blobstore-sdk
+      - deploy-s3-blobstore-sdk-with-iam-instance-profile
+      - deploy-azure-blobstore-sdk
+      - deploy-gcs-blobstore-sdk
     - get: version
-      passed: [build-rc]
+      passed:
+      - deploy-database-sdk
+      - deploy-postgres
+      - deploy-mariadb
+      - deploy-s3-blobstore-sdk
+      - deploy-s3-blobstore-sdk-with-iam-instance-profile
+      - deploy-azure-blobstore-sdk
+      - deploy-gcs-blobstore-sdk
 
 - name: create-final-patch
   serial: true
@@ -1084,11 +1098,15 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: version
+      passed: [build-rc]
     - get: backup-and-restore-sdk-release
       resource: backup-and-restore-sdk-release-main
+      passed: [build-rc]
     - get: release-tarball
       trigger: true
       resource: release
+      passed: [build-rc]
     - get: bbl-state-bosh-lite
       trigger: true
     - get: xenial-stemcell
@@ -1111,13 +1129,17 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: version
+      passed: [build-rc]
     - get: every6h
       trigger: true
     - get: backup-and-restore-sdk-release
       resource: backup-and-restore-sdk-release-main
+      passed: [build-rc]
     - get: release-tarball
       resource: release
       trigger: true
+      passed: [build-rc]
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
       trigger: true
@@ -1202,13 +1224,17 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: version
+      passed: [build-rc]
     - get: every6h
       trigger: true
     - get: backup-and-restore-sdk-release
       resource: backup-and-restore-sdk-release-main
+      passed: [build-rc]
     - get: release-tarball
       trigger: true
       resource: release
+      passed: [build-rc]
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
       trigger: true
@@ -1236,13 +1262,17 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: version
+      passed: [build-rc]
     - get: every6h
       trigger: true
     - get: backup-and-restore-sdk-release
       resource: backup-and-restore-sdk-release-main
+      passed: [build-rc]
     - get: release-tarball
       trigger: true
       resource: release
+      passed: [build-rc]
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
       trigger: true
@@ -1290,13 +1320,17 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: version
+      passed: [build-rc]
     - get: every6h
       trigger: true
     - get: backup-and-restore-sdk-release
       resource: backup-and-restore-sdk-release-main
+      passed: [build-rc]
     - get: release-tarball
       trigger: true
       resource: release
+      passed: [build-rc]
     - get: xenial-stemcell-aws
     - get: bbl-state-director-with-iam-profile
       trigger: true
@@ -1323,13 +1357,17 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: version
+      passed: [build-rc]
     - get: every6h
       trigger: true
     - get: backup-and-restore-sdk-release
       resource: backup-and-restore-sdk-release-main
+      passed: [build-rc]
     - get: release-tarball
       trigger: true
       resource: release
+      passed: [build-rc]
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
       trigger: true
@@ -1358,11 +1396,15 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: version
+      passed: [build-rc]
     - get: backup-and-restore-sdk-release
       resource: backup-and-restore-sdk-release-main
+      passed: [build-rc]
     - get: release-tarball
       trigger: true
       resource: release
+      passed: [build-rc]
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
       trigger: true
