@@ -272,12 +272,6 @@ resources:
     start: 9:00 AM
     stop: 5:00 PM
     days: [Monday, Tuesday, Wednesday, Thursday, Friday]
-- name: backup-and-restore-sdk-release
-  type: git
-  source:
-    uri: git@github.com:cloudfoundry-incubator/backup-and-restore-sdk-release.git
-    private_key: ((github.ssh_key))
-    branch: main
 - name: xenial-stemcell
   type: bosh-io-stemcell
   source:
@@ -1091,6 +1085,7 @@ jobs:
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release
+      resource: backup-and-restore-sdk-release-main
     - get: release-tarball
       trigger: true
       resource: release
@@ -1119,6 +1114,7 @@ jobs:
     - get: every6h
       trigger: true
     - get: backup-and-restore-sdk-release
+      resource: backup-and-restore-sdk-release-main
     - get: release-tarball
       resource: release
       trigger: true
@@ -1209,6 +1205,7 @@ jobs:
     - get: every6h
       trigger: true
     - get: backup-and-restore-sdk-release
+      resource: backup-and-restore-sdk-release-main
     - get: release-tarball
       trigger: true
       resource: release
@@ -1242,6 +1239,7 @@ jobs:
     - get: every6h
       trigger: true
     - get: backup-and-restore-sdk-release
+      resource: backup-and-restore-sdk-release-main
     - get: release-tarball
       trigger: true
       resource: release
@@ -1295,6 +1293,7 @@ jobs:
     - get: every6h
       trigger: true
     - get: backup-and-restore-sdk-release
+      resource: backup-and-restore-sdk-release-main
     - get: release-tarball
       trigger: true
       resource: release
@@ -1327,6 +1326,7 @@ jobs:
     - get: every6h
       trigger: true
     - get: backup-and-restore-sdk-release
+      resource: backup-and-restore-sdk-release-main
     - get: release-tarball
       trigger: true
       resource: release
@@ -1359,6 +1359,7 @@ jobs:
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release
+      resource: backup-and-restore-sdk-release-main
     - get: release-tarball
       trigger: true
       resource: release
