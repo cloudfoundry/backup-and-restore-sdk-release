@@ -278,14 +278,6 @@ resources:
     uri: git@github.com:cloudfoundry-incubator/backup-and-restore-sdk-release.git
     private_key: ((github.ssh_key))
     branch: main
-- name: release
-  type: s3
-  source:
-    bucket: backup-and-restore-sdk-releases
-    regexp: backup-and-restore-sdk-(.*).tgz
-    region_name: *aws-region
-    access_key_id: ((aws_credentials.access_key_id))
-    secret_access_key: ((aws_credentials.secret_access_key))
 - name: xenial-stemcell
   type: bosh-io-stemcell
   source:
