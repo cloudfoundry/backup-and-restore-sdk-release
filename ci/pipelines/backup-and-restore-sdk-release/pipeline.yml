@@ -45,6 +45,12 @@ postgres-11-port: &postgres-11-port 5432
 postgres-11-username: &postgres-11-username test_user
 postgres-11-password: &postgres-11-password postgres_password
 
+postgres-13-deployment-name: &postgres-13-deployment-name postgres-13-dev
+postgres-13-host: &postgres-13-host 10.244.1.14
+postgres-13-port: &postgres-13-port 5432
+postgres-13-username: &postgres-13-username test_user
+postgres-13-password: &postgres-13-password postgres_password
+
 gcp-mysql-5-7-ca-cert-path: &gcp-mysql-5-7-ca-cert-path "gcp-mysql_5_7-test-server-cert.pem"
 gcp-mysql-5-7-client-cert-path: &gcp-mysql-5-7-client-cert-path "gcp-mysql_5_7-test-client-cert.pem"
 gcp-mysql-5-7-client-key-path: &gcp-mysql-5-7-client-key-path "gcp-mysql_5_7-test-client-key.pem"
@@ -251,6 +257,106 @@ resources:
   type: time
   source:
     days: [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday' ]
+
+- name: every6h
+  type: time
+  source:
+    interval: 6h
+    start: 9:00 AM
+    stop: 5:00 PM
+    days: [Monday, Tuesday, Wednesday, Thursday, Friday]
+- name: backup-and-restore-sdk-release
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry-incubator/backup-and-restore-sdk-release.git
+    private_key: ((github.ssh_key))
+    branch: main
+- name: release
+  type: s3
+  source:
+    bucket: backup-and-restore-sdk-releases
+    regexp: backup-and-restore-sdk-(.*).tgz
+    region_name: *aws-region
+    access_key_id: ((aws_credentials.access_key_id))
+    secret_access_key: ((aws_credentials.secret_access_key))
+- name: xenial-stemcell
+  type: bosh-io-stemcell
+  source:
+    name: bosh-warden-boshlite-ubuntu-xenial-go_agent
+- name: xenial-stemcell-aws
+  type: bosh-io-stemcell
+  source:
+    name: bosh-aws-xen-hvm-ubuntu-xenial-go_agent
+- name: bbl-state-bosh-lite
+  type: vault
+  source:
+    <<: *vault_creds
+    path: /concourse/common/infrastructure/bosh/maru-lite
+    tarball: true
+- name: mysql-dev-deployment
+  type: bosh-deployment
+  source:
+    deployment: *mysql-deployment-name
+    skip_check: true
+- name: postgres-9-4-dev-deployment
+  type: bosh-deployment
+  source:
+    deployment: *postgres-9-4-deployment-name
+    skip_check: true
+- name: postgres-9-6-dev-deployment
+  type: bosh-deployment
+  source:
+    deployment: *postgres-9-6-deployment-name
+    skip_check: true
+
+- name: postgres-10-dev-deployment
+  type: bosh-deployment
+  source:
+    deployment: *postgres-10-deployment-name
+    skip_check: true
+
+- name: postgres-11-dev-deployment
+  type: bosh-deployment
+  source:
+    deployment: *postgres-11-deployment-name
+    skip_check: true
+
+- name: postgres-13-dev-deployment
+  type: bosh-deployment
+  source:
+    deployment: *postgres-13-deployment-name
+    skip_check: true
+- name: aws-blobstore-sdk-deployment
+  type: bosh-deployment
+  source:
+    deployment: s3-backuper
+    skip_check: true
+- name: azure-blobstore-sdk-deployment
+  type: bosh-deployment
+  source:
+    deployment: azure-backuper
+    skip_check: true
+- name: bbl-state-director-with-iam-profile
+  type: vault
+  source:
+    <<: *vault_creds
+    path: /concourse/common/infrastructure/bosh/aws-ec2
+    tarball: true
+- name: s3-backuper-with-iam-instance-profile-deployment
+  type: bosh-deployment
+  source:
+    deployment: s3-backuper
+    skip_check: true
+- name: database-backup-restorer-deployment
+  type: bosh-deployment
+  source:
+    deployment: database-backup-restorer
+    skip_check: true
+- name: gcs-blobstore-sdk-deployment
+  type: bosh-deployment
+  source:
+    deployment: gcs-backuper
+    skip_check: true
 
 jobs:
 - name: unit-tests
@@ -981,183 +1087,6 @@ jobs:
       AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
       AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
 
----
-bosh-lite-creds: &bosh-lite-creds
-  BOSH_ENVIRONMENT: ((infrastructure/bosh-lite-director.director_url))
-  BOSH_CLIENT: ((infrastructure/bosh-lite-director.director_username))
-  BOSH_CLIENT_SECRET: ((infrastructure/bosh-lite-director.director_password))
-  BOSH_CA_CERT: ((infrastructure/bosh-lite-director.director_ca_cert))
-  BOSH_GW_USER: jumpbox
-  BOSH_GW_HOST: ((infrastructure/bosh-lite-director.jumpbox_host))
-  BOSH_GW_PRIVATE_KEY: ((infrastructure/bosh-lite-director.jumpbox_ssh_key))
-
-aws-region: &aws-region eu-west-1
-aws-backup-region: &aws-backup-region eu-central-1
-
-mysql-deployment-name: &mysql-deployment-name mysql-dev
-mysql-host: &mysql-host 10.244.1.9
-mysql-port: &mysql-port 3306
-mysql-username: &mysql-username root
-mysql-password: &mysql-password mysql_password
-
-postgres-9-4-deployment-name: &postgres-9-4-deployment-name postgres-9-4-dev
-postgres-9-4-host: &postgres-9-4-host 10.244.1.10
-postgres-9-4-port: &postgres-9-4-port 5432
-postgres-9-4-username: &postgres-9-4-username test_user
-postgres-9-4-password: &postgres-9-4-password postgres_password
-
-postgres-9-6-deployment-name: &postgres-9-6-deployment-name postgres-9-6-dev
-postgres-9-6-host: &postgres-9-6-host 10.244.1.11
-postgres-9-6-port: &postgres-9-6-port 5432
-postgres-9-6-username: &postgres-9-6-username test_user
-postgres-9-6-password: &postgres-9-6-password postgres_password
-postgres-9-6-ssl-username: &postgres-9-6-ssl-username ssl_user
-postgres-9-6-ssl-password: &postgres-9-6-ssl-password postgres_password
-postgres-9-6-tls-username: &postgres-9-6-tls-username mutual_tls_user
-postgres-9-6-tls-common-name: &postgres-9-6-tls-common-name postgres96
-
-postgres-10-deployment-name: &postgres-10-deployment-name postgres-10-dev
-postgres-10-host: &postgres-10-host 10.244.1.12
-postgres-10-port: &postgres-10-port 5432
-postgres-10-username: &postgres-10-username test_user
-postgres-10-password: &postgres-10-password postgres_password
-
-postgres-11-deployment-name: &postgres-11-deployment-name postgres-11-dev
-postgres-11-host: &postgres-11-host 10.244.1.13
-postgres-11-port: &postgres-11-port 5432
-postgres-11-username: &postgres-11-username test_user
-postgres-11-password: &postgres-11-password postgres_password
-
-postgres-13-deployment-name: &postgres-13-deployment-name postgres-13-dev
-postgres-13-host: &postgres-13-host 10.244.1.14
-postgres-13-port: &postgres-13-port 5432
-postgres-13-username: &postgres-13-username test_user
-postgres-13-password: &postgres-13-password postgres_password
-
-vault_creds: &vault_creds
-  url: ((vault/server.url))
-  role_id: ((vault/resource_credentials.role_id))
-  secret_id: ((vault/resource_credentials.secret_id))
-
-resource_types:
-- name: vault
-  type: docker-image
-  source:
-    repository: wfernandes/vault-resource
-    tag: latest
-- name: custom-terraform
-  type: docker-image
-  source:
-    repository: ljfranklin/terraform-resource
-    tag: 0.14.2
-- name: bosh-deployment
-  type: docker-image
-  source:
-    repository: cloudfoundry/bosh-deployment-resource
-
-
-resources:
-- name: every6h
-  type: time
-  source:
-    interval: 6h
-    start: 9:00 AM
-    stop: 5:00 PM
-    days: [Monday, Tuesday, Wednesday, Thursday, Friday]
-- name: backup-and-restore-sdk-release
-  type: git
-  source:
-    uri: git@github.com:cloudfoundry-incubator/backup-and-restore-sdk-release.git
-    private_key: ((github.ssh_key))
-    branch: main
-- name: release
-  type: s3
-  source:
-    bucket: backup-and-restore-sdk-releases
-    regexp: backup-and-restore-sdk-(.*).tgz
-    region_name: *aws-region
-    access_key_id: ((aws_credentials.access_key_id))
-    secret_access_key: ((aws_credentials.secret_access_key))
-- name: xenial-stemcell
-  type: bosh-io-stemcell
-  source:
-    name: bosh-warden-boshlite-ubuntu-xenial-go_agent
-- name: xenial-stemcell-aws
-  type: bosh-io-stemcell
-  source:
-    name: bosh-aws-xen-hvm-ubuntu-xenial-go_agent
-- name: bbl-state-bosh-lite
-  type: vault
-  source:
-    <<: *vault_creds
-    path: /concourse/common/infrastructure/bosh/maru-lite
-    tarball: true
-- name: mysql-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *mysql-deployment-name
-    skip_check: true
-- name: postgres-9-4-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *postgres-9-4-deployment-name
-    skip_check: true
-- name: postgres-9-6-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *postgres-9-6-deployment-name
-    skip_check: true
-
-- name: postgres-10-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *postgres-10-deployment-name
-    skip_check: true
-
-- name: postgres-11-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *postgres-11-deployment-name
-    skip_check: true
-
-- name: postgres-13-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *postgres-13-deployment-name
-    skip_check: true
-- name: aws-blobstore-sdk-deployment
-  type: bosh-deployment
-  source:
-    deployment: s3-backuper
-    skip_check: true
-- name: azure-blobstore-sdk-deployment
-  type: bosh-deployment
-  source:
-    deployment: azure-backuper
-    skip_check: true
-- name: bbl-state-director-with-iam-profile
-  type: vault
-  source:
-    <<: *vault_creds
-    path: /concourse/common/infrastructure/bosh/aws-ec2
-    tarball: true
-- name: s3-backuper-with-iam-instance-profile-deployment
-  type: bosh-deployment
-  source:
-    deployment: s3-backuper
-    skip_check: true
-- name: database-backup-restorer-deployment
-  type: bosh-deployment
-  source:
-    deployment: database-backup-restorer
-    skip_check: true
-- name: gcs-blobstore-sdk-deployment
-  type: bosh-deployment
-  source:
-    deployment: gcs-backuper
-    skip_check: true
-
-jobs:
 - name: deploy-database-sdk
   serial: true
   plan:
@@ -1455,3 +1384,74 @@ jobs:
         gcs-backup-bucket-name: bbr-system-test-gcs-backup-bucket
       source_file: source-file/source-file.yml
 
+
+---
+bosh-lite-creds: &bosh-lite-creds
+  BOSH_ENVIRONMENT: ((infrastructure/bosh-lite-director.director_url))
+  BOSH_CLIENT: ((infrastructure/bosh-lite-director.director_username))
+  BOSH_CLIENT_SECRET: ((infrastructure/bosh-lite-director.director_password))
+  BOSH_CA_CERT: ((infrastructure/bosh-lite-director.director_ca_cert))
+  BOSH_GW_USER: jumpbox
+  BOSH_GW_HOST: ((infrastructure/bosh-lite-director.jumpbox_host))
+  BOSH_GW_PRIVATE_KEY: ((infrastructure/bosh-lite-director.jumpbox_ssh_key))
+
+aws-region: &aws-region eu-west-1
+aws-backup-region: &aws-backup-region eu-central-1
+
+mysql-deployment-name: &mysql-deployment-name mysql-dev
+mysql-host: &mysql-host 10.244.1.9
+mysql-port: &mysql-port 3306
+mysql-username: &mysql-username root
+mysql-password: &mysql-password mysql_password
+
+postgres-9-4-deployment-name: &postgres-9-4-deployment-name postgres-9-4-dev
+postgres-9-4-host: &postgres-9-4-host 10.244.1.10
+postgres-9-4-port: &postgres-9-4-port 5432
+postgres-9-4-username: &postgres-9-4-username test_user
+postgres-9-4-password: &postgres-9-4-password postgres_password
+
+postgres-9-6-deployment-name: &postgres-9-6-deployment-name postgres-9-6-dev
+postgres-9-6-host: &postgres-9-6-host 10.244.1.11
+postgres-9-6-port: &postgres-9-6-port 5432
+postgres-9-6-username: &postgres-9-6-username test_user
+postgres-9-6-password: &postgres-9-6-password postgres_password
+postgres-9-6-ssl-username: &postgres-9-6-ssl-username ssl_user
+postgres-9-6-ssl-password: &postgres-9-6-ssl-password postgres_password
+postgres-9-6-tls-username: &postgres-9-6-tls-username mutual_tls_user
+postgres-9-6-tls-common-name: &postgres-9-6-tls-common-name postgres96
+
+postgres-10-deployment-name: &postgres-10-deployment-name postgres-10-dev
+postgres-10-host: &postgres-10-host 10.244.1.12
+postgres-10-port: &postgres-10-port 5432
+postgres-10-username: &postgres-10-username test_user
+postgres-10-password: &postgres-10-password postgres_password
+
+postgres-11-deployment-name: &postgres-11-deployment-name postgres-11-dev
+postgres-11-host: &postgres-11-host 10.244.1.13
+postgres-11-port: &postgres-11-port 5432
+postgres-11-username: &postgres-11-username test_user
+postgres-11-password: &postgres-11-password postgres_password
+
+vault_creds: &vault_creds
+  url: ((vault/server.url))
+  role_id: ((vault/resource_credentials.role_id))
+  secret_id: ((vault/resource_credentials.secret_id))
+
+resource_types:
+- name: vault
+  type: docker-image
+  source:
+    repository: wfernandes/vault-resource
+    tag: latest
+- name: custom-terraform
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource
+    tag: 0.14.2
+- name: bosh-deployment
+  type: docker-image
+  source:
+    repository: cloudfoundry/bosh-deployment-resource
+
+
+resources:
