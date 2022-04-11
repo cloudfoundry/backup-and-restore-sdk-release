@@ -85,6 +85,13 @@ groups:
 - name: shipit
   jobs:
   - build-rc
+  - deploy-s3-blobstore-sdk
+  - deploy-database-sdk
+  - deploy-mariadb
+  - deploy-postgres
+  - deploy-gcs-blobstore-sdk
+  - deploy-s3-blobstore-sdk-with-iam-instance-profile
+  - deploy-azure-blobstore-sdk
   - check-for-changes
   - create-final-patch
 
