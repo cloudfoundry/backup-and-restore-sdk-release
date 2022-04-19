@@ -65,7 +65,7 @@ vault_creds: &vault_creds
   secret_id: ((vault/resource_credentials.secret_id))
 
 groups:
-- name: build
+- name: pr-test-and-merge
   jobs:
   - unit-tests
   - system-tests-internal-dbs
@@ -82,7 +82,7 @@ groups:
   - bump-postgresql
   - bump-boost
   - bump-libpcre2
-- name: shipit
+- name: infrastructure-tests
   jobs:
   - build-rc
   - deploy-s3-blobstore-sdk
@@ -92,6 +92,8 @@ groups:
   - deploy-gcs-blobstore-sdk
   - deploy-s3-blobstore-sdk-with-iam-instance-profile
   - deploy-azure-blobstore-sdk
+- name: shipit
+  jobs:
   - check-for-changes
   - create-final-patch
 
