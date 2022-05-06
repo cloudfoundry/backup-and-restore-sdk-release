@@ -16,7 +16,7 @@
 # limitations under the License.
 set -e
 
-LIBPCRE2_VERSION=10.39
+LIBPCRE2_VERSION=10.40
 
 tar xzf libpcre2/pcre2-${LIBPCRE2_VERSION}.tar.gz
 

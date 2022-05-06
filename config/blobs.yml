@@ -2,10 +2,10 @@ boost/boost_1_59_0.tar.gz:
   size: 83709983
   object_id: 2bb21a57-51e9-471f-660a-edc788238fee
   sha: 5123209db194d66d69a9cfa5af8ff473d5941d97
-libpcre2/pcre2-10.39.tar.gz:
-  size: 2309964
-  object_id: f3b818ce-0e2a-40ff-7fb6-edf0cfcb7b90
-  sha: sha256:0781bd2536ef5279b1943471fdcdbd9961a2845e1d2c9ad849b9bd98ba1a9bd4
+libpcre2/pcre2-10.40.tar.gz:
+  size: 2359622
+  object_id: 71c9fce6-53f5-4775-525c-fb5a75a3528a
+  sha: sha256:ded42661cab30ada2e72ebff9e725e745b4b16ce831993635136f2ef86177724
 mariadb/mariadb-10.6.7.tar.gz:
   size: 85882896
   object_id: 95ea4190-f866-4027-7248-0ecd859ef15c
