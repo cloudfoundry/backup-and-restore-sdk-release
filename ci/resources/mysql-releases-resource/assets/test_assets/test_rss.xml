@@ -117,13 +117,13 @@
       <title>MySQL Community Server 5.7</title>
       <link>https://dev.mysql.com/downloads/mysql/5.7.html</link>
       <pubDate>Mon, 18 Jan 2021 00:00:00 +0000</pubDate>
-      <description>MySQL Community Server 5.7 (5.7.36 GA, published on Monday, 18 Jan 2021)</description>
+      <description>MySQL Community Server 5.7 (5.7.37 GA, published on Monday, 18 Jan 2021)</description>
     </item>
     <item>
       <title>MySQL Installer 5.7</title>
       <link>https://dev.mysql.com/downloads/windows/installer/5.7.html</link>
       <pubDate>Mon, 18 Jan 2021 00:00:00 +0000</pubDate>
-      <description>MySQL Installer 5.7 (5.7.36 GA, published on Monday, 18 Jan 2021)</description>
+      <description>MySQL Installer 5.7 (5.7.37 GA, published on Monday, 18 Jan 2021)</description>
     </item>
   </channel>
 </rss>
