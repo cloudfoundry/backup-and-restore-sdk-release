@@ -3,7 +3,7 @@ module gcs-blobstore-backup-restore
 go 1.16
 
 require (
-	cloud.google.com/go/storage v1.22.0
+	cloud.google.com/go/storage v1.22.1
 	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.30
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.19.0
