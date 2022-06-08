@@ -31,6 +31,7 @@ tar xzf mysql/mysql-${MYSQL_VERSION}.tar.gz
   cmake .. \
       -DCMAKE_INSTALL_PREFIX=${BOSH_INSTALL_TARGET} \
       -DWITHOUT_SERVER=ON \
+      -DCMAKE_PREFIX_PATH=/var/vcap/packages/libopenssl1 \
       -DWITH_SSL=system \
       -DWITH_WSREP=ON \
       -DWITH_INNODB_DISALLOW_WRITES=1 \
