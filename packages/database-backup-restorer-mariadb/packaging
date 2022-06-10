@@ -36,6 +36,7 @@ tar xzf mariadb/mariadb-${MARIADB_VERSION}.tar.gz
 
   cmake .. \
       -DCMAKE_INSTALL_PREFIX=${BOSH_INSTALL_TARGET} \
+      -DCMAKE_PREFIX_PATH=/var/vcap/packages/libopenssl1 \
       -DWITHOUT_SERVER=ON \
       -DWITH_SSL=system \
       -DWITH_WSREP=ON \
