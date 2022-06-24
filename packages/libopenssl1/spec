@@ -1,7 +1,0 @@
----
-name: libopenssl1
-
-dependencies: []
-
-files:
-- openssl/openssl-1.1.1o.tar.gz
