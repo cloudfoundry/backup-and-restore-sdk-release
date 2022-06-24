@@ -19,7 +19,6 @@ name: database-backup-restorer-mariadb
 
 dependencies:
 - libpcre2
-- libopenssl1
 
 files:
 - mariadb/mariadb-10.6.8.tar.gz

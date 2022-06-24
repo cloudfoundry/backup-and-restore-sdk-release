@@ -17,9 +17,7 @@
 ---
 name: database-backup-restorer-mysql-5.7
 
-dependencies: 
-- database-backup-restorer-boost
-- libopenssl1
+dependencies: [database-backup-restorer-boost]
 
 files:
 - mysql/mysql-5.7.37.tar.gz
