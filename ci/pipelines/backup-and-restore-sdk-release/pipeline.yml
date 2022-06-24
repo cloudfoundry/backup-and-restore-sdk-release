@@ -74,16 +74,6 @@ groups:
   - system-tests-blobstore-backuper
   - contract-tests
   - merge-pr
-- name: dependencies
-  jobs:
-  - bump-golang
-  - bump-mariadb
-  - bump-mysql
-  - bump-postgresql
-  - bump-boost
-  - bump-libpcre2
-- name: infrastructure-tests
-  jobs:
   - build-rc
   - deploy-s3-blobstore-sdk
   - deploy-database-sdk
@@ -92,6 +82,15 @@ groups:
   - deploy-gcs-blobstore-sdk
   - deploy-s3-blobstore-sdk-with-iam-instance-profile
   - deploy-azure-blobstore-sdk
+  - deploy-rc-finished
+- name: dependencies
+  jobs:
+  - bump-golang
+  - bump-mariadb
+  - bump-mysql
+  - bump-postgresql
+  - bump-boost
+  - bump-libpcre2
 - name: shipit
   jobs:
   - check-for-changes
@@ -267,13 +266,6 @@ resources:
   source:
     days: [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday' ]
 
-- name: every6h
-  type: time
-  source:
-    interval: 6h
-    start: 9:00 AM
-    stop: 5:00 PM
-    days: [Monday, Tuesday, Wednesday, Thursday, Friday]
 - name: xenial-stemcell
   type: bosh-io-stemcell
   source:
@@ -386,16 +378,38 @@ jobs:
         PACKAGE_NAME: gcs-blobstore-backup-restore
         GINKGO_EXTRA_FLAGS: -p --skipPackage contract_test
 
+- name: deploy-rc-finished
+  plan:
+  - in_parallel:
+    - get: release
+      trigger: true
+      passed:
+      - deploy-database-sdk
+      - deploy-postgres
+      - deploy-mariadb
+      - deploy-s3-blobstore-sdk
+      - deploy-s3-blobstore-sdk-with-iam-instance-profile
+      - deploy-azure-blobstore-sdk
+      - deploy-gcs-blobstore-sdk
+    - get: backup-and-restore-sdk-release
+      passed:
+      - deploy-database-sdk
+      - deploy-postgres
+      - deploy-mariadb
+      - deploy-s3-blobstore-sdk
+      - deploy-s3-blobstore-sdk-with-iam-instance-profile
+      - deploy-azure-blobstore-sdk
+      - deploy-gcs-blobstore-sdk
+
 - name: contract-tests
   serial: true
   plan:
   - in_parallel:
+    - get: release
+      trigger: true
+      passed: [deploy-rc-finished]
     - get: backup-and-restore-sdk-release
-      passed: [unit-tests]
-      trigger: true
-    - get: six-hours
-      trigger: true
-      passed: [ unit-tests ]
+      passed: [deploy-rc-finished]
   - in_parallel:
     - task: aws-s3-blobstore-contract-tests
       file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
@@ -429,14 +443,13 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: backup-and-restore-sdk-release
-      passed: [unit-tests]
+    - get: release
       trigger: true
+      passed: [deploy-rc-finished]
+    - get: backup-and-restore-sdk-release
+      passed: [deploy-rc-finished]
     - get: cryogenics-concourse-tasks
     - get: gcp-db-certs
-    - get: six-hours
-      trigger: true
-      passed: [ unit-tests ]
   - in_parallel:
     - do:
       - put: gcp-terraform
@@ -523,15 +536,14 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: backup-and-restore-sdk-release
+    - get: release
       trigger: true
-      passed: [unit-tests]
+      passed: [deploy-rc-finished]
+    - get: backup-and-restore-sdk-release
+      passed: [deploy-rc-finished]
     - get: cryogenics-concourse-tasks
     - get: cert-store
       resource: rds-ca-bundle
-    - get: six-hours
-      trigger: true
-      passed: [ unit-tests ]
   - in_parallel:
     - put: terraform
       params:
@@ -647,14 +659,13 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: backup-and-restore-sdk-release
+    - get: release
       trigger: true
-      passed: [unit-tests]
+      passed: [deploy-rc-finished]
+    - get: backup-and-restore-sdk-release
+      passed: [deploy-rc-finished]
     - get: cert-store
       resource: gcp-db-certs
-    - get: six-hours
-      trigger: true
-      passed: [ unit-tests ]
   - in_parallel:
     - task: postgres-system-tests-9.4
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
@@ -727,12 +738,11 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: release
+      trigger: true
+      passed: [deploy-rc-finished]
     - get: backup-and-restore-sdk-release
-      trigger: true
-      passed: [unit-tests]
-    - get: six-hours
-      trigger: true
-      passed: [ unit-tests ]
+      passed: [deploy-rc-finished]
   - in_parallel:
     - task: s3
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
@@ -829,14 +839,15 @@ jobs:
   serial_groups: [version]
   plan:
   - in_parallel:
-    - get: backup-and-restore-sdk-release-main
+    - get: backup-and-restore-sdk-release
+      passed: [unit-tests]
       trigger: true
     - get: version
       params: {pre: rc}
   - task: create-dev-release
-    file: backup-and-restore-sdk-release-main/ci/tasks/create-dev-release/task.yml
+    file: backup-and-restore-sdk-release/ci/tasks/create-dev-release/task.yml
     input_mapping:
-      backup-and-restore-sdk-release: backup-and-restore-sdk-release-main
+      backup-and-restore-sdk-release: backup-and-restore-sdk-release
     params:
       AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
       AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
@@ -852,23 +863,7 @@ jobs:
     - get: every-2-weeks
       trigger: true
     - get: backup-and-restore-sdk-release-main
-      passed:
-      - deploy-database-sdk
-      - deploy-postgres
-      - deploy-mariadb
-      - deploy-s3-blobstore-sdk
-      - deploy-s3-blobstore-sdk-with-iam-instance-profile
-      - deploy-azure-blobstore-sdk
-      - deploy-gcs-blobstore-sdk
     - get: version
-      passed:
-      - deploy-database-sdk
-      - deploy-postgres
-      - deploy-mariadb
-      - deploy-s3-blobstore-sdk
-      - deploy-s3-blobstore-sdk-with-iam-instance-profile
-      - deploy-azure-blobstore-sdk
-      - deploy-gcs-blobstore-sdk
 
 - name: create-final-patch
   serial: true
@@ -1103,14 +1098,13 @@ jobs:
     - get: version
       passed: [build-rc]
     - get: backup-and-restore-sdk-release
-      resource: backup-and-restore-sdk-release-main
+      resource: backup-and-restore-sdk-release
       passed: [build-rc]
     - get: release-tarball
       trigger: true
       resource: release
       passed: [build-rc]
     - get: bbl-state-bosh-lite
-      trigger: true
     - get: xenial-stemcell
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
@@ -1133,10 +1127,8 @@ jobs:
   - in_parallel:
     - get: version
       passed: [build-rc]
-    - get: every6h
-      trigger: true
     - get: backup-and-restore-sdk-release
-      resource: backup-and-restore-sdk-release-main
+      resource: backup-and-restore-sdk-release
       passed: [build-rc]
     - get: release-tarball
       resource: release
@@ -1144,7 +1136,6 @@ jobs:
       passed: [build-rc]
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
-      trigger: true
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
     params:
@@ -1228,10 +1219,8 @@ jobs:
   - in_parallel:
     - get: version
       passed: [build-rc]
-    - get: every6h
-      trigger: true
     - get: backup-and-restore-sdk-release
-      resource: backup-and-restore-sdk-release-main
+      resource: backup-and-restore-sdk-release
       passed: [build-rc]
     - get: release-tarball
       trigger: true
@@ -1239,7 +1228,6 @@ jobs:
       passed: [build-rc]
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
-      trigger: true
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
     params:
@@ -1266,10 +1254,8 @@ jobs:
   - in_parallel:
     - get: version
       passed: [build-rc]
-    - get: every6h
-      trigger: true
     - get: backup-and-restore-sdk-release
-      resource: backup-and-restore-sdk-release-main
+      resource: backup-and-restore-sdk-release
       passed: [build-rc]
     - get: release-tarball
       trigger: true
@@ -1277,7 +1263,6 @@ jobs:
       passed: [build-rc]
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
-      trigger: true
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
     params:
@@ -1324,10 +1309,8 @@ jobs:
   - in_parallel:
     - get: version
       passed: [build-rc]
-    - get: every6h
-      trigger: true
     - get: backup-and-restore-sdk-release
-      resource: backup-and-restore-sdk-release-main
+      resource: backup-and-restore-sdk-release
       passed: [build-rc]
     - get: release-tarball
       trigger: true
@@ -1361,10 +1344,8 @@ jobs:
   - in_parallel:
     - get: version
       passed: [build-rc]
-    - get: every6h
-      trigger: true
     - get: backup-and-restore-sdk-release
-      resource: backup-and-restore-sdk-release-main
+      resource: backup-and-restore-sdk-release
       passed: [build-rc]
     - get: release-tarball
       trigger: true
@@ -1372,7 +1353,6 @@ jobs:
       passed: [build-rc]
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
-      trigger: true
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
     params:
@@ -1401,7 +1381,7 @@ jobs:
     - get: version
       passed: [build-rc]
     - get: backup-and-restore-sdk-release
-      resource: backup-and-restore-sdk-release-main
+      resource: backup-and-restore-sdk-release
       passed: [build-rc]
     - get: release-tarball
       trigger: true
@@ -1409,7 +1389,6 @@ jobs:
       passed: [build-rc]
     - get: xenial-stemcell
     - get: bbl-state-bosh-lite
-      trigger: true
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
     params:
