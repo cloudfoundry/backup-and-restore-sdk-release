@@ -93,6 +93,7 @@ groups:
   - bump-libpcre2
 - name: shipit
   jobs:
+  - force-a-new-release
   - check-for-changes
   - create-final-patch
 
@@ -857,9 +858,17 @@ jobs:
   - put: version
     params: {file: version/number}
 
+- name: force-a-new-release
+  plan:
+  - put: every-2-weeks
+
 - name: check-for-changes
   plan:
   - in_parallel:
+    - get: force-a-new-release
+      resource: every-2-weeks
+      passed: [force-a-new-release]
+      trigger: true
     - get: every-2-weeks
       trigger: true
     - get: backup-and-restore-sdk-release-main
