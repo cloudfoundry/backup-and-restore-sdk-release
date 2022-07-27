@@ -41,9 +41,9 @@ variables:
   type: certificate
   options:
     is_ca: true
-    common_name: 10.244.1.7
+    common_name: ((minio-host))
     alternative_names:
-    - 10.244.1.7
+    - ((minio-host))
 
 instance_groups:
 - name: backuper
@@ -154,7 +154,7 @@ instance_groups:
       enabled: true
       buckets:
         bucket_identifier:
-          endpoint: https://10.244.1.7:9000
+          endpoint: https://((minio-host)):((minio-port))
           name: systest-bucket
           region: us-east-1
           aws_access_key_id: "((minio-access-key))"
@@ -168,7 +168,7 @@ instance_groups:
   stemcell: xenial
   networks:
   - name: default
-    static_ips: [10.244.1.7]
+    static_ips: [((minio-host))]
   jobs:
   - name: minio-server
     release: minio
