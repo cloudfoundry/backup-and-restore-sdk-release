@@ -1,30 +1,33 @@
 ---
 bosh-lite-creds: &bosh-lite-creds
-  BOSH_ENVIRONMENT: ((infrastructure/bosh-lite-director.director_url))
-  BOSH_CLIENT: ((infrastructure/bosh-lite-director.director_username))
-  BOSH_CLIENT_SECRET: ((infrastructure/bosh-lite-director.director_password))
-  BOSH_CA_CERT: ((infrastructure/bosh-lite-director.director_ca_cert))
-  BOSH_GW_USER: jumpbox
-  BOSH_GW_HOST: ((infrastructure/bosh-lite-director.jumpbox_host))
-  BOSH_GW_PRIVATE_KEY: ((infrastructure/bosh-lite-director.jumpbox_ssh_key))
+  BOSH_ENVIRONMENT: "((.:pooled-env.BOSH_ENVIRONMENT))"
+  BOSH_CLIENT: "((.:pooled-env.BOSH_CLIENT))"
+  BOSH_CLIENT_SECRET: "((.:pooled-env.BOSH_CLIENT_SECRET))"
+  BOSH_CA_CERT: "((.:pooled-env.BOSH_CA_CERT))"
+  BOSH_GW_USER: "((.:pooled-env.INSTANCE_JUMPBOX_USER))"
+  BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP)):22"
+  BOSH_GW_PRIVATE_KEY: "((.:pooled-env.INSTANCE_JUMPBOX_PRIVATE))"
 
 aws-region: &aws-region eu-west-1
 aws-backup-region: &aws-backup-region eu-central-1
 
+minio-host: &minio-host 10.0.255.7
+minio-port: &minio-port "9000"
+
 mysql-deployment-name: &mysql-deployment-name mysql-dev
-mysql-host: &mysql-host 10.244.1.9
+mysql-host: &mysql-host 10.0.255.9
 mysql-port: &mysql-port 3306
 mysql-username: &mysql-username root
 mysql-password: &mysql-password mysql_password
 
 postgres-9-4-deployment-name: &postgres-9-4-deployment-name postgres-9-4-dev
-postgres-9-4-host: &postgres-9-4-host 10.244.1.10
+postgres-9-4-host: &postgres-9-4-host 10.0.255.10
 postgres-9-4-port: &postgres-9-4-port 5432
 postgres-9-4-username: &postgres-9-4-username test_user
 postgres-9-4-password: &postgres-9-4-password postgres_password
 
 postgres-9-6-deployment-name: &postgres-9-6-deployment-name postgres-9-6-dev
-postgres-9-6-host: &postgres-9-6-host 10.244.1.11
+postgres-9-6-host: &postgres-9-6-host 10.0.255.11
 postgres-9-6-port: &postgres-9-6-port 5432
 postgres-9-6-username: &postgres-9-6-username test_user
 postgres-9-6-password: &postgres-9-6-password postgres_password
@@ -34,19 +37,19 @@ postgres-9-6-tls-username: &postgres-9-6-tls-username mutual_tls_user
 postgres-9-6-tls-common-name: &postgres-9-6-tls-common-name postgres96
 
 postgres-10-deployment-name: &postgres-10-deployment-name postgres-10-dev
-postgres-10-host: &postgres-10-host 10.244.1.12
+postgres-10-host: &postgres-10-host 10.0.255.12
 postgres-10-port: &postgres-10-port 5432
 postgres-10-username: &postgres-10-username test_user
 postgres-10-password: &postgres-10-password postgres_password
 
 postgres-11-deployment-name: &postgres-11-deployment-name postgres-11-dev
-postgres-11-host: &postgres-11-host 10.244.1.13
+postgres-11-host: &postgres-11-host 10.0.255.13
 postgres-11-port: &postgres-11-port 5432
 postgres-11-username: &postgres-11-username test_user
 postgres-11-password: &postgres-11-password postgres_password
 
 postgres-13-deployment-name: &postgres-13-deployment-name postgres-13-dev
-postgres-13-host: &postgres-13-host 10.244.1.14
+postgres-13-host: &postgres-13-host 10.0.255.14
 postgres-13-port: &postgres-13-port 5432
 postgres-13-username: &postgres-13-username test_user
 postgres-13-password: &postgres-13-password postgres_password
@@ -69,12 +72,15 @@ groups:
   jobs:
   - unit-tests
   - system-tests-internal-dbs
+  - system-tests-terraform-external-dbs-gcp
+  - system-tests-terraform-external-dbs-rds
   - system-tests-external-dbs-gcp
   - system-tests-external-dbs-rds
   - system-tests-blobstore-backuper
   - contract-tests
   - merge-pr
   - build-rc
+  - claim-env
   - deploy-s3-blobstore-sdk
   - deploy-database-sdk
   - deploy-mariadb
@@ -83,6 +89,7 @@ groups:
   - deploy-s3-blobstore-sdk-with-iam-instance-profile
   - deploy-azure-blobstore-sdk
   - deploy-rc-finished
+  - unclaim-env
 - name: dependencies
   jobs:
   - bump-golang
@@ -147,7 +154,27 @@ resource_types:
   source:
     repository: dpb587/dynamic-metalink-resource
 
+- name: pcf-pool
+  type: registry-image
+  source:
+    repository: cftoolsmiths/toolsmiths-envs-resource
+    tag: latest
+
 resources:
+- name: cryogenics-ci
+  type: git
+  source:
+    uri: git@github.com:pivotal/cryogenics-concourse-tasks.git
+    private_key: ((github.ssh_key))
+    branch: main
+
+- name: environment
+  type: pcf-pool
+  source:
+    api_token: ((toolsmiths.api_token))
+    hostname: environments.toolsmiths.cf-app.com
+    pool_name: cf-deployment
+
 - name: rds-ca-bundle
   type: file-url
   icon: web-box
@@ -229,7 +256,7 @@ resources:
   source:
     uri: git@github.com:cloudfoundry/backup-and-restore-sdk-release.git
     private_key: ((github.ssh_key))
-    branch: main
+    branch: 182318213-use-toolsmiths-envs
     disable_ci_skip: true
 
 - name: every-2-weeks
@@ -270,17 +297,11 @@ resources:
 - name: xenial-stemcell
   type: bosh-io-stemcell
   source:
-    name: bosh-warden-boshlite-ubuntu-xenial-go_agent
+    name: bosh-google-kvm-ubuntu-xenial-go_agent
 - name: xenial-stemcell-aws
   type: bosh-io-stemcell
   source:
     name: bosh-aws-xen-hvm-ubuntu-xenial-go_agent
-- name: bbl-state-bosh-lite
-  type: vault
-  source:
-    <<: *vault_creds
-    path: /concourse/common/infrastructure/bosh/maru-lite
-    tarball: true
 - name: mysql-dev-deployment
   type: bosh-deployment
   source:
@@ -382,6 +403,15 @@ jobs:
 - name: deploy-rc-finished
   plan:
   - in_parallel:
+    - get: environment
+      trigger: true
+      passed:
+      - deploy-database-sdk
+      - deploy-postgres
+      - deploy-mariadb
+      - deploy-s3-blobstore-sdk
+      - deploy-azure-blobstore-sdk
+      - deploy-gcs-blobstore-sdk
     - get: release
       trigger: true
       passed:
@@ -440,17 +470,33 @@ jobs:
         AZURE_DIFFERENT_STORAGE_KEY: ((azure_credentials.storage_key_2))
         AZURE_CONTAINER_NAME_MANY_FILES: bbr-test-many-blobs-azure-container
 
-- name: system-tests-external-dbs-gcp
+- name: system-tests-terraform-external-dbs-gcp
   serial: true
   plan:
   - in_parallel:
-    - get: release
+    - get: environment
       trigger: true
+      passed: [deploy-rc-finished]
+    - get: release
       passed: [deploy-rc-finished]
     - get: backup-and-restore-sdk-release
       passed: [deploy-rc-finished]
     - get: cryogenics-concourse-tasks
     - get: gcp-db-certs
+    - get: cryogenics-ci
+    - get: backup-and-restore-sdk-release-main
+  - task: alias-env
+    file: cryogenics-ci/tasks/toolsmiths/bosh-envify/task.yml
+    input_mapping:
+      cryogenics-tasks: cryogenics-ci
+      toolsmiths-env: environment
+  - load_var: pooled-env
+    file: bosh-env/metadata.yml
+  - get: gcp-terraform
+    resource: terraform
+    params:
+      env_name: bbr-sdk-external-gcp-dbs
+      output_statefile: true
   - in_parallel:
     - do:
       - put: gcp-terraform
@@ -460,13 +506,44 @@ jobs:
           env_name: bbr-sdk-external-gcp-dbs
           delete_on_failure: true
           vars:
-            director-external-ip: ((infrastructure/bosh-lite-director.director_external_ip))
-            director-jumpbox-ip: ((infrastructure/bosh-lite-director.jumpbox_host))
+            director-external-ip: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))"
+            director-jumpbox-ip: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))"
             gcp-key: ((gcp/service_accounts/owner.json_key))
             mysql-5-7-password: ((backup-and-restore-sdk-release.gcp_mysql_5_7_password))
             postgres-9-6-password: ((backup-and-restore-sdk-release.gcp_postgres_9_6_password))
         get_params:
           output_statefile: true
+
+- name: system-tests-external-dbs-gcp
+  serial: true
+  plan:
+  - in_parallel:
+    - get: environment
+      trigger: true
+      passed: [system-tests-terraform-external-dbs-gcp]
+    - get: release
+      passed: [deploy-rc-finished]
+    - get: backup-and-restore-sdk-release
+      passed: [deploy-rc-finished]
+    - get: cryogenics-concourse-tasks
+    - get: gcp-db-certs
+    - get: cryogenics-ci
+    - get: backup-and-restore-sdk-release-main
+    - get: gcp-terraform
+      resource: terraform
+      trigger: true
+      passed: [system-tests-terraform-external-dbs-gcp]
+      params:
+        output_statefile: true
+  - task: alias-env
+    file: cryogenics-ci/tasks/toolsmiths/bosh-envify/task.yml
+    input_mapping:
+      cryogenics-tasks: cryogenics-ci
+      toolsmiths-env: environment
+  - load_var: pooled-env
+    file: bosh-env/metadata.yml
+  - in_parallel:
+    - do:
       - task: create-gcp-db-certs
         file: backup-and-restore-sdk-release/ci/tasks/create-gcp-db-certs/task.yml
         input_mapping:
@@ -481,7 +558,7 @@ jobs:
   - in_parallel:
     - do: # postgres gcp system tests
       - task: postgres-system-tests-9.6
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+        file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/terraform-task.yml
         input_mapping:
           terraform-state: gcp-terraform
           cert-store: gcp-db-certs
@@ -491,7 +568,7 @@ jobs:
           TEST_SUITE_NAME: postgresql
           POSTGRES_PASSWORD: ((backup-and-restore-sdk-release.gcp_postgres_9_6_password))
       - task: postgres-tls-system-tests-9.6
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+        file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/terraform-task.yml
         input_mapping:
           terraform-state: gcp-terraform
           cert-store: gcp-db-certs
@@ -504,7 +581,7 @@ jobs:
           TEST_SUITE_NAME: postgresql_tls
           TEST_TLS_VERIFY_IDENTITY: false
       - task: postgres-mutual-tls-system-tests-9.6
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+        file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/terraform-task.yml
         input_mapping:
           terraform-state: gcp-terraform
           cert-store: gcp-db-certs
@@ -519,7 +596,7 @@ jobs:
           TEST_SUITE_NAME: postgresql_mutual_tls
           TEST_TLS_VERIFY_IDENTITY: false
     - task: mysql-system-tests-5.7
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+      file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/terraform-task.yml
       input_mapping:
         terraform-state: gcp-terraform
         cert-store: gcp-db-certs
@@ -533,10 +610,13 @@ jobs:
         TEST_SUITE_NAME: mysql
         TEST_TLS_VERIFY_IDENTITY: false
 
-- name: system-tests-external-dbs-rds
+- name: system-tests-terraform-external-dbs-rds
   serial: true
   plan:
   - in_parallel:
+    - get: environment
+      trigger: true
+      passed: [deploy-rc-finished]
     - get: release
       trigger: true
       passed: [deploy-rc-finished]
@@ -545,6 +625,15 @@ jobs:
     - get: cryogenics-concourse-tasks
     - get: cert-store
       resource: rds-ca-bundle
+    - get: cryogenics-ci
+    - get: backup-and-restore-sdk-release-main
+  - task: alias-env
+    file: cryogenics-ci/tasks/toolsmiths/bosh-envify/task.yml
+    input_mapping:
+      cryogenics-tasks: cryogenics-ci
+      toolsmiths-env: environment
+  - load_var: pooled-env
+    file: bosh-env/metadata.yml
   - in_parallel:
     - put: terraform
       params:
@@ -563,22 +652,54 @@ jobs:
           mariadb_10_password: ((backup-and-restore-sdk-release.rds_mariadb_10_password))
       get_params:
         output_statefile: true
+
+- name: system-tests-external-dbs-rds
+  serial: true
+  plan:
+  - in_parallel:
+    - get: environment
+      trigger: true
+      passed: [system-tests-terraform-external-dbs-rds]
+    - get: release
+      trigger: true
+      passed: [deploy-rc-finished]
+    - get: backup-and-restore-sdk-release
+      passed: [deploy-rc-finished]
+    - get: cryogenics-concourse-tasks
+    - get: cert-store
+      resource: rds-ca-bundle
+    - get: cryogenics-ci
+    - get: backup-and-restore-sdk-release-main
+    - get: terraform
+      trigger: true
+      passed: [system-tests-terraform-external-dbs-rds]
+      params:
+        output_statefile: true
+  - task: alias-env
+    file: cryogenics-ci/tasks/toolsmiths/bosh-envify/task.yml
+    input_mapping:
+      cryogenics-tasks: cryogenics-ci
+      toolsmiths-env: environment
+  - load_var: pooled-env
+    file: bosh-env/metadata.yml
   - in_parallel:
     - do:
       - task: postgres-system-tests-9.6
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+        file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/terraform-task.yml
         input_mapping:
           terraform-state: terraform
         params:
+          BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))"
           DB_PREFIX: postgres_9_6
           DB_TYPE: postgres
           POSTGRES_PASSWORD: ((backup-and-restore-sdk-release.rds_postgres_9_6_password))
           TEST_SUITE_NAME: postgresql
       - task: postgres-tls-system-tests-9.6
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+        file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/terraform-task.yml
         input_mapping:
           terraform-state: terraform
         params:
+          BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))"
           DB_PREFIX: postgres_9_6
           DB_TYPE: postgres
           POSTGRES_CA_CERT_PATH: rds-combined-ca-bundle.pem
@@ -587,19 +708,21 @@ jobs:
           TEST_SUITE_NAME: postgresql_tls
     - do:
       - task: postgres-system-tests-10
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+        file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/terraform-task.yml
         input_mapping:
           terraform-state: terraform
         params:
+          BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))"
           DB_PREFIX: postgres_10
           DB_TYPE: postgres
           POSTGRES_PASSWORD: ((backup-and-restore-sdk-release.rds_postgres_10_password))
           TEST_SUITE_NAME: postgresql
       - task: postgres-tls-system-tests-10
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+        file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/terraform-task.yml
         input_mapping:
           terraform-state: terraform
         params:
+          BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))"
           DB_PREFIX: postgres_10
           DB_TYPE: postgres
           POSTGRES_CA_CERT_PATH: rds-combined-ca-bundle.pem
@@ -608,19 +731,21 @@ jobs:
           TEST_SUITE_NAME: postgresql_tls
     - do:
       - task: postgres-system-tests-11
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+        file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/terraform-task.yml
         input_mapping:
           terraform-state: terraform
         params:
+          BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))"
           DB_PREFIX: postgres_11
           DB_TYPE: postgres
           POSTGRES_PASSWORD: ((backup-and-restore-sdk-release.rds_postgres_11_password))
           TEST_SUITE_NAME: postgresql
       - task: postgres-tls-system-tests-11
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+        file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/terraform-task.yml
         input_mapping:
           terraform-state: terraform
         params:
+          BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))"
           DB_PREFIX: postgres_11
           DB_TYPE: postgres
           POSTGRES_CA_CERT_PATH: rds-combined-ca-bundle.pem
@@ -629,10 +754,11 @@ jobs:
           TEST_SUITE_NAME: postgresql_tls
     - do:
       - task: maria-system-tests-10-2
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+        file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/terraform-task.yml
         input_mapping:
           terraform-state: terraform
         params:
+          BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))"
           DB_PREFIX: mariadb_10_2
           DB_TYPE: mysql
           MYSQL_CA_CERT_PATH: rds-combined-ca-bundle.pem
@@ -642,11 +768,12 @@ jobs:
           TEST_TLS_VERIFY_IDENTITY: false
     - do:
       - task: mysql-system-tests-5.7
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+        file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/terraform-task.yml
         input_mapping:
           terraform-state: terraform
         params:
           <<: *bosh-lite-creds
+          BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))"
           TEST_SUITE_NAME: mysql
           MYSQL_PASSWORD: ((backup-and-restore-sdk-release.rds_5_7_password))
           MYSQL_PORT: 3306
@@ -660,6 +787,9 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: environment
+      trigger: true
+      passed: [system-tests-terraform-external-dbs-rds, system-tests-terraform-external-dbs-gcp]
     - get: release
       trigger: true
       passed: [deploy-rc-finished]
@@ -667,10 +797,25 @@ jobs:
       passed: [deploy-rc-finished]
     - get: cert-store
       resource: gcp-db-certs
+    - get: backup-and-restore-sdk-release-main
+    - get: cryogenics-ci
+    - get: gcp-terraform
+      resource: terraform
+      passed: [system-tests-terraform-external-dbs-gcp]
+    - get: terraform
+      passed: [system-tests-terraform-external-dbs-rds]
+  - task: alias-env
+    file: cryogenics-ci/tasks/toolsmiths/bosh-envify/task.yml
+    input_mapping:
+      cryogenics-tasks: cryogenics-ci
+      toolsmiths-env: environment
+  - load_var: pooled-env
+    file: bosh-env/metadata.yml
   - in_parallel:
     - task: postgres-system-tests-9.4
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
+      file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/task.yml
       params:
+        BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP)):22"
         POSTGRES_HOSTNAME: *postgres-9-4-host
         POSTGRES_PASSWORD: *postgres-9-4-password
         POSTGRES_PORT: *postgres-9-4-port
@@ -678,23 +823,29 @@ jobs:
         TEST_SUITE_NAME: postgresql
     - task: postgres-system-tests-9.6
       attempts: 4
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
+      file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/task.yml
       params:
+        BOSH_ENVIRONMENT: 10.0.0.6
+        BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))"
         POSTGRES_HOSTNAME: *postgres-9-6-host
         POSTGRES_PASSWORD: postgres_password
         POSTGRES_USERNAME: test_user
         TEST_SUITE_NAME: postgresql
     - task: postgres-system-tests-10
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
+      file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/task.yml
       params:
+        BOSH_ENVIRONMENT: 10.0.0.6
+        BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP)):22"
         POSTGRES_HOSTNAME: *postgres-10-host
         POSTGRES_PASSWORD: *postgres-10-password
         POSTGRES_PORT: *postgres-10-port
         POSTGRES_USERNAME: *postgres-10-username
         TEST_SUITE_NAME: postgresql
     - task: postgres-system-tests-11
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
+      file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/task.yml
       params:
+        BOSH_ENVIRONMENT: "10.0.0.6:25555"
+        BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))"
         POSTGRES_HOSTNAME: *postgres-11-host
         POSTGRES_PASSWORD: *postgres-11-password
         POSTGRES_PORT: *postgres-11-port
@@ -702,8 +853,10 @@ jobs:
         TEST_SUITE_NAME: postgresql
   - task: postgres-tls-system-tests-9.6
     attempts: 4
-    file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
+    file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/task.yml
     params:
+      BOSH_ENVIRONMENT: "10.0.0.6:2555"
+      BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP)):22"
       POSTGRES_CA_CERT: ((backup-and-restore-sdk-release-db-certs.postgres_96_ca_cert))
       POSTGRES_HOSTNAME: *postgres-9-6-host
       POSTGRES_PASSWORD: postgres_password
@@ -711,7 +864,7 @@ jobs:
       TEST_SUITE_NAME: postgresql_tls
       TEST_TLS_VERIFY_IDENTITY: false
   - task: postgres-mutual-tls-system-tests-9.6
-    file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
+    file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/task.yml
     params:
       POSTGRES_CA_CERT: ((backup-and-restore-sdk-release-db-certs.postgres_96_ca_cert))
       POSTGRES_CLIENT_CERT: ((backup-and-restore-sdk-release-db-certs.postgres_96_client_cert))
@@ -722,7 +875,7 @@ jobs:
       TEST_SUITE_NAME: postgresql_mutual_tls
       TEST_TLS_VERIFY_IDENTITY: false
   - task: mariadb-system-tests
-    file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
+    file: backup-and-restore-sdk-release-main/ci/tasks/sdk-system-db/task.yml
     params:
       TEST_SUITE_NAME: mysql
       MYSQL_HOSTNAME: *mysql-host
@@ -739,16 +892,33 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: environment
+      trigger: true
+      passed: [system-tests-terraform-external-dbs-rds, system-tests-terraform-external-dbs-gcp]
     - get: release
       trigger: true
       passed: [deploy-rc-finished]
     - get: backup-and-restore-sdk-release
       passed: [deploy-rc-finished]
+    - get: cryogenics-ci
+    - get: gcp-terraform
+      resource: terraform
+      passed: [system-tests-terraform-external-dbs-gcp]
+    - get: terraform
+      passed: [system-tests-terraform-external-dbs-rds]
+  - task: alias-env
+    file: cryogenics-ci/tasks/toolsmiths/bosh-envify/task.yml
+    input_mapping:
+      cryogenics-tasks: cryogenics-ci
+      toolsmiths-env: environment
+  - load_var: pooled-env
+    file: bosh-env/metadata.yml
   - in_parallel:
     - task: s3
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
       params:
         <<: *bosh-lite-creds
+        BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))"
         TEST_SUITE_NAME: s3
         BOSH_DEPLOYMENT: s3-backuper
         AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
@@ -798,6 +968,7 @@ jobs:
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
       params:
         <<: *bosh-lite-creds
+        BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))"
         TEST_SUITE_NAME: azure
         BOSH_DEPLOYMENT: azure-backuper
         AZURE_STORAGE_ACCOUNT: ((azure_credentials.storage_account_1))
@@ -810,6 +981,7 @@ jobs:
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
       params:
         <<: *bosh-lite-creds
+        BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))"
         TEST_SUITE_NAME: gcs
         GCP_SERVICE_ACCOUNT_KEY: ((gcp/service_accounts/owner_role.json_key))
         GCP_PROJECT_NAME: cf-backup-and-restore
@@ -1104,24 +1276,58 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: environment
+      passed: [claim-env]
+      trigger: true
     - get: version
-      passed: [build-rc]
+      passed: [claim-env]
     - get: backup-and-restore-sdk-release
       resource: backup-and-restore-sdk-release
-      passed: [build-rc]
+      passed: [claim-env]
     - get: release-tarball
-      trigger: true
       resource: release
-      passed: [build-rc]
-    - get: bbl-state-bosh-lite
+      passed: [claim-env]
     - get: xenial-stemcell
-  - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
+    - get: cryogenics-ci
+    - get: backup-and-restore-sdk-release-main
+  - task: alias-env
+    file: cryogenics-ci/tasks/toolsmiths/bosh-envify/task.yml
+    input_mapping:
+      cryogenics-tasks: cryogenics-ci
+      toolsmiths-env: environment
+  - load_var: pooled-env
+    file: bosh-env/metadata.yml
+  - task: generate-source-file
     params:
-      BBL_STATE: .
+      <<: *bosh-lite-creds
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source: {repository: pcfplatformrecovery/backup-and-restore}
+      outputs:
+      - name: source-file
+      run:
+        path: /bin/bash
+        args:
+        - "-e"
+        - "-c"
+        - |
+          yq write <( cat <<EOF
+          ---
+          jumpbox_username: ${BOSH_GW_USER}
+          jumpbox_url: ${BOSH_GW_HOST}
+          target: ${BOSH_ENVIRONMENT}
+          client: ${BOSH_CLIENT}
+          client_secret: ${BOSH_CLIENT_SECRET}
+          EOF
+          ) -- "ca_cert" "$BOSH_CA_CERT" > source-file/source-file.yml
+
+          yq write --inplace -- source-file/source-file.yml jumpbox_ssh_key "$BOSH_GW_PRIVATE_KEY"
+
   - put: database-backup-restorer-deployment
     params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/database-backup-restorer.yml
+      manifest: backup-and-restore-sdk-release-main/ci/manifests/database-backup-restorer.yml
       stemcells:
       - xenial-stemcell/*.tgz
       releases:
@@ -1134,25 +1340,59 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: environment
+      passed: [claim-env]
+      trigger: true
     - get: version
-      passed: [build-rc]
+      passed: [claim-env]
     - get: backup-and-restore-sdk-release
       resource: backup-and-restore-sdk-release
-      passed: [build-rc]
+      passed: [claim-env]
     - get: release-tarball
       resource: release
-      trigger: true
-      passed: [build-rc]
+      passed: [claim-env]
     - get: xenial-stemcell
-    - get: bbl-state-bosh-lite
-  - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
+    - get: cryogenics-ci
+    - get: backup-and-restore-sdk-release-main
+  - task: alias-env
+    file: cryogenics-ci/tasks/toolsmiths/bosh-envify/task.yml
+    input_mapping:
+      cryogenics-tasks: cryogenics-ci
+      toolsmiths-env: environment
+  - load_var: pooled-env
+    file: bosh-env/metadata.yml
+  - task: generate-source-file
     params:
-      BBL_STATE: .
+      <<: *bosh-lite-creds
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source: {repository: pcfplatformrecovery/backup-and-restore}
+      outputs:
+      - name: source-file
+      run:
+        path: /bin/bash
+        args:
+        - "-e"
+        - "-c"
+        - |
+          yq write <( cat <<EOF
+          ---
+          jumpbox_username: ${BOSH_GW_USER}
+          jumpbox_url: ${BOSH_GW_HOST}
+          target: ${BOSH_ENVIRONMENT}
+          client: ${BOSH_CLIENT}
+          client_secret: ${BOSH_CLIENT_SECRET}
+          EOF
+          ) -- "ca_cert" "$BOSH_CA_CERT" > source-file/source-file.yml
+
+          yq write --inplace -- source-file/source-file.yml jumpbox_ssh_key "$BOSH_GW_PRIVATE_KEY"
+
   - in_parallel:
     - put: postgres-9-4-dev-deployment
       params:
-        manifest: backup-and-restore-sdk-release/ci/manifests/postgres-9.4.yml
+        manifest: backup-and-restore-sdk-release-main/ci/manifests/postgres-9.4.yml
         stemcells:
         - xenial-stemcell/*.tgz
         vars:
@@ -1164,7 +1404,7 @@ jobs:
         source_file: source-file/source-file.yml
     - put: postgres-9-6-dev-deployment
       params:
-        manifest: backup-and-restore-sdk-release/ci/manifests/postgres-9.6.yml
+        manifest: backup-and-restore-sdk-release-main/ci/manifests/postgres-9.6.yml
         vars:
           deployment-name: *postgres-9-6-deployment-name
           db_username: *postgres-9-6-username
@@ -1182,7 +1422,7 @@ jobs:
         source_file: source-file/source-file.yml
     - put: postgres-10-dev-deployment
       params:
-        manifest: backup-and-restore-sdk-release/ci/manifests/postgres-10.yml
+        manifest: backup-and-restore-sdk-release-main/ci/manifests/postgres-10.yml
         stemcells:
         - xenial-stemcell/*.tgz
         vars:
@@ -1194,7 +1434,7 @@ jobs:
         source_file: source-file/source-file.yml
     - put: postgres-11-dev-deployment
       params:
-        manifest: backup-and-restore-sdk-release/ci/manifests/postgres-11.yml
+        manifest: backup-and-restore-sdk-release-main/ci/manifests/postgres-11.yml
         stemcells:
         - xenial-stemcell/*.tgz
         vars:
@@ -1206,7 +1446,7 @@ jobs:
         source_file: source-file/source-file.yml
     - put: postgres-13-dev-deployment
       params:
-        manifest: backup-and-restore-sdk-release/ci/manifests/postgres-13.yml
+        manifest: backup-and-restore-sdk-release-main/ci/manifests/postgres-13.yml
         stemcells:
         - xenial-stemcell/*.tgz
         vars:
@@ -1217,34 +1457,69 @@ jobs:
           availability_zone: z1
         source_file: source-file/source-file.yml
   - task: create-ssl-user
-    file: backup-and-restore-sdk-release/ci/tasks/create-ssl-user/task.yml
+    file: backup-and-restore-sdk-release-main/ci/tasks/create-ssl-user/task.yml
     params:
       <<: *bosh-lite-creds
       BOSH_DEPLOYMENT: *postgres-9-6-deployment-name
+      BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP)):22"
 
 - name: deploy-mariadb
   serial: true
   plan:
   - in_parallel:
+    - get: environment
+      passed: [claim-env]
+      trigger: true
     - get: version
-      passed: [build-rc]
+      passed: [claim-env]
     - get: backup-and-restore-sdk-release
       resource: backup-and-restore-sdk-release
-      passed: [build-rc]
+      passed: [claim-env]
     - get: release-tarball
-      trigger: true
       resource: release
-      passed: [build-rc]
+      passed: [claim-env]
     - get: xenial-stemcell
-    - get: bbl-state-bosh-lite
-  - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
+    - get: cryogenics-ci
+    - get: backup-and-restore-sdk-release-main
+  - task: alias-env
+    file: cryogenics-ci/tasks/toolsmiths/bosh-envify/task.yml
+    input_mapping:
+      cryogenics-tasks: cryogenics-ci
+      toolsmiths-env: environment
+  - load_var: pooled-env
+    file: bosh-env/metadata.yml
+  - task: generate-source-file
     params:
-      BBL_STATE: .
+      <<: *bosh-lite-creds
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source: {repository: pcfplatformrecovery/backup-and-restore}
+      outputs:
+      - name: source-file
+      run:
+        path: /bin/bash
+        args:
+        - "-e"
+        - "-c"
+        - |
+          yq write <( cat <<EOF
+          ---
+          jumpbox_username: ${BOSH_GW_USER}
+          jumpbox_url: ${BOSH_GW_HOST}
+          target: ${BOSH_ENVIRONMENT}
+          client: ${BOSH_CLIENT}
+          client_secret: ${BOSH_CLIENT_SECRET}
+          EOF
+          ) -- "ca_cert" "$BOSH_CA_CERT" > source-file/source-file.yml
+
+          yq write --inplace -- source-file/source-file.yml jumpbox_ssh_key "$BOSH_GW_PRIVATE_KEY"
+
   - put: mysql-dev-deployment
     attempts: 3
     params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/mysql.yml
+      manifest: backup-and-restore-sdk-release-main/ci/manifests/mysql.yml
       stemcells:
       - xenial-stemcell/*.tgz
       vars:
@@ -1261,30 +1536,63 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: environment
+      passed: [claim-env]
+      trigger: true
     - get: version
-      passed: [build-rc]
+      passed: [claim-env]
     - get: backup-and-restore-sdk-release
       resource: backup-and-restore-sdk-release
-      passed: [build-rc]
+      passed: [claim-env]
     - get: release-tarball
-      trigger: true
       resource: release
-      passed: [build-rc]
+      passed: [claim-env]
     - get: xenial-stemcell
-    - get: bbl-state-bosh-lite
-  - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
+    - get: cryogenics-ci
+    - get: backup-and-restore-sdk-release-main
+  - task: alias-env
+    file: cryogenics-ci/tasks/toolsmiths/bosh-envify/task.yml
+    input_mapping:
+      cryogenics-tasks: cryogenics-ci
+      toolsmiths-env: environment
+  - load_var: pooled-env
+    file: bosh-env/metadata.yml
+  - task: generate-source-file
     params:
-      BBL_STATE: .
+      <<: *bosh-lite-creds
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source: {repository: pcfplatformrecovery/backup-and-restore}
+      outputs:
+      - name: source-file
+      run:
+        path: /bin/bash
+        args:
+        - "-e"
+        - "-c"
+        - |
+          yq write <( cat <<EOF
+          ---
+          jumpbox_username: ${BOSH_GW_USER}
+          jumpbox_url: ${BOSH_GW_HOST}
+          target: ${BOSH_ENVIRONMENT}
+          client: ${BOSH_CLIENT}
+          client_secret: ${BOSH_CLIENT_SECRET}
+          EOF
+          ) -- "ca_cert" "$BOSH_CA_CERT" > source-file/source-file.yml
+
+          yq write --inplace -- source-file/source-file.yml jumpbox_ssh_key "$BOSH_GW_PRIVATE_KEY"
+
   - put: aws-blobstore-sdk-deployment
     params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/s3-backuper.yml
+      manifest: backup-and-restore-sdk-release-main/ci/manifests/s3-backuper.yml
       stemcells:
       - xenial-stemcell/*.tgz
       releases:
       - release-tarball/backup-and-restore-sdk-*.tgz
       vars:
-        deployment-name: s3-backuper
         availability_zone: z1
         aws-access-key-id: ((aws_credentials.access_key_id))
         aws-secret-access-key: ((aws_credentials.secret_access_key))
@@ -1300,6 +1608,9 @@ jobs:
         s3-unversioned-backup-bucket-region: us-east-1
         minio-access-key: ((backup-and-restore-sdk-release.minio_access_key))
         minio-secret-key: ((backup-and-restore-sdk-release.minio_secret_key))
+        minio-host: *minio-host
+        minio-port: *minio-port
+        deployment-name: s3-backuper
         s3-unversioned-bpm-bucket-name: sdk-system-test-unversioned-bpm
         s3-unversioned-bpm-bucket-region: *aws-region
         s3-unversioned-bpm-backup-bucket-name: sdk-system-test-unversioned-bpm-backup
@@ -1328,6 +1639,7 @@ jobs:
     - get: xenial-stemcell-aws
     - get: bbl-state-director-with-iam-profile
       trigger: true
+    - get: backup-and-restore-sdk-release-main
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
     input_mapping:
@@ -1336,7 +1648,7 @@ jobs:
       BBL_STATE: .
   - put: s3-backuper-with-iam-instance-profile-deployment
     params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/s3-backuper-with-iam-instance-profile.yml
+      manifest: backup-and-restore-sdk-release-main/ci/manifests/s3-backuper-with-iam-instance-profile.yml
       stemcells:
       - xenial-stemcell-aws/*.tgz
       releases:
@@ -1351,24 +1663,58 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: environment
+      passed: [claim-env]
+      trigger: true
     - get: version
-      passed: [build-rc]
+      passed: [claim-env]
     - get: backup-and-restore-sdk-release
       resource: backup-and-restore-sdk-release
-      passed: [build-rc]
+      passed: [claim-env]
     - get: release-tarball
-      trigger: true
       resource: release
-      passed: [build-rc]
+      passed: [claim-env]
     - get: xenial-stemcell
-    - get: bbl-state-bosh-lite
-  - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
+    - get: cryogenics-ci
+    - get: backup-and-restore-sdk-release-main
+  - task: alias-env
+    file: cryogenics-ci/tasks/toolsmiths/bosh-envify/task.yml
+    input_mapping:
+      cryogenics-tasks: cryogenics-ci
+      toolsmiths-env: environment
+  - load_var: pooled-env
+    file: bosh-env/metadata.yml
+  - task: generate-source-file
     params:
-      BBL_STATE: .
+      <<: *bosh-lite-creds
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source: {repository: pcfplatformrecovery/backup-and-restore}
+      outputs:
+      - name: source-file
+      run:
+        path: /bin/bash
+        args:
+        - "-e"
+        - "-c"
+        - |
+          yq write <( cat <<EOF
+          ---
+          jumpbox_username: ${BOSH_GW_USER}
+          jumpbox_url: ${BOSH_GW_HOST}
+          target: ${BOSH_ENVIRONMENT}
+          client: ${BOSH_CLIENT}
+          client_secret: ${BOSH_CLIENT_SECRET}
+          EOF
+          ) -- "ca_cert" "$BOSH_CA_CERT" > source-file/source-file.yml
+
+          yq write --inplace -- source-file/source-file.yml jumpbox_ssh_key "$BOSH_GW_PRIVATE_KEY"
+
   - put: azure-blobstore-sdk-deployment
     params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/azure-backuper.yml
+      manifest: backup-and-restore-sdk-release-main/ci/manifests/azure-backuper.yml
       stemcells:
       - xenial-stemcell/*.tgz
       releases:
@@ -1387,24 +1733,59 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: environment
+      passed: [claim-env]
+      trigger: true
     - get: version
-      passed: [build-rc]
+      passed: [claim-env]
     - get: backup-and-restore-sdk-release
       resource: backup-and-restore-sdk-release
-      passed: [build-rc]
+      passed: [claim-env]
     - get: release-tarball
       trigger: true
       resource: release
-      passed: [build-rc]
+      passed: [claim-env]
     - get: xenial-stemcell
-    - get: bbl-state-bosh-lite
-  - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
+    - get: cryogenics-ci
+    - get: backup-and-restore-sdk-release-main
+  - task: alias-env
+    file: cryogenics-ci/tasks/toolsmiths/bosh-envify/task.yml
+    input_mapping:
+      cryogenics-tasks: cryogenics-ci
+      toolsmiths-env: environment
+  - load_var: pooled-env
+    file: bosh-env/metadata.yml
+  - task: generate-source-file
     params:
-      BBL_STATE: .
+      <<: *bosh-lite-creds
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source: {repository: pcfplatformrecovery/backup-and-restore}
+      outputs:
+      - name: source-file
+      run:
+        path: /bin/bash
+        args:
+        - "-e"
+        - "-c"
+        - |
+          yq write <( cat <<EOF
+          ---
+          jumpbox_username: ${BOSH_GW_USER}
+          jumpbox_url: ${BOSH_GW_HOST}
+          target: ${BOSH_ENVIRONMENT}
+          client: ${BOSH_CLIENT}
+          client_secret: ${BOSH_CLIENT_SECRET}
+          EOF
+          ) -- "ca_cert" "$BOSH_CA_CERT" > source-file/source-file.yml
+
+          yq write --inplace -- source-file/source-file.yml jumpbox_ssh_key "$BOSH_GW_PRIVATE_KEY"
+
   - put: gcs-blobstore-sdk-deployment
     params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/gcs-backuper.yml
+      manifest: backup-and-restore-sdk-release-main/ci/manifests/gcs-backuper.yml
       stemcells:
       - xenial-stemcell/*.tgz
       releases:
@@ -1415,3 +1796,34 @@ jobs:
         gcs-bucket-name: bbr-system-test-gcs-bucket
         gcs-backup-bucket-name: bbr-system-test-gcs-backup-bucket
       source_file: source-file/source-file.yml
+
+- name: claim-env
+  plan:
+  - in_parallel:
+      steps:
+      - get: cryogenics-ci
+      - get: version
+        passed: [build-rc]
+      - get: backup-and-restore-sdk-release
+        resource: backup-and-restore-sdk-release
+        passed: [build-rc]
+      - get: release-tarball
+        trigger: true
+        resource: release
+        passed: [build-rc]
+      - put: environment
+        params:
+          action: claim
+  - task: alias-env
+    file: cryogenics-ci/tasks/toolsmiths/bosh-envify/task.yml
+    input_mapping:
+      cryogenics-tasks: cryogenics-ci
+      toolsmiths-env: environment
+
+- name: unclaim-env
+  plan:
+  - in_parallel:
+      steps:
+      - get: environment
+        passed:
+        - claim-env
