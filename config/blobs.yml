@@ -14,10 +14,10 @@ mysql/mysql-5.6.51.tar.gz:
   size: 32411131
   object_id: a8edb89b-908d-41d2-564a-d3fef5ad21cf
   sha: sha256:262ccaf2930fca1f33787505dd125a7a04844f40d3421289a51974b5935d9abc
-mysql/mysql-5.7.37.tar.gz:
-  size: 56248775
-  object_id: bda6d410-4f86-42b3-600a-7705c210ee57
-  sha: sha256:a99a9aa8635d2566dab764b2de56bed1730365d360e20bb27f56392ce54e18bd
+mysql/mysql-5.7.38.tar.gz:
+  size: 56247722
+  object_id: fc5eb46b-585b-455a-70c5-f174d518e490
+  sha: sha256:22bf87eefa975b92b54d7c72fb5f3772c657cb0eb055bc6aea65d3a75f69a356
 openssl/openssl-1.1.1o.tar.gz:
   size: 9856386
   object_id: 49453dd9-155f-49c7-4e90-c7fd6293c02f
