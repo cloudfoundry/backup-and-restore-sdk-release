@@ -1164,6 +1164,8 @@ jobs:
         source_file: source-file/source-file.yml
     - put: postgres-9-6-dev-deployment
       params:
+        stemcells:
+        - xenial-stemcell/*.tgz
         manifest: backup-and-restore-sdk-release/ci/manifests/postgres-9.6.yml
         vars:
           deployment-name: *postgres-9-6-deployment-name
