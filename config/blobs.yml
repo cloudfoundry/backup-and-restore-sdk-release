@@ -6,10 +6,10 @@ libpcre2/pcre2-10.40.tar.gz:
   size: 2359622
   object_id: 71c9fce6-53f5-4775-525c-fb5a75a3528a
   sha: sha256:ded42661cab30ada2e72ebff9e725e745b4b16ce831993635136f2ef86177724
-mariadb/mariadb-10.6.8.tar.gz:
-  size: 88794744
-  object_id: 2c68687b-7280-435e-6e41-3ff01c2de2ec
-  sha: sha256:57a9488559ccbdfb8506b781089a7a08d8e0e1b647cffb8f2706af06f69ed438
+mariadb/mariadb-10.6.9.tar.gz:
+  size: 96494484
+  object_id: 17cf3583-3f3d-444c-4ef6-dd78cd97f0b4
+  sha: sha256:37959f8b5fbc64d94e180dcd8ae5bdfafd406203a07f48f7becd6b8a7633744c
 mysql/mysql-5.6.51.tar.gz:
   size: 32411131
   object_id: a8edb89b-908d-41d2-564a-d3fef5ad21cf
@@ -30,15 +30,15 @@ postgres/postgresql-9.6.24.tar.gz:
   size: 24739272
   object_id: a1248b2f-d48d-48c2-4403-ae27e3cace4a
   sha: sha256:52947ecc119846eace5164399d173576c0d4a47ec116ae58a46a8fd0c576c7c3
-postgres/postgresql-13.8.tar.gz:
-  size: 28046336
-  object_id: 0f2a5efd-ef59-426f-7612-a6b76ba6787f
-  sha: sha256:b0742c4e2a577afc9a3b31b19ee65e2b8369664676b119904a56028f0cefddbe
-postgres/postgresql-11.17.tar.gz:
-  size: 26671622
-  object_id: 6bee55a3-261c-4209-4b32-9dc181942785
-  sha: sha256:cabae4206160541797ea2547689eb64de9dd767a5a1ca1b721cee009fbdde752
 postgres/postgresql-10.22.tar.gz:
   size: 25460734
   object_id: e65a2e31-839b-47b1-6d45-6e2caca39f5f
   sha: sha256:3ca98f49a31f595fd90664818eaa35a7a96d86123aedda8a023b2be8c96733f2
+postgres/postgresql-11.17.tar.gz:
+  size: 26671622
+  object_id: 6bee55a3-261c-4209-4b32-9dc181942785
+  sha: sha256:cabae4206160541797ea2547689eb64de9dd767a5a1ca1b721cee009fbdde752
+postgres/postgresql-13.8.tar.gz:
+  size: 28046336
+  object_id: 0f2a5efd-ef59-426f-7612-a6b76ba6787f
+  sha: sha256:b0742c4e2a577afc9a3b31b19ee65e2b8369664676b119904a56028f0cefddbe
