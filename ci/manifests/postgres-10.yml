@@ -23,7 +23,7 @@ releases:
   url: https://bosh.io/d/github.com/cloudfoundry/bosh?v=268.6.0
 - name: bpm
   version: latest
-  url: https://bosh.io/d/github.com/cloudfoundry-incubator/bpm-release
+  url: https://bosh.io/d/github.com/cloudfoundry/bpm-release
 
 stemcells:
 - alias: xenial
