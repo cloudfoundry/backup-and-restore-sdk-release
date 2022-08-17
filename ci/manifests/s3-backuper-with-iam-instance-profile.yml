@@ -22,8 +22,8 @@ releases:
   version: latest
 
 stemcells:
-- alias: xenial
-  os: ubuntu-xenial
+- alias: jammy
+  os: ubuntu-jammy
   version: latest
 
 instance_groups:
@@ -33,7 +33,7 @@ instance_groups:
   vm_extensions:
   - s3-backup-iam-instance-profile
   persistent_disk_type: 1GB
-  stemcell: xenial
+  stemcell: jammy
   update:
     serial: true
   networks:

@@ -6,11 +6,11 @@ set -euo pipefail
 
 if [ $# -eq 0 ]
 then
-  echo "Usage: ${0} [--stemcell|-s xenial|bionic] <package name>"
+  echo "Usage: ${0} [--stemcell|-s xenial|bionic|jammy] <package name>"
   exit 1
 fi
 
-STEMCELL='bionic'
+STEMCELL='jammy'
 
 while [[ $# -gt 0 ]]
 do
