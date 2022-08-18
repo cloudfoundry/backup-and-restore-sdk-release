@@ -21,6 +21,9 @@ releases:
 - name: pxc
   version: latest
   url: https://bosh.io/d/github.com/cloudfoundry-incubator/pxc-release
+- name: bpm
+  version: latest
+  url: https://bosh.io/d/github.com/cloudfoundry/bpm-release
 
 stemcells:
 - alias: jammy
@@ -39,6 +42,8 @@ instance_groups:
   - name: default
     static_ips: [((db_host))]
   jobs:
+  - name: bpm
+    release: bpm
   - name: cluster-health-logger
     release: pxc
     properties:
