@@ -24,8 +24,8 @@ releases:
   sha1: "a798999d29b9f5aa12035cff907b26674b491200"
 
 stemcells:
-- alias: xenial
-  os: ubuntu-xenial
+- alias: jammy
+  os: ubuntu-jammy
   version: latest
 
 instance_groups:
@@ -33,7 +33,7 @@ instance_groups:
   instances: 1
   vm_type: small
   persistent_disk_type: 10GB
-  stemcell: xenial
+  stemcell: jammy
   update:
     serial: true
   networks:

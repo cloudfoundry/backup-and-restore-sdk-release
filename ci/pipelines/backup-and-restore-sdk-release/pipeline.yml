@@ -267,14 +267,14 @@ resources:
   source:
     days: [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday' ]
 
-- name: xenial-stemcell
+- name: jammy-stemcell
   type: bosh-io-stemcell
   source:
-    name: bosh-warden-boshlite-ubuntu-xenial-go_agent
-- name: xenial-stemcell-aws
+    name: bosh-warden-boshlite-ubuntu-jammy-go_agent
+- name: jammy-stemcell-aws
   type: bosh-io-stemcell
   source:
-    name: bosh-aws-xen-hvm-ubuntu-xenial-go_agent
+    name: bosh-aws-xen-hvm-ubuntu-jammy-go_agent
 - name: bbl-state-bosh-lite
   type: vault
   source:
@@ -1114,7 +1114,7 @@ jobs:
       resource: release
       passed: [build-rc]
     - get: bbl-state-bosh-lite
-    - get: xenial-stemcell
+    - get: jammy-stemcell
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
     params:
@@ -1123,7 +1123,7 @@ jobs:
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/database-backup-restorer.yml
       stemcells:
-      - xenial-stemcell/*.tgz
+      - jammy-stemcell/*.tgz
       releases:
       - release-tarball/backup-and-restore-sdk-*.tgz
       vars:
@@ -1143,7 +1143,7 @@ jobs:
       resource: release
       trigger: true
       passed: [build-rc]
-    - get: xenial-stemcell
+    - get: jammy-stemcell
     - get: bbl-state-bosh-lite
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
@@ -1154,7 +1154,7 @@ jobs:
       params:
         manifest: backup-and-restore-sdk-release/ci/manifests/postgres-9.4.yml
         stemcells:
-        - xenial-stemcell/*.tgz
+        - jammy-stemcell/*.tgz
         vars:
           deployment-name: *postgres-9-4-deployment-name
           db_username: *postgres-9-4-username
@@ -1165,7 +1165,7 @@ jobs:
     - put: postgres-9-6-dev-deployment
       params:
         stemcells:
-        - xenial-stemcell/*.tgz
+        - jammy-stemcell/*.tgz
         manifest: backup-and-restore-sdk-release/ci/manifests/postgres-9.6.yml
         vars:
           deployment-name: *postgres-9-6-deployment-name
@@ -1186,7 +1186,7 @@ jobs:
       params:
         manifest: backup-and-restore-sdk-release/ci/manifests/postgres-10.yml
         stemcells:
-        - xenial-stemcell/*.tgz
+        - jammy-stemcell/*.tgz
         vars:
           deployment-name: *postgres-10-deployment-name
           db_username: *postgres-10-username
@@ -1198,7 +1198,7 @@ jobs:
       params:
         manifest: backup-and-restore-sdk-release/ci/manifests/postgres-11.yml
         stemcells:
-        - xenial-stemcell/*.tgz
+        - jammy-stemcell/*.tgz
         vars:
           deployment-name: *postgres-11-deployment-name
           db_username: *postgres-11-username
@@ -1210,7 +1210,7 @@ jobs:
       params:
         manifest: backup-and-restore-sdk-release/ci/manifests/postgres-13.yml
         stemcells:
-        - xenial-stemcell/*.tgz
+        - jammy-stemcell/*.tgz
         vars:
           deployment-name: *postgres-13-deployment-name
           db_username: *postgres-13-username
@@ -1237,7 +1237,7 @@ jobs:
       trigger: true
       resource: release
       passed: [build-rc]
-    - get: xenial-stemcell
+    - get: jammy-stemcell
     - get: bbl-state-bosh-lite
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
@@ -1248,7 +1248,7 @@ jobs:
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/mysql.yml
       stemcells:
-      - xenial-stemcell/*.tgz
+      - jammy-stemcell/*.tgz
       vars:
         deployment-name: *mysql-deployment-name
         db_password: *mysql-password
@@ -1272,7 +1272,7 @@ jobs:
       trigger: true
       resource: release
       passed: [build-rc]
-    - get: xenial-stemcell
+    - get: jammy-stemcell
     - get: bbl-state-bosh-lite
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
@@ -1282,7 +1282,7 @@ jobs:
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/s3-backuper.yml
       stemcells:
-      - xenial-stemcell/*.tgz
+      - jammy-stemcell/*.tgz
       releases:
       - release-tarball/backup-and-restore-sdk-*.tgz
       vars:
@@ -1327,7 +1327,7 @@ jobs:
       trigger: true
       resource: release
       passed: [build-rc]
-    - get: xenial-stemcell-aws
+    - get: jammy-stemcell-aws
     - get: bbl-state-director-with-iam-profile
       trigger: true
   - task: generate-bosh-deployment-source-file
@@ -1340,7 +1340,7 @@ jobs:
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/s3-backuper-with-iam-instance-profile.yml
       stemcells:
-      - xenial-stemcell-aws/*.tgz
+      - jammy-stemcell-aws/*.tgz
       releases:
       - release-tarball/backup-and-restore-sdk-*.tgz
       vars:
@@ -1362,7 +1362,7 @@ jobs:
       trigger: true
       resource: release
       passed: [build-rc]
-    - get: xenial-stemcell
+    - get: jammy-stemcell
     - get: bbl-state-bosh-lite
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
@@ -1372,7 +1372,7 @@ jobs:
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/azure-backuper.yml
       stemcells:
-      - xenial-stemcell/*.tgz
+      - jammy-stemcell/*.tgz
       releases:
       - release-tarball/backup-and-restore-sdk-*.tgz
       vars:
@@ -1398,7 +1398,7 @@ jobs:
       trigger: true
       resource: release
       passed: [build-rc]
-    - get: xenial-stemcell
+    - get: jammy-stemcell
     - get: bbl-state-bosh-lite
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
@@ -1408,7 +1408,7 @@ jobs:
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/gcs-backuper.yml
       stemcells:
-      - xenial-stemcell/*.tgz
+      - jammy-stemcell/*.tgz
       releases:
       - release-tarball/backup-and-restore-sdk-*.tgz
       vars:

@@ -27,8 +27,8 @@ releases:
   sha1: "0bffec6b98df81219a18ec8da0e19721be799eed"
 
 stemcells:
-- alias: xenial
-  os: ubuntu-xenial
+- alias: jammy
+  os: ubuntu-jammy
   version: latest  # replaced by exact version by bosh-deployment-resource in CI
 
 instance_groups:
@@ -36,7 +36,7 @@ instance_groups:
   instances: 1
   vm_type: small
   persistent_disk_type: 10GB
-  stemcell: xenial
+  stemcell: jammy
   networks:
   - name: default
     static_ips: [((db_host))]

@@ -18,13 +18,16 @@
 name: ((deployment-name))
 
 releases:
-- name: cf-mysql
+- name: pxc
   version: latest
-  url: https://bosh.io/d/github.com/cloudfoundry/cf-mysql-release
+  url: https://bosh.io/d/github.com/cloudfoundry-incubator/pxc-release
+- name: bpm
+  version: latest
+  url: https://bosh.io/d/github.com/cloudfoundry/bpm-release
 
 stemcells:
-- alias: xenial
-  os: ubuntu-xenial
+- alias: jammy
+  os: ubuntu-jammy
   version: latest  # replaced by exact version by bosh-deployment-resource in CI
 
 instance_groups:
@@ -32,34 +35,38 @@ instance_groups:
   instances: 1
   vm_type: small
   persistent_disk_type: 10GB
-  stemcell: xenial
+  stemcell: jammy
   update:
     serial: true
   networks:
   - name: default
     static_ips: [((db_host))]
   jobs:
-  - name: mysql
-    release: cf-mysql
+  - name: bpm
+    release: bpm
+  - name: cluster-health-logger
+    release: pxc
+    properties:
+      db_password: foo
+  - name: galera-agent
+    release: pxc
+    properties:
+      db_password: foo
+      endpoint_username: galera_healthcheck
+      endpoint_password: foo
+  - name: pxc-mysql
+    release: pxc
+    properties:
+      admin_password: ((db_password))
+      port: 3306
+      monit_startup_timeout: 120
+      remote_admin_access: true
+      tls:
+        server:
+          ca: ((databases.ca))
+          certificate: ((databases.certificate))
+          private_key: ((databases.private_key))
   azs: [((availability_zone))]
-  properties:
-    cf_mysql:
-        mysql:
-          startup_timeout: 120
-          admin_password: ((db_password))
-          port: 3306
-          binlog_enabled: false
-          cluster_health:
-            password: foo
-          galera_healthcheck:
-            db_password: foo
-            endpoint_username: galera_healthcheck
-            endpoint_password: foo
-          tls:
-            ca_certificate: ((databases.ca))
-            server_certificate: ((databases.certificate))
-            server_key: ((databases.private_key))
-          remote_admin_access: true
 
 variables:
 - name: databases
