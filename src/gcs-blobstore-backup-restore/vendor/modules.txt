@@ -118,7 +118,7 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/oauth2 v0.0.0-20220622183110-fd043fe589d2
+# golang.org/x/oauth2 v0.0.0-20220822191816-0ebed06d0094
 ## explicit
 golang.org/x/oauth2
 golang.org/x/oauth2/authhandler
@@ -154,7 +154,7 @@ golang.org/x/text/unicode/norm
 # golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
-# google.golang.org/api v0.93.0
+# google.golang.org/api v0.94.0
 ## explicit
 google.golang.org/api/googleapi
 google.golang.org/api/googleapi/transport
