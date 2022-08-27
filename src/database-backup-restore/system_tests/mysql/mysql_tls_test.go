@@ -2,7 +2,6 @@ package mysql
 
 import (
 	"fmt"
-	"net"
 	"os"
 	"strings"
 
@@ -162,7 +161,7 @@ var _ = Describe("mysql with tls", func() {
 						}`,
 							mysqlSslUsername,
 							mysqlPassword,
-							resolveHostToIP(mysqlHostName),
+							resolveHostToIP(brJob, mysqlHostName),
 							mysqlPort,
 							databaseName,
 							escapeNewLines(mysqlCaCert),
@@ -575,9 +574,21 @@ var _ = Describe("mysql with tls", func() {
 	})
 })
 
-func resolveHostToIP(hostname string) string {
-	addrs, err := net.LookupHost(hostname)
-	Expect(err).NotTo(HaveOccurred())
+func resolveHostToIP(brJob JobInstance, hostname string) string {
+	session := RunCommand(
+		strings.Join(
+			[]string{
+				BoshCommand(),
+				"--deployment=" + brJob.Deployment,
+				"ssh", brJob.Instance,
+				"--results",
+				"--column=Stdout",
+			},
+			" ",
+		),
+		`dig +short `+hostname,
+	)
+	addrs := strings.Fields(string(session.Out.Contents()))
 	Expect(addrs).NotTo(HaveLen(0), "hostname "+hostname+" does not resolve to any IPs")
 	return addrs[0]
 }
