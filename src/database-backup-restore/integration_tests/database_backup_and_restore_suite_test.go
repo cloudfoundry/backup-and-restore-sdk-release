@@ -54,6 +54,8 @@ var fakeMariaDBClient *binmock.Mock
 var fakeMariaDBDump *binmock.Mock
 
 var _ = BeforeSuite(func() {
+	SetDefaultEventuallyTimeout(5 * time.Second)
+
 	var err error
 	compiledSDKPath, err = gexec.Build(
 		"database-backup-restore/cmd/database-backup-restore")
