@@ -17,12 +17,13 @@
 package integration_tests
 
 import (
+	"testing"
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	binmock "github.com/pivotal-cf-experimental/go-binmock"
-
-	"testing"
+	"github.com/pivotal-cf-experimental/go-binmock"
 )
 
 func TestDatabaseBackupAndRestore(t *testing.T) {
@@ -50,6 +51,8 @@ var fakeMysqlClient56 *binmock.Mock
 var fakeMysqlDump56 *binmock.Mock
 var fakeMysqlClient57 *binmock.Mock
 var fakeMysqlDump57 *binmock.Mock
+var fakeMysqlClient80 *binmock.Mock
+var fakeMysqlDump80 *binmock.Mock
 var fakeMariaDBClient *binmock.Mock
 var fakeMariaDBDump *binmock.Mock
 
@@ -78,6 +81,8 @@ var _ = BeforeSuite(func() {
 	fakeMysqlClient56 = binmock.NewBinMock(Fail)
 	fakeMysqlDump57 = binmock.NewBinMock(Fail)
 	fakeMysqlClient57 = binmock.NewBinMock(Fail)
+	fakeMysqlDump80 = binmock.NewBinMock(Fail)
+	fakeMysqlClient80 = binmock.NewBinMock(Fail)
 	fakeMariaDBClient = binmock.NewBinMock(Fail)
 	fakeMariaDBDump = binmock.NewBinMock(Fail)
 })
@@ -102,5 +107,7 @@ var _ = BeforeEach(func() {
 		"MYSQL_DUMP_5_6_PATH":   "non-existent",
 		"MYSQL_CLIENT_5_7_PATH": "non-existent",
 		"MYSQL_DUMP_5_7_PATH":   "non-existent",
+		"MYSQL_CLIENT_8_0_PATH": "non-existent",
+		"MYSQL_DUMP_8_0_PATH":   "non-existent",
 	}
 })
