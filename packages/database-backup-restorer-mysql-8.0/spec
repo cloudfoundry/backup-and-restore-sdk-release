@@ -1,0 +1,7 @@
+---
+name: database-backup-restorer-mysql-8.0
+
+dependencies: []
+
+files:
+- mysql/mysql-boost-8.0.*.tar.gz
