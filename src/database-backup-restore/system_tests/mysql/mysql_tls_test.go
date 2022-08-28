@@ -39,19 +39,14 @@ var _ = Describe("mysql with tls", func() {
 		RunSQLCommand("INSERT INTO people VALUES ('Old Person');", connection)
 
 		mysqlSslUsername = "ssl_user_" + DisambiguationStringOfLength(6)
-		RunSQLCommand(fmt.Sprintf(
-			"CREATE USER '%s' IDENTIFIED BY '%s';",
-			mysqlSslUsername, mysqlPassword), connection)
-
 		mysqlMutualTlsUsername = "mtls_user_" + DisambiguationStringOfLength(6)
-		RunSQLCommand(fmt.Sprintf(
-			"CREATE USER '%s' IDENTIFIED BY '%s';",
-			mysqlMutualTlsUsername, mysqlPassword), connection)
+		RunSQLCommand(fmt.Sprintf("DROP USER IF EXISTS '%s'", mysqlSslUsername), connection)
+		RunSQLCommand(fmt.Sprintf("DROP USER IF EXISTS '%s'", mysqlMutualTlsUsername), connection)
 	})
 
 	AfterEach(func() {
-		RunSQLCommand(fmt.Sprintf("DROP USER '%s';", mysqlSslUsername), connection)
-		RunSQLCommand(fmt.Sprintf("DROP USER '%s';", mysqlMutualTlsUsername), connection)
+		RunSQLCommand(fmt.Sprintf("DROP USER IF EXISTS '%s'", mysqlSslUsername), connection)
+		RunSQLCommand(fmt.Sprintf("DROP USER IF EXISTS '%s'", mysqlMutualTlsUsername), connection)
 	})
 
 	JustBeforeEach(func() {
@@ -60,7 +55,10 @@ var _ = Describe("mysql with tls", func() {
 
 	Context("when the db user requires TLS", func() {
 		BeforeEach(func() {
-			RunSQLCommand(fmt.Sprintf("GRANT ALL PRIVILEGES ON %s.* TO %s REQUIRE SSL;", databaseName, mysqlSslUsername), connection)
+			RunSQLCommand(fmt.Sprintf(
+				"CREATE USER '%s' IDENTIFIED BY '%s' REQUIRE SSL",
+				mysqlSslUsername, mysqlPassword), connection)
+			RunSQLCommand(fmt.Sprintf("GRANT ALL PRIVILEGES ON %s.* TO %s", databaseName, mysqlSslUsername), connection)
 		})
 
 		Context("when TLS info is not provided in the config", func() {
@@ -257,8 +255,10 @@ var _ = Describe("mysql with tls", func() {
 				Skip("Skipping mutual TLS tests")
 			}
 
-			RunSQLCommand(fmt.Sprintf("GRANT ALL PRIVILEGES ON %s.* TO %s REQUIRE SSL;", databaseName, mysqlMutualTlsUsername), connection)
-			RunSQLCommand(fmt.Sprintf("GRANT ALL PRIVILEGES ON %s.* TO %s REQUIRE X509;", databaseName, mysqlMutualTlsUsername), connection)
+			RunSQLCommand(fmt.Sprintf(
+				"CREATE USER '%s' IDENTIFIED BY '%s' REQUIRE X509",
+				mysqlMutualTlsUsername, mysqlPassword), connection)
+			RunSQLCommand(fmt.Sprintf("GRANT ALL PRIVILEGES ON %s.* TO %s", databaseName, mysqlMutualTlsUsername), connection)
 		})
 
 		Context("when TLS info is not provided in the config", func() {

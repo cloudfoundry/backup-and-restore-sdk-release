@@ -3,14 +3,15 @@ package database_test
 import (
 	"fmt"
 
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+
 	"database-backup-restore/config"
 	"database-backup-restore/database"
 	"database-backup-restore/database/fakes"
 	"database-backup-restore/mysql"
 	"database-backup-restore/postgres"
 	"database-backup-restore/version"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("InteractorFactory", func() {
@@ -54,6 +55,11 @@ var _ = Describe("InteractorFactory", func() {
 			Dump:    "mysql_57_dump",
 			Restore: "mysql_57_restore",
 			Client:  "mysql_57_client",
+		},
+		Mysql80: config.UtilityPaths{
+			Dump:    "mysql_80_dump",
+			Restore: "mysql_80_restore",
+			Client:  "mysql_80_client",
 		},
 	}
 	var postgresServerVersionDetector = new(fakes.FakeServerVersionDetector)
@@ -386,6 +392,30 @@ var _ = Describe("InteractorFactory", func() {
 				})
 			})
 
+			Context("when the version is detected as MySQL 8.0.27", func() {
+				BeforeEach(func() {
+					mysqlServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{
+							"mysql",
+							version.SemanticVersion{
+								Major: "8",
+								Minor: "0",
+								Patch: "27"}},
+						nil,
+					)
+				})
+
+				It("builds a mysql.Backuper", func() {
+					Expect(factoryError).NotTo(HaveOccurred())
+					Expect(interactor).To(Equal(mysql.NewBackuper(
+						connectionConfig,
+						"mysql_80_dump",
+						mysql.NewDefaultSSLProvider(tempFolderManager),
+						mysql.NewPurgeGTIDOptionProvider(),
+					)))
+				})
+			})
+
 			Context("when the version is detected as the not supported MariaDB 5.5.58", func() {
 				BeforeEach(func() {
 					mysqlServerVersionDetector.GetVersionReturns(
@@ -452,6 +482,24 @@ var _ = Describe("InteractorFactory", func() {
 					Expect(interactor).To(Equal(mysql.NewRestorer(
 						connectionConfig,
 						"mysql_57_restore",
+						mysql.NewDefaultSSLProvider(tempFolderManager),
+					)))
+				})
+			})
+
+			Context("when the version is detected as MySQL 8.0.27", func() {
+				BeforeEach(func() {
+					mysqlServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{
+							"mysql",
+							version.SemanticVersion{Major: "8", Minor: "0", Patch: "27"}}, nil)
+				})
+
+				It("builds a mysql.Restorer", func() {
+					Expect(factoryError).NotTo(HaveOccurred())
+					Expect(interactor).To(Equal(mysql.NewRestorer(
+						connectionConfig,
+						"mysql_80_restore",
 						mysql.NewDefaultSSLProvider(tempFolderManager),
 					)))
 				})

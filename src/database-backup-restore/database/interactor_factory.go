@@ -121,15 +121,20 @@ func (f InteractorFactory) getUtilitiesForMySQL(mysqlVersion version.DatabaseSer
 		if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "7", "20")) {
 			return f.utilitiesConfig.Mysql57.Dump, f.utilitiesConfig.Mysql57.Restore, nil
 		}
+		if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("8", "0", "0")) {
+			return f.utilitiesConfig.Mysql80.Dump, f.utilitiesConfig.Mysql80.Restore, nil
+		}
 	}
 
 	return "", "", fmt.Errorf("unsupported version of %s: %s.%s", implementation, semVer.Major, semVer.Minor)
 }
 
 func (f InteractorFactory) getSSLCommandProvider(mysqlVersion version.DatabaseServerVersion) mysql.SSLOptionsProvider {
-	if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "7", "20")) {
+	switch {
+	case mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "7", "20")),
+		mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("8", "0", "0")):
 		return mysql.NewDefaultSSLProvider(f.tempFolderManager)
-	} else {
+	default:
 		return mysql.NewLegacySSLOptionsProvider(f.tempFolderManager)
 	}
 }
