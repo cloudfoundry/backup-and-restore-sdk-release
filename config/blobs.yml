@@ -20,6 +20,7 @@ mysql/mysql-5.7.38.tar.gz:
   sha: sha256:22bf87eefa975b92b54d7c72fb5f3772c657cb0eb055bc6aea65d3a75f69a356
 mysql/mysql-boost-8.0.30.tar.gz:
   size: 332772783
+  object_id: 40cdd4fd-29ae-4fbc-6b86-e46802a0b171
   sha: sha256:c331ac7a68099a2116097acbb14fd331423d486fe47ce0e346925111b44df69c
 openssl/openssl-1.1.1o.tar.gz:
   size: 9856386
