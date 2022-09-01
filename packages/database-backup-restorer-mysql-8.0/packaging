@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e
+
+apt-get update
+apt-get install -y lsb-release
+codename=$(lsb_release -c -s)
+if [ "${codename}" == "xenial" ]; then
+  echo "MySQL 8.0.27+ requires GCC 7.1 or Clang 5 at a minimum. This means compilation will fail on an ubuntu-xenial stemcell which only provides GCC 5.4"
+  exit 0
+fi
+
+tar -xf mysql/mysql-boost-8.0.*.tar.gz
+cd mysql-8.0.*/
+mkdir bld
+cd bld
+
+
+
+cmake .. \
+    -DBUILD_CONFIG=mysql_release \
+    -DCMAKE_C_COMPILER=gcc \
+    -DCMAKE_CXX_COMPILER=g++ \
+    -DCMAKE_INSTALL_PREFIX="${BOSH_INSTALL_TARGET}" \
+    -DINSTALL_STATIC_LIBRARIES=OFF \
+    -DWITHOUT_SERVER=ON \
+    -DWITH_BOOST=../boost/
+make install/strip -j "$(nproc)"

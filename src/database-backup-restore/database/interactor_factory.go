@@ -1,7 +1,9 @@
 package database
 
 import (
+	"errors"
 	"fmt"
+	"os"
 
 	"database-backup-restore/config"
 	"database-backup-restore/mysql"
@@ -121,15 +123,23 @@ func (f InteractorFactory) getUtilitiesForMySQL(mysqlVersion version.DatabaseSer
 		if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "7", "20")) {
 			return f.utilitiesConfig.Mysql57.Dump, f.utilitiesConfig.Mysql57.Restore, nil
 		}
+		if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("8", "0", "0")) {
+			if _, err := os.Stat(f.utilitiesConfig.Mysql80.Client) ; os.IsNotExist(err) {
+				return "", "", errors.New("MySQL 8.0 is not supported on this OS. Are you using an old (xenial?) stemcell?")
+			}
+			return f.utilitiesConfig.Mysql80.Dump, f.utilitiesConfig.Mysql80.Restore, nil
+		}
 	}
 
 	return "", "", fmt.Errorf("unsupported version of %s: %s.%s", implementation, semVer.Major, semVer.Minor)
 }
 
 func (f InteractorFactory) getSSLCommandProvider(mysqlVersion version.DatabaseServerVersion) mysql.SSLOptionsProvider {
-	if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "7", "20")) {
+	switch {
+	case mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "7", "20")),
+		mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("8", "0", "0")):
 		return mysql.NewDefaultSSLProvider(f.tempFolderManager)
-	} else {
+	default:
 		return mysql.NewLegacySSLOptionsProvider(f.tempFolderManager)
 	}
 }

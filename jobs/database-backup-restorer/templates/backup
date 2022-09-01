@@ -44,4 +44,7 @@ export MYSQL_CLIENT_5_6_PATH="/var/vcap/packages/database-backup-restorer-mysql-
 export MYSQL_DUMP_5_7_PATH="/var/vcap/packages/database-backup-restorer-mysql-5.7/bin/mysqldump"
 export MYSQL_CLIENT_5_7_PATH="/var/vcap/packages/database-backup-restorer-mysql-5.7/bin/mysql"
 
+export MYSQL_DUMP_8_0_PATH="/var/vcap/packages/database-backup-restorer-mysql-8.0/bin/mysqldump"
+export MYSQL_CLIENT_8_0_PATH="/var/vcap/packages/database-backup-restorer-mysql-8.0/bin/mysql"
+
 /var/vcap/packages/database-backup-restorer/bin/database-backup-restore --backup $*
