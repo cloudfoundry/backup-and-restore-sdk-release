@@ -54,7 +54,7 @@ var _ = Describe("mysql", func() {
 		mysqlClientKey = os.Getenv("MYSQL_CLIENT_KEY")
 
 		connection, proxySession = ConnectMysql(
-			resolveHostToIP(brJob, mysqlHostName),
+			mysqlHostName,
 			mysqlPassword,
 			mysqlNonSslUsername,
 			mysqlPort,

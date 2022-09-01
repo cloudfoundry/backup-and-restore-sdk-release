@@ -44,6 +44,16 @@ instance_groups:
   jobs:
   - name: bpm
     release: bpm
+  - name: cluster-health-logger
+    release: pxc
+    properties:
+      db_password: foo
+  - name: galera-agent
+    release: pxc
+    properties:
+      db_password: foo
+      endpoint_username: galera_healthcheck
+      endpoint_password: foo
   - name: pxc-mysql
     release: pxc
     properties:
@@ -52,8 +62,6 @@ instance_groups:
       monit_startup_timeout: 120
       remote_admin_access: true
       tls:
-        client:
-          ca: ((databases.ca))
         server:
           ca: ((databases.ca))
           certificate: ((databases.certificate))
@@ -63,11 +71,9 @@ instance_groups:
 variables:
 - name: databases
   type: certificate
-  update_mode: converge
   options:
     is_ca: true
     common_name: mysql
-    alternative_names: ["q-s0.mysql.default.mysql.bosh"]
 
 update:
   canaries: 1
