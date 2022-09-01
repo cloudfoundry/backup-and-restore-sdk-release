@@ -1235,7 +1235,7 @@ var _ = Describe("MySQL", func() {
 				})
 				It("should fail", func() {
 					Eventually(session).Should(gexec.Exit(1))
-					Expect(session.Err).Should(gbytes.Say("MySQL 8.0 is not supported for xenial stemcells."))
+					Expect(session.Err).Should(gbytes.Say(`MySQL 8.0 is not supported on this OS. Are you using an old \(xenial\?\) stemcell\?`))
 				})
 			})
 
@@ -1246,7 +1246,7 @@ var _ = Describe("MySQL", func() {
 				})
 				It("should fail", func() {
 					Eventually(session).Should(gexec.Exit(1))
-					Expect(session.Err).Should(gbytes.Say("MySQL 8.0 is not supported for xenial stemcells."))
+					Expect(session.Err).Should(gbytes.Say(`MySQL 8.0 is not supported on this OS. Are you using an old \(xenial\?\) stemcell\?`))
 				})
 			})
 		})

@@ -125,7 +125,7 @@ func (f InteractorFactory) getUtilitiesForMySQL(mysqlVersion version.DatabaseSer
 		}
 		if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("8", "0", "0")) {
 			if _, err := os.Stat(f.utilitiesConfig.Mysql80.Client) ; os.IsNotExist(err) {
-				return "", "", errors.New("MySQL 8.0 is not supported for xenial stemcells.")
+				return "", "", errors.New("MySQL 8.0 is not supported on this OS. Are you using an old (xenial?) stemcell?")
 			}
 			return f.utilitiesConfig.Mysql80.Dump, f.utilitiesConfig.Mysql80.Restore, nil
 		}

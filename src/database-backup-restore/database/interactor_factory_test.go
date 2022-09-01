@@ -2,6 +2,7 @@ package database_test
 
 import (
 	"fmt"
+	"os"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -15,61 +16,11 @@ import (
 )
 
 var _ = Describe("InteractorFactory", func() {
-	var utilitiesConfig = config.UtilitiesConfig{
-		Postgres94: config.UtilityPaths{
-			Dump:    "pg_p_9_4_dump",
-			Restore: "pg_p_9_4_restore",
-			Client:  "pg_p_9_4_client",
-		},
-		Postgres96: config.UtilityPaths{
-			Dump:    "pg_p_9_6_dump",
-			Restore: "pg_p_9_6_restore",
-			Client:  "pg_p_9_6_client",
-		},
-		Postgres10: config.UtilityPaths{
-			Dump:    "pg_p_10_dump",
-			Restore: "pg_p_10_restore",
-			Client:  "pg_p_10_client",
-		},
-		Postgres11: config.UtilityPaths{
-			Dump:    "pg_p_11_dump",
-			Restore: "pg_p_11_restore",
-			Client:  "pg_p_11_client",
-		},
-		Postgres13: config.UtilityPaths{
-			Dump:    "pg_p_13_dump",
-			Restore: "pg_p_13_restore",
-			Client:  "pg_p_13_client",
-		},
-		Mariadb: config.UtilityPaths{
-			Dump:    "mariadb_dump",
-			Restore: "mariadb_restore",
-			Client:  "mariadb_client",
-		},
-		Mysql56: config.UtilityPaths{
-			Dump:    "mysql_56_dump",
-			Restore: "mysql_56_restore",
-			Client:  "mysql_56_client",
-		},
-		Mysql57: config.UtilityPaths{
-			Dump:    "mysql_57_dump",
-			Restore: "mysql_57_restore",
-			Client:  "mysql_57_client",
-		},
-		Mysql80: config.UtilityPaths{
-			Dump:    "mysql_80_dump",
-			Restore: "mysql_80_restore",
-			Client:  "mysql_80_client",
-		},
-	}
+	var utilitiesConfig config.UtilitiesConfig
 	var postgresServerVersionDetector = new(fakes.FakeServerVersionDetector)
 	var mysqlServerVersionDetector = new(fakes.FakeServerVersionDetector)
 	var tempFolderManager, _ = config.NewTempFolderManager()
-	var interactorFactory = database.NewInteractorFactory(
-		utilitiesConfig,
-		postgresServerVersionDetector,
-		mysqlServerVersionDetector,
-		tempFolderManager)
+	var interactorFactory database.InteractorFactory
 
 	var action database.Action
 	var connectionConfig config.ConnectionConfig
@@ -78,7 +29,63 @@ var _ = Describe("InteractorFactory", func() {
 	var factoryError error
 
 	JustBeforeEach(func() {
+		interactorFactory = database.NewInteractorFactory(
+			utilitiesConfig,
+			postgresServerVersionDetector,
+			mysqlServerVersionDetector,
+			tempFolderManager)
+
 		interactor, factoryError = interactorFactory.Make(action, connectionConfig)
+	})
+
+	BeforeEach(func() {
+		utilitiesConfig = config.UtilitiesConfig{
+			Postgres94: config.UtilityPaths{
+				Dump:    "pg_p_9_4_dump",
+				Restore: "pg_p_9_4_restore",
+				Client:  "pg_p_9_4_client",
+			},
+			Postgres96: config.UtilityPaths{
+				Dump:    "pg_p_9_6_dump",
+				Restore: "pg_p_9_6_restore",
+				Client:  "pg_p_9_6_client",
+			},
+			Postgres10: config.UtilityPaths{
+				Dump:    "pg_p_10_dump",
+				Restore: "pg_p_10_restore",
+				Client:  "pg_p_10_client",
+			},
+			Postgres11: config.UtilityPaths{
+				Dump:    "pg_p_11_dump",
+				Restore: "pg_p_11_restore",
+				Client:  "pg_p_11_client",
+			},
+			Postgres13: config.UtilityPaths{
+				Dump:    "pg_p_13_dump",
+				Restore: "pg_p_13_restore",
+				Client:  "pg_p_13_client",
+			},
+			Mariadb: config.UtilityPaths{
+				Dump:    "mariadb_dump",
+				Restore: "mariadb_restore",
+				Client:  "mariadb_client",
+			},
+			Mysql56: config.UtilityPaths{
+				Dump:    "mysql_56_dump",
+				Restore: "mysql_56_restore",
+				Client:  "mysql_56_client",
+			},
+			Mysql57: config.UtilityPaths{
+				Dump:    "mysql_57_dump",
+				Restore: "mysql_57_restore",
+				Client:  "mysql_57_client",
+			},
+			Mysql80: config.UtilityPaths{
+				Dump:    "mysql_80_dump",
+				Restore: "mysql_80_restore",
+				Client:  "mysql_80_client",
+			},
+		}
 	})
 
 	Context("when the configured adapter is postgres", func() {
@@ -405,14 +412,31 @@ var _ = Describe("InteractorFactory", func() {
 					)
 				})
 
-				It("builds a mysql.Backuper", func() {
-					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewBackuper(
-						connectionConfig,
-						"mysql_80_dump",
-						mysql.NewDefaultSSLProvider(tempFolderManager),
-						mysql.NewPurgeGTIDOptionProvider(),
-					)))
+				Context("when MySQL 8 is supported", func() {
+					BeforeEach(func() {
+						tempfile, err := os.CreateTemp("", "fake_mysql_for_bbr_sdk")
+						Expect(err).NotTo(HaveOccurred())
+						utilitiesConfig.Mysql80.Client = tempfile.Name()
+					})
+
+					AfterEach(func() {
+						os.Remove(utilitiesConfig.Mysql80.Client)
+					})
+
+					It("builds a mysql.Backuper", func() {
+						Expect(factoryError).NotTo(HaveOccurred())
+						Expect(interactor).To(Equal(mysql.NewBackuper(
+							connectionConfig,
+							"mysql_80_dump",
+							mysql.NewDefaultSSLProvider(tempFolderManager),
+							mysql.NewPurgeGTIDOptionProvider(),
+						)))
+					})
+				})
+				Context("when MySQL 8 is not supported", func() {
+					It("returns a helpful error message", func() {
+						Expect(factoryError).To(MatchError("MySQL 8.0 is not supported on this OS. Are you using an old (xenial?) stemcell?"))
+					})
 				})
 			})
 
@@ -495,13 +519,31 @@ var _ = Describe("InteractorFactory", func() {
 							version.SemanticVersion{Major: "8", Minor: "0", Patch: "27"}}, nil)
 				})
 
-				It("builds a mysql.Restorer", func() {
-					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewRestorer(
-						connectionConfig,
-						"mysql_80_restore",
-						mysql.NewDefaultSSLProvider(tempFolderManager),
-					)))
+				Context("when MySQL 8 is supported", func() {
+					BeforeEach(func() {
+						tempfile, err := os.CreateTemp("", "fake_mysql_for_bbr_sdk")
+						Expect(err).NotTo(HaveOccurred())
+						utilitiesConfig.Mysql80.Client = tempfile.Name()
+					})
+
+					AfterEach(func() {
+						os.Remove(utilitiesConfig.Mysql80.Client)
+					})
+
+					It("builds a mysql.Restorer", func() {
+						Expect(factoryError).NotTo(HaveOccurred())
+						Expect(interactor).To(Equal(mysql.NewRestorer(
+							connectionConfig,
+							"mysql_80_restore",
+							mysql.NewDefaultSSLProvider(tempFolderManager),
+						)))
+					})
+				})
+
+				Context("when MySQL 8 is not supported", func() {
+					It("returns a helpful error message", func() {
+						Expect(factoryError).To(MatchError("MySQL 8.0 is not supported on this OS. Are you using an old (xenial?) stemcell?"))
+					})
 				})
 			})
 
