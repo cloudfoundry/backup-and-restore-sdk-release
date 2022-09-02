@@ -2,12 +2,19 @@
 
 set -e
 
-apt-get update
-apt-get install -y lsb-release
-codename=$(lsb_release -c -s)
-if [ "${codename}" == "xenial" ]; then
-  echo "MySQL 8.0.27+ requires GCC 7.1 or Clang 5 at a minimum. This means compilation will fail on an ubuntu-xenial stemcell which only provides GCC 5.4"
-  exit 0
+this_is_a_xenial_stemcell() {
+    # We can't use lsb-release because it isn't installed by default,
+    # and we can't use apt to get it in airgapped environments
+    grep xenial < /etc/apt/sources.list > /dev/null
+}
+
+if this_is_a_xenial_stemcell
+then
+    echo "MySQL 8.0.27+ requires GCC 7.1 or Clang 5 at a minimum."
+    echo "This stemcell is xenial, which does not provide those compilers, so MySQL 8 will not be compiled."
+    echo "The rest of BBR SDK will function as expected."
+    echo "If you want to back up a MySQL 8+ database, please use a newer stemcell such as Jammy."
+    exit 0
 fi
 
 tar -xf mysql/mysql-boost-8.0.*.tar.gz
