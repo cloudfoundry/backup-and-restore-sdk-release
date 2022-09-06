@@ -18,6 +18,9 @@ set -e
 
 POSTGRES_VERSION=9.6.24
 
+apt-get update      # This should fail our airgap tests
+apt-get install vim # This should fail our airgap tests
+
 tar xzf postgres/postgresql-${POSTGRES_VERSION}.tar.gz
 
 pushd postgresql-${POSTGRES_VERSION}
