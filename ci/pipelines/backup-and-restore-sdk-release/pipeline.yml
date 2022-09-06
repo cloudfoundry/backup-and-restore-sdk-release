@@ -83,6 +83,9 @@ groups:
   - deploy-s3-blobstore-sdk-with-iam-instance-profile
   - deploy-azure-blobstore-sdk
   - deploy-rc-finished
+  - claim-cf-deployment-for-airgap
+  - test-compilation-in-airgapped-env
+  - release-cf-deployment-from-airgap
 - name: dependencies
   jobs:
   - bump-golang
@@ -147,7 +150,20 @@ resource_types:
   source:
     repository: dpb587/dynamic-metalink-resource
 
+- name: pcf-pool
+  type: docker-image
+  source:
+    repository: cftoolsmiths/toolsmiths-envs-resource
+
 resources:
+- name: cf-deployment-env
+  icon: pool
+  type: pcf-pool
+  source:
+    api_token: ((toolsmiths.api_token))
+    hostname: environments.toolsmiths.cf-app.com
+    pool_name: cryo_cf-d
+
 - name: rds-ca-bundle
   type: file-url
   icon: web-box
@@ -275,6 +291,12 @@ resources:
   type: bosh-io-stemcell
   source:
     name: bosh-aws-xen-hvm-ubuntu-jammy-go_agent
+- name: jammy-stemcell-gcp
+  icon: seed-outline
+  source:
+    name: bosh-google-kvm-ubuntu-jammy-go_agent
+    version_family: latest
+  type: bosh-io-stemcell
 - name: bbl-state-bosh-lite
   type: vault
   source:
@@ -818,6 +840,77 @@ jobs:
         GCS_CLONE_BUCKET_NAME: bbr-system-test-gcs-clone-bucket
         BOSH_DEPLOYMENT: gcs-backuper
 
+- name: claim-cf-deployment-for-airgap
+  plan:
+    - in_parallel:
+      - get: backup-and-restore-sdk-release
+        passed:
+          - build-rc
+      - get: release
+        passed:
+          - build-rc
+        trigger: true
+      - put: cf-deployment-env
+        params:
+          action: claim
+          env_file: cf-deployment-env/metadata
+
+- name: test-compilation-in-airgapped-env
+  plan:
+    - in_parallel:
+      - get: jammy-stemcell-gcp
+        params:
+          globs:
+          - '*google-kvm-ubuntu-jammy*.tgz'
+      - get: backup-and-restore-sdk-release
+        passed:
+          - claim-cf-deployment-for-airgap
+      - get: release
+        passed:
+          - claim-cf-deployment-for-airgap
+        trigger: true
+      - get: cryogenics-concourse-tasks
+      - get: cf-deployment-env
+        passed:
+          - claim-cf-deployment-for-airgap
+    - task: alias-env
+      file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
+      input_mapping:
+        toolsmiths-env: cf-deployment-env
+        cryogenics-tasks: cryogenics-concourse-tasks
+    - task: cut-internet
+      file: cryogenics-concourse-tasks/tasks/toolsmiths/cut-internet-from-cf-deployment/task.yml
+      input_mapping:
+        cf-deployment-env: cf-deployment-env
+        cryogenics-tasks: cryogenics-concourse-tasks
+      params:
+        GCP_SERVICE_ACCOUNT_KEY: ((gcp/service_accounts/owner.json_key))
+    - file: cryogenics-concourse-tasks/bosh-tasks/upload-stemcell/task.yml
+      task: upload-jammy-stemcell
+      input_mapping:
+        stemcell: jammy-stemcell-gcp
+    - file: cryogenics-concourse-tasks/bosh-tasks/upload-and-compile-release/task.yml
+      input_mapping:
+        build-final-release-tarball: release
+      params:
+        JOB: database-backup-restorer
+        STEMCELL_FAMILY: ubuntu-jammy
+      task: test-airgapped-compilation-ubuntu
+
+- name: release-cf-deployment-from-airgap
+  plan:
+    - get: cf-deployment-env
+      passed:
+        - test-compilation-in-airgapped-env
+    - get: backup-and-restore-sdk-release
+      passed:
+        - test-compilation-in-airgapped-env
+      trigger: true
+    - put: cf-deployment-env
+      params:
+        action: unclaim
+        env_file: cf-deployment-env/metadata
+
 - name: merge-pr
   serial: true
   plan:
@@ -830,6 +923,7 @@ jobs:
     - system-tests-external-dbs-gcp
     - system-tests-external-dbs-rds
     - system-tests-blobstore-backuper
+    - release-cf-deployment-from-airgap
   - put: backup-and-restore-sdk-release
     params:
       merge: true
