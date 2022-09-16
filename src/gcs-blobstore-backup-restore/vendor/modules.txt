@@ -105,7 +105,7 @@ go.opencensus.io/trace
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/propagation
 go.opencensus.io/trace/tracestate
-# golang.org/x/net v0.0.0-20220812174116-3211cb980234
+# golang.org/x/net v0.0.0-20220909164309-bea034e7d591
 ## explicit
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
@@ -154,7 +154,7 @@ golang.org/x/text/unicode/norm
 # golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
-# google.golang.org/api v0.94.0
+# google.golang.org/api v0.96.0
 ## explicit
 google.golang.org/api/googleapi
 google.golang.org/api/googleapi/transport
