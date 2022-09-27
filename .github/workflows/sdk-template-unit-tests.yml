@@ -13,7 +13,6 @@ jobs:
       - uses: actions/checkout@v3
         with:
           path: repo
-          set-safe-directory: true
       - name: Run SDK Template Unit Tests
         run: docker run -v "$PWD/repo:/backup-and-restore-sdk-release" --rm -i "$(docker build -q ./repo/.github/actions/sdk-template-unit-tests/)"
 
