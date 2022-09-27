@@ -6,7 +6,7 @@ on:
 
 jobs:
   sdk-template-unit-tests:
-    name: SDK Template Unit Tests
+    name: SDK Template
     runs-on: ubuntu-latest
 
     steps:
@@ -18,7 +18,7 @@ jobs:
 
 
   s3-blobstore-unit-tests:
-    name: S3 Blobstore Unit Tests
+    name: S3 Blobstore
     runs-on: ubuntu-latest
 
     steps:
