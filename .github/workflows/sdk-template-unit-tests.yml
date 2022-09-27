@@ -15,3 +15,15 @@ jobs:
           path: repo
       - name: Run SDK Template Unit Tests
         run: docker run -v "$PWD/repo:/backup-and-restore-sdk-release" --rm -i "$(docker build -q ./repo/.github/actions/sdk-template-unit-tests/)"
+
+
+  s3-blobstore-unit-tests:
+    name: S3 Blobstore Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: repo
+      - name: Run S3 Blobstore Unit Tests
+        run: docker run -v "$PWD/repo:/backup-and-restore-sdk-release" --rm -i "$(docker build -q ./repo/.github/actions/s3-blobstore-unit-tests/)"
