@@ -1,0 +1,20 @@
+services:
+  blobstore-azure-unit-tests:
+    build: { context: .github/actions/run-golang-unit-tests }
+    volumes: [./src/azure-blobstore-backup-restore:/goproject]
+
+  blobstore-gcs-unit-tests:
+    build: { context: .github/actions/run-golang-unit-tests }
+    volumes: [./src/gcs-blobstore-backup-restore:/goproject]
+
+  blobstore-s3-unit-tests:
+    build: { context: .github/actions/run-golang-unit-tests }
+    volumes: [./src/s3-blobstore-backup-restore:/goproject]
+
+  database-unit-tests:
+    build: { context: .github/actions/run-golang-unit-tests }
+    volumes: [./src/database-backup-restore:/goproject]
+
+  sdk-template-unit-tests:
+    build: { context: .github/actions/sdk-template-unit-tests }
+    volumes: [.:/backup-and-restore-sdk-release]
