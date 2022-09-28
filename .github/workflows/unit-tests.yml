@@ -47,7 +47,7 @@ jobs:
         with:
           path: repo
       - name: Run GCS Blobstore Unit Tests
-        run: docker run -v "$PWD/repo:/backup-and-restore-sdk-release" --rm -i "$(docker build -q ./repo/.github/actions/gcs-blobstore-unit-tests/)"
+        run: docker run -v "$PWD/repo/src/gcs-blobstore-backup-restore:/goproject" --rm -i "$(docker build -q ./repo/.github/actions/run-golang-unit-tests/)"
 
   database-unit-tests:
     name: Database
