@@ -5,29 +5,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  sdk-template-unit-tests:
-    name: SDK Template
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          path: repo
-      - name: Run SDK Template Unit Tests
-        run: docker run -v "$PWD/repo:/backup-and-restore-sdk-release" --rm -i "$(docker build -q ./repo/.github/actions/sdk-template-unit-tests/)"
-
-  s3-blobstore-unit-tests:
-    name: S3 Blobstore
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          path: repo
-      - name: Run S3 Blobstore Unit Tests
-        run: docker run -v "$PWD/repo/src/s3-blobstore-backup-restore:/goproject" --rm -i "$(docker build -q ./repo/.github/actions/run-golang-unit-tests/)"
-
-  azure-blobstore-unit-tests:
+  blobstore-azure-unit-tests:
     name: Azure Blobstore
     runs-on: ubuntu-latest
 
@@ -38,7 +16,7 @@ jobs:
       - name: Run Azure Blobstore Unit Tests
         run: docker run -v "$PWD/repo/src/azure-blobstore-backup-restore:/goproject" --rm -i "$(docker build -q ./repo/.github/actions/run-golang-unit-tests/)"
 
-  gcs-blobstore-unit-tests:
+  blobstore-gcs-unit-tests:
     name: GCS Blobstore
     runs-on: ubuntu-latest
 
@@ -48,6 +26,17 @@ jobs:
           path: repo
       - name: Run GCS Blobstore Unit Tests
         run: docker run -v "$PWD/repo/src/gcs-blobstore-backup-restore:/goproject" --rm -i "$(docker build -q ./repo/.github/actions/run-golang-unit-tests/)"
+
+  blobstore-s3-unit-tests:
+    name: S3 Blobstore
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: repo
+      - name: Run S3 Blobstore Unit Tests
+        run: docker run -v "$PWD/repo/src/s3-blobstore-backup-restore:/goproject" --rm -i "$(docker build -q ./repo/.github/actions/run-golang-unit-tests/)"
 
   database-unit-tests:
     name: Database
@@ -59,3 +48,14 @@ jobs:
           path: repo
       - name: Run Database Unit Tests
         run: docker run -v "$PWD/repo/src/database-backup-restore:/goproject" --rm -i "$(docker build -q ./repo/.github/actions/run-golang-unit-tests/)"
+
+  sdk-template-unit-tests:
+    name: SDK Template
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: repo
+      - name: Run SDK Template Unit Tests
+        run: docker run -v "$PWD/repo:/backup-and-restore-sdk-release" --rm -i "$(docker build -q ./repo/.github/actions/sdk-template-unit-tests/)"
