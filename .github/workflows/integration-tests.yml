@@ -1,0 +1,28 @@
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      bosh_creds_script:
+        required: true
+
+jobs:
+  list-bosh-releases:
+    name: List BOSH Releases
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Add mask
+        run: |
+          echo "::add-mask::${{ github.event.inputs.bosh_creds_script }}"
+      - uses: actions/checkout@v3
+        with:
+          path: repo
+      - name: List BOSH releases
+        run: |
+          docker run --rm -i \
+                     -e BOSH_CREDS_SCRIPT="${{ github.event.inputs.bosh_creds_script }}" \
+                     -v "$PWD/repo:/backup-and-restore-sdk-release" \
+                     "$(docker build -q ./repo/.github/actions/list-bosh-releases/)"
+
