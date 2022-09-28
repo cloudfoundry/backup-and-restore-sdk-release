@@ -25,7 +25,7 @@ jobs:
         with:
           path: repo
       - name: Run S3 Blobstore Unit Tests
-        run: docker run -v "$PWD/repo:/backup-and-restore-sdk-release" --rm -i "$(docker build -q ./repo/.github/actions/s3-blobstore-unit-tests/)"
+        run: docker run -v "$PWD/repo/src/s3-blobstore-backup-restore:/goproject" --rm -i "$(docker build -q ./repo/.github/actions/run-golang-unit-tests/)"
 
   azure-blobstore-unit-tests:
     name: Azure Blobstore
