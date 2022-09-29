@@ -1,3 +1,5 @@
+version: '3.0'
+
 services:
   blobstore-azure-unit-tests:
     build: { context: .github/actions/run-golang-unit-tests }
