@@ -14,7 +14,7 @@ jobs:
         with:
           path: repo
       - name: Run Azure Blobstore Unit Tests
-        run: docker compose -f repo/docker-compose.yml run database-unit-tests
+        run: docker compose -f repo/docker-compose.yml run unit-database
 
   blobstore-gcs-unit-tests:
     name: GCS Blobstore
@@ -25,7 +25,7 @@ jobs:
         with:
           path: repo
       - name: Run GCS Blobstore Unit Tests
-        run: docker compose -f repo/docker-compose.yml run blobstore-gcs-unit-tests
+        run: docker compose -f repo/docker-compose.yml run unit-blobstore-gcs
 
   blobstore-s3-unit-tests:
     name: S3 Blobstore
@@ -36,7 +36,7 @@ jobs:
         with:
           path: repo
       - name: Run S3 Blobstore Unit Tests
-        run: docker compose -f repo/docker-compose.yml run blobstore-s3-unit-tests
+        run: docker compose -f repo/docker-compose.yml run unit-blobstore-s3
 
   database-unit-tests:
     name: Database
@@ -47,7 +47,7 @@ jobs:
         with:
           path: repo
       - name: Run Database Unit Tests
-        run: docker compose -f repo/docker-compose.yml run database-unit-tests
+        run: docker compose -f repo/docker-compose.yml run unit-database
 
   sdk-template-unit-tests:
     name: SDK Template
@@ -58,4 +58,4 @@ jobs:
         with:
           path: repo
       - name: Run SDK Template Unit Tests
-        run: docker compose -f repo/docker-compose.yml run sdk-template-unit-tests
+        run: docker compose -f repo/docker-compose.yml run unit-sdk-template

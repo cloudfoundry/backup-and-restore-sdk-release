@@ -1,22 +1,22 @@
 version: '3.0'
 
 services:
-  blobstore-azure-unit-tests:
+  unit-blobstore-azure:
     build: { context: .github/actions/run-golang-unit-tests }
     volumes: [./src/azure-blobstore-backup-restore:/goproject]
 
-  blobstore-gcs-unit-tests:
+  unit-blobstore-gcs:
     build: { context: .github/actions/run-golang-unit-tests }
     volumes: [./src/gcs-blobstore-backup-restore:/goproject]
 
-  blobstore-s3-unit-tests:
+  unit-blobstore-s3:
     build: { context: .github/actions/run-golang-unit-tests }
     volumes: [./src/s3-blobstore-backup-restore:/goproject]
 
-  database-unit-tests:
+  unit-database:
     build: { context: .github/actions/run-golang-unit-tests }
     volumes: [./src/database-backup-restore:/goproject]
 
-  sdk-template-unit-tests:
+  unit-sdk-template:
     build: { context: .github/actions/sdk-template-unit-tests }
     volumes: [.:/backup-and-restore-sdk-release]
