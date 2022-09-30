@@ -20,3 +20,21 @@ services:
   unit-sdk-template:
     build: { context: .github/actions/sdk-template-unit-tests }
     volumes: [.:/backup-and-restore-sdk-release]
+
+  system-mysql:
+    build:
+      context: .github/actions/run-golang-system-tests
+    volumes: [./src/database-backup-restore:/goproject]
+    depends_on: [mysql]
+    environment:
+    - MYSQL_HOSTNAME=mysql
+    - MYSQL_PORT=3306
+    - MYSQL_USERNAME=${MYSQL_USERNAME}
+    - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    - TEST_TLS_VERIFY_IDENTITY=false
+    - TEST_TLS_MUTUAL_TLS=false
+
+  mysql:
+    image: mysql:8.0
+    environment:
+    - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}

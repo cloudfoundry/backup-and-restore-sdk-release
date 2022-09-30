@@ -38,11 +38,11 @@ func TestMysql(t *testing.T) {
 
 var _ = Describe("mysql", func() {
 	BeforeSuite(func() {
-		brJob = JobInstance{
-			Deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
-			Instance:      MustHaveEnv("SDK_INSTANCE_GROUP"),
-			InstanceIndex: "0",
-		}
+		//brJob = JobInstance{
+		//	Deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
+		//	Instance:      MustHaveEnv("SDK_INSTANCE_GROUP"),
+		//	InstanceIndex: "0",
+		//}
 
 		mysqlHostName = MustHaveEnv("MYSQL_HOSTNAME")
 		mysqlNonSslUsername = MustHaveEnv("MYSQL_USERNAME")
