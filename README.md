@@ -48,14 +48,23 @@ This repository using develop as the main branch, tested releases are tagged wit
 ## Testing
 
 ### Unit tests
-
-You can run all unit tests by running
+The unit tests make use of ruby, go, and ginkgo. The easiest way to
+run them is to use our docker files, which provide versions of these
+dependencies that we've already tested. You can do this with:
 
 ```
 make unit
 ```
 
-Individual targets exist for individual unit tests, like `make unit-s3`. Check
+If you want to run the tests using your local development tools,
+without using docker, you can run:
+
+```
+make local-unit
+```
+
+Individual targets exist for individual unit tests, like `make
+docker-unit-blobstore-gcs` and `make local-unit-blobstore-gcs`. Check
 the Makefile for all available targets
 
 ### Contract tests
