@@ -190,6 +190,7 @@ resources:
     base_branch: main
     disable_forks: true
     access_token: ((github.access_token))
+    autosync_pr: true
 
 - name: version
   type: semver
