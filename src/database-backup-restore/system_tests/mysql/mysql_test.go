@@ -56,7 +56,7 @@ var _ = Describe("mysql", func() {
 					databaseName,
 				)
 				// brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
-				exec.Command(fmt.Sprintf("echo '%s' > %s", configJson, configPath)).CombinedOutput()
+				exec.Command("bash", "-c", fmt.Sprintf("echo '%s' > %s", configJson, configPath)).CombinedOutput()
 				// brJob.RunOnVMAndSucceed(
 				//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 				//		dbDumpPath, configPath))
@@ -116,7 +116,7 @@ var _ = Describe("mysql", func() {
 					databaseName,
 				)
 				// brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
-				exec.Command(fmt.Sprintf("echo '%s' > %s", configJson, configPath)).CombinedOutput()
+				exec.Command("bash", "-c", fmt.Sprintf("echo '%s' > %s", configJson, configPath)).CombinedOutput()
 			})
 
 			It("backs up and restores only the specified tables", func() {
@@ -164,18 +164,22 @@ var _ = Describe("mysql", func() {
 					databaseName,
 				)
 				//brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
-				exec.Command(fmt.Sprintf("echo '%s' > %s", configJson, configPath)).CombinedOutput()
+				exec.Command("bash", "-c", fmt.Sprintf("echo '%s' > %s", configJson, configPath)).CombinedOutput()
 			})
 
 			It("raises an error about the non-existent tables", func() {
-				session := brJob.RunOnInstance(fmt.Sprintf(
-					"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+				//session := brJob.RunOnInstance(fmt.Sprintf(
+				//	"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+				//	dbDumpPath,
+				//	configPath))
+				msg, err := exec.Command(fmt.Sprintf(
+					"/backup --artifact-file %s --config %s",
 					dbDumpPath,
-					configPath))
+					configPath)).CombinedOutput()
 
-				Expect(session.ExitCode()).NotTo(BeZero())
-				Expect(session).To(gbytes.Say("mysqldump: Couldn't find table: \"not there\""))
-				Expect(session).To(gbytes.Say(
+				Expect(err).To(HaveOccurred())
+				Expect(msg).To(gbytes.Say("mysqldump: Couldn't find table: \"not there\""))
+				Expect(msg).To(gbytes.Say(
 					"You may need to delete the artifact-file that was created before re-running"))
 			})
 		})
@@ -191,18 +195,22 @@ var _ = Describe("mysql", func() {
 					databaseName,
 				)
 				// brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
-				exec.Command(fmt.Sprintf("echo '%s' > %s", configJson, configPath)).CombinedOutput()
+				exec.Command("bash", "-c", fmt.Sprintf("echo '%s' > %s", configJson, configPath)).CombinedOutput()
 			})
 
 			It("raises an error about the non-existent tables", func() {
-				session := brJob.RunOnInstance(fmt.Sprintf(
-					"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+				//session := brJob.RunOnInstance(fmt.Sprintf(
+				//	"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+				//	dbDumpPath,
+				//	configPath))
+				msg, err := exec.Command(fmt.Sprintf(
+					"/backup --artifact-file %s --config %s",
 					dbDumpPath,
-					configPath))
+					configPath)).CombinedOutput()
 
-				Expect(session.ExitCode()).NotTo(BeZero())
-				Expect(session).To(gbytes.Say("mysqldump: Couldn't find table: \"lizards\""))
-				Expect(session).To(gbytes.Say(
+				Expect(err).To(HaveOccurred())
+				Expect(msg).To(gbytes.Say("mysqldump: Couldn't find table: \"lizards\""))
+				Expect(msg).To(gbytes.Say(
 					"You may need to delete the artifact-file that was created before re-running"))
 			})
 		})
