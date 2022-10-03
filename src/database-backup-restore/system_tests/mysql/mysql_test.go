@@ -7,7 +7,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 
 	. "database-backup-restore/system_tests/utils"
 )
@@ -60,7 +59,7 @@ var _ = Describe("mysql", func() {
 				// brJob.RunOnVMAndSucceed(
 				//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 				//		dbDumpPath, configPath))
-				exec.Command(
+				exec.Command("bash", "-c",
 					fmt.Sprintf("/backup --artifact-file %s --config %s",
 						dbDumpPath, configPath)).CombinedOutput()
 
@@ -73,7 +72,7 @@ var _ = Describe("mysql", func() {
 				// brJob.RunOnVMAndSucceed(
 				//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 				//		dbDumpPath, configPath))
-				exec.Command(
+				exec.Command("bash", "-c",
 					fmt.Sprintf("/restore --artifact-file %s --config %s",
 						dbDumpPath, configPath)).CombinedOutput()
 
@@ -94,7 +93,7 @@ var _ = Describe("mysql", func() {
 					// brJob.RunOnVMAndSucceed(
 					//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
 					//		configPath, dbDumpPath))
-					exec.Command(
+					exec.Command("bash", "-c",
 						fmt.Sprintf("/restore --config %s --artifact-file %s",
 							configPath, dbDumpPath)).CombinedOutput()
 
@@ -123,7 +122,7 @@ var _ = Describe("mysql", func() {
 				//brJob.RunOnVMAndSucceed(
 				//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 				//		dbDumpPath, configPath))
-				exec.Command(
+				exec.Command("bash", "-c",
 					fmt.Sprintf("/backup --artifact-file %s --config %s",
 						dbDumpPath, configPath)).CombinedOutput()
 
@@ -136,11 +135,11 @@ var _ = Describe("mysql", func() {
 				// restoreSession := brJob.RunOnVMAndSucceed(
 				//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 				//		dbDumpPath, configPath))
-				restoreSession, _ := exec.Command(
+				restoreSession, _ := exec.Command("bash", "-c",
 					fmt.Sprintf("/restore --artifact-file %s --config %s",
 						dbDumpPath, configPath)).CombinedOutput()
 
-				Expect(restoreSession).To(gbytes.Say("CREATE TABLE `people`"))
+				Expect(restoreSession).To(ContainSubstring("CREATE TABLE `people`"))
 
 				Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(
 					ConsistOf("Old Person"))
@@ -172,14 +171,14 @@ var _ = Describe("mysql", func() {
 				//	"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 				//	dbDumpPath,
 				//	configPath))
-				msg, err := exec.Command(fmt.Sprintf(
+				msg, err := exec.Command("bash", "-c", fmt.Sprintf(
 					"/backup --artifact-file %s --config %s",
 					dbDumpPath,
 					configPath)).CombinedOutput()
 
 				Expect(err).To(HaveOccurred())
-				Expect(msg).To(gbytes.Say("mysqldump: Couldn't find table: \"not there\""))
-				Expect(msg).To(gbytes.Say(
+				Expect(msg).To(ContainSubstring("mysqldump: Couldn't find table: \"not there\""))
+				Expect(msg).To(ContainSubstring(
 					"You may need to delete the artifact-file that was created before re-running"))
 			})
 		})
@@ -203,14 +202,14 @@ var _ = Describe("mysql", func() {
 				//	"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 				//	dbDumpPath,
 				//	configPath))
-				msg, err := exec.Command(fmt.Sprintf(
+				msg, err := exec.Command("bash", "-c", fmt.Sprintf(
 					"/backup --artifact-file %s --config %s",
 					dbDumpPath,
 					configPath)).CombinedOutput()
 
 				Expect(err).To(HaveOccurred())
-				Expect(msg).To(gbytes.Say("mysqldump: Couldn't find table: \"lizards\""))
-				Expect(msg).To(gbytes.Say(
+				Expect(msg).To(ContainSubstring("mysqldump: Couldn't find table: \"lizards\""))
+				Expect(msg).To(ContainSubstring(
 					"You may need to delete the artifact-file that was created before re-running"))
 			})
 		})

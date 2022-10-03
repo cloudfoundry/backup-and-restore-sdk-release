@@ -87,7 +87,7 @@ var _ = Describe("mysql with tls", func() {
 				//brJob.RunOnVMAndSucceed(
 				//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 				//		dbDumpPath, configPath))
-				exec.Command(
+				exec.Command("bash", "-c",
 					fmt.Sprintf("/backup --artifact-file %s --config %s",
 						dbDumpPath, configPath)).CombinedOutput()
 
@@ -96,7 +96,7 @@ var _ = Describe("mysql with tls", func() {
 				//brJob.RunOnVMAndSucceed(
 				//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 				//		dbDumpPath, configPath))
-				exec.Command(
+				exec.Command("bash", "-c",
 					fmt.Sprintf("/restore --artifact-file %s --config %s",
 						dbDumpPath, configPath)).CombinedOutput()
 
@@ -139,7 +139,7 @@ var _ = Describe("mysql with tls", func() {
 						//brJob.RunOnVMAndSucceed(
 						//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 						//		dbDumpPath, configPath))
-						exec.Command(
+						exec.Command("bash", "-c",
 							fmt.Sprintf("/backup --artifact-file %s --config %s",
 								dbDumpPath, configPath)).CombinedOutput()
 
@@ -148,7 +148,7 @@ var _ = Describe("mysql with tls", func() {
 						//brJob.RunOnVMAndSucceed(
 						//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 						//		dbDumpPath, configPath))
-						exec.Command(
+						exec.Command("bash", "-c",
 							fmt.Sprintf("/restore --artifact-file %s --config %s",
 								dbDumpPath, configPath)).CombinedOutput()
 
@@ -185,7 +185,7 @@ var _ = Describe("mysql with tls", func() {
 						//Expect(brJob.RunOnInstance(
 						//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 						//		dbDumpPath, configPath))).To(gexec.Exit(1))
-						Expect(exec.Command(
+						Expect(exec.Command("bash", "-c",
 							fmt.Sprintf("/backup --artifact-file %s --config %s",
 								dbDumpPath, configPath)).Run()).To(gexec.Exit(1))
 
@@ -223,7 +223,7 @@ var _ = Describe("mysql with tls", func() {
 						//brJob.RunOnVMAndSucceed(
 						//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 						//		dbDumpPath, configPath))
-						exec.Command(
+						exec.Command("bash", "-c",
 							fmt.Sprintf("/backup --artifact-file %s --config %s",
 								dbDumpPath, configPath)).CombinedOutput()
 
@@ -232,7 +232,7 @@ var _ = Describe("mysql with tls", func() {
 						//brJob.RunOnVMAndSucceed(
 						//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 						//		dbDumpPath, configPath))
-						exec.Command(
+						exec.Command("bash", "-c",
 							fmt.Sprintf("/restore --artifact-file %s --config %s",
 								dbDumpPath, configPath)).CombinedOutput()
 
@@ -267,8 +267,7 @@ var _ = Describe("mysql with tls", func() {
 					It("does not work", func() {
 						//Expect(brJob.RunOnInstance("/var/vcap/jobs/database-backup-restorer/bin/backup",
 						//	"--artifact-file", dbDumpPath, "--config", configPath)).To(gexec.Exit(1))
-						Expect(exec.Command("/backup",
-							"--artifact-file", dbDumpPath, "--config", configPath).Run()).To(gexec.Exit(1))
+						Expect(exec.Command("bash", "-c", fmt.Sprintf("/backup --artifact-file %s --config %s", dbDumpPath, configPath)).Run()).To(gexec.Exit(1))
 					})
 				})
 			})
@@ -309,8 +308,7 @@ var _ = Describe("mysql with tls", func() {
 			It("does not work", func() {
 				//Expect(brJob.RunOnInstance("/var/vcap/jobs/database-backup-restorer/bin/backup",
 				//	"--artifact-file", dbDumpPath, "--config", configPath)).To(gexec.Exit(1))
-				Expect(exec.Command("/backup",
-					"--artifact-file", dbDumpPath, "--config", configPath)).To(gexec.Exit(1))
+				Expect( exec.Command("bash", "-c", fmt.Sprintf("/backup --artifact-file %s --config %s", dbDumpPath, configPath))).To(gexec.Exit(1))
 			})
 		})
 
@@ -353,7 +351,7 @@ var _ = Describe("mysql with tls", func() {
 						//brJob.RunOnVMAndSucceed(
 						//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 						//		dbDumpPath, configPath))
-						exec.Command(
+						exec.Command("bash", "-c",
 							fmt.Sprintf("/backup --artifact-file %s --config %s",
 								dbDumpPath, configPath)).CombinedOutput()
 
@@ -362,7 +360,7 @@ var _ = Describe("mysql with tls", func() {
 						//brJob.RunOnVMAndSucceed(
 						//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 						//		dbDumpPath, configPath))
-						exec.Command(
+						exec.Command("bash", "-c",
 							fmt.Sprintf("/restore --artifact-file %s --config %s",
 								dbDumpPath, configPath)).CombinedOutput()
 
@@ -406,7 +404,7 @@ var _ = Describe("mysql with tls", func() {
 						//brJob.RunOnVMAndSucceed(
 						//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 						//		dbDumpPath, configPath))
-						exec.Command(
+						exec.Command("bash", "-c",
 							fmt.Sprintf("/backup --artifact-file %s --config %s",
 								dbDumpPath, configPath)).CombinedOutput()
 
@@ -415,7 +413,7 @@ var _ = Describe("mysql with tls", func() {
 						//brJob.RunOnVMAndSucceed(
 						//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 						//		dbDumpPath, configPath))
-						exec.Command(
+						exec.Command("bash", "-c",
 							fmt.Sprintf("/restore --artifact-file %s --config %s",
 								dbDumpPath, configPath)).CombinedOutput()
 
@@ -454,8 +452,7 @@ var _ = Describe("mysql with tls", func() {
 					It("does not work", func() {
 						//Expect(brJob.RunOnInstance("/var/vcap/jobs/database-backup-restorer/bin/backup",
 						//	"--artifact-file", dbDumpPath, "--config", configPath)).To(gexec.Exit(1))
-						Expect(exec.Command("/backup",
-							"--artifact-file", dbDumpPath, "--config", configPath).Run()).To(gexec.Exit(1))
+						Expect(exec.Command("bash", "-c", fmt.Sprintf("/backup --artifact-file %s --config %s", dbDumpPath, configPath)).Run()).To(gexec.Exit(1))
 					})
 				})
 
@@ -488,8 +485,7 @@ var _ = Describe("mysql with tls", func() {
 					It("does not work", func() {
 						//Expect(brJob.RunOnInstance("/var/vcap/jobs/database-backup-restorer/bin/backup",
 						//	"--artifact-file", dbDumpPath, "--config", configPath)).To(gexec.Exit(1))
-						Expect(exec.Command("/backup",
-							"--artifact-file", dbDumpPath, "--config", configPath).Run()).To(gexec.Exit(1))
+						Expect(exec.Command("bash", "-c", fmt.Sprintf("/backup --artifact-file %s --config %s", dbDumpPath, configPath)).Run()).To(gexec.Exit(1))
 					})
 				})
 			})
@@ -531,7 +527,7 @@ var _ = Describe("mysql with tls", func() {
 					//brJob.RunOnVMAndSucceed(
 					//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 					//		dbDumpPath, configPath))
-					exec.Command(
+					exec.Command("bash", "-c",
 						fmt.Sprintf("/backup --artifact-file %s --config %s",
 							dbDumpPath, configPath)).CombinedOutput()
 
@@ -540,7 +536,7 @@ var _ = Describe("mysql with tls", func() {
 					//brJob.RunOnVMAndSucceed(
 					//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 					//		dbDumpPath, configPath))
-					exec.Command(
+					exec.Command("bash", "-c",
 						fmt.Sprintf("/restore --artifact-file %s --config %s",
 							dbDumpPath, configPath)).CombinedOutput()
 
@@ -580,7 +576,7 @@ var _ = Describe("mysql with tls", func() {
 					//brJob.RunOnVMAndSucceed(
 					//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 					//		dbDumpPath, configPath))
-					exec.Command(
+					exec.Command("bash", "-c",
 						fmt.Sprintf("/backup --artifact-file %s --config %s",
 							dbDumpPath, configPath)).CombinedOutput()
 
@@ -589,7 +585,7 @@ var _ = Describe("mysql with tls", func() {
 					//brJob.RunOnVMAndSucceed(
 					//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 					//		dbDumpPath, configPath))
-					exec.Command(
+					exec.Command("bash", "-c",
 						fmt.Sprintf("/restore --artifact-file %s --config %s",
 							dbDumpPath, configPath)).CombinedOutput()
 
@@ -624,8 +620,7 @@ var _ = Describe("mysql with tls", func() {
 				It("does not work", func() {
 					//Expect(brJob.RunOnInstance("/var/vcap/jobs/database-backup-restorer/bin/backup",
 					//	"--artifact-file", dbDumpPath, "--config", configPath)).To(gexec.Exit(1))
-					Expect(exec.Command("/backup",
-						"--artifact-file", dbDumpPath, "--config", configPath).Run()).To(gexec.Exit(1))
+					Expect(exec.Command("bash", "-c", fmt.Sprintf("/backup --artifact-file %s --config %s", dbDumpPath, configPath)).Run()).To(gexec.Exit(1))
 				})
 			})
 		})
