@@ -27,9 +27,9 @@ services:
     volumes: [./src/database-backup-restore:/goproject]
     depends_on: [mysql]
     environment:
+    - MYSQL_USERNAME=root
     - MYSQL_HOSTNAME=mysql
     - MYSQL_PORT=3306
-    - MYSQL_USERNAME=${MYSQL_USERNAME}
     - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     - TEST_TLS_VERIFY_IDENTITY=false
     - TEST_TLS_MUTUAL_TLS=false

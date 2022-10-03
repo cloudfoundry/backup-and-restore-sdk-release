@@ -1,0 +1,17 @@
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  mysql-system-tests:
+    name: System Tests for MySQL
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: repo
+      - name: Run System Tests for MySQL
+        run: MYSQL_PASSWORD="$(head /dev/urandom | md5sum | cut -f1 -d" ")" docker compose -f repo/docker-compose.yml run system-mysql
+
