@@ -1,4 +1,5 @@
-FROM mysql:8.0 as db
+ARG MYSQL_VERSION
+FROM mysql:$MYSQL_VERSION as db
 
 FROM golang:1.19.1
 

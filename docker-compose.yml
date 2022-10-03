@@ -24,6 +24,8 @@ services:
   system-mysql:
     build:
       context: .github/actions/run-golang-system-tests
+      args:
+      - MYSQL_VERSION=${MYSQL_VERSION}
     volumes:
     - ./src/database-backup-restore:/goproject
     - mysql-certs:/mysql-certs
@@ -43,6 +45,8 @@ services:
   mysql:
     build:
       context: .github/actions/run-golang-system-tests/mysql
+      args:
+      - MYSQL_VERSION=${MYSQL_VERSION}
     volumes:
     - mysql-certs:/mysql-certs
     environment:

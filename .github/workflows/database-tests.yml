@@ -7,11 +7,17 @@ jobs:
   mysql-system-tests:
     name: System Tests for MySQL
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mysql-version: [8.0-debian, 8.0-oracle, 5.7-debian, 5.7-oracle, 5.6]
 
     steps:
       - uses: actions/checkout@v3
         with:
           path: repo
       - name: Run System Tests for MySQL
-        run: MYSQL_PASSWORD="$(head /dev/urandom | md5sum | cut -f1 -d" ")" docker compose -f repo/docker-compose.yml run system-mysql
+        run: |
+             MYSQL_VERSION="${{ matrix.mysql-version }}" \
+             MYSQL_PASSWORD="$(head /dev/urandom | md5sum | cut -f1 -d" ")" \
+             docker compose -f repo/docker-compose.yml run system-mysql
 
