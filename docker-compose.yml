@@ -24,17 +24,32 @@ services:
   system-mysql:
     build:
       context: .github/actions/run-golang-system-tests
-    volumes: [./src/database-backup-restore:/goproject]
+    volumes:
+    - ./src/database-backup-restore:/goproject
+    - mysql-certs:/mysql-certs
     depends_on: [mysql]
     environment:
+    - MYSQL_CA_CERT_PATH=/mysql-certs/ca.pem
+    - MYSQL_CLIENT_CERT_PATH=/mysql-certs/server-cert.pem
+    - MYSQL_CLIENT_KEY_PATH=/mysql-certs/server-key.pem
     - MYSQL_USERNAME=root
     - MYSQL_HOSTNAME=mysql
     - MYSQL_PORT=3306
     - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    - TEST_TLS=true
     - TEST_TLS_VERIFY_IDENTITY=false
-    - TEST_TLS_MUTUAL_TLS=false
+    - TEST_SSL_USER_REQUIRES_SSL=true
 
   mysql:
-    image: mysql:8.0
+    build:
+      context: .github/actions/run-golang-system-tests/mysql
+    volumes:
+    - mysql-certs:/mysql-certs
     environment:
     - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
+
+volumes:
+# See https://docs.docker.com/compose/compose-file/#volumes - Specially:
+### To reuse a volume across multiple services,
+### a named volume MUST be declared in the top-level volumes key.
+  mysql-certs:

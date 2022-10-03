@@ -308,7 +308,8 @@ var _ = Describe("mysql with tls", func() {
 			It("does not work", func() {
 				//Expect(brJob.RunOnInstance("/var/vcap/jobs/database-backup-restorer/bin/backup",
 				//	"--artifact-file", dbDumpPath, "--config", configPath)).To(gexec.Exit(1))
-				Expect( exec.Command("bash", "-c", fmt.Sprintf("/backup --artifact-file %s --config %s", dbDumpPath, configPath))).To(gexec.Exit(1))
+				err := exec.Command("bash", "-c", fmt.Sprintf("/backup --artifact-file %s --config %s", dbDumpPath, configPath)).Run()
+				Expect(err).To(HaveOccurred())
 			})
 		})
 
