@@ -2,10 +2,9 @@
 
 set -euo pipefail
 
-pushd "/goproject"
+pushd "/backup-and-restore-sdk-release/src/database-backup-restore"
 go build ./cmd/database-backup-restore
 mv database-backup-restore /database-backup-restore
-popd
 
 for i in {1..5}; do
 /mysql -u ${MYSQL_USERNAME} -p${MYSQL_PASSWORD} -h ${MYSQL_HOSTNAME} -P ${MYSQL_PORT} -e 'SELECT "successfully connected to mysql"' && break || sleep 15
@@ -23,4 +22,5 @@ if [ ! -z "$MYSQL_CLIENT_KEY_PATH" ]; then
 export MYSQL_CLIENT_KEY="$( cat "${MYSQL_CLIENT_KEY_PATH}" )"
 fi
 
-/goproject/scripts/run-system-tests.bash
+./scripts/run-system-tests.bash
+popd

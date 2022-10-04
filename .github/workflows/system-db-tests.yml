@@ -4,8 +4,8 @@ on:
       - main
 
 jobs:
-  mysql-system-tests:
-    name: System Tests for MySQL
+  system-db-mysql:
+    name: System DB Tests for MySQL
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -19,5 +19,5 @@ jobs:
         run: |
              MYSQL_VERSION="${{ matrix.mysql-version }}" \
              MYSQL_PASSWORD="$(head /dev/urandom | md5sum | cut -f1 -d" ")" \
-             docker-compose -f repo/docker-compose.yml run system-mysql
+             docker-compose -f repo/docker-compose.yml run system-db-mysql
 
