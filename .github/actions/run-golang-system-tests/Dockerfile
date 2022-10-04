@@ -16,6 +16,7 @@ ENV MYSQL_USERNAME= \
 
 VOLUME /goproject
 VOLUME /mysql-certs
+RUN mkdir -p /mysql-certs && chmod -R 777 /mysql-certs
 
 RUN go install github.com/onsi/ginkgo/ginkgo@latest
 
