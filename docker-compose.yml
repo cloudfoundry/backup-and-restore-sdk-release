@@ -26,8 +26,10 @@ services:
     volumes: [./:/backup-and-restore-sdk-release]
 
   system-db-mysql:
+    entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-mysql.bash
     build:
-      context: .github/actions/run-system-db-tests
+      context: .github/actions/run-system-db-tests/mysql
+      dockerfile: TestsRunner.Dockerfile
       args:
       - MYSQL_VERSION=${MYSQL_VERSION}
     volumes:
@@ -42,13 +44,11 @@ services:
     - MYSQL_HOSTNAME=system-db-mysql-backing-db
     - MYSQL_PORT=3306
     - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-    - TEST_TLS=true
-    - TEST_TLS_VERIFY_IDENTITY=false
-    - TEST_SSL_USER_REQUIRES_SSL=true
 
   system-db-mysql-backing-db:
     build:
       context: .github/actions/run-system-db-tests/mysql
+      dockerfile: BackingDB.Dockerfile
       args:
       - MYSQL_VERSION=${MYSQL_VERSION}
     volumes:

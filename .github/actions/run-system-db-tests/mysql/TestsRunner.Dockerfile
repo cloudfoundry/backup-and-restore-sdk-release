@@ -7,23 +7,19 @@ ENV MYSQL_USERNAME= \
     MYSQL_PASSWORD= \
     MYSQL_HOSTNAME= \
     MYSQL_PORT= \
-    TEST_TLS= \
-    TEST_TLS_VERIFY_IDENTITY= \
-    TEST_TLS_MUTUAL_TLS= \
     MYSQL_CA_CERT_PATH= \
     MYSQL_CLIENT_CERT_PATH= \
     MYSQL_CLIENT_KEY_PATH=
 
-VOLUME /goproject
+
+VOLUME /backup-and-restore-sdk-release
 
 RUN mkdir -p /mysql-certs && chmod -R 777 /mysql-certs
 VOLUME /mysql-certs
 
 RUN go install github.com/onsi/ginkgo/ginkgo@latest
 
-COPY --from=db /usr/bin/mysql /
-COPY --from=db /usr/bin/mysqldump /
-COPY task.bash /
+COPY --from=db /usr/bin/mysql /usr/local/bin/
+COPY --from=db /usr/bin/mysqldump /usr/local/bin/
 COPY backup /
 COPY restore /
-ENTRYPOINT /task.bash
