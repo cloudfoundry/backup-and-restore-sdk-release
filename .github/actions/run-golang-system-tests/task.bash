@@ -8,7 +8,7 @@ mv database-backup-restore /database-backup-restore
 popd
 
 for i in {1..5}; do
-/mysql -u ${MYSQL_USERNAME} -p${MYSQL_PASSWORD} -h ${MYSQL_HOSTNAME} -P ${MYSQL_PORT} -e "SELECT 999" && break || sleep 15
+/mysql -u ${MYSQL_USERNAME} -p${MYSQL_PASSWORD} -h ${MYSQL_HOSTNAME} -P ${MYSQL_PORT} -e 'SELECT "successfully connected to mysql"' && break || sleep 15
 done
 
 if [ ! -z "$MYSQL_CA_CERT_PATH" ]; then

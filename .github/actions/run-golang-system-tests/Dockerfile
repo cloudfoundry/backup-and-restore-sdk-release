@@ -7,9 +7,15 @@ ENV MYSQL_USERNAME= \
     MYSQL_PASSWORD= \
     MYSQL_HOSTNAME= \
     MYSQL_PORT= \
+    TEST_TLS= \
     TEST_TLS_VERIFY_IDENTITY= \
-    TEST_TLS_MUTUAL_TLS=
+    TEST_TLS_MUTUAL_TLS= \
+    MYSQL_CA_CERT_PATH= \
+    MYSQL_CLIENT_CERT_PATH= \
+    MYSQL_CLIENT_KEY_PATH=
+
 VOLUME /goproject
+VOLUME /mysql-certs
 
 RUN go install github.com/onsi/ginkgo/ginkgo@latest
 

@@ -29,20 +29,20 @@ services:
     volumes:
     - ./src/database-backup-restore:/goproject
     - mysql-certs:/mysql-certs
-    depends_on: [mysql]
+    depends_on: [system-mysql-backing-db]
     environment:
     - MYSQL_CA_CERT_PATH=/mysql-certs/ca.pem
     - MYSQL_CLIENT_CERT_PATH=/mysql-certs/server-cert.pem
     - MYSQL_CLIENT_KEY_PATH=/mysql-certs/server-key.pem
     - MYSQL_USERNAME=root
-    - MYSQL_HOSTNAME=mysql
+    - MYSQL_HOSTNAME=system-mysql-backing-db
     - MYSQL_PORT=3306
     - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     - TEST_TLS=true
     - TEST_TLS_VERIFY_IDENTITY=false
     - TEST_SSL_USER_REQUIRES_SSL=true
 
-  mysql:
+  system-mysql-backing-db:
     build:
       context: .github/actions/run-golang-system-tests/mysql
       args:
