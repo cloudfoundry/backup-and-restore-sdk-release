@@ -3,23 +3,27 @@ version: '3.0'
 services:
   unit-blobstore-azure:
     build: { context: .github/actions/run-golang-unit-tests }
-    volumes: [./src/azure-blobstore-backup-restore:/goproject]
+    volumes: [./:/backup-and-restore-sdk-release]
+    entrypoint: /backup-and-restore-sdk-release/src/azure-blobstore-backup-restore/scripts/run-unit-tests.bash
 
   unit-blobstore-gcs:
     build: { context: .github/actions/run-golang-unit-tests }
-    volumes: [./src/gcs-blobstore-backup-restore:/goproject]
+    volumes: [./:/backup-and-restore-sdk-release]
+    entrypoint: /backup-and-restore-sdk-release/src/gcs-blobstore-backup-restore/scripts/run-unit-tests.bash
 
   unit-blobstore-s3:
     build: { context: .github/actions/run-golang-unit-tests }
-    volumes: [./src/s3-blobstore-backup-restore:/goproject]
+    volumes: [./:/backup-and-restore-sdk-release]
+    entrypoint: /backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/scripts/run-unit-tests.bash
 
   unit-database:
     build: { context: .github/actions/run-golang-unit-tests }
-    volumes: [./src/database-backup-restore:/goproject]
+    volumes: [./:/backup-and-restore-sdk-release]
+    entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-unit-tests.bash
 
   unit-sdk-template:
     build: { context: .github/actions/sdk-template-unit-tests }
-    volumes: [.:/backup-and-restore-sdk-release]
+    volumes: [./:/backup-and-restore-sdk-release]
 
   system-db-mysql:
     build:
