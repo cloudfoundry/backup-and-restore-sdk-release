@@ -19,5 +19,5 @@ jobs:
         run: |
              MYSQL_VERSION="${{ matrix.mysql-version }}" \
              MYSQL_PASSWORD="$(head /dev/urandom | md5sum | cut -f1 -d" ")" \
-             docker-compose -f repo/docker-compose.yml run system-mysql || (docker-compose -f repo/docker-compose.yml logs system-mysql-backing-db && exit 1)
+             docker-compose -f repo/docker-compose.yml run system-mysql
 
