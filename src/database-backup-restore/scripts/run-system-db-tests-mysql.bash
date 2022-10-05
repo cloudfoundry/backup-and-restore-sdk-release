@@ -13,17 +13,19 @@ pushd "$SRC_DIR"
   go build ./cmd/database-backup-restore
   mv database-backup-restore /usr/local/bin/database-backup-restore
 
-  export MYSQL_CA_CERT="$( cat "${MYSQL_CERTS_PATH}/ca.pem" )"
-  export MYSQL_CLIENT_CERT="$( cat "${MYSQL_CERTS_PATH/server-cert.pem}" )"
-  export MYSQL_CLIENT_KEY="$( cat "${MYSQL_CERTS_PATH}/server-key.pem" )"
+  export MYSQL_CA_CERT_PATH="${MYSQL_CERTS_PATH}/ca.pem"
+  export MYSQL_CLIENT_CERT_PATH="${MYSQL_CERTS_PATH}/server-cert.pem"
+  export MYSQL_CLIENT_KEY_PATH="${MYSQL_CERTS_PATH}/server-key.pem"
+
+  export MYSQL_CA_CERT="$( cat "${MYSQL_CA_CERT_PATH}" )"
+  export MYSQL_CLIENT_CERT="$( cat "${MYSQL_CLIENT_CERT_PATH}" )"
+  export MYSQL_CLIENT_KEY="$( cat "${MYSQL_CLIENT_KEY_PATH}" )"
 
   export TEST_TLS=true
   export TEST_TLS_VERIFY_IDENTITY=false
   export TEST_SSL_USER_REQUIRES_SSL=true
 
 
-  # For some reason tests fail if we don't pass
-  # MYSQL_DUMP and MYSQL_CLIENT for both 5_7 and 8_0
   source scripts/system-db-tests-vars.bash
 
   export MYSQL_DUMP_5_7_PATH="$(which mysqldump)"
@@ -31,10 +33,6 @@ pushd "$SRC_DIR"
 
   export MYSQL_DUMP_8_0_PATH="$(which mysqldump)"
   export MYSQL_CLIENT_8_0_PATH="$(which mysql)"
-
-  # But curiously, we don't need to pass 5_6 at all
-  #export MYSQL_DUMP_5_6_PATH="$(which mysqldump)"
-  #export MYSQL_CLIENT_5_6_PATH="$(which mysql)"
 
   ginkgo -mod vendor -r -v "system_tests/mysql" -trace
 popd
