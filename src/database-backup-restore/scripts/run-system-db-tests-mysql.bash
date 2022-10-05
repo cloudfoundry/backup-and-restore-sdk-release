@@ -28,8 +28,7 @@ pushd "$SRC_DIR"
 
   source scripts/system-db-tests-vars.bash
 
-  export MYSQL_DUMP_5_7_PATH="$(which mysqldump)"
-  export MYSQL_CLIENT_5_7_PATH="$(which mysql)"
+  export MYSQL_CLIENT_5_7_PATH="$(which mysql57)"
 
   export MYSQL_DUMP_8_0_PATH="$(which mysqldump)"
   export MYSQL_CLIENT_8_0_PATH="$(which mysql)"
