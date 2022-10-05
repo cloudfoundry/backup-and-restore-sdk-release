@@ -7,14 +7,9 @@ ENV MYSQL_USERNAME= \
     MYSQL_PASSWORD= \
     MYSQL_HOSTNAME= \
     MYSQL_PORT= \
-    MYSQL_CA_CERT_PATH= \
-    MYSQL_CLIENT_CERT_PATH= \
-    MYSQL_CLIENT_KEY_PATH=
-
+    MYSQL_CERTS_PATH=/mysql-certs
 
 VOLUME /backup-and-restore-sdk-release
-
-RUN mkdir -p /mysql-certs && chmod -R 777 /mysql-certs
 VOLUME /mysql-certs
 
 RUN go install github.com/onsi/ginkgo/ginkgo@latest

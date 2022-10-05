@@ -13,9 +13,9 @@ pushd "$SRC_DIR"
   go build ./cmd/database-backup-restore
   mv database-backup-restore /usr/local/bin/database-backup-restore
 
-  export MYSQL_CA_CERT="$( cat "${MYSQL_CA_CERT_PATH}" )"
-  export MYSQL_CLIENT_CERT="$( cat "${MYSQL_CLIENT_CERT_PATH}" )"
-  export MYSQL_CLIENT_KEY="$( cat "${MYSQL_CLIENT_KEY_PATH}" )"
+  export MYSQL_CA_CERT="$( cat "${MYSQL_CERTS_PATH}/ca.pem" )"
+  export MYSQL_CLIENT_CERT="$( cat "${MYSQL_CERTS_PATH/server-cert.pem}" )"
+  export MYSQL_CLIENT_KEY="$( cat "${MYSQL_CERTS_PATH}/server-key.pem" )"
 
   export TEST_TLS=true
   export TEST_TLS_VERIFY_IDENTITY=false
