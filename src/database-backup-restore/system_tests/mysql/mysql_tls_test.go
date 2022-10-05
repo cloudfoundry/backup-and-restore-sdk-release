@@ -88,7 +88,7 @@ var _ = Describe("mysql with tls", func() {
 				//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 				//		dbDumpPath, configPath))
 				exec.Command("bash", "-c",
-					fmt.Sprintf("/backup --artifact-file %s --config %s",
+					fmt.Sprintf("database-backup-restore --backup --artifact-file %s --config %s",
 						dbDumpPath, configPath)).CombinedOutput()
 
 				RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
@@ -97,7 +97,7 @@ var _ = Describe("mysql with tls", func() {
 				//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 				//		dbDumpPath, configPath))
 				exec.Command("bash", "-c",
-					fmt.Sprintf("/restore --artifact-file %s --config %s",
+					fmt.Sprintf("database-backup-restore --restore --artifact-file %s --config %s",
 						dbDumpPath, configPath)).CombinedOutput()
 
 				Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(ConsistOf("Old Person"))
@@ -140,7 +140,7 @@ var _ = Describe("mysql with tls", func() {
 						//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 						//		dbDumpPath, configPath))
 						exec.Command("bash", "-c",
-							fmt.Sprintf("/backup --artifact-file %s --config %s",
+							fmt.Sprintf("database-backup-restore --backup --artifact-file %s --config %s",
 								dbDumpPath, configPath)).CombinedOutput()
 
 						RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
@@ -149,7 +149,7 @@ var _ = Describe("mysql with tls", func() {
 						//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 						//		dbDumpPath, configPath))
 						exec.Command("bash", "-c",
-							fmt.Sprintf("/restore --artifact-file %s --config %s",
+							fmt.Sprintf("database-backup-restore --restore --artifact-file %s --config %s",
 								dbDumpPath, configPath)).CombinedOutput()
 
 						Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(ConsistOf("Old Person"))
@@ -186,7 +186,7 @@ var _ = Describe("mysql with tls", func() {
 						//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 						//		dbDumpPath, configPath))).To(gexec.Exit(1))
 						Expect(exec.Command("bash", "-c",
-							fmt.Sprintf("/backup --artifact-file %s --config %s",
+							fmt.Sprintf("database-backup-restore --backup --artifact-file %s --config %s",
 								dbDumpPath, configPath)).Run()).To(gexec.Exit(1))
 
 					})
@@ -224,7 +224,7 @@ var _ = Describe("mysql with tls", func() {
 						//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 						//		dbDumpPath, configPath))
 						exec.Command("bash", "-c",
-							fmt.Sprintf("/backup --artifact-file %s --config %s",
+							fmt.Sprintf("database-backup-restore --backup --artifact-file %s --config %s",
 								dbDumpPath, configPath)).CombinedOutput()
 
 						RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
@@ -233,7 +233,7 @@ var _ = Describe("mysql with tls", func() {
 						//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 						//		dbDumpPath, configPath))
 						exec.Command("bash", "-c",
-							fmt.Sprintf("/restore --artifact-file %s --config %s",
+							fmt.Sprintf("database-backup-restore --restore --artifact-file %s --config %s",
 								dbDumpPath, configPath)).CombinedOutput()
 
 						Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(ConsistOf("Old Person"))
@@ -267,7 +267,7 @@ var _ = Describe("mysql with tls", func() {
 					It("does not work", func() {
 						//Expect(brJob.RunOnInstance("/var/vcap/jobs/database-backup-restorer/bin/backup",
 						//	"--artifact-file", dbDumpPath, "--config", configPath)).To(gexec.Exit(1))
-						Expect(exec.Command("bash", "-c", fmt.Sprintf("/backup --artifact-file %s --config %s", dbDumpPath, configPath)).Run()).To(gexec.Exit(1))
+						Expect(exec.Command("bash", "-c", fmt.Sprintf("database-backup-restore --backup --artifact-file %s --config %s", dbDumpPath, configPath)).Run()).To(gexec.Exit(1))
 					})
 				})
 			})
@@ -308,7 +308,7 @@ var _ = Describe("mysql with tls", func() {
 			It("does not work", func() {
 				//Expect(brJob.RunOnInstance("/var/vcap/jobs/database-backup-restorer/bin/backup",
 				//	"--artifact-file", dbDumpPath, "--config", configPath)).To(gexec.Exit(1))
-				err := exec.Command("bash", "-c", fmt.Sprintf("/backup --artifact-file %s --config %s", dbDumpPath, configPath)).Run()
+				err := exec.Command("bash", "-c", fmt.Sprintf("database-backup-restore --backup --artifact-file %s --config %s", dbDumpPath, configPath)).Run()
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -353,7 +353,7 @@ var _ = Describe("mysql with tls", func() {
 						//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 						//		dbDumpPath, configPath))
 						exec.Command("bash", "-c",
-							fmt.Sprintf("/backup --artifact-file %s --config %s",
+							fmt.Sprintf("database-backup-restore --backup --artifact-file %s --config %s",
 								dbDumpPath, configPath)).CombinedOutput()
 
 						RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
@@ -362,7 +362,7 @@ var _ = Describe("mysql with tls", func() {
 						//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 						//		dbDumpPath, configPath))
 						exec.Command("bash", "-c",
-							fmt.Sprintf("/restore --artifact-file %s --config %s",
+							fmt.Sprintf("database-backup-restore --restore --artifact-file %s --config %s",
 								dbDumpPath, configPath)).CombinedOutput()
 
 						Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(ConsistOf("Old Person"))
@@ -406,7 +406,7 @@ var _ = Describe("mysql with tls", func() {
 						//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 						//		dbDumpPath, configPath))
 						exec.Command("bash", "-c",
-							fmt.Sprintf("/backup --artifact-file %s --config %s",
+							fmt.Sprintf("database-backup-restore --backup --artifact-file %s --config %s",
 								dbDumpPath, configPath)).CombinedOutput()
 
 						RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
@@ -415,7 +415,7 @@ var _ = Describe("mysql with tls", func() {
 						//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 						//		dbDumpPath, configPath))
 						exec.Command("bash", "-c",
-							fmt.Sprintf("/restore --artifact-file %s --config %s",
+							fmt.Sprintf("database-backup-restore --restore --artifact-file %s --config %s",
 								dbDumpPath, configPath)).CombinedOutput()
 
 						Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(ConsistOf("Old Person"))
@@ -453,7 +453,7 @@ var _ = Describe("mysql with tls", func() {
 					It("does not work", func() {
 						//Expect(brJob.RunOnInstance("/var/vcap/jobs/database-backup-restorer/bin/backup",
 						//	"--artifact-file", dbDumpPath, "--config", configPath)).To(gexec.Exit(1))
-						Expect(exec.Command("bash", "-c", fmt.Sprintf("/backup --artifact-file %s --config %s", dbDumpPath, configPath)).Run()).To(gexec.Exit(1))
+						Expect(exec.Command("bash", "-c", fmt.Sprintf("database-backup-restore --backup --artifact-file %s --config %s", dbDumpPath, configPath)).Run()).To(gexec.Exit(1))
 					})
 				})
 
@@ -486,7 +486,7 @@ var _ = Describe("mysql with tls", func() {
 					It("does not work", func() {
 						//Expect(brJob.RunOnInstance("/var/vcap/jobs/database-backup-restorer/bin/backup",
 						//	"--artifact-file", dbDumpPath, "--config", configPath)).To(gexec.Exit(1))
-						Expect(exec.Command("bash", "-c", fmt.Sprintf("/backup --artifact-file %s --config %s", dbDumpPath, configPath)).Run()).To(gexec.Exit(1))
+						Expect(exec.Command("bash", "-c", fmt.Sprintf("database-backup-restore --backup --artifact-file %s --config %s", dbDumpPath, configPath)).Run()).To(gexec.Exit(1))
 					})
 				})
 			})
@@ -529,7 +529,7 @@ var _ = Describe("mysql with tls", func() {
 					//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 					//		dbDumpPath, configPath))
 					exec.Command("bash", "-c",
-						fmt.Sprintf("/backup --artifact-file %s --config %s",
+						fmt.Sprintf("database-backup-restore --backup --artifact-file %s --config %s",
 							dbDumpPath, configPath)).CombinedOutput()
 
 					RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
@@ -538,7 +538,7 @@ var _ = Describe("mysql with tls", func() {
 					//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 					//		dbDumpPath, configPath))
 					exec.Command("bash", "-c",
-						fmt.Sprintf("/restore --artifact-file %s --config %s",
+						fmt.Sprintf("database-backup-restore --restore --artifact-file %s --config %s",
 							dbDumpPath, configPath)).CombinedOutput()
 
 					Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(ConsistOf("Old Person"))
@@ -578,7 +578,7 @@ var _ = Describe("mysql with tls", func() {
 					//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 					//		dbDumpPath, configPath))
 					exec.Command("bash", "-c",
-						fmt.Sprintf("/backup --artifact-file %s --config %s",
+						fmt.Sprintf("database-backup-restore --backup --artifact-file %s --config %s",
 							dbDumpPath, configPath)).CombinedOutput()
 
 					RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
@@ -587,7 +587,7 @@ var _ = Describe("mysql with tls", func() {
 					//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 					//		dbDumpPath, configPath))
 					exec.Command("bash", "-c",
-						fmt.Sprintf("/restore --artifact-file %s --config %s",
+						fmt.Sprintf("database-backup-restore --restore --artifact-file %s --config %s",
 							dbDumpPath, configPath)).CombinedOutput()
 
 					Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(ConsistOf("Old Person"))
@@ -621,7 +621,7 @@ var _ = Describe("mysql with tls", func() {
 				It("does not work", func() {
 					//Expect(brJob.RunOnInstance("/var/vcap/jobs/database-backup-restorer/bin/backup",
 					//	"--artifact-file", dbDumpPath, "--config", configPath)).To(gexec.Exit(1))
-					Expect(exec.Command("bash", "-c", fmt.Sprintf("/backup --artifact-file %s --config %s", dbDumpPath, configPath)).Run()).To(gexec.Exit(1))
+					Expect(exec.Command("bash", "-c", fmt.Sprintf("database-backup-restore --backup --artifact-file %s --config %s", dbDumpPath, configPath)).Run()).To(gexec.Exit(1))
 				})
 			})
 		})

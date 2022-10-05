@@ -60,7 +60,7 @@ var _ = Describe("mysql", func() {
 				//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 				//		dbDumpPath, configPath))
 				exec.Command("bash", "-c",
-					fmt.Sprintf("/backup --artifact-file %s --config %s",
+					fmt.Sprintf("database-backup-restore --backup --artifact-file %s --config %s",
 						dbDumpPath, configPath)).CombinedOutput()
 
 			})
@@ -73,7 +73,7 @@ var _ = Describe("mysql", func() {
 				//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 				//		dbDumpPath, configPath))
 				exec.Command("bash", "-c",
-					fmt.Sprintf("/restore --artifact-file %s --config %s",
+					fmt.Sprintf("database-backup-restore --restore --artifact-file %s --config %s",
 						dbDumpPath, configPath)).CombinedOutput()
 
 				Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(
@@ -94,7 +94,7 @@ var _ = Describe("mysql", func() {
 					//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
 					//		configPath, dbDumpPath))
 					exec.Command("bash", "-c",
-						fmt.Sprintf("/restore --config %s --artifact-file %s",
+						fmt.Sprintf("database-backup-restore --restore --config %s --artifact-file %s",
 							configPath, dbDumpPath)).CombinedOutput()
 
 					Expect(FetchSQLColumn("SELECT name FROM people;", connection)).
@@ -123,7 +123,7 @@ var _ = Describe("mysql", func() {
 				//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 				//		dbDumpPath, configPath))
 				exec.Command("bash", "-c",
-					fmt.Sprintf("/backup --artifact-file %s --config %s",
+					fmt.Sprintf("database-backup-restore --backup --artifact-file %s --config %s",
 						dbDumpPath, configPath)).CombinedOutput()
 
 				RunSQLCommand("UPDATE people SET NAME = 'New Person';", connection)
@@ -136,7 +136,7 @@ var _ = Describe("mysql", func() {
 				//	fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
 				//		dbDumpPath, configPath))
 				restoreSession, _ := exec.Command("bash", "-c",
-					fmt.Sprintf("/restore --artifact-file %s --config %s",
+					fmt.Sprintf("database-backup-restore --restore --artifact-file %s --config %s",
 						dbDumpPath, configPath)).CombinedOutput()
 
 				Expect(restoreSession).To(ContainSubstring("CREATE TABLE `people`"))
@@ -172,7 +172,7 @@ var _ = Describe("mysql", func() {
 				//	dbDumpPath,
 				//	configPath))
 				msg, err := exec.Command("bash", "-c", fmt.Sprintf(
-					"/backup --artifact-file %s --config %s",
+					"database-backup-restore --backup --artifact-file %s --config %s",
 					dbDumpPath,
 					configPath)).CombinedOutput()
 
@@ -203,7 +203,7 @@ var _ = Describe("mysql", func() {
 				//	dbDumpPath,
 				//	configPath))
 				msg, err := exec.Command("bash", "-c", fmt.Sprintf(
-					"/backup --artifact-file %s --config %s",
+					"database-backup-restore --backup --artifact-file %s --config %s",
 					dbDumpPath,
 					configPath)).CombinedOutput()
 

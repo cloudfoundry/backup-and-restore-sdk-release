@@ -21,5 +21,3 @@ RUN go install github.com/onsi/ginkgo/ginkgo@latest
 
 COPY --from=db /usr/bin/mysql /usr/local/bin/
 COPY --from=db /usr/bin/mysqldump /usr/local/bin/
-COPY backup /
-COPY restore /
