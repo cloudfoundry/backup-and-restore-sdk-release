@@ -25,6 +25,34 @@ services:
     build: { context: .github/actions/sdk-template-unit-tests }
     volumes: [./:/backup-and-restore-sdk-release]
 
+  system-db-mariadb:
+    depends_on: [system-db-mariadb-backing-db]
+    entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-mariadb.bash
+    build:
+      context: .github/actions/run-system-db-tests/mariadb
+      dockerfile: TestsRunner.Dockerfile
+      args:
+      - MARIADB_VERSION=${MARIADB_VERSION}
+    volumes:
+    - ./:/backup-and-restore-sdk-release
+    - mariadb-certs:/tls-certs
+    environment:
+    - MYSQL_USERNAME=root
+    - MYSQL_HOSTNAME=system-db-mariadb-backing-db
+    - MYSQL_PORT=3306
+    - MYSQL_PASSWORD=${MARIADB_PASSWORD}
+
+  system-db-mariadb-backing-db:
+    build:
+      context: .github/actions/run-system-db-tests/mariadb
+      dockerfile: BackingDB.Dockerfile
+      args:
+      - MARIADB_VERSION=${MARIADB_VERSION}
+    volumes:
+    - mariadb-certs:/tls-certs
+    environment:
+    - MARIADB_ROOT_PASSWORD=${MARIADB_PASSWORD}
+
   system-db-mysql:
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-mysql.bash
     build:
@@ -53,8 +81,10 @@ services:
     environment:
     - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
 
+
 volumes:
 # See https://docs.docker.com/compose/compose-file/#volumes - Specially:
 ### To reuse a volume across multiple services,
 ### a named volume MUST be declared in the top-level volumes key.
   mysql-certs:
+  mariadb-certs:

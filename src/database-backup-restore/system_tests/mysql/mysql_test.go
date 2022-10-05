@@ -139,7 +139,7 @@ var _ = Describe("mysql", func() {
 					fmt.Sprintf("database-backup-restore --restore --artifact-file %s --config %s",
 						dbDumpPath, configPath)).CombinedOutput()
 
-				Expect(restoreSession).To(ContainSubstring("CREATE TABLE `people`"))
+				Expect(string(restoreSession)).To(ContainSubstring("CREATE TABLE `people`"))
 
 				Expect(FetchSQLColumn("SELECT name FROM people;", connection)).To(
 					ConsistOf("Old Person"))
@@ -177,8 +177,8 @@ var _ = Describe("mysql", func() {
 					configPath)).CombinedOutput()
 
 				Expect(err).To(HaveOccurred())
-				Expect(msg).To(ContainSubstring("mysqldump: Couldn't find table: \"not there\""))
-				Expect(msg).To(ContainSubstring(
+				Expect(string(msg)).To(ContainSubstring("Couldn't find table: \"not there\""))
+				Expect(string(msg)).To(ContainSubstring(
 					"You may need to delete the artifact-file that was created before re-running"))
 			})
 		})
@@ -208,8 +208,8 @@ var _ = Describe("mysql", func() {
 					configPath)).CombinedOutput()
 
 				Expect(err).To(HaveOccurred())
-				Expect(msg).To(ContainSubstring("mysqldump: Couldn't find table: \"lizards\""))
-				Expect(msg).To(ContainSubstring(
+				Expect(string(msg)).To(ContainSubstring("Couldn't find table: \"lizards\""))
+				Expect(string(msg)).To(ContainSubstring(
 					"You may need to delete the artifact-file that was created before re-running"))
 			})
 		})

@@ -4,6 +4,23 @@ on:
       - main
 
 jobs:
+  system-db-mariadb:
+    name: System DB Tests for MariaDB
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mariadb-version: [10.9-jammy, 10.7-focal, 10.5-focal, 10.2-bionic]
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: repo
+      - name: Run System Tests for MariaDB
+        run: |
+             MARIADB_VERSION="${{ matrix.mariadb-version }}" \
+             MARIADB_PASSWORD="$(head /dev/urandom | md5sum | cut -f1 -d" ")" \
+             docker-compose -f repo/docker-compose.yml run system-db-mariadb
+
   system-db-mysql:
     name: System DB Tests for MySQL
     runs-on: ubuntu-latest
