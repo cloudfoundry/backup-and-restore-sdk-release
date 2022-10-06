@@ -81,6 +81,31 @@ services:
     environment:
     - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
 
+  system-db-postgres:
+    depends_on: [system-db-postgres-backing-db]
+    entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-postgres.bash
+    build:
+      context: .github/actions/run-system-db-tests/postgres
+      dockerfile: TestsRunner.Dockerfile
+      args:
+      - POSTGRES_VERSION=${POSTGRES_VERSION}
+    volumes:
+    - ./:/backup-and-restore-sdk-release
+    environment:
+    - POSTGRES_USERNAME=postgres
+    - POSTGRES_HOSTNAME=system-db-postgres-backing-db
+    - POSTGRES_PORT=5432
+    - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+  system-db-postgres-backing-db:
+    build:
+      context: .github/actions/run-system-db-tests/postgres
+      dockerfile: BackingDB.Dockerfile
+      args:
+      - POSTGRES_VERSION=${POSTGRES_VERSION}
+    environment:
+    - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
 
 volumes:
 # See https://docs.docker.com/compose/compose-file/#volumes - Specially:

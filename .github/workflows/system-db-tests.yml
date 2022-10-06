@@ -38,3 +38,20 @@ jobs:
              MYSQL_PASSWORD="$(head /dev/urandom | md5sum | cut -f1 -d" ")" \
              docker-compose -f repo/docker-compose.yml run system-db-mysql || (docker-compose -f repo/docker-compose.yml logs system-db-mysql-backing-db && exit 1)
 
+  system-db-postgres:
+    name: System DB Tests for Postgres
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        postgres-version: [13-bullseye, 11-bulleye, 10-bullseye, 9.6-bullseye, 9.4-alpine]
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: repo
+      - name: Run System Tests for Postgres
+        run: |
+             POSTGRES_VERSION="${{ matrix.postgres-version }}" \
+             POSTGRES_PASSWORD="$(head /dev/urandom | md5sum | cut -f1 -d" ")" \
+             docker-compose -f repo/docker-compose.yml run system-db-postgres || (docker-compose -f repo/docker-compose.yml logs system-db-postgres-backing-db && exit 1)
+

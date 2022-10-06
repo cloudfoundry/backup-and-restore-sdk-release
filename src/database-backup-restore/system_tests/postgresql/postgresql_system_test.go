@@ -19,12 +19,12 @@ package postgresql
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"strconv"
 
 	_ "github.com/lib/pq"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 
 	. "database-backup-restore/system_tests/utils"
 )
@@ -48,11 +48,11 @@ var _ = Describe("postgres", func() {
 	)
 
 	BeforeSuite(func() {
-		brJob = JobInstance{
-			Deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
-			Instance:      MustHaveEnv("SDK_INSTANCE_GROUP"),
-			InstanceIndex: "0",
-		}
+		//brJob = JobInstance{
+		//	Deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
+		//	Instance:      MustHaveEnv("SDK_INSTANCE_GROUP"),
+		//	InstanceIndex: "0",
+		//}
 
 		postgresHostName = MustHaveEnv("POSTGRES_HOSTNAME")
 		postgresPort, _ = strconv.Atoi(MustHaveEnv("POSTGRES_PORT"))
@@ -91,7 +91,7 @@ var _ = Describe("postgres", func() {
 		pgConnection.RunSQLCommand("DROP DATABASE " + databaseName)
 		pgConnection.Close()
 
-		brJob.RunOnVMAndSucceed(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath))
+		exec.Command(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath)).Run()
 	})
 
 	Context("database backup is successful", func() {
@@ -110,11 +110,11 @@ var _ = Describe("postgres", func() {
 				postgresHostName,
 				databaseName,
 			)
-			brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
-			brJob.RunOnVMAndSucceed(
-				fmt.Sprintf(`/var/vcap/jobs/database-backup-restorer/bin/backup --config %s --artifact-file %s`,
-					configPath, dbDumpPath))
-			brJob.RunOnVMAndSucceed(fmt.Sprintf("ls -l %s", dbDumpPath))
+			exec.Command("bash", "-c", fmt.Sprintf("echo '%s' > %s", configJson, configPath)).Run()
+			exec.Command("bash", "-c",
+				fmt.Sprintf("database-backup-restore --backup --config %s --artifact-file %s",
+					configPath, dbDumpPath)).Run()
+			exec.Command("bash", "-c", fmt.Sprintf("ls -l %s", dbDumpPath)).Run()
 		})
 
 		Context("when tables exist", func() {
@@ -125,9 +125,9 @@ var _ = Describe("postgres", func() {
 			})
 
 			It("restores the Postgres database", func() {
-				brJob.RunOnVMAndSucceed(
-					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
-						configPath, dbDumpPath))
+				exec.Command("bash", "-c",
+					fmt.Sprintf("database-backup-restore --restore --config %s --artifact-file %s",
+						configPath, dbDumpPath)).Run()
 
 				Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
 					To(ConsistOf("Old Person"))
@@ -145,9 +145,9 @@ var _ = Describe("postgres", func() {
 				})
 
 				It("the restore is atomic and does not contain any new data", func() {
-					session := brJob.RunOnInstance(
-						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
-							configPath, dbDumpPath))
+					_, err := exec.Command("bash", "-c",
+						fmt.Sprintf("database-backup-restore --restore --config %s --artifact-file %s",
+							configPath, dbDumpPath)).CombinedOutput()
 
 					Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
 						To(ConsistOf("New Person"))
@@ -157,7 +157,7 @@ var _ = Describe("postgres", func() {
 						To(ConsistOf("New Place"))
 					Expect(pgConnection.FetchSQLColumn("SELECT name FROM places;")).
 						NotTo(ConsistOf("Old Place"))
-					Expect(session.ExitCode()).To(Equal(1))
+					Expect(err).To(HaveOccurred())
 				})
 			})
 		})
@@ -166,9 +166,9 @@ var _ = Describe("postgres", func() {
 			It("restores the tables successfully", func() {
 				pgConnection.RunSQLCommand("DROP TABLE people;")
 
-				brJob.RunOnVMAndSucceed(
-					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
-						configPath, dbDumpPath))
+				exec.Command("bash", "-c",
+					fmt.Sprintf("database-backup-restore --restore --config %s --artifact-file %s",
+						configPath, dbDumpPath)).Run()
 
 				Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
 					To(ConsistOf("Old Person"))
@@ -193,21 +193,21 @@ var _ = Describe("postgres", func() {
 				postgresHostName,
 				databaseName,
 			)
-			brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+			exec.Command("bash", "-c", fmt.Sprintf("echo '%s' > %s", configJson, configPath)).Run()
 		})
 
 		It("backs up and restores only the specified tables", func() {
-			brJob.RunOnVMAndSucceed(fmt.Sprintf(
-				"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+			exec.Command("bash", "-c",
+				fmt.Sprintf("database-backup-restore --backup --artifact-file %s --config %s",
 				dbDumpPath,
-				configPath))
+				configPath)).Run()
 
 			pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
 			pgConnection.RunSQLCommand("UPDATE places SET NAME = 'New Place';")
 
-			brJob.RunOnVMAndSucceed(fmt.Sprintf("cat %s", dbDumpPath))
+			exec.Command("bash", "-c", fmt.Sprintf("cat %s", dbDumpPath)).Run()
 
-			brJob.RunOnVMAndSucceed(fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath))
+			exec.Command("bash", "-c", fmt.Sprintf("database-backup-restore --restore --artifact-file %s --config %s", dbDumpPath, configPath)).Run()
 
 			Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
 				To(ConsistOf("Old Person"))
@@ -237,16 +237,17 @@ var _ = Describe("postgres", func() {
 				postgresHostName,
 				databaseName,
 			)
-			brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+			exec.Command("bash", "-c", fmt.Sprintf("echo '%s' > %s", configJson, configPath)).Run()
 		})
 
 		It("raises an error about the non-existent tables", func() {
-			session := brJob.RunOnInstance(fmt.Sprintf(
-				"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+			msg, err := exec.Command("bash", "-c", fmt.Sprintf(
+				"database-backup-restore --backup --artifact-file %s --config %s",
 				dbDumpPath,
-				configPath))
-			Expect(session.ExitCode()).NotTo(BeZero())
-			Expect(session).To(gbytes.Say(`can't find specified table\(s\): lizards`))
+				configPath)).CombinedOutput()
+
+			Expect(err).To(HaveOccurred())
+			Expect(string(msg)).To(ContainSubstring(`can't find specified table(s): lizards`))
 		})
 	})
 })
