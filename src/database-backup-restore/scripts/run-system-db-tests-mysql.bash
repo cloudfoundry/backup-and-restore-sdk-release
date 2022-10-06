@@ -6,7 +6,7 @@ SRC_DIR="$(cd "$( dirname "$0" )/.." && pwd)"
 
 for i in {1..5}; do
   # Wait for the database to be ready
-  mysql -u ${MYSQL_USERNAME} -p${MYSQL_PASSWORD} -h ${MYSQL_HOSTNAME} -P ${MYSQL_PORT} -e 'SELECT "successfully connected to mysql"' && break || sleep 15
+  mysql57 -u ${MYSQL_USERNAME} -p${MYSQL_PASSWORD} -h ${MYSQL_HOSTNAME} -P ${MYSQL_PORT} -e 'SELECT "successfully connected to mysql"' && break || sleep 15
 done
 
 pushd "$SRC_DIR"
@@ -28,10 +28,11 @@ pushd "$SRC_DIR"
 
   source scripts/system-db-tests-vars.bash
 
+  export MYSQL_DUMP_5_7_PATH="$(which mysqldump57)"
   export MYSQL_CLIENT_5_7_PATH="$(which mysql57)"
 
-  export MYSQL_DUMP_8_0_PATH="$(which mysqldump)"
-  export MYSQL_CLIENT_8_0_PATH="$(which mysql)"
+  export MYSQL_DUMP_8_0_PATH="$(which mysqldump80)"
+  export MYSQL_CLIENT_8_0_PATH="$(which mysql80)"
 
   ginkgo -mod vendor -r -v "system_tests/mysql" -trace
 popd

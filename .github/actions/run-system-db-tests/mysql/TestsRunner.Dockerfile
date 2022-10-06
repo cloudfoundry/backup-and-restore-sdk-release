@@ -1,7 +1,5 @@
-ARG MYSQL_VERSION
-FROM mysql:$MYSQL_VERSION as db
-
 FROM mysql:5.7-debian as mysql57
+FROM mysql:8.0-debian as mysql80
 
 FROM golang:1.19.1
 
@@ -20,5 +18,6 @@ VOLUME /mysql-certs
 RUN go install github.com/onsi/ginkgo/ginkgo@latest
 
 COPY --from=mysql57 /usr/bin/mysql /usr/local/bin/mysql57
-COPY --from=db /usr/bin/mysql /usr/local/bin/
-COPY --from=db /usr/bin/mysqldump /usr/local/bin/
+COPY --from=mysql57 /usr/bin/mysqldump /usr/local/bin/mysqldump57
+COPY --from=mysql80 /usr/bin/mysql /usr/local/bin/mysql80
+COPY --from=mysql80 /usr/bin/mysqldump /usr/local/bin/mysqldump80

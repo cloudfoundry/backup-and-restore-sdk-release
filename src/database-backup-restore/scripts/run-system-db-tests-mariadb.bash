@@ -6,7 +6,7 @@ SRC_DIR="$(cd "$( dirname "$0" )/.." && pwd)"
 
 for i in {1..5}; do
   # Wait for the database to be ready
-  mysql -u ${MYSQL_USERNAME} -p${MYSQL_PASSWORD} -h ${MYSQL_HOSTNAME} -P ${MYSQL_PORT} -e 'SELECT "successfully connected to mysql"' && break || sleep 15
+  mysql57 -u ${MYSQL_USERNAME} -p${MYSQL_PASSWORD} -h ${MYSQL_HOSTNAME} -P ${MYSQL_PORT} -e 'SELECT "successfully connected to mysql"' && break || sleep 15
 done
 
 pushd "$SRC_DIR"
