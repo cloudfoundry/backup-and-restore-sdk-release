@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        postgres-version: [13-bullseye, 11-bulleye, 10-bullseye, 9.6-bullseye, 9.4-alpine]
+        postgres-version: [13-bullseye, 11-bullseye, 10-bullseye, 9.6-bullseye, 9.4-alpine]
 
     steps:
       - uses: actions/checkout@v3
