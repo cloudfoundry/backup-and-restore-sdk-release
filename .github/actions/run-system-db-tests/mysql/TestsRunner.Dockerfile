@@ -12,7 +12,10 @@ ENV MYSQL_USERNAME= \
     MYSQL_CERTS_PATH=/mysql-certs
 
 VOLUME /backup-and-restore-sdk-release
+
+RUN mkdir -p /mysql-certs && chmod -R 777 /mysql-certs
 VOLUME /mysql-certs
+# https://boxboat.com/2017/01/23/volumes-and-dockerfiles-dont-mix/
 
 RUN go install github.com/onsi/ginkgo/ginkgo@latest
 
