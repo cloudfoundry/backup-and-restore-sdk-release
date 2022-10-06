@@ -19,7 +19,7 @@ jobs:
         run: |
              MARIADB_VERSION="${{ matrix.mariadb-version }}" \
              MARIADB_PASSWORD="$(head /dev/urandom | md5sum | cut -f1 -d" ")" \
-             docker-compose -f repo/docker-compose.yml run system-db-mariadb
+             docker-compose -f repo/docker-compose.yml run system-db-mariadb || (docker-compose -f repo/docker-compose.yml logs system-db-mariadb-backing-db && exit 1)
 
   system-db-mysql:
     name: System DB Tests for MySQL
@@ -36,5 +36,5 @@ jobs:
         run: |
              MYSQL_VERSION="${{ matrix.mysql-version }}" \
              MYSQL_PASSWORD="$(head /dev/urandom | md5sum | cut -f1 -d" ")" \
-             docker-compose -f repo/docker-compose.yml run system-db-mysql
+             docker-compose -f repo/docker-compose.yml run system-db-mysql || (docker-compose -f repo/docker-compose.yml logs system-db-mysql-backing-db && exit 1)
 
