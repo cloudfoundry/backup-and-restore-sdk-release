@@ -3,9 +3,9 @@
 set -euo pipefail
 
 mysql_ssl_rsa_setup
-cp /var/lib/mysql/ca.pem /tls-certs/
-cp /var/lib/mysql/server-cert.pem /tls-certs/
-cp /var/lib/mysql/server-key.pem /tls-certs/
+cp /var/lib/mysql/ca.pem /mysql-certs/
+cp /var/lib/mysql/server-cert.pem /mysql-certs/
+cp /var/lib/mysql/server-key.pem /mysql-certs/
  
 mkdir -p /etc/mysql/mysql.conf.d/
 cat << EOF > /etc/mysql/mysql.conf.d/ssl.cnf

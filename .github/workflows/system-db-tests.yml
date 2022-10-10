@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        stemcell-name: [ubuntu-bionic, ubuntu-jammy]
         mariadb-version: [10.9-jammy, 10.7-focal, 10.5-focal, 10.2-bionic]
 
     steps:
@@ -17,6 +18,7 @@ jobs:
           path: repo
       - name: Run System Tests for MariaDB
         run: |
+             STEMCELL_NAME="${{ matrix.stemcell-name }}" \
              MARIADB_VERSION="${{ matrix.mariadb-version }}" \
              MARIADB_PASSWORD="$(head /dev/urandom | md5sum | cut -f1 -d" ")" \
              docker-compose -f repo/docker-compose.yml run system-db-mariadb || (docker-compose -f repo/docker-compose.yml logs system-db-mariadb-backing-db && exit 1)
@@ -26,6 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        stemcell-name: [ubuntu-bionic, ubuntu-jammy]
         mysql-version: [8.0-debian, 8.0-oracle, 5.7-debian]
 
     steps:
@@ -34,6 +37,7 @@ jobs:
           path: repo
       - name: Run System Tests for MySQL
         run: |
+             STEMCELL_NAME="${{ matrix.stemcell-name }}" \
              MYSQL_VERSION="${{ matrix.mysql-version }}" \
              MYSQL_PASSWORD="$(head /dev/urandom | md5sum | cut -f1 -d" ")" \
              docker-compose -f repo/docker-compose.yml run system-db-mysql || (docker-compose -f repo/docker-compose.yml logs system-db-mysql-backing-db && exit 1)
@@ -43,6 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        stemcell-name: [ubuntu-bionic, ubuntu-jammy]
         postgres-version: [13-bullseye, 11-bullseye, 10-bullseye, 9.6-bullseye, 9.4-alpine]
 
     steps:
@@ -51,6 +56,7 @@ jobs:
           path: repo
       - name: Run System Tests for Postgres
         run: |
+             STEMCELL_NAME="${{ matrix.stemcell-name }}" \
              POSTGRES_VERSION="${{ matrix.postgres-version }}" \
              POSTGRES_PASSWORD="$(head /dev/urandom | md5sum | cut -f1 -d" ")" \
              docker-compose -f repo/docker-compose.yml run system-db-postgres || (docker-compose -f repo/docker-compose.yml logs system-db-postgres-backing-db && exit 1)

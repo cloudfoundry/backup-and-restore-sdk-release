@@ -1,6 +1,14 @@
 version: '3.0'
 
 services:
+  dockerize-release:
+    image: dockerize-release
+    build:
+      context: .
+      dockerfile: .github/actions/dockerize-release/Dockerfile
+      args:
+      - STEMCELL_NAME=${STEMCELL_NAME}
+
   unit-blobstore-azure:
     build: { context: .github/actions/run-golang-unit-tests }
     volumes: [./:/backup-and-restore-sdk-release]
@@ -26,11 +34,10 @@ services:
     volumes: [./:/backup-and-restore-sdk-release]
 
   system-db-mariadb:
-    depends_on: [system-db-mariadb-backing-db]
+    depends_on: [dockerize-release, system-db-mariadb-backing-db]
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-mariadb.bash
     build:
-      context: .github/actions/run-system-db-tests/mariadb
-      dockerfile: TestsRunner.Dockerfile
+      context: .github/actions/run-system-db-tests/
       args:
       - MARIADB_VERSION=${MARIADB_VERSION}
     volumes:
@@ -45,7 +52,6 @@ services:
   system-db-mariadb-backing-db:
     build:
       context: .github/actions/run-system-db-tests/mariadb
-      dockerfile: BackingDB.Dockerfile
       args:
       - MARIADB_VERSION=${MARIADB_VERSION}
     volumes:
@@ -54,16 +60,15 @@ services:
     - MARIADB_ROOT_PASSWORD=${MARIADB_PASSWORD}
 
   system-db-mysql:
+    depends_on: [dockerize-release, system-db-mysql-backing-db]
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-mysql.bash
     build:
-      context: .github/actions/run-system-db-tests/mysql
-      dockerfile: TestsRunner.Dockerfile
+      context: .github/actions/run-system-db-tests/
       args:
       - MYSQL_VERSION=${MYSQL_VERSION}
     volumes:
     - ./:/backup-and-restore-sdk-release
-    - mysql-certs:/mysql-certs
-    depends_on: [system-db-mysql-backing-db]
+    - mysql-certs:/tls-certs
     environment:
     - MYSQL_USERNAME=root
     - MYSQL_HOSTNAME=system-db-mysql-backing-db
@@ -73,20 +78,18 @@ services:
   system-db-mysql-backing-db:
     build:
       context: .github/actions/run-system-db-tests/mysql
-      dockerfile: BackingDB.Dockerfile
       args:
       - MYSQL_VERSION=${MYSQL_VERSION}
     volumes:
-    - mysql-certs:/mysql-certs
+    - mysql-certs:/tls-certs
     environment:
     - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
 
   system-db-postgres:
-    depends_on: [system-db-postgres-backing-db]
+    depends_on: [dockerize-release, system-db-postgres-backing-db]
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-postgres.bash
     build:
-      context: .github/actions/run-system-db-tests/postgres
-      dockerfile: TestsRunner.Dockerfile
+      context: .github/actions/run-system-db-tests/
       args:
       - POSTGRES_VERSION=${POSTGRES_VERSION}
     volumes:
@@ -100,7 +103,6 @@ services:
   system-db-postgres-backing-db:
     build:
       context: .github/actions/run-system-db-tests/postgres
-      dockerfile: BackingDB.Dockerfile
       args:
       - POSTGRES_VERSION=${POSTGRES_VERSION}
     environment:
