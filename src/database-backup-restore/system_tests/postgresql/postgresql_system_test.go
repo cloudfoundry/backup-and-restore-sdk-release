@@ -112,7 +112,7 @@ var _ = Describe("postgres", func() {
 			)
 			exec.Command("bash", "-c", fmt.Sprintf("echo '%s' > %s", configJson, configPath)).Run()
 			exec.Command("bash", "-c",
-				fmt.Sprintf("database-backup-restore --backup --config %s --artifact-file %s",
+				fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --config %s --artifact-file %s",
 					configPath, dbDumpPath)).Run()
 			exec.Command("bash", "-c", fmt.Sprintf("ls -l %s", dbDumpPath)).Run()
 		})
@@ -126,7 +126,7 @@ var _ = Describe("postgres", func() {
 
 			It("restores the Postgres database", func() {
 				exec.Command("bash", "-c",
-					fmt.Sprintf("database-backup-restore --restore --config %s --artifact-file %s",
+					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
 						configPath, dbDumpPath)).Run()
 
 				Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
@@ -146,7 +146,7 @@ var _ = Describe("postgres", func() {
 
 				It("the restore is atomic and does not contain any new data", func() {
 					_, err := exec.Command("bash", "-c",
-						fmt.Sprintf("database-backup-restore --restore --config %s --artifact-file %s",
+						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
 							configPath, dbDumpPath)).CombinedOutput()
 
 					Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
@@ -167,7 +167,7 @@ var _ = Describe("postgres", func() {
 				pgConnection.RunSQLCommand("DROP TABLE people;")
 
 				exec.Command("bash", "-c",
-					fmt.Sprintf("database-backup-restore --restore --config %s --artifact-file %s",
+					fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --config %s --artifact-file %s",
 						configPath, dbDumpPath)).Run()
 
 				Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
@@ -198,7 +198,7 @@ var _ = Describe("postgres", func() {
 
 		It("backs up and restores only the specified tables", func() {
 			exec.Command("bash", "-c",
-				fmt.Sprintf("database-backup-restore --backup --artifact-file %s --config %s",
+				fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 				dbDumpPath,
 				configPath)).Run()
 
@@ -207,7 +207,7 @@ var _ = Describe("postgres", func() {
 
 			exec.Command("bash", "-c", fmt.Sprintf("cat %s", dbDumpPath)).Run()
 
-			exec.Command("bash", "-c", fmt.Sprintf("database-backup-restore --restore --artifact-file %s --config %s", dbDumpPath, configPath)).Run()
+			exec.Command("bash", "-c", fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s", dbDumpPath, configPath)).Run()
 
 			Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).
 				To(ConsistOf("Old Person"))
@@ -242,7 +242,7 @@ var _ = Describe("postgres", func() {
 
 		It("raises an error about the non-existent tables", func() {
 			msg, err := exec.Command("bash", "-c", fmt.Sprintf(
-				"database-backup-restore --backup --artifact-file %s --config %s",
+				"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
 				dbDumpPath,
 				configPath)).CombinedOutput()
 

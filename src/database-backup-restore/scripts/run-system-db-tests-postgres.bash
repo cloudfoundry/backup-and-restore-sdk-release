@@ -5,15 +5,12 @@ set -euo pipefail
 SRC_DIR="$(cd "$( dirname "$0" )/.." && pwd)"
 
 pushd "$SRC_DIR"
-  source scripts/system-db-tests-vars.bash
+  PG_BINARY="/var/vcap/packages/database-backup-restorer-postgres-13/bin/psql"
 
   for i in {1..5}; do
     # Wait for the database to be ready
-    PGPASSWORD=${POSTGRES_PASSWORD} ${PG_CLIENT_PATH} -U ${POSTGRES_USERNAME} -h ${POSTGRES_HOSTNAME} -p ${POSTGRES_PORT} -c "SELECT CAST('successfully connected' AS text) AS healthcheck" && break || sleep 15
+    PGPASSWORD=${POSTGRES_PASSWORD} ${PG_BINARY} -U ${POSTGRES_USERNAME} -h ${POSTGRES_HOSTNAME} -p ${POSTGRES_PORT} -c "SELECT CAST('successfully connected' AS text) AS healthcheck" && break || sleep 15
   done
-
-  go build ./cmd/database-backup-restore
-  mv database-backup-restore /usr/local/bin/database-backup-restore
 
   export TEST_TLS=true
   export TEST_TLS_VERIFY_IDENTITY=false

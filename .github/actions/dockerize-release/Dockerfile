@@ -34,6 +34,18 @@ RUN bash -c 'for tgz in *.tgz ; do    \
   echo "${tgz} extracted!"         ;  \
 done'
 
+WORKDIR /release/jobs
+RUN bash -c 'for tgz in *.tgz ; do    \
+  filename=$(basename -- "${tgz}") ;  \
+  ext="${filename##*.}"            ;  \
+  noext="${filename%.*}"           ;  \
+                                      \
+  mkdir -p "${noext}"              ;  \
+  tar -xf "${tgz}" -C "${noext}"   ;  \
+  rm "${tgz}"                      ;  \
+  echo "${tgz} extracted!"         ;  \
+done'
+
 #########################################################################
 # Mount alongside stemcell and uncompressed release files and run packaging scripts
 #########################################################################
@@ -54,7 +66,8 @@ database-backup-restorer-postgres-10  \
 database-backup-restorer-postgres-10  \
 database-backup-restorer-postgres-11  \
 database-backup-restorer-postgres-13  \
-golang-1-linux"
+golang-1-linux                        \
+database-backup-restorer"
 
 WORKDIR /release/packages
 RUN bash -c 'for pkg in ${PACKAGES}; do                   \
@@ -64,6 +77,14 @@ RUN bash -c 'for pkg in ${PACKAGES}; do                   \
  chmod +x packaging                                     ; \
  ./packaging                                            ; \
 done'
+
+
+WORKDIR /release/jobs
+RUN mkdir -p /var/vcap/jobs/database-backup-restorer/bin \
+ && cp database-backup-restorer/templates/backup /var/vcap/jobs/database-backup-restorer/bin/backup \
+ && cp database-backup-restorer/templates/restore /var/vcap/jobs/database-backup-restorer/bin/restore \
+ && chmod +x /var/vcap/jobs/database-backup-restorer/bin/backup \
+ && chmod +x /var/vcap/jobs/database-backup-restorer/bin/restore
 
 #########################################################################
 # Ready to run, clean, filesystem with the stemcell and compiled packages in place

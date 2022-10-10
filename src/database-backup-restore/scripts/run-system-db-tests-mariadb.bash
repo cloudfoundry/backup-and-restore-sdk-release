@@ -5,15 +5,12 @@ set -euo pipefail
 SRC_DIR="$(cd "$( dirname "$0" )/.." && pwd)"
 
 pushd "$SRC_DIR"
-  source scripts/system-db-tests-vars.bash
+  MYSQL_BINARY="/var/vcap/packages/database-backup-restorer-mysql-5.7/bin/mysql"
 
   for i in {1..5}; do
     # Wait for the database to be ready
-    ${MYSQL_CLIENT_5_7_PATH} -u ${MYSQL_USERNAME} -p${MYSQL_PASSWORD} -h ${MYSQL_HOSTNAME} -P ${MYSQL_PORT} -e 'SELECT "successfully connected to mysql"' && break || sleep 15
+    ${MYSQL_BINARY} -u ${MYSQL_USERNAME} -p${MYSQL_PASSWORD} -h ${MYSQL_HOSTNAME} -P ${MYSQL_PORT} -e 'SELECT "successfully connected to mysql"' && break || sleep 15
   done
-
-  go build ./cmd/database-backup-restore
-  mv database-backup-restore /usr/local/bin/database-backup-restore
 
   export MYSQL_CA_CERT_PATH="/tls-certs/ca-cert.pem"
   export MYSQL_CLIENT_CERT_PATH="/tls-certs/client-cert.pem"
