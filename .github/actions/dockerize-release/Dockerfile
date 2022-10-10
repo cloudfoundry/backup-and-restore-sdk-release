@@ -6,8 +6,8 @@ ARG STEMCELL_NAME
 RUN apk add curl --no-cache
 RUN STEMCELL_URL="$(curl -L https://bosh.io/stemcells | grep -io "https:\/\/.*warden-boshlite-${STEMCELL_NAME}-go_agent.tgz")" \
  && curl -o /stemcell.tgz -L ${STEMCELL_URL}
-RUN mkdir -p /wrapper && tar xvf /stemcell.tgz -C /wrapper
-RUN mkdir -p /stemcell && tar xvf /wrapper/image -C /stemcell
+RUN mkdir -p /wrapper && tar xf /stemcell.tgz -C /wrapper
+RUN mkdir -p /stemcell && tar xf /wrapper/image -C /stemcell
 
 #########################################################################
 # Run bosh create-release and uncompress tarball which contains blobs and vendored packages
@@ -20,7 +20,7 @@ COPY . /release-repo
 WORKDIR /release-repo
 
 RUN bosh create-release --force --tarball /release.tgz
-RUN mkdir -p /release && tar -xvf /release.tgz -C /release
+RUN mkdir -p /release && tar -xf /release.tgz -C /release
 
 WORKDIR /release/packages
 RUN bash -c 'for tgz in *.tgz ; do    \
