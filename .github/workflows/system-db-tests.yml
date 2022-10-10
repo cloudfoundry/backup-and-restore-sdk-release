@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        stemcell-name: [ubuntu-bionic, ubuntu-jammy]
+        stemcell-name: [ubuntu-bionic, ubuntu-jammy, ubuntu-xenial]
         mariadb-version: [10.9-jammy, 10.7-focal, 10.5-focal, 10.2-bionic]
 
     steps:
@@ -28,8 +28,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        stemcell-name: [ubuntu-bionic, ubuntu-jammy]
+        stemcell-name: [ubuntu-bionic, ubuntu-jammy, ubuntu-xenial]
         mysql-version: [8.0-debian, 8.0-oracle, 5.7-debian]
+        exclude:
+        - stemcell-name: ubuntu-xenial
+          mysql-version: 8.0-debian
+        - stemcell-name: ubuntu-xenial
+          mysql-version: 8.0-oracle
 
     steps:
       - uses: actions/checkout@v3
@@ -47,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        stemcell-name: [ubuntu-bionic, ubuntu-jammy]
+        stemcell-name: [ubuntu-bionic, ubuntu-jammy, ubuntu-xenial]
         postgres-version: [13-bullseye, 11-bullseye, 10-bullseye, 9.6-bullseye, 9.4-alpine]
 
     steps:
