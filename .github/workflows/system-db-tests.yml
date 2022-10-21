@@ -69,7 +69,7 @@ jobs:
 
       - name: Run System Tests for Postgres with TLS
         run: |
-             ENABLE_TLS="yes"
+             ENABLE_TLS="yes" \
              STEMCELL_NAME="${{ matrix.stemcell-name }}" \
              POSTGRES_VERSION="${{ matrix.postgres-version }}" \
              POSTGRES_PASSWORD="$(head /dev/urandom | md5sum | cut -f1 -d" ")" \
@@ -78,7 +78,7 @@ jobs:
 
       - name: Run System Tests for Postgres with MUTUAL_TLS
         run: |
-             ENABLE_TLS="mutual"
+             ENABLE_TLS="mutual" \
              STEMCELL_NAME="${{ matrix.stemcell-name }}" \
              POSTGRES_VERSION="${{ matrix.postgres-version }}" \
              POSTGRES_PASSWORD="$(head /dev/urandom | md5sum | cut -f1 -d" ")" \
