@@ -16,6 +16,12 @@ jobs:
       - uses: actions/checkout@v3
         with:
           path: repo
+
+      - name: Dockerize BOSH Release (Compilation Test)
+        run: |
+             STEMCELL_NAME="${{ matrix.stemcell-name }}" \
+             docker-compose -f repo/docker-compose.yml run dockerize-release
+
       - name: Run System Tests for MariaDB
         run: |
              STEMCELL_NAME="${{ matrix.stemcell-name }}" \
@@ -40,6 +46,12 @@ jobs:
       - uses: actions/checkout@v3
         with:
           path: repo
+
+      - name: Dockerize BOSH Release (Compilation Test)
+        run: |
+             STEMCELL_NAME="${{ matrix.stemcell-name }}" \
+             docker-compose -f repo/docker-compose.yml run dockerize-release
+
       - name: Run System Tests for MySQL
         run: |
              STEMCELL_NAME="${{ matrix.stemcell-name }}" \
@@ -59,6 +71,12 @@ jobs:
       - uses: actions/checkout@v3
         with:
           path: repo
+
+      - name: Dockerize BOSH Release (Compilation Test)
+        run: |
+             STEMCELL_NAME="${{ matrix.stemcell-name }}" \
+             docker-compose -f repo/docker-compose.yml run dockerize-release
+
       - name: Run System Tests for Postgres
         run: |
              STEMCELL_NAME="${{ matrix.stemcell-name }}" \
