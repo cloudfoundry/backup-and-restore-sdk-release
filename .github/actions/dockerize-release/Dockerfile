@@ -19,6 +19,7 @@ RUN curl -o /bin/bosh -L "https://github.com/cloudfoundry/bosh-cli/releases/down
 COPY . /release-repo
 WORKDIR /release-repo
 
+RUN git submodule update --init --recursive
 RUN bosh create-release --force --tarball /release.tgz
 RUN mkdir -p /release && tar -xf /release.tgz -C /release
 

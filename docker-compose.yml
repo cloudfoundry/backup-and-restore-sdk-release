@@ -96,6 +96,7 @@ services:
     - ./:/backup-and-restore-sdk-release
     - postgres-certs:/tls-certs
     environment:
+    - ENABLE_TLS=${ENABLE_TLS}
     - POSTGRES_USERNAME=postgres
     - POSTGRES_HOSTNAME=system-db-postgres-backing-db
     - POSTGRES_PORT=5432
@@ -109,6 +110,7 @@ services:
     volumes:
     - postgres-certs:/tls-certs
     environment:
+    - ENABLE_TLS=${ENABLE_TLS}
     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 
 

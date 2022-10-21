@@ -66,3 +66,19 @@ jobs:
              POSTGRES_PASSWORD="$(head /dev/urandom | md5sum | cut -f1 -d" ")" \
              docker-compose -f repo/docker-compose.yml run system-db-postgres || (docker-compose -f repo/docker-compose.yml logs system-db-postgres-backing-db && exit 1)
 
+      - name: Run System Tests for Postgres with TLS
+        run: |
+             ENABLE_TLS="yes"
+             STEMCELL_NAME="${{ matrix.stemcell-name }}" \
+             POSTGRES_VERSION="${{ matrix.postgres-version }}" \
+             POSTGRES_PASSWORD="$(head /dev/urandom | md5sum | cut -f1 -d" ")" \
+             docker-compose -f repo/docker-compose.yml run system-db-postgres || (docker-compose -f repo/docker-compose.yml logs system-db-postgres-backing-db && exit 1)
+
+      - name: Run System Tests for Postgres with MUTUAL_TLS
+        run: |
+             ENABLE_TLS="mutual"
+             STEMCELL_NAME="${{ matrix.stemcell-name }}" \
+             POSTGRES_VERSION="${{ matrix.postgres-version }}" \
+             POSTGRES_PASSWORD="$(head /dev/urandom | md5sum | cut -f1 -d" ")" \
+             docker-compose -f repo/docker-compose.yml run system-db-postgres || (docker-compose -f repo/docker-compose.yml logs system-db-postgres-backing-db && exit 1)
+
