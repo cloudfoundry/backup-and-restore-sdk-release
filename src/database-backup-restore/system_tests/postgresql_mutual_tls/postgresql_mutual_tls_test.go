@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strconv"
 
 	_ "github.com/lib/pq"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gexec"
 
 	. "database-backup-restore/system_tests/utils"
 )
@@ -32,17 +32,9 @@ var _ = Describe("postgres with mutual tls", func() {
 		postgresClientKey      string
 		postgresClientCertPath string
 		postgresClientKeyPath  string
-
-		brJob JobInstance
 	)
 
 	BeforeSuite(func() {
-		brJob = JobInstance{
-			Deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
-			Instance:      MustHaveEnv("SDK_INSTANCE_GROUP"),
-			InstanceIndex: "0",
-		}
-
 		postgresHostName = MustHaveEnv("POSTGRES_HOSTNAME")
 		postgresPort, _ = strconv.Atoi(MustHaveEnv("POSTGRES_PORT"))
 		postgresPassword = MustHaveEnv("POSTGRES_PASSWORD")
@@ -89,11 +81,11 @@ var _ = Describe("postgres with mutual tls", func() {
 		Expect(os.Remove(postgresClientCertPath)).To(Succeed())
 		Expect(os.Remove(postgresClientKeyPath)).To(Succeed())
 
-		brJob.RunOnVMAndSucceed(fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath))
+		exec.Command("bash", "-c", fmt.Sprintf("sudo rm -rf %s %s", configPath, dbDumpPath)).CombinedOutput()
 	})
 
 	JustBeforeEach(func() {
-		brJob.RunOnVMAndSucceed(fmt.Sprintf("echo '%s' > %s", configJson, configPath))
+		exec.Command("bash", "-c", fmt.Sprintf("echo '%s' > %s", configJson, configPath)).CombinedOutput()
 	})
 
 	Context("when TLS info is not provided in the config", func() {
@@ -116,8 +108,11 @@ var _ = Describe("postgres with mutual tls", func() {
 		})
 
 		It("does not work", func() {
-			Expect(brJob.RunOnInstance("/var/vcap/jobs/database-backup-restorer/bin/backup",
-				"--artifact-file", dbDumpPath, "--config", configPath)).To(gexec.Exit(1))
+			_, err := exec.Command("bash", "-c", fmt.Sprintf(
+				"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+				dbDumpPath, configPath)).CombinedOutput()
+
+			Expect(err).To(HaveOccurred())
 		})
 	})
 
@@ -157,15 +152,15 @@ var _ = Describe("postgres with mutual tls", func() {
 				})
 
 				It("works", func() {
-					brJob.RunOnVMAndSucceed(
+					exec.Command("bash", "-c",
 						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
-							dbDumpPath, configPath))
+							dbDumpPath, configPath)).CombinedOutput()
 
 					pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
 
-					brJob.RunOnVMAndSucceed(
+					exec.Command("bash", "-c",
 						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
-							dbDumpPath, configPath))
+							dbDumpPath, configPath)).CombinedOutput()
 
 					Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).To(ConsistOf("Old Person"))
 				})
@@ -204,15 +199,15 @@ var _ = Describe("postgres with mutual tls", func() {
 				})
 
 				It("works", func() {
-					brJob.RunOnVMAndSucceed(
+					exec.Command("bash", "-c",
 						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
-							dbDumpPath, configPath))
+							dbDumpPath, configPath)).CombinedOutput()
 
 					pgConnection.RunSQLCommand("UPDATE people SET NAME = 'New Person';")
 
-					brJob.RunOnVMAndSucceed(
+					exec.Command("bash", "-c",
 						fmt.Sprintf("/var/vcap/jobs/database-backup-restorer/bin/restore --artifact-file %s --config %s",
-							dbDumpPath, configPath))
+							dbDumpPath, configPath)).CombinedOutput()
 
 					Expect(pgConnection.FetchSQLColumn("SELECT name FROM people;")).To(ConsistOf("Old Person"))
 				})
@@ -247,8 +242,11 @@ var _ = Describe("postgres with mutual tls", func() {
 				})
 
 				It("does not work", func() {
-					Expect(brJob.RunOnInstance("/var/vcap/jobs/database-backup-restorer/bin/backup",
-						"--artifact-file", dbDumpPath, "--config", configPath)).To(gexec.Exit(1))
+					_, err := exec.Command("bash", "-c", fmt.Sprintf(
+						"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+						dbDumpPath, configPath)).CombinedOutput()
+
+					Expect(err).To(HaveOccurred())
 				})
 			})
 
@@ -279,8 +277,11 @@ var _ = Describe("postgres with mutual tls", func() {
 				})
 
 				It("does not work", func() {
-					Expect(brJob.RunOnInstance("/var/vcap/jobs/database-backup-restorer/bin/backup",
-						"--artifact-file", dbDumpPath, "--config", configPath)).To(gexec.Exit(1))
+					_, err := exec.Command("bash", "-c", fmt.Sprintf(
+						"/var/vcap/jobs/database-backup-restorer/bin/backup --artifact-file %s --config %s",
+						dbDumpPath, configPath)).CombinedOutput()
+
+					Expect(err).To(HaveOccurred())
 				})
 			})
 		})

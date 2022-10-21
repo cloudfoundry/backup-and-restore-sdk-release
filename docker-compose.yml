@@ -94,6 +94,7 @@ services:
       - POSTGRES_VERSION=${POSTGRES_VERSION}
     volumes:
     - ./:/backup-and-restore-sdk-release
+    - postgres-certs:/tls-certs
     environment:
     - POSTGRES_USERNAME=postgres
     - POSTGRES_HOSTNAME=system-db-postgres-backing-db
@@ -105,6 +106,8 @@ services:
       context: .github/actions/run-system-db-tests/postgres
       args:
       - POSTGRES_VERSION=${POSTGRES_VERSION}
+    volumes:
+    - postgres-certs:/tls-certs
     environment:
     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 
@@ -115,3 +118,4 @@ volumes:
 ### a named volume MUST be declared in the top-level volumes key.
   mysql-certs:
   mariadb-certs:
+  postgres-certs:
