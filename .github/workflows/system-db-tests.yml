@@ -78,7 +78,6 @@ jobs:
              docker-compose -f repo/docker-compose.yml run dockerize-release
 
       - name: Run System Tests for Postgres
-        if: ${{ matrix.postgres-version != '9.4-alpine' }}
         run: |
              STEMCELL_NAME="${{ matrix.stemcell-name }}" \
              POSTGRES_VERSION="${{ matrix.postgres-version }}" \
@@ -97,6 +96,7 @@ jobs:
              docker-compose -f repo/docker-compose.yml down -v --remove-orphans --rmi local
 
       - name: Run System Tests for Postgres with MUTUAL_TLS
+        if: ${{ matrix.postgres-version != '9.4-alpine' }}
         run: |
              ENABLE_TLS="mutual" \
              STEMCELL_NAME="${{ matrix.stemcell-name }}" \
