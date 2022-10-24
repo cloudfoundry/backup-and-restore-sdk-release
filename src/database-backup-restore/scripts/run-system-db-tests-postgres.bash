@@ -21,6 +21,7 @@ pushd "$SRC_DIR"
   export TEST_TLS_VERIFY_IDENTITY=false
   export TEST_SSL_USER_REQUIRES_SSL=true
 
+  export RUN_TESTS_WITHOUT_BOSH=true
   ginkgo -mod vendor -r -v "system_tests/postgresql" -trace
 
   elif [[ "$ENABLE_TLS" == "yes" ]]; then
@@ -42,6 +43,7 @@ pushd "$SRC_DIR"
   export POSTGRES_CLIENT_CERT="$( cat "${POSTGRES_CLIENT_CERT_PATH}" )"
   export POSTGRES_CLIENT_KEY="$( cat "${POSTGRES_CLIENT_KEY_PATH}" )"
 
+  export RUN_TESTS_WITHOUT_BOSH=true
   ginkgo -mod vendor -r -v "system_tests/postgresql_tls" -trace
 
   elif [[ "${ENABLE_TLS}" == "mutual" ]]; then
@@ -69,6 +71,7 @@ pushd "$SRC_DIR"
   export POSTGRES_CLIENT_CERT="$( cat "${POSTGRES_CLIENT_CERT_PATH}" )"
   export POSTGRES_CLIENT_KEY="$( cat "${POSTGRES_CLIENT_KEY_PATH}" )"
 
+  export RUN_TESTS_WITHOUT_BOSH=true
   ginkgo -mod vendor -r -v "system_tests/postgresql_mutual_tls" -trace
 
   fi

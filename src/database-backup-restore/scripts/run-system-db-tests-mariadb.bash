@@ -25,5 +25,6 @@ pushd "$SRC_DIR"
   export TEST_TLS_VERIFY_IDENTITY=false
   export TEST_SSL_USER_REQUIRES_SSL=true
 
+  export RUN_TESTS_WITHOUT_BOSH=true
   ginkgo -mod vendor -r -v "system_tests/mysql" -trace
 popd

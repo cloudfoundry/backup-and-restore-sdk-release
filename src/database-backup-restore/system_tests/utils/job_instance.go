@@ -19,6 +19,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -59,14 +60,18 @@ func (jobInstance *JobInstance) RunOnVMAndSucceed(command string) *gexec.Session
 }
 
 func (jobInstance *JobInstance) RunOnInstance(cmd ...string) *gexec.Session {
-	return RunCommand(
-		join(
-			BoshCommand(),
-			forDeployment(jobInstance.Deployment),
-			getSSHCommand(jobInstance.Instance, jobInstance.InstanceIndex),
-		),
-		join(cmd...),
-	)
+	if os.Getenv("RUN_TESTS_WITHOUT_BOSH") == "true" {
+		return RunCommandWithStream(nil, nil, "bash", "-c", join(cmd...))
+	} else {
+		return RunCommand(
+			join(
+				BoshCommand(),
+				forDeployment(jobInstance.Deployment),
+				getSSHCommand(jobInstance.Instance, jobInstance.InstanceIndex),
+			),
+			join(cmd...),
+		)
+	}
 }
 
 func (jobInstance *JobInstance) GetIPOfInstance() string {
