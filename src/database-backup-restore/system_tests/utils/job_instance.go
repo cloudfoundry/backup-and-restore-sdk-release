@@ -61,7 +61,7 @@ func (jobInstance *JobInstance) RunOnVMAndSucceed(command string) *gexec.Session
 
 func (jobInstance *JobInstance) RunOnInstance(cmd ...string) *gexec.Session {
 	if os.Getenv("RUN_TESTS_WITHOUT_BOSH") == "true" {
-		return RunCommandWithStream(nil, nil, "bash", "-c", join(cmd...))
+		return RunCommandWithStream(nil, nil, "bash", "-c", join(join(cmd...), "2>&1"))
 	} else {
 		return RunCommand(
 			join(

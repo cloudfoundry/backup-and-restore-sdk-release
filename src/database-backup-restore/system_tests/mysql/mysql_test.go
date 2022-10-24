@@ -153,8 +153,8 @@ var _ = Describe("mysql", func() {
 					configPath))
 
 				Expect(session.ExitCode()).NotTo(BeZero())
-				Expect(session.Err).To(gbytes.Say("mysqldump: Couldn't find table: \"not there\""))
-				Expect(session.Err).To(gbytes.Say(
+				Expect(session).To(gbytes.Say("mysqldump: Couldn't find table: \"not there\""))
+				Expect(session).To(gbytes.Say(
 					"You may need to delete the artifact-file that was created before re-running"))
 			})
 		})
@@ -179,8 +179,8 @@ var _ = Describe("mysql", func() {
 					configPath))
 
 				Expect(session.ExitCode()).NotTo(BeZero())
-				Expect(session.Err).To(gbytes.Say("mysqldump: Couldn't find table: \"lizards\""))
-				Expect(session.Err).To(gbytes.Say(
+				Expect(session).To(gbytes.Say("mysqldump: Couldn't find table: \"lizards\""))
+				Expect(session).To(gbytes.Say(
 					"You may need to delete the artifact-file that was created before re-running"))
 			})
 		})

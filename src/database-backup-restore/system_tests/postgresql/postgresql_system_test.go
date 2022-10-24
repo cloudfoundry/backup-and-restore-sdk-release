@@ -248,7 +248,7 @@ var _ = Describe("postgres", func() {
 				dbDumpPath,
 				configPath))
 			Expect(session.ExitCode()).NotTo(BeZero())
-			Expect(session.Err).To(gbytes.Say(`can't find specified table\(s\): lizards`))
+			Expect(session).To(gbytes.Say(`can't find specified table\(s\): lizards`))
 		})
 	})
 })
