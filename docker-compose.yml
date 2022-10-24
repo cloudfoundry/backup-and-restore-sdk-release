@@ -5,39 +5,39 @@ services:
     image: dockerize-release
     build:
       context: .
-      dockerfile: .github/actions/dockerize-release/Dockerfile
+      dockerfile: ci/dockerfiles/dockerize-release/Dockerfile
       args:
       - STEMCELL_NAME=${STEMCELL_NAME}
 
   unit-blobstore-azure:
-    build: { context: .github/actions/run-golang-unit-tests }
+    build: { context: ci/dockerfiles/run-golang-unit-tests }
     volumes: [./:/backup-and-restore-sdk-release]
     entrypoint: /backup-and-restore-sdk-release/src/azure-blobstore-backup-restore/scripts/run-unit-tests.bash
 
   unit-blobstore-gcs:
-    build: { context: .github/actions/run-golang-unit-tests }
+    build: { context: ci/dockerfiles/run-golang-unit-tests }
     volumes: [./:/backup-and-restore-sdk-release]
     entrypoint: /backup-and-restore-sdk-release/src/gcs-blobstore-backup-restore/scripts/run-unit-tests.bash
 
   unit-blobstore-s3:
-    build: { context: .github/actions/run-golang-unit-tests }
+    build: { context: ci/dockerfiles/run-golang-unit-tests }
     volumes: [./:/backup-and-restore-sdk-release]
     entrypoint: /backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/scripts/run-unit-tests.bash
 
   unit-database:
-    build: { context: .github/actions/run-golang-unit-tests }
+    build: { context: ci/dockerfiles/run-golang-unit-tests }
     volumes: [./:/backup-and-restore-sdk-release]
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-unit-tests.bash
 
   unit-sdk-template:
-    build: { context: .github/actions/sdk-template-unit-tests }
+    build: { context: ci/dockerfiles/sdk-template-unit-tests }
     volumes: [./:/backup-and-restore-sdk-release]
 
   system-db-mariadb:
     depends_on: [dockerize-release, system-db-mariadb-backing-db]
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-mariadb.bash
     build:
-      context: .github/actions/run-system-db-tests/
+      context: ci/dockerfiles/run-system-db-tests/
       args:
       - MARIADB_VERSION=${MARIADB_VERSION}
     volumes:
@@ -51,7 +51,7 @@ services:
 
   system-db-mariadb-backing-db:
     build:
-      context: .github/actions/run-system-db-tests/mariadb
+      context: ci/dockerfiles/run-system-db-tests/mariadb
       args:
       - MARIADB_VERSION=${MARIADB_VERSION}
     volumes:
@@ -63,7 +63,7 @@ services:
     depends_on: [dockerize-release, system-db-mysql-backing-db]
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-mysql.bash
     build:
-      context: .github/actions/run-system-db-tests/
+      context: ci/dockerfiles/run-system-db-tests/
       args:
       - MYSQL_VERSION=${MYSQL_VERSION}
     volumes:
@@ -77,7 +77,7 @@ services:
 
   system-db-mysql-backing-db:
     build:
-      context: .github/actions/run-system-db-tests/mysql
+      context: ci/dockerfiles/run-system-db-tests/mysql
       args:
       - MYSQL_VERSION=${MYSQL_VERSION}
     volumes:
@@ -89,7 +89,7 @@ services:
     depends_on: [dockerize-release, system-db-postgres-backing-db]
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-postgres.bash
     build:
-      context: .github/actions/run-system-db-tests/
+      context: ci/dockerfiles/run-system-db-tests/
       args:
       - POSTGRES_VERSION=${POSTGRES_VERSION}
     volumes:
@@ -104,7 +104,7 @@ services:
 
   system-db-postgres-backing-db:
     build:
-      context: .github/actions/run-system-db-tests/postgres
+      context: ci/dockerfiles/run-system-db-tests/postgres
       args:
       - POSTGRES_VERSION=${POSTGRES_VERSION}
     volumes:
