@@ -5,9 +5,8 @@ FROM alpine as uncompressed-stemcell
 ARG STEMCELL_NAME
 RUN apk add curl --no-cache
 RUN STEMCELL_URL="$(curl -L https://bosh.io/stemcells | grep -io "https:\/\/.*warden-boshlite-${STEMCELL_NAME}-go_agent.tgz")" \
- && curl -o /stemcell.tgz -L ${STEMCELL_URL}
-RUN mkdir -p /wrapper && tar xf /stemcell.tgz -C /wrapper
-RUN mkdir -p /stemcell && tar xf /wrapper/image -C /stemcell
+    && mkdir -p /stemcell \
+    && curl -L -o - ${STEMCELL_URL} | tar -Ozx image | tar -zx -C /stemcell
 
 #########################################################################
 # Run bosh create-release and uncompress tarball which contains blobs and vendored packages
