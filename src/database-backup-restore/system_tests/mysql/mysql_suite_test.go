@@ -38,10 +38,12 @@ func TestMysql(t *testing.T) {
 
 var _ = Describe("mysql", func() {
 	BeforeSuite(func() {
-		brJob = JobInstance{
-			Deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
-			Instance:      MustHaveEnv("SDK_INSTANCE_GROUP"),
-			InstanceIndex: "0",
+		if os.Getenv("RUN_TESTS_WITHOUT_BOSH") != "true" {
+			brJob = JobInstance{
+				Deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
+				Instance:      MustHaveEnv("SDK_INSTANCE_GROUP"),
+				InstanceIndex: "0",
+			}
 		}
 
 		mysqlHostName = MustHaveEnv("MYSQL_HOSTNAME")

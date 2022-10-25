@@ -1,22 +1,123 @@
 version: '3.0'
 
 services:
+  dockerize-release:
+    image: dockerize-release
+    build:
+      context: .
+      dockerfile: ci/dockerfiles/dockerize-release/Dockerfile
+      args:
+      - STEMCELL_NAME=${STEMCELL_NAME}
+
   unit-blobstore-azure:
-    build: { context: .github/actions/run-golang-unit-tests }
-    volumes: [./src/azure-blobstore-backup-restore:/goproject]
+    build: { context: ci/dockerfiles/run-golang-unit-tests }
+    volumes: [./:/backup-and-restore-sdk-release]
+    entrypoint: /backup-and-restore-sdk-release/src/azure-blobstore-backup-restore/scripts/run-unit-tests.bash
 
   unit-blobstore-gcs:
-    build: { context: .github/actions/run-golang-unit-tests }
-    volumes: [./src/gcs-blobstore-backup-restore:/goproject]
+    build: { context: ci/dockerfiles/run-golang-unit-tests }
+    volumes: [./:/backup-and-restore-sdk-release]
+    entrypoint: /backup-and-restore-sdk-release/src/gcs-blobstore-backup-restore/scripts/run-unit-tests.bash
 
   unit-blobstore-s3:
-    build: { context: .github/actions/run-golang-unit-tests }
-    volumes: [./src/s3-blobstore-backup-restore:/goproject]
+    build: { context: ci/dockerfiles/run-golang-unit-tests }
+    volumes: [./:/backup-and-restore-sdk-release]
+    entrypoint: /backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/scripts/run-unit-tests.bash
 
   unit-database:
-    build: { context: .github/actions/run-golang-unit-tests }
-    volumes: [./src/database-backup-restore:/goproject]
+    build: { context: ci/dockerfiles/run-golang-unit-tests }
+    volumes: [./:/backup-and-restore-sdk-release]
+    entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-unit-tests.bash
 
   unit-sdk-template:
-    build: { context: .github/actions/sdk-template-unit-tests }
-    volumes: [.:/backup-and-restore-sdk-release]
+    build: { context: ci/dockerfiles/sdk-template-unit-tests }
+    volumes: [./:/backup-and-restore-sdk-release]
+
+  system-db-mariadb:
+    depends_on: [dockerize-release, system-db-mariadb-backing-db]
+    entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-mariadb.bash
+    build:
+      context: ci/dockerfiles/run-system-db-tests/
+      args:
+      - MARIADB_VERSION=${MARIADB_VERSION}
+    volumes:
+    - ./:/backup-and-restore-sdk-release
+    - mariadb-certs:/tls-certs
+    environment:
+    - MYSQL_USERNAME=root
+    - MYSQL_HOSTNAME=system-db-mariadb-backing-db
+    - MYSQL_PORT=3306
+    - MYSQL_PASSWORD=${MARIADB_PASSWORD}
+
+  system-db-mariadb-backing-db:
+    build:
+      context: ci/dockerfiles/run-system-db-tests/mariadb
+      args:
+      - MARIADB_VERSION=${MARIADB_VERSION}
+    volumes:
+    - mariadb-certs:/tls-certs
+    environment:
+    - MARIADB_ROOT_PASSWORD=${MARIADB_PASSWORD}
+
+  system-db-mysql:
+    depends_on: [dockerize-release, system-db-mysql-backing-db]
+    entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-mysql.bash
+    build:
+      context: ci/dockerfiles/run-system-db-tests/
+      args:
+      - MYSQL_VERSION=${MYSQL_VERSION}
+    volumes:
+    - ./:/backup-and-restore-sdk-release
+    - mysql-certs:/tls-certs
+    environment:
+    - MYSQL_USERNAME=root
+    - MYSQL_HOSTNAME=system-db-mysql-backing-db
+    - MYSQL_PORT=3306
+    - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+
+  system-db-mysql-backing-db:
+    build:
+      context: ci/dockerfiles/run-system-db-tests/mysql
+      args:
+      - MYSQL_VERSION=${MYSQL_VERSION}
+    volumes:
+    - mysql-certs:/tls-certs
+    environment:
+    - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
+
+  system-db-postgres:
+    depends_on: [dockerize-release, system-db-postgres-backing-db]
+    entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-postgres.bash
+    build:
+      context: ci/dockerfiles/run-system-db-tests/
+      args:
+      - POSTGRES_VERSION=${POSTGRES_VERSION}
+    volumes:
+    - ./:/backup-and-restore-sdk-release
+    - postgres-certs:/tls-certs
+    environment:
+    - ENABLE_TLS=${ENABLE_TLS}
+    - POSTGRES_USERNAME=postgres
+    - POSTGRES_HOSTNAME=system-db-postgres-backing-db
+    - POSTGRES_PORT=5432
+    - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+  system-db-postgres-backing-db:
+    build:
+      context: ci/dockerfiles/run-system-db-tests/postgres
+      args:
+      - POSTGRES_VERSION=${POSTGRES_VERSION}
+    volumes:
+    - postgres-certs:/tls-certs
+    environment:
+    - ENABLE_TLS=${ENABLE_TLS}
+    - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+
+volumes:
+# See https://docs.docker.com/compose/compose-file/#volumes - Specially:
+### To reuse a volume across multiple services,
+### a named volume MUST be declared in the top-level volumes key.
+  mysql-certs:
+  mariadb-certs:
+  postgres-certs:
