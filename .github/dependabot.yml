@@ -35,3 +35,8 @@ updates:
     directory: "/src/system-tests"
     schedule:
       interval: "daily"
+  # Go module dependencies - system-tests
+  - package-ecosystem: "gomod"
+    directory: "/scripts/boshcompiler"
+    schedule:
+      interval: "daily"
