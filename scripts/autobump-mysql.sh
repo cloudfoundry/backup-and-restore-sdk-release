@@ -9,20 +9,30 @@ ALL_VERSIONS="$(echo "${VALUES}" | grep -Eo '[0-9]+(\.[0-9]+){1,2}[a-zA-Z]?')"
 
 export BLOBS_PREFIX="mysql"
 export ALL_VERSIONS
-export DOWNLOADED_FILENAME='mysql-${VERSION/8.0/boost-8.0}.tar.gz'
+# shellcheck disable=SC2016
+export DOWNLOADED_FILENAME='$(basename "$(download_url_callback "${VERSION}")")'
 
 function checksum_callback() {
-    VERSION="${1}"
-    DOWNLOADED_FILE="${2}"
-
-    CHECKSUM_HTML="$(curl -s -L "https://downloads.mysql.com/archives/community/?version=${VERSION}&os=src&osva=Generic+Linux+%28Architecture+Independent%29#downloads")"
-    EXPECTED_MD5="$(echo "${CHECKSUM_HTML}" | xmllint --html --xpath "//td[a/@href='/archives/gpg/?file=mysql-${VERSION/8.0/boost-8.0}.tar.gz&p=23']/code/text()" - 2>/dev/null)"
-    echo "${EXPECTED_MD5}  ${DOWNLOADED_FILE}" | md5sum -c - || exit 1
+    local version="${1}"
+    local downloaded_file="${2}"
+    local md5_url
+    md5_url=$(download_url_callback "${version}").md5
+    curl -Ls "${md5_url}" | md5sum -c -
 }
 
 function download_url_callback() {
-    local VERSION="${1}"
-    echo "https://downloads.mysql.com/archives/get/p/23/file/mysql-${VERSION/8.0/boost-8.0}.tar.gz"
+    local version="${1}"
+    local major_minor=${version%.*}
+    local url
+    case "${major_minor}" in
+      "8.0") url=https://cdn.mysql.com/Downloads/MySQL-8.0/mysql-${version}-linux-glibc2.17-x86_64-minimal.tar.xz ;;
+      "5.7") url=https://cdn.mysql.com/Downloads/MySQL-5.7/mysql-${version}.tar.gz ;;
+      *)
+        >&2 echo "Unsupported MySQL version ${version}"
+        return 1
+        ;;
+    esac
+    echo "${url}"
 }
 
 function new_version_callback() {
