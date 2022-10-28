@@ -27,6 +27,7 @@ function download_url_callback() {
     case "${major_minor}" in
       "8.0") url=https://cdn.mysql.com/Downloads/MySQL-8.0/mysql-${version}-linux-glibc2.17-x86_64-minimal.tar.xz ;;
       "5.7") url=https://cdn.mysql.com/Downloads/MySQL-5.7/mysql-${version}.tar.gz ;;
+      "5.6") url=https://cdn.mysql.com/Downloads/MySQL-5.6/mysql-${version}.tar.gz ;;
       *)
         >&2 echo "Unsupported MySQL version ${version}"
         return 1
