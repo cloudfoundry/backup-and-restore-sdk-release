@@ -20,9 +20,11 @@ mysql/mysql-5.7.39.tar.gz:
   sha: sha256:111c3aca91897e453039db391a475265e020fd921cb97307c00084a88e4d6104
 mysql/mysql-8.0.31-linux-glibc2.17-x86_64-minimal.tar.xz:
   size: 60148296
+  object_id: 6029432e-38d0-4ff0-6af0-b55d25fbbff2
   sha: sha256:925d51cd2b05af536d035eb2f6ffe3acf42dd2c43993f91fc98d925d56a937de
 ncurses/ncurses-6.3.tar.gz:
   size: 3583550
+  object_id: f33b3936-ebe8-4fcc-7f51-295692ca2119
   sha: sha256:97fc51ac2b085d4cde31ef4d2c3122c21abc217e9090a43a30fc5ec21684e059
 openssl/openssl-1.1.1o.tar.gz:
   size: 9856386
