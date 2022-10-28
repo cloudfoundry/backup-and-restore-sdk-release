@@ -18,20 +18,15 @@ package s3_test
 
 import (
 	"encoding/json"
-	"s3-blobstore-backup-restore/incremental"
-	"time"
-
-	. "github.com/onsi/gomega/gexec"
-
-	"strconv"
-
-	"io/ioutil"
-
-	"os"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gexec"
+	. "github.com/onsi/gomega/gstruct"
+	"io/ioutil"
+	"os"
+	"strconv"
 	. "system-tests"
+	"time"
 )
 
 var _ = Describe("S3 unversioned backup and restore", func() {
@@ -347,24 +342,21 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 				fileContents, err := ioutil.ReadFile(localArtifact.Name())
 				Expect(err).NotTo(HaveOccurred())
 
-				var backups map[string]incremental.Backup
+				var backups map[string]any
 				err = json.Unmarshal(fileContents, &backups)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(backups).To(Equal(map[string]incremental.Backup{
-					"bucket1": {
-						BucketName:   backupBucket,
-						BucketRegion: backupRegion,
-						Blobs:        backups["bucket1"].Blobs, //skip
-						SrcBackupDirectoryPath: backups["bucket1"].SrcBackupDirectoryPath, //skip
-					},
-					"bucket2": {
-						SameBucketAs: "bucket1",
-					},
+				Expect(backups).To(MatchAllKeys(Keys{
+					"bucket1": MatchAllKeys(Keys{
+						"bucket_name":               Equal(backupBucket),
+						"bucket_region":             Equal(backupRegion),
+						"blobs":                     ConsistOf(MatchRegexp(`^\d{4}(_\d{2}){5}/bucket1/original/path/to/file`)),
+						"src_backup_directory_path": MatchRegexp(`^\d{4}(_\d{2}){5}/bucket1$`),
+					}),
+					"bucket2": MatchAllKeys(Keys{
+						"SameBucketAs": Equal("bucket1"),
+					}),
 				}))
-
-				Expect(backups["bucket1"].Blobs).To(ConsistOf(MatchRegexp(`^\d{4}(_\d{2}){5}/bucket1/original/path/to/file`)))
-				Expect(backups["bucket1"].SrcBackupDirectoryPath).To(MatchRegexp(`^\d{4}(_\d{2}){5}/bucket1$`))
 			})
 
 			By("changing blobs in the live bucket", func() {

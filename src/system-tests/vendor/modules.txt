@@ -1,7 +1,7 @@
-# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.25
-github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor
 # github.com/fsnotify/fsnotify v1.4.9
 github.com/fsnotify/fsnotify
+# github.com/kr/pretty v0.3.0
+## explicit
 # github.com/nxadm/tail v1.4.8
 github.com/nxadm/tail
 github.com/nxadm/tail/ratelimiter
@@ -36,6 +36,8 @@ github.com/onsi/gomega
 github.com/onsi/gomega/format
 github.com/onsi/gomega/gbytes
 github.com/onsi/gomega/gexec
+github.com/onsi/gomega/gstruct
+github.com/onsi/gomega/gstruct/errors
 github.com/onsi/gomega/internal
 github.com/onsi/gomega/internal/gutil
 github.com/onsi/gomega/matchers
@@ -48,7 +50,8 @@ github.com/onsi/gomega/types
 golang.org/x/net/html
 golang.org/x/net/html/atom
 golang.org/x/net/html/charset
-# golang.org/x/sys v0.0.0-20220209214540-3681064d5158
+# golang.org/x/sys v0.0.0-20220310020820-b874c991c1a5
+## explicit
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.7
@@ -69,12 +72,9 @@ golang.org/x/text/internal/utf8internal
 golang.org/x/text/language
 golang.org/x/text/runes
 golang.org/x/text/transform
+# gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
+## explicit
 # gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
 gopkg.in/tomb.v1
 # gopkg.in/yaml.v2 v2.4.0
 gopkg.in/yaml.v2
-# s3-blobstore-backup-restore v0.0.0 => ../s3-blobstore-backup-restore
-## explicit
-s3-blobstore-backup-restore/blobpath
-s3-blobstore-backup-restore/incremental
-# s3-blobstore-backup-restore => ../s3-blobstore-backup-restore

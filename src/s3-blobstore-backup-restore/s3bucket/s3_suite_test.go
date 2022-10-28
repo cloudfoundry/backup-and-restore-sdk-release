@@ -1,12 +1,9 @@
 package s3bucket_test
 
 import (
-	"os"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "system-tests"
-
+	"os"
 	"testing"
 )
 
@@ -27,6 +24,14 @@ func TestS3(t *testing.T) {
 func MustHaveEnvOrBeEmpty(keyname string) string {
 	val, exist := os.LookupEnv(keyname)
 	if !exist {
+		panic("Need " + keyname + " for the test")
+	}
+	return val
+}
+
+func MustHaveEnv(keyname string) string {
+	val := os.Getenv(keyname)
+	if val == "" {
 		panic("Need " + keyname + " for the test")
 	}
 	return val
