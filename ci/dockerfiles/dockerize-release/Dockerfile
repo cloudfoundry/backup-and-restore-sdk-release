@@ -47,37 +47,23 @@ RUN bash -c 'for tgz in *.tgz ; do    \
 done'
 
 #########################################################################
+# Build the boshcompiler util
+#########################################################################
+FROM golang:1.19.2 as boshcompiler
+
+COPY scripts/boshcompiler /boshcompiler
+WORKDIR /boshcompiler
+RUN go install
+
+#########################################################################
 # Mount alongside stemcell and uncompressed release files and run packaging scripts
 #########################################################################
 FROM scratch as compiled-release
 COPY --from=uncompressed-stemcell /stemcell/ /
 COPY --from=uncompressed-release /release /release
+COPY --from=boshcompiler /go/bin/boshcompiler /usr/bin/boshcompiler
 
-ENV PACKAGES="libpcre2                \
-libopenssl1                           \
-database-backup-restorer-mariadb      \
-database-backup-restorer-boost        \
-database-backup-restorer-mysql-5.6    \
-database-backup-restorer-mysql-5.7    \
-database-backup-restorer-mysql-8.0    \
-database-backup-restorer-postgres-9.4 \
-database-backup-restorer-postgres-9.6 \
-database-backup-restorer-postgres-10  \
-database-backup-restorer-postgres-10  \
-database-backup-restorer-postgres-11  \
-database-backup-restorer-postgres-13  \
-golang-1-linux                        \
-database-backup-restorer"
-
-WORKDIR /release/packages
-RUN bash -c 'for pkg in ${PACKAGES}; do                   \
- export BOSH_INSTALL_TARGET="/var/vcap/packages/${pkg}" ; \
- cd "/release/packages/${pkg}"                          ; \
- mkdir -p "${BOSH_INSTALL_TARGET}"                      ; \
- chmod +x packaging                                     ; \
- ./packaging                                            ; \
-done'
-
+RUN boshcompiler /release
 
 WORKDIR /release/jobs
 RUN mkdir -p /var/vcap/jobs/database-backup-restorer/bin \
