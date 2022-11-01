@@ -10,6 +10,9 @@ import (
 
 type callback func(string)
 
+// Run will run the callback function `cb` (which must be thread safe) in parallel with the values specified in the
+// `work` slice, using up to the specified number of workers. It is dependency-aware, so if a dependency map is specified,
+// it will not run the callback function for a value until the callback functions for its dependents have finished.
 func Run(workers int, work []string, deps map[string][]string, cb callback) {
 	workQueue := make(chan string)
 	status := workstatus.New(work)
