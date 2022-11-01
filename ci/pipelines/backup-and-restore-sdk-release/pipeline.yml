@@ -91,6 +91,7 @@ groups:
   - bump-golang
   - bump-mariadb
   - bump-mysql
+  - bump-ncurses
   - bump-postgresql
   - bump-boost
   - bump-libpcre2
@@ -1118,6 +1119,29 @@ jobs:
       bump-repo: backup-and-restore-sdk-release-main
     vars:
       bump-script: scripts/autobump-mysql.sh
+    params:
+      PR_BASE: main
+      PR_LABELS: ci
+
+      GH_TOKEN: ((github.access_token))
+      AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
+      AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
+
+- name: bump-ncurses
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release-main
+    - get: cryogenics-concourse-tasks
+    - get: daily-trigger
+      trigger: true
+
+  - task: bump-ncurses
+    file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
+    input_mapping:
+      task-repo: cryogenics-concourse-tasks
+      bump-repo: backup-and-restore-sdk-release-main
+    vars:
+      bump-script: scripts/autobump-ncurses.sh
     params:
       PR_BASE: main
       PR_LABELS: ci
