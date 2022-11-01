@@ -1,6 +1,6 @@
 module gcs-blobstore-backup-restore
 
-go 1.16
+go 1.18
 
 require (
 	cloud.google.com/go/storage v1.27.0

@@ -9,4 +9,4 @@ require (
 	github.com/pivotal-cf/go-binmock v0.0.0-20171027112700-f797157c64e9 // indirect
 )
 
-go 1.13
+go 1.18
