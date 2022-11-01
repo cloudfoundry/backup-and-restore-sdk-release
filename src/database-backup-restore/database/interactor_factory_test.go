@@ -433,11 +433,6 @@ var _ = Describe("InteractorFactory", func() {
 						)))
 					})
 				})
-				Context("when MySQL 8 is not supported", func() {
-					It("returns a helpful error message", func() {
-						Expect(factoryError).To(MatchError("MySQL 8.0 is not supported on this OS. Are you using an old (xenial?) stemcell?"))
-					})
-				})
 			})
 
 			Context("when the version is detected as the not supported MariaDB 5.5.58", func() {
@@ -537,12 +532,6 @@ var _ = Describe("InteractorFactory", func() {
 							"mysql_80_restore",
 							mysql.NewDefaultSSLProvider(tempFolderManager),
 						)))
-					})
-				})
-
-				Context("when MySQL 8 is not supported", func() {
-					It("returns a helpful error message", func() {
-						Expect(factoryError).To(MatchError("MySQL 8.0 is not supported on this OS. Are you using an old (xenial?) stemcell?"))
 					})
 				})
 			})

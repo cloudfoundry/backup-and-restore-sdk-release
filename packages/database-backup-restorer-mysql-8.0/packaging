@@ -1,35 +1,28 @@
 #!/bin/bash
 
-set -e
+set -o errexit
 
-this_is_a_xenial_stemcell() {
-    # We can't use lsb-release because it isn't installed by default,
-    # and we can't use apt to get it in airgapped environments
-    grep xenial < /etc/apt/sources.list > /dev/null
-}
+tar \
+  --directory="${BOSH_INSTALL_TARGET}" \
+  --strip-components=1 \
+  --wildcards \
+  --extract \
+  --file mysql/mysql-8.0*.tar.xz \
+  "*/README" "*/LICENSE" \
+  "*/bin/mysql" "*/bin/mysqldump" \
+  "*/lib/private/libssl.so*" "*/lib/private/libcrypto.so*" \
+  "*/share/"
 
-if this_is_a_xenial_stemcell
-then
-    echo "MySQL 8.0.27+ requires GCC 7.1 or Clang 5 at a minimum."
-    echo "This stemcell is xenial, which does not provide those compilers, so MySQL 8 will not be compiled."
-    echo "The rest of BBR SDK will function as expected."
-    echo "If you want to back up a MySQL 8+ database, please use a newer stemcell such as Jammy."
-    exit 0
-fi
-
-tar -xf mysql/mysql-boost-8.0.*.tar.gz
-cd mysql-8.0.*/
-mkdir bld
-cd bld
-
-
-
-cmake .. \
-    -DBUILD_CONFIG=mysql_release \
-    -DCMAKE_C_COMPILER=gcc \
-    -DCMAKE_CXX_COMPILER=g++ \
-    -DCMAKE_INSTALL_PREFIX="${BOSH_INSTALL_TARGET}" \
-    -DINSTALL_STATIC_LIBRARIES=OFF \
-    -DWITHOUT_SERVER=ON \
-    -DWITH_BOOST=../boost/
-make install/strip -j "$(nproc)"
+tar -xf ncurses/ncurses-6.3.tar.gz
+cd ncurses-*/
+./configure \
+  --with-abi-version=5 \
+  --with-shared \
+  --with-termlib \
+  --without-cxx-binding \
+  --without-debug \
+  --without-develop \
+  --without-normal \
+  --prefix="${BOSH_INSTALL_TARGET}" \
+  --libdir="${BOSH_INSTALL_TARGET}/lib/private"
+make -j "$(nproc)" install
