@@ -12,12 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          gh label create "ActivePR" --force
-          ACTIVE_PR="$(gh pr list --state open --label "ActivePR" --limit 1 --json number --jq '.[0].number')"
+          gh label create "active-pr" --force
+          ACTIVE_PR="$(gh pr list --state open --label "active-pr" --limit 1 --json number --jq '.[0].number')"
           if [ -z "${ACTIVE_PR}" ];
           then
             OLDEST_PR="$(gh pr list --state open --base ${{ github.base_ref }} --limit 1 --search 'draft:true sort:created-asc' --json number --jq '.[0].number')"
-            gh pr edit "${OLDEST_PR}" --add-label "ActivePR"
+            gh pr edit "${OLDEST_PR}" --add-label "active-pr"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
