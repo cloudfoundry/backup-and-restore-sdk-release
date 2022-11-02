@@ -1,24 +1,30 @@
 # github.com/fsnotify/fsnotify v1.4.9
+## explicit; go 1.13
 github.com/fsnotify/fsnotify
 # github.com/go-sql-driver/mysql v1.6.0
+## explicit; go 1.10
 github.com/go-sql-driver/mysql
 # github.com/google/go-cmp v0.5.8
+## explicit; go 1.13
 github.com/google/go-cmp/cmp
 github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
 # github.com/lib/pq v1.10.7
+## explicit; go 1.13
 github.com/lib/pq
 github.com/lib/pq/oid
 github.com/lib/pq/scram
 # github.com/nxadm/tail v1.4.8
+## explicit; go 1.13
 github.com/nxadm/tail
 github.com/nxadm/tail/ratelimiter
 github.com/nxadm/tail/util
 github.com/nxadm/tail/watch
 github.com/nxadm/tail/winfile
 # github.com/onsi/ginkgo v1.16.5
+## explicit; go 1.16
 github.com/onsi/ginkgo
 github.com/onsi/ginkgo/config
 github.com/onsi/ginkgo/extensions/table
@@ -41,6 +47,7 @@ github.com/onsi/ginkgo/reporters/stenographer/support/go-colorable
 github.com/onsi/ginkgo/reporters/stenographer/support/go-isatty
 github.com/onsi/ginkgo/types
 # github.com/onsi/gomega v1.22.1
+## explicit; go 1.18
 github.com/onsi/gomega
 github.com/onsi/gomega/format
 github.com/onsi/gomega/gbytes
@@ -54,15 +61,21 @@ github.com/onsi/gomega/matchers/support/goraph/node
 github.com/onsi/gomega/matchers/support/goraph/util
 github.com/onsi/gomega/types
 # github.com/pivotal-cf-experimental/go-binmock v0.0.0-20171027112700-f797157c64e9
+## explicit
 github.com/pivotal-cf-experimental/go-binmock
+# github.com/pivotal-cf/go-binmock v0.0.0-20171027112700-f797157c64e9
+## explicit
 # golang.org/x/net v0.0.0-20220722155237-a158d28d115b
+## explicit; go 1.17
 golang.org/x/net/html
 golang.org/x/net/html/atom
 golang.org/x/net/html/charset
 # golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f
+## explicit; go 1.17
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.7
+## explicit; go 1.17
 golang.org/x/text/encoding
 golang.org/x/text/encoding/charmap
 golang.org/x/text/encoding/htmlindex
@@ -81,6 +94,8 @@ golang.org/x/text/language
 golang.org/x/text/runes
 golang.org/x/text/transform
 # gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
+## explicit
 gopkg.in/tomb.v1
 # gopkg.in/yaml.v3 v3.0.1
+## explicit
 gopkg.in/yaml.v3
