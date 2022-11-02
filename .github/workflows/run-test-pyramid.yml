@@ -1,6 +1,6 @@
 on:
   pull_request:
-    types: [ labeled ]
+    types: [ opened, synchronize, reopened, labeled ]
     branches:
       - main
 
@@ -10,11 +10,11 @@ concurrency:
 
 jobs:
   run-unit-tests:
-    if: ${{ github.event.label.name == 'active-pr' }}
+    if: contains(github.event.pull_request.labels.*.name, 'active-pr')
     uses: ./.github/workflows/unit-tests.yml
 
   run-system-db-tests:
-    if: ${{ github.event.label.name == 'active-pr' }}
+    if: contains(github.event.pull_request.labels.*.name, 'active-pr')   
     needs: run-unit-tests
     uses: ./.github/workflows/system-db-tests.yml
     
