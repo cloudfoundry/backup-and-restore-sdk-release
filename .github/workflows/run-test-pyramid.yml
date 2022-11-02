@@ -1,0 +1,20 @@
+on:
+  pull_request:
+    types: [ labeled ]
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.base_ref }}
+  cancel-in-progress: true
+
+jobs:
+  run-unit-tests:
+    if: ${{ github.event.label.name == 'active-pr' }}
+    uses: ./.github/workflows/unit-tests.yml
+
+  run-system-db-tests:
+    if: ${{ github.event.label.name == 'active-pr' }}
+    needs: run-unit-tests
+    uses: ./.github/workflows/system-db-tests.yml
+    

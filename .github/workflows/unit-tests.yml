@@ -1,17 +1,9 @@
 on:
-  pull_request:
-    types: [ labeled ]
-    branches:
-      - main
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  workflow_call:
 
 jobs:
   blobstore-azure-unit-tests:
     name: Azure Blobstore
-    if: ${{ github.event.label.name == 'active-pr' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -23,7 +15,6 @@ jobs:
 
   blobstore-gcs-unit-tests:
     name: GCS Blobstore
-    if: ${{ github.event.label.name == 'active-pr' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -35,7 +26,6 @@ jobs:
 
   blobstore-s3-unit-tests:
     name: S3 Blobstore
-    if: ${{ github.event.label.name == 'active-pr' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -47,7 +37,6 @@ jobs:
 
   database-unit-tests:
     name: Database
-    if: ${{ github.event.label.name == 'active-pr' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -59,7 +48,6 @@ jobs:
 
   sdk-template-unit-tests:
     name: SDK Template
-    if: ${{ github.event.label.name == 'active-pr' }}
     runs-on: ubuntu-latest
 
     steps:
