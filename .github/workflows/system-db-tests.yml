@@ -1,11 +1,17 @@
 on:
   pull_request:
+    types: [ labeled ]
     branches:
       - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   system-db-mariadb:
     name: System DB Tests for MariaDB
+    if: ${{ github.event.label.name == 'active-pr' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -31,6 +37,7 @@ jobs:
 
   system-db-mysql:
     name: System DB Tests for MySQL
+    if: ${{ github.event.label.name == 'active-pr' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -56,6 +63,7 @@ jobs:
 
   system-db-postgres:
     name: System DB Tests for Postgres
+    if: ${{ github.event.label.name == 'active-pr' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
