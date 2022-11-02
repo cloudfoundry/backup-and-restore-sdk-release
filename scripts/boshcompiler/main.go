@@ -45,9 +45,11 @@ func compilePackage(releasePath, pkgName string, deps []string) {
 
 	boshInstallTarget := filepath.Join("/var/vcap/packages", pkgName)
 	mkdir(boshInstallTarget)
+	boshCompileTarget := filepath.Join(releasePath, "packages", pkgName)
+	mkdir(boshCompileTarget)
 
 	cmd := exec.Command("bash", filepath.Join(releasePath, "packages", pkgName, "packaging"))
-	cmd.Env = append(os.Environ(), fmt.Sprintf("BOSH_INSTALL_TARGET=%s", boshInstallTarget))
+	cmd.Env = append(os.Environ(), fmt.Sprintf("BOSH_INSTALL_TARGET=%s", boshInstallTarget), fmt.Sprintf("BOSH_COMPILE_TARGET=%s", boshCompileTarget))
 	cmd.Dir = filepath.Join(releasePath, "packages", pkgName)
 
 	if output, err := cmd.CombinedOutput(); err != nil {
