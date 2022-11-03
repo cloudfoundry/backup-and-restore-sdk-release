@@ -80,6 +80,7 @@ var _ = Describe("MySQL", func() {
 					cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
 				}
 
+				fmt.Fprintf(GinkgoWriter, "Running command: %s\n", cmd.String())
 				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).ToNot(HaveOccurred())
 				Eventually(session).Should(gexec.Exit())
@@ -423,6 +424,7 @@ var _ = Describe("MySQL", func() {
 					cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
 				}
 
+				fmt.Fprintf(GinkgoWriter, "Running command: %s\n", cmd.String())
 				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).ToNot(HaveOccurred())
 				Eventually(session).Should(gexec.Exit())
@@ -653,6 +655,7 @@ var _ = Describe("MySQL", func() {
 					cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
 				}
 
+				fmt.Fprintf(GinkgoWriter, "Running command: %s\n", cmd.String())
 				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).ToNot(HaveOccurred())
 				Eventually(session).Should(gexec.Exit())
@@ -998,6 +1001,7 @@ var _ = Describe("MySQL", func() {
 					cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
 				}
 
+				fmt.Fprintf(GinkgoWriter, "Running command: %s\n", cmd.String())
 				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).ToNot(HaveOccurred())
 				Eventually(session).Should(gexec.Exit())
@@ -1227,6 +1231,7 @@ var _ = Describe("MySQL", func() {
 					cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
 				}
 
+				fmt.Fprintf(GinkgoWriter, "Running command: %s\n", cmd.String())
 				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).ToNot(HaveOccurred())
 				Eventually(session).Should(gexec.Exit())
@@ -1573,6 +1578,7 @@ var _ = Describe("MySQL", func() {
 					cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
 				}
 
+				fmt.Fprintf(GinkgoWriter, "Running command: %s\n", cmd.String())
 				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).ToNot(HaveOccurred())
 				Eventually(session).Should(gexec.Exit())
@@ -1813,6 +1819,7 @@ var _ = Describe("MariaDB", func() {
 					cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
 				}
 
+				fmt.Fprintf(GinkgoWriter, "Running command: %s\n", cmd.String())
 				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).ToNot(HaveOccurred())
 				Eventually(session).Should(gexec.Exit())

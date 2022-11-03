@@ -62,6 +62,7 @@ func createTmpFile(dirName, fileName, fileContents string) *os.File {
 
 func runSuccessfully(command string, args ...string) (string, string) {
 	cmd := exec.Command(command, args...)
+	fmt.Fprintf(GinkgoWriter, "Running command: %s\n", cmd.String())
 	session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 	Eventually(session).Should(gexec.Exit(0))

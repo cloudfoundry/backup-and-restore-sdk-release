@@ -176,7 +176,7 @@ func (c *PostgresConnection) connectionString(hostname string, port int, dbName,
 
 func startTunnel(localPort int, remoteHost string, remotePort int, proxyUsername string, proxyHost string, proxyPrivateKey string) (*gexec.Session, error) {
 	var err error
-	proxySession, err := gexec.Start(exec.Command(
+	command := exec.Command(
 		"ssh",
 		"-L",
 		fmt.Sprintf("%d:%s:%d", localPort, remoteHost, remotePort),
@@ -187,7 +187,9 @@ func startTunnel(localPort int, remoteHost string, remotePort int, proxyUsername
 		"UserKnownHostsFile=/dev/null",
 		"-o",
 		"StrictHostKeyChecking=no",
-	), ginkgo.GinkgoWriter, ginkgo.GinkgoWriter)
+	)
+	fmt.Fprintf(ginkgo.GinkgoWriter, "Running command: %s\n", command.String())
+	proxySession, err := gexec.Start(command, ginkgo.GinkgoWriter, ginkgo.GinkgoWriter)
 
 	time.Sleep(5 * time.Second)
 

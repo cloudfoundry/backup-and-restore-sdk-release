@@ -43,6 +43,7 @@ func RunCommandWithStream(stdout, stderr io.Writer, cmd string, args ...string) 
 	combinedArgs := append(cmdParts[1:], args...)
 	command := exec.Command(commandPath, combinedArgs...)
 
+	fmt.Fprintf(GinkgoWriter, "Running command: %s\n", command.String())
 	session, err := gexec.Start(command, stdout, stderr)
 
 	Expect(err).ToNot(HaveOccurred())

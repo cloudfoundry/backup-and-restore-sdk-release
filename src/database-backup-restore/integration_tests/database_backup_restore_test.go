@@ -121,6 +121,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				args := strings.Split(entry.arguments, " ")
 				cmd := exec.Command(compiledSDKPath, args...)
 
+				fmt.Fprintf(GinkgoWriter, "Running command: %s\n", cmd.String())
 				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).ToNot(HaveOccurred())
 				Eventually(session).Should(gexec.Exit(1))
@@ -174,6 +175,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 					}
 				}
 
+				fmt.Fprintf(GinkgoWriter, "Running command: %s\n", cmd.String())
 				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).ToNot(HaveOccurred())
 				Eventually(session).Should(gexec.Exit(1))

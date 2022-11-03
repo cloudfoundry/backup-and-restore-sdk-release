@@ -1810,6 +1810,7 @@ func run(path string, env map[string]string, args ...string) *gexec.Session {
 	for key, val := range env {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
 	}
+	fmt.Fprintf(GinkgoWriter, "Running command: %s\n", cmd.String())
 	session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 	Expect(err).ToNot(HaveOccurred())
 	Eventually(session).Should(gexec.Exit())

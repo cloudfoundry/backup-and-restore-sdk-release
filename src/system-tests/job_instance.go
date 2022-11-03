@@ -83,6 +83,7 @@ func (i *JobInstance) runBosh(args ...string) *gexec.Session {
 	}, args...)
 	command := exec.Command("bosh", combinedArgs...)
 
+	fmt.Fprintf(GinkgoWriter, "Running command: %s\n", command.String())
 	session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 

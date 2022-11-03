@@ -1,17 +1,15 @@
 package gcs_test
 
 import (
-	"testing"
-
-	"time"
-
-	"os/exec"
-
-	. "system-tests"
+	"fmt"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 	. "github.com/onsi/gomega/gexec"
+	"os/exec"
+	. "system-tests"
+	"testing"
+	"time"
 )
 
 func TestGcs(t *testing.T) {
@@ -29,6 +27,7 @@ var _ = BeforeSuite(func() {
 func MustRunSuccessfully(command string, args ...string) {
 	cmd := exec.Command(command, args...)
 
+	fmt.Fprintf(GinkgoWriter, "Running command: %s\n", cmd.String())
 	session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 	Eventually(session).Should(Exit(0))
@@ -37,6 +36,7 @@ func MustRunSuccessfully(command string, args ...string) {
 func Run(command string, args ...string) *gexec.Session {
 	cmd := exec.Command(command, args...)
 
+	fmt.Fprintf(GinkgoWriter, "Running command: %s\n", cmd.String())
 	session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 	return session
