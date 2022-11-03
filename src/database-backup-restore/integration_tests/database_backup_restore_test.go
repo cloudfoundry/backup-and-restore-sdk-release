@@ -18,7 +18,6 @@ package integration_tests
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -185,14 +184,14 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 })
 
 func tempFilePath() string {
-	tmpfile, err := ioutil.TempFile("", "")
+	tmpfile, err := os.CreateTemp("", "")
 	Expect(err).NotTo(HaveOccurred())
 	tmpfile.Close()
 	return tmpfile.Name()
 }
 
 func invalidConfig() (string, error) {
-	invalidJsonConfig, err := ioutil.TempFile(os.TempDir(), "")
+	invalidJsonConfig, err := os.CreateTemp(os.TempDir(), "")
 	if err != nil {
 		return "", err
 	}
@@ -201,7 +200,7 @@ func invalidConfig() (string, error) {
 }
 
 func invalidAdapterConfig() (string, error) {
-	invalidAdapterConfig, err := ioutil.TempFile(os.TempDir(), "")
+	invalidAdapterConfig, err := os.CreateTemp(os.TempDir(), "")
 	if err != nil {
 		return "", err
 	}
@@ -210,7 +209,7 @@ func invalidAdapterConfig() (string, error) {
 }
 
 func emptyTablesConfig() (string, error) {
-	validConfig, err := ioutil.TempFile(os.TempDir(), "")
+	validConfig, err := os.CreateTemp(os.TempDir(), "")
 	if err != nil {
 		return "", err
 	}
@@ -231,7 +230,7 @@ func emptyTablesConfig() (string, error) {
 }
 
 func tlsBlockWithoutCaConfig() (string, error) {
-	validConfig, err := ioutil.TempFile(os.TempDir(), "")
+	validConfig, err := os.CreateTemp(os.TempDir(), "")
 	if err != nil {
 		return "", err
 	}
@@ -252,7 +251,7 @@ func tlsBlockWithoutCaConfig() (string, error) {
 }
 
 func missingClientKeyConfig() (string, error) {
-	validConfig, err := ioutil.TempFile(os.TempDir(), "")
+	validConfig, err := os.CreateTemp(os.TempDir(), "")
 	if err != nil {
 		return "", err
 	}
@@ -278,7 +277,7 @@ func missingClientKeyConfig() (string, error) {
 }
 
 func missingClientCertConfig() (string, error) {
-	validConfig, err := ioutil.TempFile(os.TempDir(), "")
+	validConfig, err := os.CreateTemp(os.TempDir(), "")
 	if err != nil {
 		return "", err
 	}
@@ -304,7 +303,7 @@ func missingClientCertConfig() (string, error) {
 }
 
 func validPgConfig() (string, error) {
-	validConfig, err := ioutil.TempFile(os.TempDir(), "")
+	validConfig, err := os.CreateTemp(os.TempDir(), "")
 	if err != nil {
 		return "", err
 	}
@@ -324,10 +323,10 @@ func validPgConfig() (string, error) {
 }
 
 func saveFile(content string) *os.File {
-	configFile, err := ioutil.TempFile(os.TempDir(), time.Now().String())
+	configFile, err := os.CreateTemp(os.TempDir(), time.Now().String())
 	Expect(err).NotTo(HaveOccurred())
 
-	ioutil.WriteFile(configFile.Name(), []byte(content), 0755)
+	os.WriteFile(configFile.Name(), []byte(content), 0755)
 
 	return configFile
 }

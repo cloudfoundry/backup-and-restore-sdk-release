@@ -2,7 +2,6 @@ package gcs_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"gcs-blobstore-backup-restore"
@@ -18,7 +17,7 @@ var _ = Describe("Artifact", func() {
 		Context("when the artifact file is writable", func() {
 			BeforeEach(func() {
 				var err error
-				artifactFile, err = ioutil.TempFile("", "gcs_backup")
+				artifactFile, err = os.CreateTemp("", "gcs_backup")
 				Expect(err).NotTo(HaveOccurred())
 
 				artifact = gcs.NewArtifact(artifactFile.Name())
@@ -37,7 +36,7 @@ var _ = Describe("Artifact", func() {
 				)
 
 				Expect(err).NotTo(HaveOccurred())
-				fileContent, err := ioutil.ReadFile(artifactFile.Name())
+				fileContent, err := os.ReadFile(artifactFile.Name())
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fileContent).To(MatchJSON(`{
 					"bucket_identifier": {
@@ -70,7 +69,7 @@ var _ = Describe("Artifact", func() {
 		Context("when the artifact file exists", func() {
 			Context("and is valid json", func() {
 				It("returns the artifact contents", func() {
-					artifactFile, err := ioutil.TempFile("", "gcs_backup")
+					artifactFile, err := os.CreateTemp("", "gcs_backup")
 					Expect(err).NotTo(HaveOccurred())
 
 					_, err = artifactFile.Write([]byte(`{
@@ -103,7 +102,7 @@ var _ = Describe("Artifact", func() {
 
 			Context("and is not valid json", func() {
 				It("returns an error", func() {
-					artifactFile, err := ioutil.TempFile("", "gcs_backup")
+					artifactFile, err := os.CreateTemp("", "gcs_backup")
 					Expect(err).NotTo(HaveOccurred())
 
 					_, err = artifactFile.Write([]byte(`not-valid{json`))

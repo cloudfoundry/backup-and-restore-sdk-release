@@ -3,7 +3,6 @@ package incremental
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 )
 
 //go:generate counterfeiter -o fakes/fake_artifact.go . Artifact
@@ -37,7 +36,7 @@ func (a artifact) Write(backups map[string]Backup) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(a.path, filesContents, 0644)
+	err = os.WriteFile(a.path, filesContents, 0644)
 	if err != nil {
 		return fmt.Errorf("could not write backup file: %s", err.Error())
 	}
@@ -46,7 +45,7 @@ func (a artifact) Write(backups map[string]Backup) error {
 }
 
 func (a artifact) Load() (map[string]Backup, error) {
-	bytes, err := ioutil.ReadFile(a.path)
+	bytes, err := os.ReadFile(a.path)
 	if err != nil {
 		return nil, fmt.Errorf("could not read backup file: %s", err.Error())
 	}

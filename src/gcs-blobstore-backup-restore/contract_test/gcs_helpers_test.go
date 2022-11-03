@@ -9,8 +9,6 @@ import (
 
 	"fmt"
 
-	"io/ioutil"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -23,9 +21,9 @@ func MustHaveEnv(keyname string) string {
 }
 
 func Authenticate(serviceAccountKey, projectName string) {
-	tmpFile, err := ioutil.TempFile("", "gcp_service_account_key_")
+	tmpFile, err := os.CreateTemp("", "gcp_service_account_key_")
 	Expect(err).NotTo(HaveOccurred())
-	err = ioutil.WriteFile(tmpFile.Name(), []byte(serviceAccountKey), 0644)
+	err = os.WriteFile(tmpFile.Name(), []byte(serviceAccountKey), 0644)
 	Expect(err).NotTo(HaveOccurred())
 	runSuccessfully("gcloud", "auth", "activate-service-account", "--key-file", tmpFile.Name(), "--project", projectName)
 }
@@ -51,11 +49,11 @@ func UploadFileWithDir(bucketName, dir, blobName, fileContents string) {
 }
 
 func createTmpFile(dirName, fileName, fileContents string) *os.File {
-	dir, err := ioutil.TempDir("", dirName)
+	dir, err := os.MkdirTemp("", dirName)
 	Expect(err).NotTo(HaveOccurred())
-	file, err := ioutil.TempFile(dir, fileName)
+	file, err := os.CreateTemp(dir, fileName)
 	Expect(err).NotTo(HaveOccurred())
-	err = ioutil.WriteFile(file.Name(), []byte(fileContents), 0644)
+	err = os.WriteFile(file.Name(), []byte(fileContents), 0644)
 	Expect(err).NotTo(HaveOccurred())
 	return file
 }

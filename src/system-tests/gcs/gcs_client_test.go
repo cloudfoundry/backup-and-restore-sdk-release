@@ -1,7 +1,6 @@
 package gcs_test
 
 import (
-	"io/ioutil"
 	"strconv"
 	"time"
 
@@ -15,7 +14,7 @@ import (
 type GCSClient struct{}
 
 func (c GCSClient) WriteBlobToBucket(bucket, blobName, body string) {
-	file, err := ioutil.TempFile("", "bbr-sdk-gcs-system-tests")
+	file, err := os.CreateTemp("", "bbr-sdk-gcs-system-tests")
 	Expect(err).NotTo(HaveOccurred())
 
 	_, err = file.WriteString(body)
@@ -25,11 +24,11 @@ func (c GCSClient) WriteBlobToBucket(bucket, blobName, body string) {
 }
 
 func (c GCSClient) WriteNBlobsToBucket(bucket string, blobName string, blobBody string, n int) {
-	blobsDir, err := ioutil.TempDir("", "testdir")
+	blobsDir, err := os.MkdirTemp("", "testdir")
 	Expect(err).NotTo(HaveOccurred())
 	for i := 0; i < n; i++ {
 		timestampedName := blobName + strconv.FormatInt(time.Now().Unix(), 10)
-		file, err := ioutil.TempFile(blobsDir, fmt.Sprintf(timestampedName, i))
+		file, err := os.CreateTemp(blobsDir, fmt.Sprintf(timestampedName, i))
 		Expect(err).NotTo(HaveOccurred())
 		_, err = file.WriteString(fmt.Sprintf(blobBody, i))
 		Expect(err).NotTo(HaveOccurred())
@@ -39,12 +38,12 @@ func (c GCSClient) WriteNBlobsToBucket(bucket string, blobName string, blobBody 
 }
 
 func (c GCSClient) ReadBlobFromBucket(bucket, blobName string) string {
-	file, err := ioutil.TempFile("", "bbr-sdk-gcs-system-tests")
+	file, err := os.CreateTemp("", "bbr-sdk-gcs-system-tests")
 	Expect(err).NotTo(HaveOccurred())
 
 	MustRunSuccessfully("gsutil", "cp", fmt.Sprintf("gs://%s/%s", bucket, blobName), file.Name())
 
-	body, err := ioutil.ReadFile(file.Name())
+	body, err := os.ReadFile(file.Name())
 	Expect(err).NotTo(HaveOccurred())
 
 	return string(body)
@@ -65,7 +64,7 @@ func (c GCSClient) ListDirsFromBucket(bucket string) string {
 	return string(session.Out.Contents())
 }
 func (c GCSClient) WriteNSizeBlobToBucket(bucket string, blobName string, size int) {
-	blobsDir, err := ioutil.TempDir("", "testdir")
+	blobsDir, err := os.MkdirTemp("", "testdir")
 	Expect(err).NotTo(HaveOccurred())
 	fileToCopy := fmt.Sprintf("%s/%s", blobsDir, blobName)
 	gigabyte := 1024 * 1024 * 1024

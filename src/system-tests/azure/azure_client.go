@@ -2,7 +2,6 @@ package azure
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os/exec"
 
 	"encoding/json"
@@ -50,7 +49,7 @@ func (c AzureClient) DeleteFileInContainer(container, blobName string) {
 }
 
 func (c AzureClient) WriteFileInContainer(container, blobName, body string) string {
-	bodyFile, _ := ioutil.TempFile("", "write_file_in_container_")
+	bodyFile, _ := os.CreateTemp("", "write_file_in_container_")
 	bodyFile.WriteString(body)
 	bodyFile.Close()
 
@@ -87,7 +86,7 @@ func (c AzureClient) CreateContainer(name string) {
 }
 
 func (c AzureClient) ReadFileFromContainer(container, blobName string) string {
-	bodyFile, err := ioutil.TempFile("", "read_file_from_container_")
+	bodyFile, err := os.CreateTemp("", "read_file_from_container_")
 	if err != nil {
 		panic(err)
 	}
@@ -100,7 +99,7 @@ func (c AzureClient) ReadFileFromContainer(container, blobName string) string {
 		"--name", blobName,
 		"--file", bodyFile.Name())
 
-	body, err := ioutil.ReadFile(bodyFile.Name())
+	body, err := os.ReadFile(bodyFile.Name())
 	if err != nil {
 		panic(err)
 	}
@@ -112,7 +111,7 @@ func (c AzureClient) runAzureCommandSuccessfully(args ...string) *bytes.Buffer {
 	outputBuffer := new(bytes.Buffer)
 	errorBuffer := new(bytes.Buffer)
 
-	azureConfigDir, err := ioutil.TempDir("", "azure_")
+	azureConfigDir, err := os.MkdirTemp("", "azure_")
 	if err != nil {
 		panic(err)
 	}

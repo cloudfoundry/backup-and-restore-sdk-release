@@ -18,7 +18,6 @@ package integration_tests
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -406,7 +405,7 @@ var _ = Describe("MySQL", func() {
 			})
 
 			JustBeforeEach(func() {
-				err := ioutil.WriteFile(artifactFile, []byte("SOME BACKUP SQL"), 0644)
+				err := os.WriteFile(artifactFile, []byte("SOME BACKUP SQL"), 0644)
 				if err != nil {
 					log.Fatalf("Failed to write to artifact file, %s\n", err.Error())
 				}
@@ -981,7 +980,7 @@ var _ = Describe("MySQL", func() {
 			})
 
 			JustBeforeEach(func() {
-				err := ioutil.WriteFile(artifactFile, []byte("SOME BACKUP SQL"), 0644)
+				err := os.WriteFile(artifactFile, []byte("SOME BACKUP SQL"), 0644)
 				if err != nil {
 					log.Fatalf("Failed to write to artifact file, %s\n", err.Error())
 				}
@@ -1556,7 +1555,7 @@ var _ = Describe("MySQL", func() {
 			})
 
 			JustBeforeEach(func() {
-				err := ioutil.WriteFile(artifactFile, []byte("SOME BACKUP SQL"), 0644)
+				err := os.WriteFile(artifactFile, []byte("SOME BACKUP SQL"), 0644)
 				if err != nil {
 					log.Fatalf("Failed to write to artifact file, %s\n", err.Error())
 				}

@@ -1,7 +1,6 @@
 package incremental_test
 
 import (
-	"io/ioutil"
 	"os"
 
 	. "github.com/onsi/ginkgo"
@@ -16,7 +15,7 @@ var _ = Describe("Artifact", func() {
 
 	BeforeEach(func() {
 		var err error
-		artifactFile, err = ioutil.TempFile("", "s3_backup")
+		artifactFile, err = os.CreateTemp("", "s3_backup")
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -35,7 +34,7 @@ var _ = Describe("Artifact", func() {
 			}
 		}`
 
-			err := ioutil.WriteFile(artifactFile.Name(), []byte(body), 644)
+			err := os.WriteFile(artifactFile.Name(), []byte(body), 644)
 			Expect(err).NotTo(HaveOccurred())
 
 			artifact := incremental.NewArtifact(artifactFile.Name())
@@ -67,7 +66,7 @@ var _ = Describe("Artifact", func() {
 
 	Context("when the back artifact file is not valid json", func() {
 		It("errors", func() {
-			err := ioutil.WriteFile(artifactFile.Name(), []byte("not-valid-json"), 644)
+			err := os.WriteFile(artifactFile.Name(), []byte("not-valid-json"), 644)
 			Expect(err).NotTo(HaveOccurred())
 
 			artifact := incremental.NewArtifact(artifactFile.Name())
@@ -97,7 +96,7 @@ var _ = Describe("Artifact", func() {
 
 		Expect(err).NotTo(HaveOccurred())
 
-		fileContent, err := ioutil.ReadFile(artifactFile.Name())
+		fileContent, err := os.ReadFile(artifactFile.Name())
 		Expect(fileContent).To(MatchJSON(`{
 			"bucket_id": {
 				"bucket_name": "backup-bucket",
@@ -130,7 +129,7 @@ var _ = Describe("Artifact", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 
-			fileContent, err := ioutil.ReadFile(artifactFile.Name())
+			fileContent, err := os.ReadFile(artifactFile.Name())
 			Expect(fileContent).To(MatchJSON(`{
 			"bucket_id": {
 				"src_backup_directory_path": "2000_01_02_03_04_05/bucket_id",
@@ -169,7 +168,7 @@ var _ = Describe("Artifact", func() {
 	Context("when the artifact has an invalid format", func() {
 		BeforeEach(func() {
 			artifact = incremental.NewArtifact(artifactFile.Name())
-			err := ioutil.WriteFile(artifactFile.Name(), []byte("THIS IS NOT VALID JSON"), 0666)
+			err := os.WriteFile(artifactFile.Name(), []byte("THIS IS NOT VALID JSON"), 0666)
 			Expect(err).NotTo(HaveOccurred())
 		})
 

@@ -7,8 +7,6 @@ import (
 	"s3-blobstore-backup-restore/unversioned"
 
 	"encoding/json"
-	"io/ioutil"
-
 	"errors"
 	"flag"
 
@@ -47,7 +45,7 @@ func main() {
 		exitWithError("Failed to parse flags", err)
 	}
 
-	rawConfig, err := ioutil.ReadFile(flags.ConfigPath)
+	rawConfig, err := os.ReadFile(flags.ConfigPath)
 	if err != nil {
 		exitWithError("Failed to read config", err)
 	}

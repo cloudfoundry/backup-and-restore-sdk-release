@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os/exec"
 	"strings"
 	"time"
@@ -73,7 +72,7 @@ func getFileContents(bucket, endpoint, key string, creds s3bucket.AccessKey) str
 }
 
 func uploadFile(bucket, endpoint, key, body string, creds s3bucket.AccessKey) string {
-	bodyFile, _ := ioutil.TempFile("", "")
+	bodyFile, _ := os.CreateTemp("", "")
 	bodyFile.WriteString(body)
 	bodyFile.Close()
 
@@ -93,7 +92,7 @@ func uploadFile(bucket, endpoint, key, body string, creds s3bucket.AccessKey) st
 }
 
 func downloadFileToTmp(bucket, endpoint, key string, creds s3bucket.AccessKey) string {
-	bodyFile, _ := ioutil.TempFile("", "")
+	bodyFile, _ := os.CreateTemp("", "")
 	bodyFile.Close()
 
 	baseCmd := constructBaseCmd(endpoint)

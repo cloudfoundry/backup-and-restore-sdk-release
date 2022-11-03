@@ -24,8 +24,6 @@ import (
 	"strconv"
 	"time"
 
-	"io/ioutil"
-
 	. "github.com/onsi/gomega"
 )
 
@@ -101,7 +99,7 @@ func runAwsCommandOnBucketSuccessfully(args ...string) *bytes.Buffer {
 }
 
 func WriteFileInBucket(region, bucket, key, body string) {
-	bodyFile, _ := ioutil.TempFile("", "")
+	bodyFile, _ := os.CreateTemp("", "")
 	bodyFile.WriteString(body)
 	bodyFile.Close()
 
