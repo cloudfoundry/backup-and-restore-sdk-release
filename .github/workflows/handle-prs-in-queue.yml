@@ -1,6 +1,6 @@
 on:
   pull_request:
-    types: [closed, opened, reopened, converted_to_draft]
+    types: [closed, opened, reopened, converted_to_draft, ready_for_review]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.base_ref }}
@@ -8,16 +8,27 @@ concurrency:
 
 jobs:
   pick-next-active-pr:
-    runs_on: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - run: |
           gh label create "active-pr" --force
           ACTIVE_PR="$(gh pr list --state open --label "active-pr" --limit 1 --json number --jq '.[0].number')"
-          if [ -z "${ACTIVE_PR}" ];
+
+          if [ -n "${ACTIVE_PR}" ];
           then
-            OLDEST_PR="$(gh pr list --state open --base ${{ github.base_ref }} --limit 1 --search 'draft:true sort:created-asc' --json number --jq '.[0].number')"
-            gh pr edit "${OLDEST_PR}" --add-label "active-pr"
+            echo "There is already an active-pr, we don't need to\n"
+            echo "pick another one until the current one finishes.\n"
+            exit 0
           fi
+
+          OLDEST_PR="$(gh pr list --state open --base ${{ github.base_ref }} --limit 1 --search 'draft:false sort:created-asc' --json number,isCrossRepository --jq '[.[] | select(.isCrossRepository==false)][0].number')"
+          if [ -z "${OLDEST_PR}" ];
+          then
+            echo "There isn't any open, non-draft PR waiting to be tested"
+            exit 0
+          fi
+
+          gh pr edit "${OLDEST_PR}" --add-label "active-pr"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
