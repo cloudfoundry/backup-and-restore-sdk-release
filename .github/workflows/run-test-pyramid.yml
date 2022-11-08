@@ -1,0 +1,26 @@
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened, labeled ]
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: make docker-unit 
+
+  run-system-db-tests:
+    if: contains(github.event.pull_request.labels.*.name, 'system-tests')
+    needs: run-unit-tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: |
+           make docker-compile-release-matrix
+           make docker-system-matrix
