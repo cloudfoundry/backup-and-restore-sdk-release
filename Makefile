@@ -124,7 +124,7 @@ $(supported-stemcells):
 		elif [ "$(MAKECMDGOALS)" = "docker-compile" ]; then                 \
 			echo "\033[92mCompiling $@ \033[0m"                        ;\
 			export STEMCELL_NAME=$@                                    ;\
-			docker-compose --log-level ERROR run dockerize-release     ;\
+			docker-compose --log-level ERROR run --rm dockerize-release                  ;\
 		fi                                                                  \
 	fi
 
@@ -136,7 +136,8 @@ $(supported-mariadb):
 		export MARIADB_VERSION=$(word 2,$(subst ~, ,$@))                   ;\
 		export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))                     ;\
 		export MARIADB_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
-		docker-compose --log-level ERROR run system-db-mariadb             ;\
+		docker-compose --log-level ERROR run --rm system-db-mariadb               ;\
+		docker-compose --log-level ERROR down -v --remove-orphans --rmi local     ;\
 	fi
 
 $(supported-mysql):
@@ -147,7 +148,8 @@ $(supported-mysql):
 		export MYSQL_VERSION=$(word 2,$(subst ~, ,$@))                     ;\
 		export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))                     ;\
 		export MYSQL_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"    ;\
-		docker-compose --log-level ERROR run system-db-mysql               ;\
+		docker-compose --log-level ERROR run --rm system-db-mysql                 ;\
+		docker-compose --log-level ERROR down -v --remove-orphans --rmi local     ;\
 	fi
 
 docker-system-postgres-aux:
@@ -157,7 +159,7 @@ docker-system-postgres-aux:
 	export POSTGRES_VERSION=$(word 2,$(subst ~, ,$(MATRIX_TUPLE)))             ;\
 	export STEMCELL_NAME=$(word 1,$(subst ~, ,$(MATRIX_TUPLE)))                ;\
 	export POSTGRES_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
-	docker-compose --log-level ERROR run system-db-postgres
+	docker-compose --log-level ERROR run --rm system-db-postgres
 	docker-compose --log-level ERROR down -v --remove-orphans --rmi local
 
 $(supported-postgres):
