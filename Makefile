@@ -1,5 +1,6 @@
 ###### Help ###################################################################
 
+$(VERBOSE).SILENT:
 .DEFAULT_GOAL = help
 
 .PHONY: help
@@ -59,73 +60,20 @@ supported-postgres=\
   ubuntu-xenial~~~9.6-bullseye \
 
 
-docker-clean:
-	docker-compose down --rmi local --volumes --remove-orphans ## remove containers created to run the tests
+docker-clean: ## remove containers created to run the tests
+	if ! echo "$@" | grep -q "${FOCUS}" ; then                                  \
+		echo "\033[92mSkipping $@ \033[0m"                                 ;\
+	else                                                                        \
+		docker-compose --log-level ERROR down --rmi local --volumes --remove-orphans ;\
+	fi
 
 docker-clean-prune: $(supported-stemcells) ## remove containers AND IMAGES created to run the tests
-docker-compile-release-matrix: $(supported-stemcells) ## run compilation test for all supported stemcells
+docker-compile: $(supported-stemcells) ## run compilation test for all supported stemcells
+docker-system-mariadb: $(supported-mariadb) ## run system tests for all supported Stemcells and MARIADB versions
+docker-system-mysql: $(supported-mysql) ## run system tests for all supported Stemcells and MYSQL versions
+docker-system-postgres: $(supported-postgres) ## run system tests for all supported Stemcells and POSTGRES versions
 
-docker-compile-release: ## run compilation test for the specified $STEMCELL_NAME
-	@echo "\033[92mCompiling: Stemcell ${STEMCELL_NAME} \033[0m"
-	docker-compose --log-level ERROR run dockerize-release
-
-$(supported-stemcells):
-	@if [ "$(MAKECMDGOALS)" = "docker-clean-prune" ]; then\
-		export STEMCELL_NAME=$@                                  ;\
-		docker-compose down --rmi all --volumes --remove-orphans ;\
-	fi
-	@if [ "$(MAKECMDGOALS)" = "docker-compile-release-matrix" ]; then\
-		export STEMCELL_NAME=$@        ;\
-		$(MAKE) docker-compile-release ;\
-	fi
-
-docker-system-mariadb: ## run system tests for the specified $STEMCELL_NAME and $MARIADB_VERSION
-	@echo "\033[92mTesting: Stemcell ${STEMCELL_NAME} | MariaDB ${MARIADB_VERSION} \033[0m"
-	export MARIADB_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
-	docker-compose --log-level ERROR run system-db-mariadb
-
-docker-system-mysql: ## run system tests for the specified $STEMCELL_NAME and $MYSQL_VERSION
-	@echo "\033[92mTesting: Stemcell ${STEMCELL_NAME} | Mysql ${MYSQL_VERSION} \033[0m"
-	export MYSQL_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
-	docker-compose --log-level ERROR run system-db-mysql
-
-docker-system-postgres: ## run system tests for the specified $STEMCELL_NAME and $POSTGRES_VERSION
-	@echo "\033[92mTesting: Stemcell ${STEMCELL_NAME} | Postgres ${POSTGRES_VERSION} \033[0m"
-
-	export POSTGRES_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
-	export ENABLE_TLS="no"                                                     ;\
-	docker-compose --log-level ERROR run system-db-postgres
-	docker-compose down -v --remove-orphans --rmi local
-
-	export POSTGRES_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
-	export ENABLE_TLS="yes"                                                    ;\
-	docker-compose --log-level ERROR run system-db-postgres
-	docker-compose down -v --remove-orphans --rmi local
-
-	export POSTGRES_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
-	export ENABLE_TLS="mutual"                                                 ;\
-	docker-compose --log-level ERROR run system-db-postgres
-	docker-compose down -v --remove-orphans --rmi local
-
-docker-system-mariadb-matrix: $(supported-mariadb) ## run system tests for all supported Stemcells and MARIADB versions
-$(supported-mariadb):
-	export MARIADB_VERSION=$(word 2,$(subst ~, ,$@)) ;\
-	export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))   ;\
-	$(MAKE) docker-system-mariadb
-
-docker-system-mysql-matrix: $(supported-mysql) ## run system tests for all supported Stemcells and MYSQL versions
-$(supported-mysql):
-	export MYSQL_VERSION=$(word 2,$(subst ~, ,$@)) ;\
-	export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))   ;\
-	$(MAKE) docker-system-mysql
-
-docker-system-postgres-matrix: $(supported-postgres) ## run system tests for all supported Stemcells and POSTGRES versions
-$(supported-postgres):
-	export POSTGRES_VERSION=$(word 2,$(subst ~, ,$@)) ;\
-	export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))   ;\
-	$(MAKE) docker-system-postgres
-
-docker-system-matrix: docker-system-mariadb-matrix docker-system-mysql-matrix docker-system-postgres-matrix ## run all system tests for all supported Stemcells and database versions
+docker-system: docker-system-mariadb docker-system-mysql docker-system-postgres ## run all system tests for all supported Stemcells and database versions
 
 docker-unit-blobstore-azure: ## run azure blobstore unit tests in Docker
 	docker-compose run unit-blobstore-azure
@@ -162,5 +110,65 @@ local-unit-template-specs: ## run templating unit tests locally
 local-unit: local-unit-blobstore-azure local-unit-blobstore-gcs local-unit-blobstore-s3 local-unit-database local-unit-template-specs ## run all unit tests locally
 
 unit: docker-unit ## run all unit tests in Docker (same as docker-unit)
-system: docker-system ## run all system tests in Docker (same as docker-system-matrix)
+system: docker-system ## run all system tests in Docker (same as docker-system)
 clean: docker-clean ## remove containers created to run the tests (same as docker-clean)
+
+$(supported-stemcells):
+	if ! echo "$@" | grep -q "${FOCUS}" ; then                                  \
+		echo "\033[92mSkipping $@ \033[0m"                                 ;\
+	else                                                                        \
+		if [ "$(MAKECMDGOALS)" = "docker-clean-prune" ]; then               \
+			echo "\033[92mCleaning $@ \033[0m"                         ;\
+			export STEMCELL_NAME=$@                                    ;\
+			docker-compose --log-level ERROR down --rmi all --volumes --remove-orphans   ;\
+		elif [ "$(MAKECMDGOALS)" = "docker-compile" ]; then                 \
+			echo "\033[92mCompiling $@ \033[0m"                        ;\
+			export STEMCELL_NAME=$@                                    ;\
+			docker-compose --log-level ERROR run dockerize-release     ;\
+		fi                                                                  \
+	fi
+
+$(supported-mariadb):
+	if ! echo "$@" | grep -q "${FOCUS}" ; then                                  \
+		echo "\033[92mSkipping $@ \033[0m"                                 ;\
+	else                                                                        \
+		echo "\033[92m Testing: MariaDB $@ \033[0m"                        ;\
+		export MARIADB_VERSION=$(word 2,$(subst ~, ,$@))                   ;\
+		export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))                     ;\
+		export MARIADB_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
+		docker-compose --log-level ERROR run system-db-mariadb             ;\
+	fi
+
+$(supported-mysql):
+	if ! echo "$@" | grep -q "${FOCUS}" ; then                                  \
+		echo "\033[92mSkipping $@ \033[0m"                                 ;\
+	else                                                                        \
+		echo "\033[92m Testing MySQL $@ \033[0m"                           ;\
+		export MYSQL_VERSION=$(word 2,$(subst ~, ,$@))                     ;\
+		export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))                     ;\
+		export MYSQL_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"    ;\
+		docker-compose --log-level ERROR run system-db-mysql               ;\
+	fi
+
+docker-system-postgres-aux:
+	if ! echo "$@" | grep -q "${FOCUS}" ; then                                  \
+		echo "\033[92mSkipping $@ \033[0m"                                 ;\
+	else                                                                        \
+	export POSTGRES_VERSION=$(word 2,$(subst ~, ,$(MATRIX_TUPLE)))             ;\
+	export STEMCELL_NAME=$(word 1,$(subst ~, ,$(MATRIX_TUPLE)))                ;\
+	export POSTGRES_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
+	docker-compose --log-level ERROR run system-db-postgres
+	docker-compose --log-level ERROR down -v --remove-orphans --rmi local
+
+$(supported-postgres):
+	if ! echo "$@" | grep -q "${FOCUS}" ; then                                  \
+		echo "\033[92mSkipping $@ \033[0m"                                 ;\
+	else                                                                        \
+		echo "\033[92m Testing Postgres $@ \033[0m"                        ;\
+		export ENABLE_TLS="no"                                             ;\
+		$(MAKE) docker-system-postgres-aux MATRIX_TUPLE=$@                 ;\
+		export ENABLE_TLS="yes"                                            ;\
+		$(MAKE) docker-system-postgres-aux MATRIX_TUPLE=$@                 ;\
+		export ENABLE_TLS="mutual"                                         ;\
+		$(MAKE) docker-system-postgres-aux MATRIX_TUPLE=$@                 ;\
+	fi
