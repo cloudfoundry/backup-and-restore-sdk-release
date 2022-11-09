@@ -156,11 +156,12 @@ docker-system-postgres-aux:
 	if ! echo "$@" | grep -q "${FOCUS}" ; then                                  \
 		echo "\033[92mSkipping $@ \033[0m"                                 ;\
 	else                                                                        \
-	export POSTGRES_VERSION=$(word 2,$(subst ~, ,$(MATRIX_TUPLE)))             ;\
-	export STEMCELL_NAME=$(word 1,$(subst ~, ,$(MATRIX_TUPLE)))                ;\
-	export POSTGRES_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
-	docker-compose --log-level ERROR run --rm system-db-postgres
-	docker-compose --log-level ERROR down -v --remove-orphans --rmi local
+		export POSTGRES_VERSION=$(word 2,$(subst ~, ,$(MATRIX_TUPLE)))             ;\
+		export STEMCELL_NAME=$(word 1,$(subst ~, ,$(MATRIX_TUPLE)))                ;\
+		export POSTGRES_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
+		docker-compose --log-level ERROR run --rm system-db-postgres               ;\
+		docker-compose --log-level ERROR down -v --remove-orphans --rmi local      ;\
+	fi
 
 $(supported-postgres):
 	if ! echo "$@" | grep -q "${FOCUS}" ; then                                  \
