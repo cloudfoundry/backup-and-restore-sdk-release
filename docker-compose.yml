@@ -1,6 +1,11 @@
 version: '3.0'
 
 services:
+  bosh-director:
+    privileged: true
+    build:
+      context: ci/dockerfiles/bosh-director/
+
   dockerize-release:
     image: dockerize-release:${STEMCELL_NAME}
     build:

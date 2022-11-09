@@ -15,6 +15,12 @@ jobs:
     - uses: actions/checkout@v3
     - run: make docker-unit 
 
+  run-bosh-director-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: make docker-bosh-director
+
   run-system-tests-jammy:
     if: contains(github.event.pull_request.labels.*.name, 'system-tests')
     needs: run-unit-tests

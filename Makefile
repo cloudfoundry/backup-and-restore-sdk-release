@@ -60,6 +60,9 @@ supported-postgres=\
   ubuntu-xenial~~~9.6-bullseye \
 
 
+docker-bosh-director: ## run some tests against a real BOSH Director using docker-cpi
+	docker-compose --log-level ERROR run bosh-director
+
 docker-clean: ## remove containers created to run the tests
 	if ! echo "$@" | grep -q "${FOCUS}" ; then                                  \
 		echo "\033[92mSkipping $@ \033[0m"                                 ;\
