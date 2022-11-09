@@ -2,7 +2,7 @@ version: '3.0'
 
 services:
   dockerize-release:
-    image: dockerize-release
+    image: dockerize-release:${STEMCELL_NAME}
     build:
       context: .
       dockerfile: ci/dockerfiles/dockerize-release/Dockerfile
@@ -34,11 +34,12 @@ services:
     volumes: [./:/backup-and-restore-sdk-release]
 
   system-db-mariadb:
-    depends_on: [dockerize-release, system-db-mariadb-backing-db]
+    depends_on: [system-db-mariadb-backing-db]
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-mariadb.bash
     build:
       context: ci/dockerfiles/run-system-db-tests/
       args:
+      - STEMCELL_NAME=${STEMCELL_NAME}
       - MARIADB_VERSION=${MARIADB_VERSION}
     volumes:
     - ./:/backup-and-restore-sdk-release
@@ -60,11 +61,12 @@ services:
     - MARIADB_ROOT_PASSWORD=${MARIADB_PASSWORD}
 
   system-db-mysql:
-    depends_on: [dockerize-release, system-db-mysql-backing-db]
+    depends_on: [system-db-mysql-backing-db]
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-mysql.bash
     build:
       context: ci/dockerfiles/run-system-db-tests/
       args:
+      - STEMCELL_NAME=${STEMCELL_NAME}
       - MYSQL_VERSION=${MYSQL_VERSION}
     volumes:
     - ./:/backup-and-restore-sdk-release
@@ -86,11 +88,12 @@ services:
     - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
 
   system-db-postgres:
-    depends_on: [dockerize-release, system-db-postgres-backing-db]
+    depends_on: [system-db-postgres-backing-db]
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-postgres.bash
     build:
       context: ci/dockerfiles/run-system-db-tests/
       args:
+      - STEMCELL_NAME=${STEMCELL_NAME}
       - POSTGRES_VERSION=${POSTGRES_VERSION}
     volumes:
     - ./:/backup-and-restore-sdk-release

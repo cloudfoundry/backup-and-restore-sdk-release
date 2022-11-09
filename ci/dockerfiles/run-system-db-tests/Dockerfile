@@ -1,5 +1,5 @@
-FROM scratch
-COPY --from=dockerize-release / /
+ARG STEMCELL_NAME
+FROM dockerize-release:${STEMCELL_NAME}
 
 VOLUME /backup-and-restore-sdk-release
 
