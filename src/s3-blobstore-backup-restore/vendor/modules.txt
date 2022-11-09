@@ -1,4 +1,4 @@
-# github.com/aws/aws-sdk-go v1.43.20
+# github.com/aws/aws-sdk-go v1.44.26
 ## explicit; go 1.11
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/arn
@@ -49,11 +49,11 @@ github.com/aws/aws-sdk-go/service/sso
 github.com/aws/aws-sdk-go/service/sso/ssoiface
 github.com/aws/aws-sdk-go/service/sts
 github.com/aws/aws-sdk-go/service/sts/stsiface
-# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.27
+# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.38
 ## explicit; go 1.14
 github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor
-# github.com/fsnotify/fsnotify v1.4.9
-## explicit; go 1.13
+# github.com/fsnotify/fsnotify v1.5.4
+## explicit; go 1.16
 github.com/fsnotify/fsnotify
 # github.com/google/go-cmp v0.5.9
 ## explicit; go 1.13
