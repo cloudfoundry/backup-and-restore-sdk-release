@@ -4,13 +4,13 @@ go 1.18
 
 require (
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.23.0
+	github.com/onsi/gomega v1.24.0
 	s3-blobstore-backup-restore v0.0.0
 )
 
 require (
-	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.27 // indirect
-	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.38 // indirect
+	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	golang.org/x/net v0.1.0 // indirect
