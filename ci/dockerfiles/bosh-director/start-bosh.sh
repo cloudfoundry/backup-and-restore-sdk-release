@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
 
 function generate_certs() {
   local certs_dir
@@ -58,7 +58,7 @@ function sanitize_cgroups() {
       continue
     fi
 
-    grouping="$(cat /proc/self/cgroup | cut -d: -f2 | { grep "\\<$sys\\>" || true; })"
+    grouping="$(cat /proc/self/cgroup | cut -d: -f2 | grep "\\<$sys\\>" )"
     if [ -z "$grouping" ]; then
       # subsystem not mounted anywhere; mount it on its own
       grouping="$sys"
