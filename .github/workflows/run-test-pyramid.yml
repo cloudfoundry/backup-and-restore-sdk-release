@@ -15,11 +15,26 @@ jobs:
     - uses: actions/checkout@v3
     - run: make docker-unit 
 
-  run-bosh-director-tests:
+  run-export-release-test-jammy:
+    if: contains(github.event.pull_request.labels.*.name, 'bosh-tests')
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - run: make docker-bosh-director
+    - run: FOCUS=ubuntu-jammy make docker-export-release
+
+  run-export-release-test-bionic:
+    if: contains(github.event.pull_request.labels.*.name, 'bosh-tests')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: FOCUS=ubuntu-bionic make docker-export-release
+
+  run-export-release-test-xenial:
+    if: contains(github.event.pull_request.labels.*.name, 'bosh-tests')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: FOCUS=ubuntu-xenial make docker-export-release
 
   run-system-tests-jammy:
     if: contains(github.event.pull_request.labels.*.name, 'system-tests')

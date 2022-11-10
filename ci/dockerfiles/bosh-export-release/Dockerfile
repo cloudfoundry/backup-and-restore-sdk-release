@@ -20,5 +20,6 @@ COPY --from=third-party-deps bosh /usr/local/bin/bosh
 COPY --from=third-party-deps bosh-deployment/ /bosh-deployment
 COPY --from=third-party-deps cf-deployment/ /cf-deployment
 COPY create-env.sh /create-env.sh
+COPY update-watch-time.yml /update-watch-time.yml
 RUN chmod +x /create-env.sh
 ENTRYPOINT /create-env.sh

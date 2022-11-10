@@ -1,0 +1,6 @@
+- type: replace
+  path: /instance_groups/0/update?/update_watch_time?
+  value: 30000-50000000000000000
+- type: replace
+  path: /update?/update_watch_time?
+  value: 30000-50000000000000000
