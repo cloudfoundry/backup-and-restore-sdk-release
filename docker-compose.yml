@@ -3,8 +3,11 @@ version: '3.0'
 services:
   bosh-director:
     privileged: true
+    volumes: [./:/backup-and-restore-sdk-release]
     build:
       context: ci/dockerfiles/bosh-director/
+    environment:
+    - STEMCELL_NAME=${STEMCELL_NAME}
 
   dockerize-release:
     image: dockerize-release:${STEMCELL_NAME}

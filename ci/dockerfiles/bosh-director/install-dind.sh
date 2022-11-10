@@ -44,3 +44,4 @@ add-apt-repository \
 
 apt-get update && apt-get install ruby bash -y --no-install-recommends
 apt-get install docker-ce docker-ce-cli containerd.io -y --no-install-recommends
+apt-get install jq -y --no-install-recommends

@@ -60,8 +60,7 @@ supported-postgres=\
   ubuntu-xenial~~~9.6-bullseye \
 
 
-docker-bosh-director: ## run some tests against a real BOSH Director using docker-cpi
-	docker-compose --log-level ERROR run bosh-director
+docker-bosh-director: $(supported-stemcells) ## run some tests against a real BOSH Director using docker-cpi
 
 docker-clean: ## remove containers created to run the tests
 	if ! echo "$@" | grep -q "${FOCUS}" ; then                                  \
@@ -128,6 +127,10 @@ $(supported-stemcells):
 			echo "\033[92mCompiling $@ \033[0m"                        ;\
 			export STEMCELL_NAME=$@                                    ;\
 			docker-compose --log-level ERROR run --rm dockerize-release                  ;\
+		elif [ "$(MAKECMDGOALS)" = "docker-bosh-director" ]; then           \
+			echo "\033[92mTesting with a real BOSH Director using docker-cpi$@ \033[0m"  ;\
+			export STEMCELL_NAME=$@                                    ;\
+			docker-compose --log-level ERROR run --rm bosh-director    ;\
 		fi                                                                  \
 	fi
 
