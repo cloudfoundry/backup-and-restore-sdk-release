@@ -20,4 +20,4 @@ name: database-backup-restorer-postgres-10
 dependencies: []
 
 files:
-- postgres/postgresql-10.22.tar.gz
+- postgres/postgresql-10.23.tar.gz
