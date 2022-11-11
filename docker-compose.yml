@@ -2,10 +2,14 @@ version: '3.0'
 
 services:
   bosh-export-release:
-    privileged: true
+    depends_on: [bosh-in-docker]
     volumes: [./:/backup-and-restore-sdk-release]
     build:
       context: ci/dockerfiles/bosh-export-release/
+
+  bosh-in-docker:
+    privileged: true
+    build: { context: ci/dockerfiles/bosh-in-docker }
     environment:
     - STEMCELL_NAME=${STEMCELL_NAME}
 
