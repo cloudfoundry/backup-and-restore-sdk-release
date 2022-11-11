@@ -36,6 +36,10 @@ bosh -n --tty create-env /bosh-deployment/bosh.yml \
 # https://github.com/cloudfoundry/bosh-deployment/issues/94
 chmod 777 /var/run/docker.sock
 
+ssh-keygen -t rsa -q -f /shared-creds/id_rsa -N ""
+mkdir -p ~/.ssh && cat /shared-creds/id_rsa.pub | cat > ~/.ssh/authorized_keys
+/etc/init.d/ssh start
+
 cat << EOF > /workspace/bosh-creds.bash
 export BOSH_CLIENT_SECRET='$(bosh int /workspace/creds.yml --path /admin_password)'
 export BOSH_CA_CERT='$(bosh int /workspace/creds.yml --path /director_ssl/ca)'
@@ -48,7 +52,4 @@ source /workspace/bosh-creds.bash
 bosh -n --tty update-cloud-config /bosh-deployment/docker/cloud-config.yml -v network=net3
 mv /workspace/bosh-creds.bash /shared-creds/bosh-creds.bash
 
-ssh-keygen -t rsa -q -f /shared-creds/id_rsa -N ""
-mkdir -p ~/.ssh && cat /shared-creds/id_rsa.pub | cat > ~/.ssh/authorized_keys
-/etc/init.d/ssh start
 while true; do sleep 30; done;
