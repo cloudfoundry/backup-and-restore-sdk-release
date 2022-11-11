@@ -41,8 +41,14 @@ export BOSH_CLIENT_SECRET='$(bosh int /workspace/creds.yml --path /admin_passwor
 export BOSH_CA_CERT='$(bosh int /workspace/creds.yml --path /director_ssl/ca)'
 export BOSH_CLIENT=admin
 export BOSH_ENVIRONMENT=https://10.245.0.10:25555
+export BOSH_ALL_PROXY=ssh+sock5://root@bosh-in-docker:22?private-key=/shared-creds/id_rsa
 EOF
 
 source /workspace/bosh-creds.bash
 bosh -n --tty update-cloud-config /bosh-deployment/docker/cloud-config.yml -v network=net3
 mv /workspace/bosh-creds.bash /shared-creds/bosh-creds.bash
+
+ssh-keygen -t rsa -q -f /shared-creds/id_rsa -N ""
+mkdir -p ~/.ssh && cat /shared-creds/id_rsa.pub | cat > ~/.ssh/authorized_keys
+/etc/init.d/ssh start
+while true; do sleep 30; done;

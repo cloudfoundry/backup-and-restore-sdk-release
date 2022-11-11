@@ -8,6 +8,7 @@ apt-get update && apt-get install -y --no-install-recommends \
   e2fsprogs \
   iptables \
   openssl \
+  ssh \
   uidmap \
   xfsprogs \
   xz-utils \
