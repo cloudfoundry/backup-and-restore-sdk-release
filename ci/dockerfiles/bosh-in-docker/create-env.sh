@@ -2,6 +2,12 @@
 
 set -euxo pipefail
 
+function create-empty-bosh-creds-if-wasnt-created {
+  touch /shared-creds/bosh-creds.bash
+}
+
+trap create-empty-bosh-creds-if-wasnt-created EXIT
+
 # References:
 # https://bosh.io/docs/bosh-lite/
 
@@ -24,43 +30,19 @@ bosh -n --tty create-env /bosh-deployment/bosh.yml \
   -v docker_host=unix:///var/run/docker.sock \
   -v network=net3
 ##
-export BOSH_CLIENT=admin
-export BOSH_CLIENT_SECRET=`bosh int /workspace/creds.yml --path /admin_password`
-bosh -n --tty alias-env bosh-in-docker -e 10.245.0.10 --ca-cert <(bosh int /workspace/creds.yml --path /director_ssl/ca)
 
-bosh -n --tty -e bosh-in-docker update-cloud-config /bosh-deployment/docker/cloud-config.yml -v network=net3
 
 # Docker CPI - Cannot upload stemcell due to "Cannot connect to the Docker daemon... Is the docker daemon running?"
 # https://github.com/cloudfoundry/bosh-deployment/issues/94
 chmod 777 /var/run/docker.sock
 
-STEMCELL_URL="$(curl -L https://bosh.io/stemcells | grep -io "https:\/\/.*warden-boshlite-${STEMCELL_NAME}-go_agent.tgz")"
-
-bosh -n --tty -e bosh-in-docker upload-stemcell "${STEMCELL_URL}"
-pushd /backup-and-restore-sdk-release
-bosh -n --tty -e bosh-in-docker upload-release
-popd
-
-cat > manifest.yml <<EOF
----
-name: compilation
-releases:
-- name: backup-and-restore-sdk
-  version: 'latest'
-stemcells:
-- alias: default
-  os: "$STEMCELL_NAME"
-  version: 'latest'
-update:
-  canaries: 1
-  max_in_flight: 1
-  canary_watch_time: 1000 - 90000
-  update_watch_time: 1000 - 90000
-instance_groups: []
+cat << EOF > /workspace/bosh-creds.bash
+export BOSH_CLIENT_SECRET='$(bosh int /workspace/creds.yml --path /admin_password)'
+export BOSH_CA_CERT='$(bosh int /workspace/creds.yml --path /director_ssl/ca)'
+export BOSH_CLIENT=admin
+export BOSH_ENVIRONMENT=https://10.245.0.10:25555
 EOF
 
-bosh -n --tty -e bosh-in-docker -d compilation deploy manifest.yml
-export STEMCELL_VERSION="$(bosh -n -e bosh-in-docker stemcells --json | jq -r --arg stemcell "${STEMCELL_NAME}" '.Tables[0].Rows[] | select(.os==$stemcell).version' | sed 's/*//g')"
-export RELEASE_VERSION="$(bosh -n -e bosh-in-docker releases --json | jq -r --arg release "backup-and-restore-sdk" '.Tables[0].Rows[] | select(.name==$release).version' | sed 's/*//g')"
-
-bosh -n --tty -e bosh-in-docker -d compilation export-release backup-and-restore-sdk/$RELEASE_VERSION $STEMCELL_NAME/$STEMCELL_VERSION
+source /workspace/bosh-creds.bash
+bosh -n --tty update-cloud-config /bosh-deployment/docker/cloud-config.yml -v network=net3
+mv /workspace/bosh-creds.bash /shared-creds/bosh-creds.bash

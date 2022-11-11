@@ -130,7 +130,8 @@ $(supported-stemcells):
 		elif [ "$(MAKECMDGOALS)" = "docker-export-release" ]; then           \
 			echo "\033[92mExporting release $@ \033[0m"  ;\
 			export STEMCELL_NAME=$@                                    ;\
-			docker-compose --log-level ERROR run --rm bosh-export-release   ;\
+			docker-compose --log-level ERROR run --rm bosh-export-release || (docker-compose logs bosh-in-docker && exit 1) ;\
+			docker-compose --log-level ERROR down -v --remove-orphans --rmi local        ;\
 		fi                                                                  \
 	fi
 

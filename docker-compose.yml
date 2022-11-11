@@ -3,13 +3,20 @@ version: '3.0'
 services:
   bosh-export-release:
     depends_on: [bosh-in-docker]
-    volumes: [./:/backup-and-restore-sdk-release]
-    build:
-      context: ci/dockerfiles/bosh-export-release/
+    build: { context: ci/dockerfiles/run-bosh-tests }
+    entrypoint: /backup-and-restore-sdk-release/scripts/run-bosh-export-release.bash
+    command: /shared-creds/bosh-creds.bash
+    volumes:
+    - ./:/backup-and-restore-sdk-release
+    - director-creds:/shared-creds
+    environment:
+    - STEMCELL_NAME=${STEMCELL_NAME}
 
   bosh-in-docker:
     privileged: true
     build: { context: ci/dockerfiles/bosh-in-docker }
+    volumes:
+    - director-creds:/shared-creds
     environment:
     - STEMCELL_NAME=${STEMCELL_NAME}
 
@@ -136,3 +143,4 @@ volumes:
   mysql-certs:
   mariadb-certs:
   postgres-certs:
+  director-creds:
