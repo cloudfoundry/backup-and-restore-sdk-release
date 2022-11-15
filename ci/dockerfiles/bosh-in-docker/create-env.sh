@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euxo pipefail
+set -euo pipefail
 
 function create-empty-bosh-creds-if-wasnt-created {
   touch /shared-creds/bosh-creds.bash
@@ -19,7 +19,6 @@ export BOSH_LOG_LEVEL=none
 bosh -n --tty create-env /bosh-deployment/bosh.yml \
   -o /bosh-deployment/docker/cpi.yml \
   -o /bosh-deployment/docker/unix-sock.yml \
-  -o /update-watch-time.yml \
   -o /bosh-deployment/jumpbox-user.yml \
   --state=/workspace/state.json              \
   --vars-store /workspace/creds.yml          \
