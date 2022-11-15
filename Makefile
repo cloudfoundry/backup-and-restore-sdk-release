@@ -69,6 +69,9 @@ docker-clean: ## remove containers created to run the tests
 
 docker-clean-prune: $(supported-stemcells) ## remove containers AND IMAGES created to run the tests
 docker-compile: $(supported-stemcells) ## run compilation test for all supported stemcells
+docker-create-final-release: ## create a new final release
+	docker-compose run create-final-release
+
 docker-system-mariadb: $(supported-mariadb) ## run system tests for all supported Stemcells and MARIADB versions
 docker-system-mysql: $(supported-mysql) ## run system tests for all supported Stemcells and MYSQL versions
 docker-system-postgres: $(supported-postgres) ## run system tests for all supported Stemcells and POSTGRES versions

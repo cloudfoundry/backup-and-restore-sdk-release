@@ -9,6 +9,14 @@ services:
       args:
       - STEMCELL_NAME=${STEMCELL_NAME}
 
+  create-final-release:
+    build:
+      context: ci/dockerfiles/run-bosh-tests/
+    entrypoint: /backup-and-restore-sdk-release/scripts/create-final-release.bash
+    volumes: [./:/backup-and-restore-sdk-release]
+    environment:
+    - ACCESS_TOKEN=${ACCESS_TOKEN}
+
   unit-blobstore-azure:
     build: { context: ci/dockerfiles/run-golang-unit-tests }
     volumes: [./:/backup-and-restore-sdk-release]
