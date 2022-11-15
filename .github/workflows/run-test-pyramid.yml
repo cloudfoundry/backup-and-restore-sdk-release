@@ -17,10 +17,27 @@ jobs:
 
   run-bosh-tests-jammy:
     if: contains(github.event.pull_request.labels.*.name, 'bosh-tests')
+    needs: run-unit-tests
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - run: FOCUS=ubuntu-jammy make docker-export-release
+
+  run-bosh-tests-bionic:
+    if: contains(github.event.pull_request.labels.*.name, 'bosh-tests')
+    needs: run-unit-tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: FOCUS=ubuntu-bionic make docker-export-release
+
+  run-bosh-tests-xenial:
+    if: contains(github.event.pull_request.labels.*.name, 'bosh-tests')
+    needs: run-unit-tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: FOCUS=ubuntu-xenial make docker-export-release
 
   run-system-tests-jammy:
     if: contains(github.event.pull_request.labels.*.name, 'system-tests')
