@@ -17,8 +17,7 @@
 ---
 final_name: backup-and-restore-sdk
 blobstore:
-  provider: s3
+  provider: ghrel
   options:
-    bucket_name: backup-and-restore-sdk-release-blobs
-    region: eu-west-1
-    endpoint: https://s3-eu-west-1.amazonaws.com
+    repository: cloudfoundry/backup-and-restore-sdk-release
+    tag_name: bosh_blobstore
