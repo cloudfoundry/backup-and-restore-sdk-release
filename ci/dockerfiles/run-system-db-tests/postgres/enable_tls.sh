@@ -23,7 +23,11 @@ openssl req -newkey rsa:2048 -days 3650 -nodes -keyout /tls-certs/server-key.pem
 openssl x509 -req -in /tls-certs/server-req.pem -days 3650 -CA /tls-certs/ca-cert.pem -CAkey /tls-certs/ca-key.pem -set_serial 01 > /tls-certs/server-cert.pem
 openssl rsa -in /tls-certs/server-key.pem -out /tls-certs/server-key.pem
 
-SUBJ="/C=CB/CN=ClientCert/ST=EvenOtherLand/L=EvenOtherLocality/S=EvenOtherProvince/O=EvenOtherOrganization"
+# Notice that we are using `postgres`
+# whish is the same name we give to the POSTGRES_USERNAME variable
+# this is needed for the plsql Mutual TLS to work correctly in `verify-full` mode
+# https://postgrespro.com/list/thread-id/2372010
+SUBJ="/C=CB/CN=postgres/ST=EvenOtherLand/L=EvenOtherLocality/S=EvenOtherProvince/O=EvenOtherOrganization"
 openssl req -newkey rsa:2048 -days 3650 -nodes -keyout /tls-certs/client-key.pem -subj "$SUBJ" > /tls-certs/client-req.pem
 openssl x509 -req -in /tls-certs/client-req.pem -days 3650 -CA /tls-certs/ca-cert.pem -CAkey /tls-certs/ca-key.pem -set_serial 01 > /tls-certs/client-cert.pem
 openssl rsa -in /tls-certs/client-key.pem -out /tls-certs/client-key.pem
@@ -46,6 +50,6 @@ hostssl all  all  0.0.0.0/0  md5
 EOF
   elif [[ "${ENABLE_TLS}" == "mutual" ]]; then
 cat << 'EOF' > /var/lib/postgresql/data/pg_hba.conf
-hostssl all  all  0.0.0.0/0  md5 clientcert=1
+hostssl all  all  0.0.0.0/0  md5 clientcert=verify-full
 EOF
 fi

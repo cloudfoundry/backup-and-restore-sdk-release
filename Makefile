@@ -46,6 +46,9 @@ supported-mysql=\
   ubuntu-xenial~~~5.7-debian  \
 
 supported-postgres=\
+  ubuntu-bionic~~~15-bullseye  \
+  ubuntu-jammy~~~~15-bullseye  \
+  ubuntu-xenial~~~15-bullseye  \
   ubuntu-bionic~~~13-bullseye  \
   ubuntu-jammy~~~~13-bullseye  \
   ubuntu-xenial~~~13-bullseye  \
