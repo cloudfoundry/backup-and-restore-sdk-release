@@ -85,6 +85,7 @@ groups:
   - deploy-rc-finished
   - claim-cf-deployment-for-airgap
   - claim-cf-deployment
+  - unclaim-cf-deployment
   - test-compilation-in-airgapped-env
   - release-cf-deployment-from-airgap
 - name: dependencies
@@ -401,8 +402,16 @@ jobs:
 - name: deploy-rc-finished
   plan:
   - in_parallel:
-    - get: release
+    - get: cf-deployment-env
       trigger: true
+      passed:
+      - deploy-database-sdk
+      - deploy-postgres
+      - deploy-mariadb
+      - deploy-s3-blobstore-sdk
+      - deploy-azure-blobstore-sdk
+      - deploy-gcs-blobstore-sdk
+    - get: release
       passed:
       - deploy-database-sdk
       - deploy-postgres
@@ -464,12 +473,15 @@ jobs:
   plan:
   - in_parallel:
     - get: release
-      trigger: true
       passed: [deploy-rc-finished]
     - get: backup-and-restore-sdk-release
       passed: [deploy-rc-finished]
     - get: cryogenics-concourse-tasks
     - get: gcp-db-certs
+    - get: cf-deployment-env
+      trigger: true
+      passed:
+        - deploy-rc-finished
   - in_parallel:
     - do:
       - put: gcp-terraform
@@ -557,13 +569,16 @@ jobs:
   plan:
   - in_parallel:
     - get: release
-      trigger: true
       passed: [deploy-rc-finished]
     - get: backup-and-restore-sdk-release
       passed: [deploy-rc-finished]
     - get: cryogenics-concourse-tasks
     - get: cert-store
       resource: rds-ca-bundle
+    - get: cf-deployment-env
+      trigger: true
+      passed:
+        - deploy-rc-finished
   - in_parallel:
     - put: terraform
       params:
@@ -680,12 +695,15 @@ jobs:
   plan:
   - in_parallel:
     - get: release
-      trigger: true
       passed: [deploy-rc-finished]
     - get: backup-and-restore-sdk-release
       passed: [deploy-rc-finished]
     - get: cert-store
       resource: gcp-db-certs
+    - get: cf-deployment-env
+      trigger: true
+      passed:
+        - deploy-rc-finished
   - in_parallel:
     - task: postgres-system-tests-9.4
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
@@ -759,10 +777,13 @@ jobs:
   plan:
   - in_parallel:
     - get: release
-      trigger: true
       passed: [deploy-rc-finished]
     - get: backup-and-restore-sdk-release
       passed: [deploy-rc-finished]
+    - get: cf-deployment-env
+      trigger: true
+      passed:
+        - deploy-rc-finished
   - in_parallel:
     - task: s3
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
@@ -1216,9 +1237,26 @@ jobs:
 
 - name: claim-cf-deployment
   plan:
+  - get: release
+    trigger: true
+    passed: [build-rc]
   - put: cf-deployment-env
     params:
       action: claim
+      env_file: cf-deployment-env/metadata
+
+- name: unclaim-cf-deployment
+  plan:
+  - get: cf-deployment-env
+    trigger: true
+    passed:
+    - system-tests-external-dbs-gcp
+    - system-tests-external-dbs-rds
+    - system-tests-internal-dbs
+    - system-tests-blobstore-backuper
+  - put: cf-deployment-env
+    params:
+      action: unclaim
       env_file: cf-deployment-env/metadata
 
 - name: deploy-database-sdk
@@ -1233,7 +1271,8 @@ jobs:
     - get: release-tarball
       trigger: true
       resource: release
-      passed: [build-rc]
+      passed:
+        - claim-cf-deployment
     # - get: bbl-state-bosh-lite
     - get: jammy-stemcell
     - get: cf-deployment-env
@@ -1306,7 +1345,8 @@ jobs:
     - get: release-tarball
       resource: release
       trigger: true
-      passed: [build-rc]
+      passed:
+        - claim-cf-deployment
     - get: jammy-stemcell
     # - get: bbl-state-bosh-lite
     - get: cf-deployment-env
@@ -1420,7 +1460,8 @@ jobs:
     - get: release-tarball
       trigger: true
       resource: release
-      passed: [build-rc]
+      passed:
+        - claim-cf-deployment
     - get: jammy-stemcell
     - get: cf-deployment-env
       trigger: true
@@ -1461,7 +1502,8 @@ jobs:
     - get: release-tarball
       trigger: true
       resource: release
-      passed: [build-rc]
+      passed:
+        - claim-cf-deployment
     - get: jammy-stemcell
     - get: cf-deployment-env
       trigger: true
@@ -1557,7 +1599,8 @@ jobs:
     - get: release-tarball
       trigger: true
       resource: release
-      passed: [build-rc]
+      passed:
+        - claim-cf-deployment
     - get: jammy-stemcell
     - get: cf-deployment-env
       trigger: true
@@ -1599,7 +1642,8 @@ jobs:
     - get: release-tarball
       trigger: true
       resource: release
-      passed: [build-rc]
+      passed:
+        - claim-cf-deployment
     - get: jammy-stemcell
     # - get: bbl-state-bosh-lite
   # - task: generate-bosh-deployment-source-file
