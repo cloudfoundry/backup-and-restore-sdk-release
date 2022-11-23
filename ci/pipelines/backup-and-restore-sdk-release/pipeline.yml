@@ -12,19 +12,19 @@ aws-region: &aws-region eu-west-1
 aws-backup-region: &aws-backup-region eu-central-1
 
 mysql-deployment-name: &mysql-deployment-name mysql-dev
-mysql-host: &mysql-host 10.244.1.9
+mysql-host: &mysql-host 10.0.255.9
 mysql-port: &mysql-port 3306
 mysql-username: &mysql-username root
 mysql-password: &mysql-password mysql_password
 
 postgres-9-4-deployment-name: &postgres-9-4-deployment-name postgres-9-4-dev
-postgres-9-4-host: &postgres-9-4-host 10.244.1.10
+postgres-9-4-host: &postgres-9-4-host 10.0.255.10
 postgres-9-4-port: &postgres-9-4-port 5432
 postgres-9-4-username: &postgres-9-4-username test_user
 postgres-9-4-password: &postgres-9-4-password postgres_password
 
 postgres-9-6-deployment-name: &postgres-9-6-deployment-name postgres-9-6-dev
-postgres-9-6-host: &postgres-9-6-host 10.244.1.11
+postgres-9-6-host: &postgres-9-6-host 10.0.255.11
 postgres-9-6-port: &postgres-9-6-port 5432
 postgres-9-6-username: &postgres-9-6-username test_user
 postgres-9-6-password: &postgres-9-6-password postgres_password
@@ -34,19 +34,19 @@ postgres-9-6-tls-username: &postgres-9-6-tls-username mutual_tls_user
 postgres-9-6-tls-common-name: &postgres-9-6-tls-common-name postgres96
 
 postgres-10-deployment-name: &postgres-10-deployment-name postgres-10-dev
-postgres-10-host: &postgres-10-host 10.244.1.12
+postgres-10-host: &postgres-10-host 10.0.255.12
 postgres-10-port: &postgres-10-port 5432
 postgres-10-username: &postgres-10-username test_user
 postgres-10-password: &postgres-10-password postgres_password
 
 postgres-11-deployment-name: &postgres-11-deployment-name postgres-11-dev
-postgres-11-host: &postgres-11-host 10.244.1.13
+postgres-11-host: &postgres-11-host 10.0.255.13
 postgres-11-port: &postgres-11-port 5432
 postgres-11-username: &postgres-11-username test_user
 postgres-11-password: &postgres-11-password postgres_password
 
 postgres-13-deployment-name: &postgres-13-deployment-name postgres-13-dev
-postgres-13-host: &postgres-13-host 10.244.1.14
+postgres-13-host: &postgres-13-host 10.0.255.14
 postgres-13-port: &postgres-13-port 5432
 postgres-13-username: &postgres-13-username test_user
 postgres-13-password: &postgres-13-password postgres_password
@@ -84,6 +84,7 @@ groups:
   - deploy-azure-blobstore-sdk
   - deploy-rc-finished
   - claim-cf-deployment-for-airgap
+  - claim-cf-deployment
   - test-compilation-in-airgapped-env
   - release-cf-deployment-from-airgap
 - name: dependencies
@@ -163,7 +164,7 @@ resources:
   source:
     api_token: ((toolsmiths.api_token))
     hostname: environments.toolsmiths.cf-app.com
-    pool_name: cryo_cf-d
+    pool_name: cryo_cf-deployment
 
 - name: rds-ca-bundle
   type: file-url
@@ -285,36 +286,30 @@ resources:
   source:
     days: [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday' ]
 
-- name: jammy-stemcell
-  type: bosh-io-stemcell
-  source:
-    name: bosh-warden-boshlite-ubuntu-jammy-go_agent
 - name: jammy-stemcell-aws
   type: bosh-io-stemcell
   source:
     name: bosh-aws-xen-hvm-ubuntu-jammy-go_agent
-- name: jammy-stemcell-gcp
+
+- name: jammy-stemcell
   icon: seed-outline
   source:
     name: bosh-google-kvm-ubuntu-jammy-go_agent
     version_family: latest
   type: bosh-io-stemcell
-- name: bbl-state-bosh-lite
-  type: vault
-  source:
-    <<: *vault_creds
-    path: /concourse/common/infrastructure/bosh/maru-lite
-    tarball: true
+
 - name: mysql-dev-deployment
   type: bosh-deployment
   source:
     deployment: *mysql-deployment-name
     skip_check: true
+
 - name: postgres-9-4-dev-deployment
   type: bosh-deployment
   source:
     deployment: *postgres-9-4-deployment-name
     skip_check: true
+
 - name: postgres-9-6-dev-deployment
   type: bosh-deployment
   source:
@@ -860,7 +855,7 @@ jobs:
 - name: test-compilation-in-airgapped-env
   plan:
     - in_parallel:
-      - get: jammy-stemcell-gcp
+      - get: jammy-stemcell
         params:
           globs:
           - '*google-kvm-ubuntu-jammy*.tgz'
@@ -890,7 +885,7 @@ jobs:
     - file: cryogenics-concourse-tasks/bosh-tasks/upload-stemcell/task.yml
       task: upload-jammy-stemcell
       input_mapping:
-        stemcell: jammy-stemcell-gcp
+        stemcell: jammy-stemcell
     - file: cryogenics-concourse-tasks/bosh-tasks/upload-and-compile-release/task.yml
       input_mapping:
         build-final-release-tarball: release
@@ -1219,12 +1214,19 @@ jobs:
       AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
       AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
 
+- name: claim-cf-deployment
+  plan:
+  - put: cf-deployment-env
+    params:
+      action: claim
+      env_file: cf-deployment-env/metadata
+
 - name: deploy-database-sdk
   serial: true
   plan:
   - in_parallel:
     - get: version
-      passed: [build-rc]
+      passed: [build-rc] # TODO: discuss about this
     - get: backup-and-restore-sdk-release
       resource: backup-and-restore-sdk-release
       passed: [build-rc]
@@ -1232,12 +1234,54 @@ jobs:
       trigger: true
       resource: release
       passed: [build-rc]
-    - get: bbl-state-bosh-lite
+    # - get: bbl-state-bosh-lite
     - get: jammy-stemcell
+    - get: cf-deployment-env
+      trigger: true
+      passed:
+        - claim-cf-deployment
+  # - task: generate-bosh-deployment-source-file
+  #   file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
+  #   params:
+  #     BBL_STATE: .
   - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-    params:
-      BBL_STATE: .
+    config: &generate-bosh-deployment-source-tile
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: cryogenics/essentials-cf6
+      inputs:
+        - name: cf-deployment-env
+      outputs:
+        - name: source-file
+      run:
+        path: /bin/bash
+        args:
+          - -c
+          - |
+            set -euo pipefail
+            set -x
+
+            eval "$(bbl print-env --metadata-file cf-deployment-env/metadata)"
+
+            function get_ip_port() {
+              grep -o '[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}:[0-9]\{1,\}' <<< "$1"
+            }
+
+            cat <<EOF > source-file/source-file.yml
+            ---
+            jumpbox_username: jumpbox
+            jumpbox_url: $( get_ip_port "$BOSH_ALL_PROXY" )
+            jumpbox_ssh_key: |-
+            $(cat "$JUMPBOX_PRIVATE_KEY" | sed 's/^/  /')
+            target: ${BOSH_ENVIRONMENT}
+            client: ${BOSH_CLIENT}
+            client_secret: ${BOSH_CLIENT_SECRET}
+            ca_cert: |-
+            $(echo "$BOSH_CA_CERT" | sed 's/^/  /')
+            EOF
+
   - put: database-backup-restorer-deployment
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/database-backup-restorer.yml
@@ -1249,6 +1293,7 @@ jobs:
         deployment-name: database-backup-restorer
         availability_zone: z1
       source_file: source-file/source-file.yml
+
 - name: deploy-postgres
   serial: true
   plan:
@@ -1263,11 +1308,18 @@ jobs:
       trigger: true
       passed: [build-rc]
     - get: jammy-stemcell
-    - get: bbl-state-bosh-lite
+    # - get: bbl-state-bosh-lite
+    - get: cf-deployment-env
+      trigger: true
+      passed:
+        - claim-cf-deployment
+    - get: cryogenics-concourse-tasks
   - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-    params:
-      BBL_STATE: .
+    config: *generate-bosh-deployment-source-tile
+  # - task: generate-bosh-deployment-source-file
+  #   file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
+  #   params:
+  #     BBL_STATE: .
   - in_parallel:
     - put: postgres-9-4-dev-deployment
       params:
@@ -1337,10 +1389,23 @@ jobs:
           db_host: *postgres-13-host
           availability_zone: z1
         source_file: source-file/source-file.yml
+  - task: alias-env
+    file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
+    input_mapping:
+      cryogenics-tasks: cryogenics-concourse-tasks
+      toolsmiths-env: cf-deployment-env
+  - load_var: pooled-env
+    file: bosh-env/metadata.yml
   - task: create-ssl-user
     file: backup-and-restore-sdk-release/ci/tasks/create-ssl-user/task.yml
     params:
-      <<: *bosh-lite-creds
+      BOSH_ENVIRONMENT: "((.:pooled-env.BOSH_ENVIRONMENT))"
+      BOSH_CLIENT: "((.:pooled-env.BOSH_CLIENT))"
+      BOSH_CLIENT_SECRET: "((.:pooled-env.BOSH_CLIENT_SECRET))"
+      BOSH_CA_CERT: "((.:pooled-env.BOSH_CA_CERT))"
+      BOSH_GW_USER: "((.:pooled-env.INSTANCE_JUMPBOX_USER))"
+      BOSH_GW_HOST: "((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))"
+      BOSH_GW_PRIVATE_KEY: "((.:pooled-env.INSTANCE_JUMPBOX_PRIVATE))"
       BOSH_DEPLOYMENT: *postgres-9-6-deployment-name
 
 - name: deploy-mariadb
@@ -1357,11 +1422,17 @@ jobs:
       resource: release
       passed: [build-rc]
     - get: jammy-stemcell
-    - get: bbl-state-bosh-lite
+    - get: cf-deployment-env
+      trigger: true
+      passed:
+        - claim-cf-deployment
+    # - get: bbl-state-bosh-lite
   - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-    params:
-      BBL_STATE: .
+    config: *generate-bosh-deployment-source-tile
+  # - task: generate-bosh-deployment-source-file
+  #   file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
+  #   params:
+  #     BBL_STATE: .
   - put: mysql-dev-deployment
     attempts: 3
     params:
@@ -1392,11 +1463,17 @@ jobs:
       resource: release
       passed: [build-rc]
     - get: jammy-stemcell
-    - get: bbl-state-bosh-lite
+    - get: cf-deployment-env
+      trigger: true
+      passed:
+        - claim-cf-deployment
+    # - get: bbl-state-bosh-lite
+  # - task: generate-bosh-deployment-source-file
+  #   file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
+  #   params:
+  #     BBL_STATE: .
   - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-    params:
-      BBL_STATE: .
+    config: *generate-bosh-deployment-source-tile
   - put: aws-blobstore-sdk-deployment
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/s3-backuper.yml
@@ -1482,11 +1559,17 @@ jobs:
       resource: release
       passed: [build-rc]
     - get: jammy-stemcell
-    - get: bbl-state-bosh-lite
+    - get: cf-deployment-env
+      trigger: true
+      passed:
+        - claim-cf-deployment
+    # - get: bbl-state-bosh-lite
+  # - task: generate-bosh-deployment-source-file
+  #   file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
+  #   params:
+  #     BBL_STATE: .
   - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-    params:
-      BBL_STATE: .
+    config: *generate-bosh-deployment-source-tile
   - put: azure-blobstore-sdk-deployment
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/azure-backuper.yml
@@ -1518,11 +1601,17 @@ jobs:
       resource: release
       passed: [build-rc]
     - get: jammy-stemcell
-    - get: bbl-state-bosh-lite
+    # - get: bbl-state-bosh-lite
+  # - task: generate-bosh-deployment-source-file
+  #   file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
+  #   params:
+  #     BBL_STATE: .
+    - get: cf-deployment-env
+      trigger: true
+      passed:
+        - claim-cf-deployment
   - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-    params:
-      BBL_STATE: .
+    config: *generate-bosh-deployment-source-tile
   - put: gcs-blobstore-sdk-deployment
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/gcs-backuper.yml
