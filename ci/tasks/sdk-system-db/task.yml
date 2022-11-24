@@ -28,13 +28,13 @@ run:
   path: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.sh
 
 params:
-  BOSH_ENVIRONMENT: ((infrastructure/bosh-lite-director.director_url))
-  BOSH_CLIENT: ((infrastructure/bosh-lite-director.director_username))
-  BOSH_CLIENT_SECRET: ((infrastructure/bosh-lite-director.director_password))
-  BOSH_CA_CERT: ((infrastructure/bosh-lite-director.director_ca_cert))
-  BOSH_GW_USER: jumpbox
-  BOSH_GW_HOST: ((infrastructure/bosh-lite-director.jumpbox_host))
-  BOSH_GW_PRIVATE_KEY: ((infrastructure/bosh-lite-director.jumpbox_ssh_key))
+  BOSH_ENVIRONMENT:
+  BOSH_CLIENT:
+  BOSH_CLIENT_SECRET:
+  BOSH_CA_CERT:
+  BOSH_GW_USER:
+  BOSH_GW_HOST:
+  BOSH_GW_PRIVATE_KEY:
 
   MYSQL_HOSTNAME:
   MYSQL_PORT: 3306

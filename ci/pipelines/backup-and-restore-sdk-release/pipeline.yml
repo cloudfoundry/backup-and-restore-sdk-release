@@ -717,6 +717,7 @@ jobs:
     - task: postgres-system-tests-9.4
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
       params:
+        <<: *bosh-lite-creds
         POSTGRES_HOSTNAME: *postgres-9-4-host
         POSTGRES_PASSWORD: *postgres-9-4-password
         POSTGRES_PORT: *postgres-9-4-port
@@ -726,6 +727,7 @@ jobs:
       attempts: 4
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
       params:
+        <<: *bosh-lite-creds
         POSTGRES_HOSTNAME: *postgres-9-6-host
         POSTGRES_PASSWORD: postgres_password
         POSTGRES_USERNAME: test_user
@@ -733,6 +735,7 @@ jobs:
     - task: postgres-system-tests-10
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
       params:
+        <<: *bosh-lite-creds
         POSTGRES_HOSTNAME: *postgres-10-host
         POSTGRES_PASSWORD: *postgres-10-password
         POSTGRES_PORT: *postgres-10-port
@@ -741,6 +744,7 @@ jobs:
     - task: postgres-system-tests-11
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
       params:
+        <<: *bosh-lite-creds
         POSTGRES_HOSTNAME: *postgres-11-host
         POSTGRES_PASSWORD: *postgres-11-password
         POSTGRES_PORT: *postgres-11-port
@@ -750,6 +754,7 @@ jobs:
     attempts: 4
     file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
     params:
+      <<: *bosh-lite-creds
       POSTGRES_CA_CERT: ((backup-and-restore-sdk-release-db-certs.postgres_96_ca_cert))
       POSTGRES_HOSTNAME: *postgres-9-6-host
       POSTGRES_PASSWORD: postgres_password
@@ -759,6 +764,7 @@ jobs:
   - task: postgres-mutual-tls-system-tests-9.6
     file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
     params:
+      <<: *bosh-lite-creds
       POSTGRES_CA_CERT: ((backup-and-restore-sdk-release-db-certs.postgres_96_ca_cert))
       POSTGRES_CLIENT_CERT: ((backup-and-restore-sdk-release-db-certs.postgres_96_client_cert))
       POSTGRES_CLIENT_KEY: ((backup-and-restore-sdk-release-db-certs.postgres_96_client_key))
@@ -770,6 +776,7 @@ jobs:
   - task: mariadb-system-tests
     file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
     params:
+      <<: *bosh-lite-creds
       TEST_SUITE_NAME: mysql
       MYSQL_HOSTNAME: *mysql-host
       MYSQL_PORT: *mysql-port
