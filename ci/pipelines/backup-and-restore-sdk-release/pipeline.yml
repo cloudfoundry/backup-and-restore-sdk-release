@@ -8,6 +8,15 @@ bosh-lite-creds: &bosh-lite-creds
   BOSH_GW_HOST: ((infrastructure/bosh-lite-director.jumpbox_host))
   BOSH_GW_PRIVATE_KEY: ((infrastructure/bosh-lite-director.jumpbox_ssh_key))
 
+bosh-smiths-creds: &bosh-smiths-creds
+  BOSH_ENVIRONMENT: ((.:pooled-env.BOSH_ENVIRONMENT))
+  BOSH_CLIENT: ((.:pooled-env.BOSH_CLIENT))
+  BOSH_CLIENT_SECRET: ((.:pooled-env.BOSH_CLIENT_SECRET))
+  BOSH_CA_CERT: ((.:pooled-env.BOSH_CA_CERT))
+  BOSH_GW_USER: ((.:pooled-env.INSTANCE_JUMPBOX_USER))
+  BOSH_GW_HOST: ((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))
+  BOSH_GW_PRIVATE_KEY: ((.:pooled-env.INSTANCE_JUMPBOX_PRIVATE))
+
 aws-region: &aws-region eu-west-1
 aws-backup-region: &aws-backup-region eu-central-1
 
@@ -784,11 +793,19 @@ jobs:
       trigger: true
       passed:
         - deploy-rc-finished
+    - get: cryogenics-concourse-tasks
+  - task: alias-env
+    file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
+    input_mapping:
+      cryogenics-tasks: cryogenics-concourse-tasks
+      toolsmiths-env: cf-deployment-env
+  - load_var: pooled-env
+    file: bosh-env/metadata.yml
   - in_parallel:
     - task: s3
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
       params:
-        <<: *bosh-lite-creds
+        <<: *bosh-smiths-creds
         TEST_SUITE_NAME: s3
         BOSH_DEPLOYMENT: s3-backuper
         AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
@@ -837,7 +854,7 @@ jobs:
     - task: azure-system-tests
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
       params:
-        <<: *bosh-lite-creds
+        <<: *bosh-smiths-creds
         TEST_SUITE_NAME: azure
         BOSH_DEPLOYMENT: azure-backuper
         AZURE_STORAGE_ACCOUNT: ((azure_credentials.storage_account_1))
@@ -849,7 +866,7 @@ jobs:
     - task: gcs-blobstore-backuper-system-tests
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
       params:
-        <<: *bosh-lite-creds
+        <<: *bosh-smiths-creds
         TEST_SUITE_NAME: gcs
         GCP_SERVICE_ACCOUNT_KEY: ((gcp/service_accounts/owner_role.json_key))
         GCP_PROJECT_NAME: cf-backup-and-restore
