@@ -9,6 +9,7 @@ services:
     healthcheck:
       test: 'bash -c "source /shared-creds/bosh-creds.bash ; bosh vms"'
       start_period: 10m
+      interval: 1m
       retries: 20
 
   unit-blobstore-azure:
