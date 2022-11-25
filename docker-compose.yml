@@ -1,13 +1,15 @@
 version: '3.0'
 
 services:
-  dockerize-release:
-    image: dockerize-release:${STEMCELL_NAME}
-    build:
-      context: .
-      dockerfile: ci/dockerfiles/dockerize-release/Dockerfile
-      args:
-      - STEMCELL_NAME=${STEMCELL_NAME}
+  bosh-in-docker:
+    privileged: true
+    build: { context: ci/dockerfiles/bosh-in-docker }
+    volumes:
+    - director-creds:/shared-creds
+    healthcheck:
+      test: 'bash -c "source /shared-creds/bosh-creds.bash ; bosh vms"'
+      start_period: 10m
+      retries: 20
 
   unit-blobstore-azure:
     build: { context: ci/dockerfiles/run-golang-unit-tests }
@@ -34,17 +36,21 @@ services:
     volumes: [./:/backup-and-restore-sdk-release]
 
   system-db-mariadb:
-    depends_on: [system-db-mariadb-backing-db]
+    depends_on:
+      bosh-in-docker:
+        condition: service_healthy
+      system-db-mariadb-backing-db:
+        condition: service_healthy
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-mariadb.bash
     build:
       context: ci/dockerfiles/run-system-db-tests/
-      args:
-      - STEMCELL_NAME=${STEMCELL_NAME}
-      - MARIADB_VERSION=${MARIADB_VERSION}
     volumes:
     - ./:/backup-and-restore-sdk-release
     - mariadb-certs:/tls-certs
+    - director-creds:/shared-creds
     environment:
+    - STEMCELL_NAME=${STEMCELL_NAME}
+    - BOSH_CREDS_SCRIPT=/shared-creds/bosh-creds.bash
     - MYSQL_USERNAME=root
     - MYSQL_HOSTNAME=system-db-mariadb-backing-db
     - MYSQL_PORT=3306
@@ -59,19 +65,25 @@ services:
     - mariadb-certs:/tls-certs
     environment:
     - MARIADB_ROOT_PASSWORD=${MARIADB_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "--silent"]
 
   system-db-mysql:
-    depends_on: [system-db-mysql-backing-db]
+    depends_on:
+      bosh-in-docker:
+        condition: service_healthy
+      system-db-mysql-backing-db:
+        condition: service_healthy
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-mysql.bash
     build:
       context: ci/dockerfiles/run-system-db-tests/
-      args:
-      - STEMCELL_NAME=${STEMCELL_NAME}
-      - MYSQL_VERSION=${MYSQL_VERSION}
     volumes:
     - ./:/backup-and-restore-sdk-release
     - mysql-certs:/tls-certs
+    - director-creds:/shared-creds
     environment:
+    - STEMCELL_NAME=${STEMCELL_NAME}
+    - BOSH_CREDS_SCRIPT=/shared-creds/bosh-creds.bash
     - MYSQL_USERNAME=root
     - MYSQL_HOSTNAME=system-db-mysql-backing-db
     - MYSQL_PORT=3306
@@ -86,19 +98,25 @@ services:
     - mysql-certs:/tls-certs
     environment:
     - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "--silent"]
 
   system-db-postgres:
-    depends_on: [system-db-postgres-backing-db]
+    depends_on:
+      bosh-in-docker:
+        condition: service_healthy
+      system-db-postgres-backing-db:
+        condition: service_healthy
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-postgres.bash
     build:
       context: ci/dockerfiles/run-system-db-tests/
-      args:
-      - STEMCELL_NAME=${STEMCELL_NAME}
-      - POSTGRES_VERSION=${POSTGRES_VERSION}
     volumes:
     - ./:/backup-and-restore-sdk-release
     - postgres-certs:/tls-certs
+    - director-creds:/shared-creds
     environment:
+    - STEMCELL_NAME=${STEMCELL_NAME}
+    - BOSH_CREDS_SCRIPT=/shared-creds/bosh-creds.bash
     - ENABLE_TLS=${ENABLE_TLS}
     - POSTGRES_USERNAME=postgres
     - POSTGRES_HOSTNAME=system-db-postgres-backing-db
@@ -115,6 +133,8 @@ services:
     environment:
     - ENABLE_TLS=${ENABLE_TLS}
     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
 
 
 volumes:
@@ -124,3 +144,4 @@ volumes:
   mysql-certs:
   mariadb-certs:
   postgres-certs:
+  director-creds:

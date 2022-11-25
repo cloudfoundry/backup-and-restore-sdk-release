@@ -21,7 +21,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - run: FOCUS=ubuntu-jammy make docker-compile
     - run: FOCUS=ubuntu-jammy make docker-system
 
   run-system-tests-bionic:
@@ -30,7 +29,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - run: FOCUS=ubuntu-bionic make docker-compile
     - run: FOCUS=ubuntu-bionic make docker-system
 
   run-system-tests-xenial:
@@ -39,5 +37,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - run: FOCUS=ubuntu-xenial make docker-compile
     - run: FOCUS=ubuntu-xenial make docker-system
