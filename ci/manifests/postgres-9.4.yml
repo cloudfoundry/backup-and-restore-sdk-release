@@ -49,5 +49,5 @@ instance_groups:
 update:
   canaries: 1
   max_in_flight: 1
-  canary_watch_time: 2000
-  update_watch_time: 2000
+  canary_watch_time: 30000
+  update_watch_time: 30000
