@@ -526,6 +526,7 @@ jobs:
           terraform-state: gcp-terraform
           cert-store: gcp-db-certs
         params:
+          <<: *bosh-lite-creds
           DB_PREFIX: postgres_9_6
           DB_TYPE: postgres
           TEST_SUITE_NAME: postgresql
@@ -536,6 +537,7 @@ jobs:
           terraform-state: gcp-terraform
           cert-store: gcp-db-certs
         params:
+          <<: *bosh-lite-creds
           DB_PREFIX: postgres_9_6
           DB_TYPE: postgres
           POSTGRES_CA_CERT_PATH: *gcp-postgres-9-6-ca-cert-path
@@ -549,6 +551,7 @@ jobs:
           terraform-state: gcp-terraform
           cert-store: gcp-db-certs
         params:
+          <<: *bosh-lite-creds
           DB_PREFIX: postgres_9_6_mutual_tls
           DB_TYPE: postgres
           POSTGRES_CA_CERT_PATH: *gcp-postgres-9-6-mutual-tls-ca-cert-path
@@ -564,6 +567,7 @@ jobs:
         terraform-state: gcp-terraform
         cert-store: gcp-db-certs
       params:
+        <<: *bosh-lite-creds
         DB_PREFIX: mysql_5_7
         DB_TYPE: mysql
         MYSQL_CA_CERT_PATH: *gcp-mysql-5-7-ca-cert-path
@@ -613,6 +617,7 @@ jobs:
         input_mapping:
           terraform-state: terraform
         params:
+          <<: *bosh-lite-creds
           DB_PREFIX: postgres_9_6
           DB_TYPE: postgres
           POSTGRES_PASSWORD: ((backup-and-restore-sdk-release.rds_postgres_9_6_password))
@@ -622,6 +627,7 @@ jobs:
         input_mapping:
           terraform-state: terraform
         params:
+          <<: *bosh-lite-creds
           DB_PREFIX: postgres_9_6
           DB_TYPE: postgres
           POSTGRES_CA_CERT_PATH: rds-combined-ca-bundle.pem
@@ -634,6 +640,7 @@ jobs:
         input_mapping:
           terraform-state: terraform
         params:
+          <<: *bosh-lite-creds
           DB_PREFIX: postgres_10
           DB_TYPE: postgres
           POSTGRES_PASSWORD: ((backup-and-restore-sdk-release.rds_postgres_10_password))
@@ -643,6 +650,7 @@ jobs:
         input_mapping:
           terraform-state: terraform
         params:
+          <<: *bosh-lite-creds
           DB_PREFIX: postgres_10
           DB_TYPE: postgres
           POSTGRES_CA_CERT_PATH: rds-combined-ca-bundle.pem
@@ -655,6 +663,7 @@ jobs:
         input_mapping:
           terraform-state: terraform
         params:
+          <<: *bosh-lite-creds
           DB_PREFIX: postgres_11
           DB_TYPE: postgres
           POSTGRES_PASSWORD: ((backup-and-restore-sdk-release.rds_postgres_11_password))
@@ -664,6 +673,7 @@ jobs:
         input_mapping:
           terraform-state: terraform
         params:
+          <<: *bosh-lite-creds
           DB_PREFIX: postgres_11
           DB_TYPE: postgres
           POSTGRES_CA_CERT_PATH: rds-combined-ca-bundle.pem
@@ -676,6 +686,7 @@ jobs:
         input_mapping:
           terraform-state: terraform
         params:
+          <<: *bosh-lite-creds
           DB_PREFIX: mariadb_10_2
           DB_TYPE: mysql
           MYSQL_CA_CERT_PATH: rds-combined-ca-bundle.pem
