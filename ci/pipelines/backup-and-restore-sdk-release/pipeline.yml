@@ -743,7 +743,6 @@ jobs:
         POSTGRES_USERNAME: *postgres-9-4-username
         TEST_SUITE_NAME: postgresql
     - task: postgres-system-tests-9.6
-      attempts: 4
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
       params:
         <<: *bosh-smiths-creds
@@ -770,7 +769,6 @@ jobs:
         POSTGRES_USERNAME: *postgres-11-username
         TEST_SUITE_NAME: postgresql
   - task: postgres-tls-system-tests-9.6
-    attempts: 4
     file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
     params:
       <<: *bosh-smiths-creds
@@ -1576,7 +1574,6 @@ jobs:
   #   params:
   #     BBL_STATE: .
   - put: mysql-dev-deployment
-    attempts: 3
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/mysql.yml
       stemcells:
