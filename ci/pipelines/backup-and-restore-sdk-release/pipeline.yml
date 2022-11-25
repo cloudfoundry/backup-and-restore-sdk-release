@@ -1331,8 +1331,8 @@ jobs:
                    --direction=INGRESS \
                    --action=allow \
                    --rules=tcp:5432,tcp:3306 \
-                   --source-tags indianyellow-jumpbox \
-                   --target-tags=indianyellow-internal \
+                   --source-tags="${env_name}-jumpbox" \
+                   --target-tags="${env_name}-internal" \
                    --priority=999
 
             cat <<EOF
