@@ -132,7 +132,7 @@ $(supported-mariadb):
 		export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))                     ;\
 		export MARIADB_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
 		docker-compose --log-level ERROR run --rm system-db-mariadb               ;\
-		docker-compose --log-level ERROR rm --stop --force --volumes system-db-mariadb-backing-db  ;\
+		docker-compose --log-level ERROR rm --stop --force -v system-db-mariadb-backing-db  ;\
 	fi
 
 $(supported-mysql):
@@ -144,7 +144,7 @@ $(supported-mysql):
 		export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))                     ;\
 		export MYSQL_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"    ;\
 		docker-compose --log-level ERROR run --rm system-db-mysql                 ;\
-		docker-compose --log-level ERROR rm --stop --force --volumes system-db-mysql-backing-db  ;\
+		docker-compose --log-level ERROR rm --stop --force -v system-db-mysql-backing-db  ;\
 	fi
 
 docker-system-postgres-aux:
@@ -152,7 +152,7 @@ docker-system-postgres-aux:
 	export STEMCELL_NAME=$(word 1,$(subst ~, ,$(MATRIX_TUPLE)))                ;\
 	export POSTGRES_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
 	docker-compose --log-level ERROR run --rm system-db-postgres               ;\
-	docker-compose --log-level ERROR rm --stop --force --volumes system-db-postgres-backing-db  ;\
+	docker-compose --log-level ERROR rm --stop --force -v system-db-postgres-backing-db  ;\
 
 $(supported-postgres):
 	if ! echo "$@" | grep -q "${FOCUS}" ; then                                  \
