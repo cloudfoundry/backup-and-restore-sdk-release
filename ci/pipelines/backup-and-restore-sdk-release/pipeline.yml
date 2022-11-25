@@ -1276,6 +1276,64 @@ jobs:
     params:
       action: claim
       env_file: cf-deployment-env/metadata
+  - task: allow-tunnel-from-jumpbox-to-database-vms
+    input_mapping:
+      env: cf-deployment-env
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: eu.gcr.io/mapbu-cryogenics/gcloud
+          username: _json_key
+          password: ((gcr.viewer_key))
+
+      params:
+        GCP_SERVICE_ACCOUNT_KEY: ((gcp/service_accounts/owner.json_key))
+        DEBUG: # any value will turn Debug mode on. Remove the param to disable debug.
+
+
+      inputs:
+        - name: env
+
+      run:
+        path: /bin/bash
+        args:
+          - -c
+          - |
+            [ -z "$DEBUG" ] || set -x
+
+            set -euo pipefail
+
+            : "${GCP_SERVICE_ACCOUNT_KEY:?}"
+
+            [ -d env ]
+
+            gcloud -q auth activate-service-account --key-file=<(echo "$GCP_SERVICE_ACCOUNT_KEY")
+            gcloud -q config set project "$(echo "$GCP_SERVICE_ACCOUNT_KEY" | jq -r '.project_id')"
+            gcloud -q config set compute/zone europe-west1-c
+
+            env_name="$(cat env/name)"
+
+            rule_name="${env_name}-jumpbox-to-databases"
+            gcloud compute firewall-rules delete "${rule_name}" --quiet || true
+            gcloud compute firewall-rules create "${rule_name}" \
+                   --network="${env_name}-network"     \
+                   --direction=INGRESS \
+                   --action=allow \
+                   --rules=tcp:5432,tcp:3306 \
+                   --source-tags indianyellow-jumpbox \
+                   --target-tags=indianyellow-internal \
+                   --priority=999
+
+            cat <<EOF
+            ======================================================================
+            The following firewall EGRESS rules have been created
+            ----------------------------------------------------------------------
+
+            EOF
+
+            gcloud compute firewall-rules list --filter="${env_name}-internetless-"
 
 - name: unclaim-cf-deployment
   plan:
