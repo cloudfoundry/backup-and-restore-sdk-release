@@ -1384,54 +1384,13 @@ jobs:
       resource: release
       passed:
         - claim-cf-deployment
-    # - get: bbl-state-bosh-lite
     - get: jammy-stemcell
     - get: cf-deployment-env
       trigger: true
       passed:
         - claim-cf-deployment
-  # - task: generate-bosh-deployment-source-file
-  #   file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-  #   params:
-  #     BBL_STATE: .
   - task: generate-bosh-deployment-source-file
-    config: &generate-bosh-deployment-source-tile
-      platform: linux
-      image_resource:
-        type: registry-image
-        source:
-          repository: cryogenics/essentials-cf6
-      inputs:
-        - name: cf-deployment-env
-      outputs:
-        - name: source-file
-      run:
-        path: /bin/bash
-        args:
-          - -c
-          - |
-            set -euo pipefail
-            set -x
-
-            eval "$(bbl print-env --metadata-file cf-deployment-env/metadata)"
-
-            function get_ip_port() {
-              grep -o '[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}:[0-9]\{1,\}' <<< "$1"
-            }
-
-            cat <<EOF > source-file/source-file.yml
-            ---
-            jumpbox_username: jumpbox
-            jumpbox_url: $( get_ip_port "$BOSH_ALL_PROXY" )
-            jumpbox_ssh_key: |-
-            $(cat "$JUMPBOX_PRIVATE_KEY" | sed 's/^/  /')
-            target: ${BOSH_ENVIRONMENT}
-            client: ${BOSH_CLIENT}
-            client_secret: ${BOSH_CLIENT_SECRET}
-            ca_cert: |-
-            $(echo "$BOSH_CA_CERT" | sed 's/^/  /')
-            EOF
-
+    file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
   - put: database-backup-restorer-deployment
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/database-backup-restorer.yml
@@ -1459,18 +1418,13 @@ jobs:
       passed:
         - claim-cf-deployment
     - get: jammy-stemcell
-    # - get: bbl-state-bosh-lite
     - get: cf-deployment-env
       trigger: true
       passed:
         - claim-cf-deployment
     - get: cryogenics-concourse-tasks
   - task: generate-bosh-deployment-source-file
-    config: *generate-bosh-deployment-source-tile
-  # - task: generate-bosh-deployment-source-file
-  #   file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-  #   params:
-  #     BBL_STATE: .
+    file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
   - in_parallel:
     - put: postgres-9-4-dev-deployment
       params:
@@ -1578,13 +1532,8 @@ jobs:
       trigger: true
       passed:
         - claim-cf-deployment
-    # - get: bbl-state-bosh-lite
   - task: generate-bosh-deployment-source-file
-    config: *generate-bosh-deployment-source-tile
-  # - task: generate-bosh-deployment-source-file
-  #   file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-  #   params:
-  #     BBL_STATE: .
+    file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
   - put: mysql-dev-deployment
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/mysql.yml
@@ -1619,13 +1568,8 @@ jobs:
       trigger: true
       passed:
         - claim-cf-deployment
-    # - get: bbl-state-bosh-lite
-  # - task: generate-bosh-deployment-source-file
-  #   file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-  #   params:
-  #     BBL_STATE: .
   - task: generate-bosh-deployment-source-file
-    config: *generate-bosh-deployment-source-tile
+    file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
   - put: aws-blobstore-sdk-deployment
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/s3-backuper.yml
@@ -1716,13 +1660,8 @@ jobs:
       trigger: true
       passed:
         - claim-cf-deployment
-    # - get: bbl-state-bosh-lite
-  # - task: generate-bosh-deployment-source-file
-  #   file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-  #   params:
-  #     BBL_STATE: .
   - task: generate-bosh-deployment-source-file
-    config: *generate-bosh-deployment-source-tile
+    file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
   - put: azure-blobstore-sdk-deployment
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/azure-backuper.yml
@@ -1755,17 +1694,12 @@ jobs:
       passed:
         - claim-cf-deployment
     - get: jammy-stemcell
-    # - get: bbl-state-bosh-lite
-  # - task: generate-bosh-deployment-source-file
-  #   file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-  #   params:
-  #     BBL_STATE: .
     - get: cf-deployment-env
       trigger: true
       passed:
         - claim-cf-deployment
   - task: generate-bosh-deployment-source-file
-    config: *generate-bosh-deployment-source-tile
+    file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
   - put: gcs-blobstore-sdk-deployment
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/gcs-backuper.yml
