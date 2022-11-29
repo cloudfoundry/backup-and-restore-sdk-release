@@ -324,15 +324,6 @@ resources:
     uri: https://github.com/bosh-packages/golang-release.git
     tag_filter: v*
 
-- name: six-hours
-  type: time
-  icon: timer-outline
-  source:
-    interval: 6h
-    start: 9:00 AM
-    stop: 5:00 PM
-    days: [Monday, Tuesday, Wednesday, Thursday, Friday]
-
 - name: daily-trigger
   type: time
   source:
@@ -432,8 +423,6 @@ jobs:
       trigger: true
     - get: github-sdk-key
     - get: cryogenics-concourse-tasks
-    - get: six-hours
-      trigger: true
   - in_parallel:
     - task: sdk-template-unit-tests
       file: backup-and-restore-sdk-release/ci/tasks/sdk-template-unit-tests/task.yml
