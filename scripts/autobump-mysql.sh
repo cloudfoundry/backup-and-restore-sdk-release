@@ -36,6 +36,12 @@ function download_url_callback() {
     echo "${url}"
 }
 
+function extract_version_callback() {
+  local blob="${1:?}"
+
+  echo "$blob " | grep -Eo '[0-9]+(\.[0-9]+){2}'
+}
+
 function new_version_callback() {
   echo "AUTO"
 }
