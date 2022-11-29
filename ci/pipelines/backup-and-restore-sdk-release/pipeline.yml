@@ -110,7 +110,6 @@ groups:
 
 - name: shipit
   jobs:
-  - force-a-new-release
   - check-for-changes
   - create-final-patch
 
@@ -303,10 +302,10 @@ resources:
     branch: main
     disable_ci_skip: true
 
-- name: every-2-weeks
+- name: every-month
   type: time
   source: 
-    interval: 20160m # 60*24*7*2
+    interval: 43200m # 60m*24h*30days
 
 - name: github-release
   type: github-release
@@ -1544,18 +1543,10 @@ jobs:
       repository: backup-and-restore-sdk-release
 
 # Release
-- name: force-a-new-release
-  plan:
-  - put: every-2-weeks
-
 - name: check-for-changes
   plan:
   - in_parallel:
-    - get: force-a-new-release
-      resource: every-2-weeks
-      passed: [force-a-new-release]
-      trigger: true
-    - get: every-2-weeks
+    - get: every-month
       trigger: true
     - get: backup-and-restore-sdk-release-main
     - get: version
@@ -1712,7 +1703,6 @@ jobs:
     params:
       PR_BASE: main
       PR_LABELS: ci
-
       GH_TOKEN: ((github.access_token))
       AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
       AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
