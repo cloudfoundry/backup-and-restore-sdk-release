@@ -244,6 +244,7 @@ resources:
     disable_forks: true
     access_token: ((github.access_token))
     autosync_pr: true
+    watch_checks_interval: "600"
 
 - name: version
   type: semver
