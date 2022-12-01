@@ -58,9 +58,6 @@ supported-postgres=\
   ubuntu-bionic~~~10-bullseye  \
   ubuntu-jammy~~~~10-bullseye  \
   ubuntu-xenial~~~10-bullseye  \
-  ubuntu-bionic~~~9.6-bullseye \
-  ubuntu-jammy~~~~9.6-bullseye \
-  ubuntu-xenial~~~9.6-bullseye \
 
 
 docker-clean: ## remove containers created to run the tests
