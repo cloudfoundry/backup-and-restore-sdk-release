@@ -13,6 +13,5 @@ CMD []
 FROM dind-ubuntu
 COPY --from=third-party-deps bosh /usr/local/bin/bosh
 COPY --from=third-party-deps bosh-deployment/ /bosh-deployment
-COPY create-env.sh /create-env.sh
-RUN chmod +x /create-env.sh
-ENTRYPOINT /create-env.sh
+VOLUME /backup-and-restore-sdk-release
+ENTRYPOINT /backup-and-restore-sdk-release/ci/dockerfiles/bosh-in-docker/create-env.sh

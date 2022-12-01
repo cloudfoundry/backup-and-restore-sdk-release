@@ -5,6 +5,7 @@ services:
     privileged: true
     build: { context: ci/dockerfiles/bosh-in-docker }
     volumes:
+    - ./:/backup-and-restore-sdk-release
     - director-creds:/shared-creds
     healthcheck:
       test: 'bash -c "source /shared-creds/bosh-creds.bash ; bosh vms"'

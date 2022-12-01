@@ -17,7 +17,8 @@ apt-get update && apt-get install -y --no-install-recommends \
   apt-transport-https \
   gnupg-agent \
   software-properties-common \
-  ruby
+  ruby \
+  git
 
 # set up subuid/subgid so that "--userns-remap=default" works out-of-the-box
 addgroup --system dockremap
