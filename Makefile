@@ -131,8 +131,9 @@ $(supported-mariadb):
 		export MARIADB_VERSION=$(word 2,$(subst ~, ,$@))                   ;\
 		export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))                     ;\
 		export MARIADB_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
+		docker-compose --log-level ERROR rm --stop --force -v system-db-mariadb-backing-db ;\
 		docker-compose --log-level ERROR run --rm system-db-mariadb               ;\
-		docker-compose --log-level ERROR rm --stop --force -v system-db-mariadb-backing-db  ;\
+		if [ $$? -ne 0 ]; then exit 1; fi                                         ;\
 	fi
 
 $(supported-mysql):
@@ -143,16 +144,17 @@ $(supported-mysql):
 		export MYSQL_VERSION=$(word 2,$(subst ~, ,$@))                     ;\
 		export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))                     ;\
 		export MYSQL_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"    ;\
+		docker-compose --log-level ERROR rm --stop --force -v system-db-mysql-backing-db ;\
 		docker-compose --log-level ERROR run --rm system-db-mysql                 ;\
-		docker-compose --log-level ERROR rm --stop --force -v system-db-mysql-backing-db  ;\
+		if [ $$? -ne 0 ]; then exit 1; fi                                         ;\
 	fi
 
 docker-system-postgres-aux:
 	export POSTGRES_VERSION=$(word 2,$(subst ~, ,$(MATRIX_TUPLE)))             ;\
 	export STEMCELL_NAME=$(word 1,$(subst ~, ,$(MATRIX_TUPLE)))                ;\
 	export POSTGRES_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
-	docker-compose --log-level ERROR run --rm system-db-postgres               ;\
 	docker-compose --log-level ERROR rm --stop --force -v system-db-postgres-backing-db  ;\
+	docker-compose --log-level ERROR run --rm system-db-postgres               ;\
 
 $(supported-postgres):
 	if ! echo "$@" | grep -q "${FOCUS}" ; then                                  \
@@ -161,8 +163,11 @@ $(supported-postgres):
 		echo "\033[92m Testing Postgres $@ \033[0m"                        ;\
 		export ENABLE_TLS="no"                                             ;\
 		$(MAKE) docker-system-postgres-aux MATRIX_TUPLE=$@                 ;\
+		if [ $$? -ne 0 ]; then exit 1; fi                                  ;\
 		export ENABLE_TLS="yes"                                            ;\
 		$(MAKE) docker-system-postgres-aux MATRIX_TUPLE=$@                 ;\
+		if [ $$? -ne 0 ]; then exit 1; fi                                  ;\
 		export ENABLE_TLS="mutual"                                         ;\
 		$(MAKE) docker-system-postgres-aux MATRIX_TUPLE=$@                 ;\
+		if [ $$? -ne 0 ]; then exit 1; fi                                  ;\
 	fi
