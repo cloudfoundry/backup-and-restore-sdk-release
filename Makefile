@@ -68,12 +68,11 @@ docker-clean: ## remove containers created to run the tests
 	fi
 
 docker-clean-prune: $(supported-stemcells) ## remove containers AND IMAGES created to run the tests
-docker-compile: $(supported-stemcells) ## run compilation test for all supported stemcells
 docker-system-mariadb: $(supported-mariadb) ## run system tests for all supported Stemcells and MARIADB versions
 docker-system-mysql: $(supported-mysql) ## run system tests for all supported Stemcells and MYSQL versions
 docker-system-postgres: $(supported-postgres) ## run system tests for all supported Stemcells and POSTGRES versions
 
-docker-system: docker-system-mariadb docker-system-mysql docker-system-postgres ## run all system tests for all supported Stemcells and database versions
+docker-system: docker-system-postgres docker-system-mariadb docker-system-mysql ## run all system tests for all supported Stemcells and database versions
 
 docker-unit-blobstore-azure: ## run azure blobstore unit tests in Docker
 	docker-compose run unit-blobstore-azure
@@ -121,10 +120,6 @@ $(supported-stemcells):
 			echo "\033[92mCleaning $@ \033[0m"                         ;\
 			export STEMCELL_NAME=$@                                    ;\
 			docker-compose --log-level ERROR down --rmi all --volumes --remove-orphans   ;\
-		elif [ "$(MAKECMDGOALS)" = "docker-compile" ]; then                 \
-			echo "\033[92mCompiling $@ \033[0m"                        ;\
-			export STEMCELL_NAME=$@                                    ;\
-			docker-compose --log-level ERROR run --rm dockerize-release                  ;\
 		fi                                                                  \
 	fi
 
@@ -137,7 +132,7 @@ $(supported-mariadb):
 		export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))                     ;\
 		export MARIADB_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
 		docker-compose --log-level ERROR run --rm system-db-mariadb               ;\
-		docker-compose --log-level ERROR down -v --remove-orphans --rmi local     ;\
+		docker-compose --log-level ERROR rm --stop --force -v system-db-mariadb-backing-db  ;\
 	fi
 
 $(supported-mysql):
@@ -149,7 +144,7 @@ $(supported-mysql):
 		export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))                     ;\
 		export MYSQL_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"    ;\
 		docker-compose --log-level ERROR run --rm system-db-mysql                 ;\
-		docker-compose --log-level ERROR down -v --remove-orphans --rmi local     ;\
+		docker-compose --log-level ERROR rm --stop --force -v system-db-mysql-backing-db  ;\
 	fi
 
 docker-system-postgres-aux:
@@ -157,7 +152,7 @@ docker-system-postgres-aux:
 	export STEMCELL_NAME=$(word 1,$(subst ~, ,$(MATRIX_TUPLE)))                ;\
 	export POSTGRES_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
 	docker-compose --log-level ERROR run --rm system-db-postgres               ;\
-	docker-compose --log-level ERROR down -v --remove-orphans --rmi local      ;\
+	docker-compose --log-level ERROR rm --stop --force -v system-db-postgres-backing-db  ;\
 
 $(supported-postgres):
 	if ! echo "$@" | grep -q "${FOCUS}" ; then                                  \
