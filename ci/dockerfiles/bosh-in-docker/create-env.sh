@@ -44,4 +44,12 @@ EOF
 source /shared-creds/bosh-creds.bash
 bosh -n --tty update-cloud-config /bosh-deployment/docker/cloud-config.yml -v network=net3
 
+pushd "/backup-and-restore-sdk-release"
+  git submodule update --recursive
+  # We can't use`upload-release` withing the repository because it ignores local changes
+  # https://github.com/cloudfoundry/bosh-cli/issues/604
+  bosh -n --tty create-release --force --tarball=/tmp/release.tgz
+  bosh -n --tty upload-release "file:///tmp/release.tgz"
+popd
+
 while true; do sleep 30; done;

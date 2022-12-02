@@ -3,17 +3,9 @@
 set -euo pipefail
 
 BOSH_LOG_LEVEL=none
-
 SRC_DIR="$(cd "$( dirname "$0" )/.." && pwd)"
-pushd "${SRC_DIR}"
-  REPO_ROOT="$(git rev-parse --show-toplevel)"
-popd
 
 source "${BOSH_CREDS_SCRIPT}"
-pushd "${REPO_ROOT}"
-  git submodule update --recursive
-  bosh -n --tty upload-release
-popd
 
 STEMCELL_URL="$(curl -L https://bosh.io/stemcells | grep -io "https:\/\/.*warden-boshlite-${STEMCELL_NAME}-go_agent.tgz")"
 bosh -n --tty upload-stemcell "${STEMCELL_URL}"
