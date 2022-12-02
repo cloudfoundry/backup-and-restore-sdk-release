@@ -1212,13 +1212,13 @@ jobs:
           TEST_SSL_USER_REQUIRES_SSL: false
           TEST_SUITE_NAME: postgresql_tls
     - do:
-      - task: maria-system-tests-10-2
+      - task: maria-system-tests-10-6
         file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
         input_mapping:
           terraform-state: terraform
         params:
           <<: *bosh-smiths-creds
-          DB_PREFIX: mariadb_10_2
+          DB_PREFIX: mariadb_10_6
           DB_TYPE: mysql
           MYSQL_CA_CERT_PATH: rds-combined-ca-bundle.pem
           MYSQL_PASSWORD: ((backup-and-restore-sdk-release.rds_mariadb_10_password))
