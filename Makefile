@@ -46,6 +46,9 @@ supported-mysql=\
   ubuntu-xenial~~~5.7-debian  \
 
 supported-postgres=\
+  ubuntu-bionic~~~15-bullseye  \
+  ubuntu-jammy~~~~15-bullseye  \
+  ubuntu-xenial~~~15-bullseye  \
   ubuntu-bionic~~~13-bullseye  \
   ubuntu-jammy~~~~13-bullseye  \
   ubuntu-xenial~~~13-bullseye  \
@@ -55,9 +58,6 @@ supported-postgres=\
   ubuntu-bionic~~~10-bullseye  \
   ubuntu-jammy~~~~10-bullseye  \
   ubuntu-xenial~~~10-bullseye  \
-  ubuntu-bionic~~~9.6-bullseye \
-  ubuntu-jammy~~~~9.6-bullseye \
-  ubuntu-xenial~~~9.6-bullseye \
 
 
 docker-clean: ## remove containers created to run the tests
@@ -75,19 +75,19 @@ docker-system-postgres: $(supported-postgres) ## run system tests for all suppor
 docker-system: docker-system-postgres docker-system-mariadb docker-system-mysql ## run all system tests for all supported Stemcells and database versions
 
 docker-unit-blobstore-azure: ## run azure blobstore unit tests in Docker
-	docker-compose run unit-blobstore-azure
+	docker-compose up --build --exit-code-from unit-blobstore-azure unit-blobstore-azure
 
 docker-unit-blobstore-gcs: ## run GCS blobstore unit tests in Docker
-	docker-compose run unit-blobstore-gcs
+	docker-compose up --build --exit-code-from unit-blobstore-gcs unit-blobstore-gcs
 
 docker-unit-blobstore-s3: ## run S3 blobstore unit tests in Docker
-	docker-compose run unit-blobstore-s3
+	docker-compose up --build --exit-code-from unit-blobstore-s3 unit-blobstore-s3
 
 docker-unit-database: ## run database unit tests in Docker
-	docker-compose run unit-database
+	docker-compose up --build --exit-code-from unit-database unit-database
 
 docker-unit-template-specs: ## run templating unit tests in Docker
-	docker-compose run unit-sdk-template
+	docker-compose up --build --exit-code-from unit-sdk-template unit-sdk-template
 
 docker-unit: docker-unit-blobstore-azure docker-unit-blobstore-gcs docker-unit-blobstore-s3 docker-unit-database docker-unit-template-specs ## run all unit tests in Docker
 
@@ -131,8 +131,10 @@ $(supported-mariadb):
 		export MARIADB_VERSION=$(word 2,$(subst ~, ,$@))                   ;\
 		export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))                     ;\
 		export MARIADB_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
-		docker-compose --log-level ERROR run --rm system-db-mariadb               ;\
-		docker-compose --log-level ERROR rm --stop --force -v system-db-mariadb-backing-db  ;\
+		docker-compose --log-level ERROR up --build --exit-code-from system-db-mariadb system-db-mariadb         ;\
+		exit_code=$$?                                                      ;\
+		docker-compose --log-level ERROR rm --stop --force -v system-db-mariadb-backing-db ;\
+		if [ $${exit_code} -ne 0 ]; then exit 1; fi                        ;\
 	fi
 
 $(supported-mysql):
@@ -143,16 +145,20 @@ $(supported-mysql):
 		export MYSQL_VERSION=$(word 2,$(subst ~, ,$@))                     ;\
 		export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))                     ;\
 		export MYSQL_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"    ;\
-		docker-compose --log-level ERROR run --rm system-db-mysql                 ;\
-		docker-compose --log-level ERROR rm --stop --force -v system-db-mysql-backing-db  ;\
+		docker-compose --log-level ERROR up --build --exit-code-from system-db-mysql system-db-mysql          ;\
+		exit_code=$$?                                                      ;\
+		docker-compose --log-level ERROR rm --stop --force -v system-db-mysql-backing-db ;\
+		if [ $${exit_code} -ne 0 ]; then exit 1; fi                        ;\
 	fi
 
 docker-system-postgres-aux:
 	export POSTGRES_VERSION=$(word 2,$(subst ~, ,$(MATRIX_TUPLE)))             ;\
 	export STEMCELL_NAME=$(word 1,$(subst ~, ,$(MATRIX_TUPLE)))                ;\
 	export POSTGRES_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
-	docker-compose --log-level ERROR run --rm system-db-postgres               ;\
+	docker-compose --log-level ERROR up --build --exit-code-from system-db-postgres system-db-postgres          ;\
+	exit_code=$$?                                                              ;\
 	docker-compose --log-level ERROR rm --stop --force -v system-db-postgres-backing-db  ;\
+	if [ $${exit_code} -ne 0 ]; then exit 1; fi                                ;\
 
 $(supported-postgres):
 	if ! echo "$@" | grep -q "${FOCUS}" ; then                                  \
@@ -161,8 +167,11 @@ $(supported-postgres):
 		echo "\033[92m Testing Postgres $@ \033[0m"                        ;\
 		export ENABLE_TLS="no"                                             ;\
 		$(MAKE) docker-system-postgres-aux MATRIX_TUPLE=$@                 ;\
+		if [ $$? -ne 0 ]; then exit 1; fi                                  ;\
 		export ENABLE_TLS="yes"                                            ;\
 		$(MAKE) docker-system-postgres-aux MATRIX_TUPLE=$@                 ;\
+		if [ $$? -ne 0 ]; then exit 1; fi                                  ;\
 		export ENABLE_TLS="mutual"                                         ;\
 		$(MAKE) docker-system-postgres-aux MATRIX_TUPLE=$@                 ;\
+		if [ $$? -ne 0 ]; then exit 1; fi                                  ;\
 	fi
