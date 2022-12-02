@@ -3,38 +3,32 @@ version: '3.0'
 services:
   bosh-in-docker:
     privileged: true
-    build: { context: ci/dockerfiles/bosh-in-docker }
+    build: { context: ., dockerfile: ci/dockerfiles/bosh-in-docker/Dockerfile }
     volumes:
-    - ./:/backup-and-restore-sdk-release
     - director-creds:/shared-creds
     healthcheck:
-      test: 'bash -c "source /shared-creds/bosh-creds.bash ; bosh vms"'
+      test: 'bash -c "source /shared-creds/bosh-creds.bash ; bosh releases | grep backup-and-restore"'
       start_period: 10m
       retries: 20
 
   unit-blobstore-azure:
-    build: { context: ci/dockerfiles/run-golang-unit-tests }
-    volumes: [./:/backup-and-restore-sdk-release]
+    build: { context: ., dockerfile: ci/dockerfiles/run-golang-unit-tests/Dockerfile }
     entrypoint: /backup-and-restore-sdk-release/src/azure-blobstore-backup-restore/scripts/run-unit-tests.bash
 
   unit-blobstore-gcs:
-    build: { context: ci/dockerfiles/run-golang-unit-tests }
-    volumes: [./:/backup-and-restore-sdk-release]
+    build: { context: ., dockerfile: ci/dockerfiles/run-golang-unit-tests/Dockerfile }
     entrypoint: /backup-and-restore-sdk-release/src/gcs-blobstore-backup-restore/scripts/run-unit-tests.bash
 
   unit-blobstore-s3:
-    build: { context: ci/dockerfiles/run-golang-unit-tests }
-    volumes: [./:/backup-and-restore-sdk-release]
+    build: { context: ., dockerfile: ci/dockerfiles/run-golang-unit-tests/Dockerfile }
     entrypoint: /backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/scripts/run-unit-tests.bash
 
   unit-database:
-    build: { context: ci/dockerfiles/run-golang-unit-tests }
-    volumes: [./:/backup-and-restore-sdk-release]
+    build: { context: ., dockerfile: ci/dockerfiles/run-golang-unit-tests/Dockerfile }
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-unit-tests.bash
 
   unit-sdk-template:
-    build: { context: ci/dockerfiles/sdk-template-unit-tests }
-    volumes: [./:/backup-and-restore-sdk-release]
+    build: { context: ., dockerfile: ci/dockerfiles/sdk-template-unit-tests/Dockerfile }
 
   system-db-mariadb:
     depends_on:
@@ -44,9 +38,9 @@ services:
         condition: service_healthy
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-mariadb.bash
     build:
-      context: ci/dockerfiles/run-system-db-tests/
+      context: .
+      dockerfile: ci/dockerfiles/run-system-db-tests/Dockerfile
     volumes:
-    - ./:/backup-and-restore-sdk-release
     - mariadb-certs:/tls-certs
     - director-creds:/shared-creds
     environment:
@@ -77,9 +71,9 @@ services:
         condition: service_healthy
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-mysql.bash
     build:
-      context: ci/dockerfiles/run-system-db-tests/
+      context: .
+      dockerfile: ci/dockerfiles/run-system-db-tests/Dockerfile
     volumes:
-    - ./:/backup-and-restore-sdk-release
     - mysql-certs:/tls-certs
     - director-creds:/shared-creds
     environment:
@@ -110,9 +104,9 @@ services:
         condition: service_healthy
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-system-db-tests-postgres.bash
     build:
-      context: ci/dockerfiles/run-system-db-tests/
+      context: .
+      dockerfile: ci/dockerfiles/run-system-db-tests/Dockerfile
     volumes:
-    - ./:/backup-and-restore-sdk-release
     - postgres-certs:/tls-certs
     - director-creds:/shared-creds
     environment:
