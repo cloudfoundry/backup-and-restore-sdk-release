@@ -75,13 +75,13 @@ docker-system-postgres: $(supported-postgres) ## run system tests for all suppor
 docker-system: docker-system-postgres docker-system-mariadb docker-system-mysql ## run all system tests for all supported Stemcells and database versions
 
 docker-unit-blobstore-azure: ## run azure blobstore unit tests in Docker
-	docker-compose up --build --exit-code-from unit-blostore-azure unit-blobstore-azure
+	docker-compose up --build --exit-code-from unit-blobstore-azure unit-blobstore-azure
 
 docker-unit-blobstore-gcs: ## run GCS blobstore unit tests in Docker
-	docker-compose up --build --exit-code-from unit-blostore-gcs unit-blobstore-gcs
+	docker-compose up --build --exit-code-from unit-blobstore-gcs unit-blobstore-gcs
 
 docker-unit-blobstore-s3: ## run S3 blobstore unit tests in Docker
-	docker-compose up --build --exit-code-from unit-blostore-s3 unit-blobstore-s3
+	docker-compose up --build --exit-code-from unit-blobstore-s3 unit-blobstore-s3
 
 docker-unit-database: ## run database unit tests in Docker
 	docker-compose up --build --exit-code-from unit-database unit-database
