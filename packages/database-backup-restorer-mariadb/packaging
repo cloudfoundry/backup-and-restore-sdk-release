@@ -22,9 +22,7 @@ set -e
 MARIADB_VERSION=10.6.11
 MY_DIR=$(pwd)
 
-cp -r /var/vcap/packages/libpcre2/lib/* /usr/local/lib/
-cp -r /var/vcap/packages/libpcre2/bin/* /usr/local/bin/
-cp -r /var/vcap/packages/libpcre2/include/* /usr/local/include
+cp -r /var/vcap/packages/libpcre2/* /usr/local/
 
 tar xzf mariadb/mariadb-${MARIADB_VERSION}.tar.gz
 (
