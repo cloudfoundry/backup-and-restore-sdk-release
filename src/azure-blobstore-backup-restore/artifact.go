@@ -2,6 +2,7 @@ package azure
 
 import (
 	"encoding/json"
+  "os"
 )
 
 type Artifact struct {

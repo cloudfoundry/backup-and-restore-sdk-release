@@ -3,6 +3,7 @@ package gcs
 import (
 	"encoding/json"
 	"fmt"
+  "os"
 )
 
 //go:generate counterfeiter -o fakes/fake_artifact.go . BackupArtifact
