@@ -41,9 +41,9 @@ variables:
   type: certificate
   options:
     is_ca: true
-    common_name: 10.244.1.7
+    common_name: 10.0.255.7
     alternative_names:
-    - 10.244.1.7
+    - 10.0.255.7
 
 instance_groups:
 - name: backuper
@@ -154,7 +154,7 @@ instance_groups:
       enabled: true
       buckets:
         bucket_identifier:
-          endpoint: https://10.244.1.7:9000
+          endpoint: https://10.0.255.7:9000
           name: systest-bucket
           region: us-east-1
           aws_access_key_id: "((minio-access-key))"
@@ -168,7 +168,7 @@ instance_groups:
   stemcell: jammy
   networks:
   - name: default
-    static_ips: [10.244.1.7]
+    static_ips: [10.0.255.7]
   jobs:
   - name: minio-server
     release: minio
@@ -313,7 +313,7 @@ instance_groups:
             name: "((s3-unversioned-bpm-backup-bucket-name))"
             region: "((s3-unversioned-bpm-backup-bucket-region))"
 update:
-  canaries: 1
-  max_in_flight: 1
+  canaries: 0
+  max_in_flight: 100%
   canary_watch_time: 30000
   update_watch_time: 30000
