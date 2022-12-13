@@ -2,6 +2,7 @@ package azure
 
 import (
 	"bytes"
+	"os"
 	"os/exec"
 
 	"encoding/json"
