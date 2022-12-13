@@ -27,9 +27,10 @@ import (
 
 	"os"
 
+	. "system-tests"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "system-tests"
 )
 
 var _ = Describe("S3 unversioned backup and restore", func() {

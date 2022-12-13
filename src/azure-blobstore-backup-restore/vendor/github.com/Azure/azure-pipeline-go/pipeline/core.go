@@ -2,11 +2,12 @@ package pipeline
 
 import (
 	"context"
-	"github.com/mattn/go-ieproxy"
 	"net"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/mattn/go-ieproxy"
 )
 
 // The Factory interface represents an object that can create its Policy object. Each HTTP request sent

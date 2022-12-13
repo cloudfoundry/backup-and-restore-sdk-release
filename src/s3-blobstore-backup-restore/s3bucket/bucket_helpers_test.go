@@ -13,6 +13,7 @@ import (
 
 	"s3-blobstore-backup-restore/s3bucket"
 
+	"github.com/bosh-packages/golang-release/blobs/go/src/os"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"

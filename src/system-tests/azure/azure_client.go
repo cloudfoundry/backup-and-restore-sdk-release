@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"fmt"
+
+	"github.com/bosh-packages/golang-release/blobs/go/src/os"
 )
 
 type AzureClient struct {
