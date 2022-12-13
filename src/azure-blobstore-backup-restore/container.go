@@ -139,8 +139,8 @@ func (c SDKContainer) copyBlob(sourceContainerName string, sourceContainerURL az
 		azblob.Metadata{},
 		azblob.ModifiedAccessConditions{},
 		azblob.BlobAccessConditions{},
-    azblob.AccessTierNone,
-   azblob.BlobTagsMap{},
+		azblob.AccessTierNone,
+		azblob.BlobTagsMap{},
 	)
 	if err != nil {
 		return err

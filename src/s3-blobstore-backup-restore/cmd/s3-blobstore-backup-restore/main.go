@@ -2,8 +2,8 @@ package main
 
 import (
 	"log"
+	"os"
 	"time"
-  "os"
 
 	"s3-blobstore-backup-restore/unversioned"
 

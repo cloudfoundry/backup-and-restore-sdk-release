@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-  "os"
+	"os"
 )
 
 var _ = Describe("TempFolderManager", func() {
