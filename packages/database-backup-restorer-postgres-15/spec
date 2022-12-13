@@ -4,4 +4,4 @@ name: database-backup-restorer-postgres-15
 dependencies: []
 
 files:
-- postgres/postgresql-15.tar.gz
+- postgres/postgresql-15.1.tar.gz
