@@ -7,12 +7,11 @@ import (
 
 	"os/exec"
 
-	. "system-tests"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 	. "github.com/onsi/gomega/gexec"
+	. "system-tests"
 )
 
 func TestGcs(t *testing.T) {

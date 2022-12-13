@@ -3,10 +3,9 @@ package s3bucket_test
 import (
 	"os"
 
-	. "system-tests"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "system-tests"
 
 	"testing"
 )

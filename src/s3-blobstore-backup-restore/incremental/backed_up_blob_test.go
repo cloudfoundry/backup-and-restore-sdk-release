@@ -1,10 +1,9 @@
 package incremental_test
 
 import (
-	"s3-blobstore-backup-restore/incremental"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"s3-blobstore-backup-restore/incremental"
 )
 
 var _ = Describe("BackedUpBlob", func() {

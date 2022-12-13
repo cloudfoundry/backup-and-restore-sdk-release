@@ -2,7 +2,6 @@ package postgres_test
 
 import (
 	"database-backup-restore/postgres"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

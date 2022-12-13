@@ -4,7 +4,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bosh-packages/golang-release/blobs/go/src/os"
 	"github.com/onsi/gomega/gexec"
 
 	"fmt"

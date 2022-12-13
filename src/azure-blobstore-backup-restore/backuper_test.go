@@ -5,7 +5,6 @@ import (
 
 	"azure-blobstore-backup-restore"
 	"azure-blobstore-backup-restore/fakes"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

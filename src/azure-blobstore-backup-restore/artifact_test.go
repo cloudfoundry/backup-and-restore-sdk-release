@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"azure-blobstore-backup-restore"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

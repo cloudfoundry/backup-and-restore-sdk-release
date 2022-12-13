@@ -3,11 +3,10 @@ package incremental_test
 import (
 	"errors"
 
-	"s3-blobstore-backup-restore/incremental"
-	"s3-blobstore-backup-restore/incremental/fakes"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"s3-blobstore-backup-restore/incremental"
+	"s3-blobstore-backup-restore/incremental/fakes"
 )
 
 var _ = Describe("BackupDirectory", func() {
