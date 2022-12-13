@@ -1,6 +1,6 @@
 on:
   pull_request:
-    types: [ opened, synchronize, reopened, labeled ]
+    types: [ assigned, synchronize ]
     branches:
       - main
 
@@ -13,10 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - run: make docker-unit 
+    - run: make docker-unit
 
   run-system-tests-jammy:
-    if: contains(github.event.pull_request.labels.*.name, 'system-tests')
     needs: run-unit-tests
     runs-on: ubuntu-20.04
     steps:
@@ -29,7 +28,6 @@ jobs:
       run: FOCUS=ubuntu-jammy make docker-system-postgres
 
   run-system-tests-bionic:
-    if: contains(github.event.pull_request.labels.*.name, 'system-tests')
     needs: run-unit-tests
     runs-on: ubuntu-20.04
     steps:
@@ -42,7 +40,6 @@ jobs:
       run: FOCUS=ubuntu-bionic make docker-system-postgres
 
   run-system-tests-xenial:
-    if: contains(github.event.pull_request.labels.*.name, 'system-tests')
     needs: run-unit-tests
     runs-on: ubuntu-20.04
     steps:
