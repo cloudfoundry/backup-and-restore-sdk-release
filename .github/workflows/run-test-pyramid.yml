@@ -1,0 +1,55 @@
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened, labeled ]
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: make docker-unit 
+
+  run-system-tests-jammy:
+    if: contains(github.event.pull_request.labels.*.name, 'system-tests')
+    needs: run-unit-tests
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: "Stemcell: Jammy | MariaDB: Multiple"
+      run: FOCUS=ubuntu-jammy make docker-system-mariadb
+    - name: "Stemcell: Jammy | MySQL: Multiple"
+      run: FOCUS=ubuntu-jammy make docker-system-mysql
+    - name: "Stemcell: Jammy | Postgres: Multiple"
+      run: FOCUS=ubuntu-jammy make docker-system-postgres
+
+  run-system-tests-bionic:
+    if: contains(github.event.pull_request.labels.*.name, 'system-tests')
+    needs: run-unit-tests
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: "Stemcell: Bionic | MariaDB: Multiple"
+      run: FOCUS=ubuntu-bionic make docker-system-mariadb
+    - name: "Stemcell: Bionic | MySQL: Multiple"
+      run: FOCUS=ubuntu-bionic make docker-system-mysql
+    - name: "Stemcell: Bionic | Postgres: Multiple"
+      run: FOCUS=ubuntu-bionic make docker-system-postgres
+
+  run-system-tests-xenial:
+    if: contains(github.event.pull_request.labels.*.name, 'system-tests')
+    needs: run-unit-tests
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: "Stemcell: Xenial | MariaDB: Multiple"
+      run: FOCUS=ubuntu-xenial make docker-system-mariadb
+    - name: "Stemcell: Xenial | MySQL: Multiple"
+      run: FOCUS=ubuntu-xenial make docker-system-mysql
+    - name: "Stemcell: Xenial | Postgres: Multiple"
+      run: FOCUS=ubuntu-xenial make docker-system-postgres
