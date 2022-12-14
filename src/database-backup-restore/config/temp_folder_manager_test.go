@@ -3,10 +3,10 @@ package config_test
 import (
 	. "database-backup-restore/config"
 
-	"io/ioutil"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"os"
 )
 
 var _ = Describe("TempFolderManager", func() {
@@ -29,7 +29,7 @@ var _ = Describe("TempFolderManager", func() {
 			filePath, err := tempFolderManager.WriteTempFile("test contents")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(filePath).To(BeAnExistingFile())
-			Expect(ioutil.ReadFile(filePath)).To(Equal([]byte("test contents")))
+			Expect(os.ReadFile(filePath)).To(Equal([]byte("test contents")))
 		})
 	})
 
@@ -38,7 +38,7 @@ var _ = Describe("TempFolderManager", func() {
 			filePath, err := tempFolderManager.WriteTempFile("test contents")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(filePath).To(BeAnExistingFile())
-			Expect(ioutil.ReadFile(filePath)).To(Equal([]byte("test contents")))
+			Expect(os.ReadFile(filePath)).To(Equal([]byte("test contents")))
 
 			tempFolderManager.Cleanup()
 			Expect(filePath).NotTo(BeAnExistingFile())

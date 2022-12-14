@@ -2,7 +2,7 @@ package azure
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 )
 
 type ContainerConfig struct {
@@ -19,7 +19,7 @@ type RestoreFromConfig struct {
 }
 
 func ParseConfig(configFilePath string) (map[string]ContainerConfig, error) {
-	configContents, err := ioutil.ReadFile(configFilePath)
+	configContents, err := os.ReadFile(configFilePath)
 	if err != nil {
 		return nil, err
 	}

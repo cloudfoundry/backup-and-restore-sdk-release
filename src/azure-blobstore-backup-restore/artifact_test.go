@@ -1,8 +1,6 @@
 package azure_test
 
 import (
-	"io/ioutil"
-
 	"os"
 
 	"azure-blobstore-backup-restore"
@@ -18,7 +16,7 @@ var _ = Describe("Artifact", func() {
 		Context("when the artifact file is writable", func() {
 			BeforeEach(func() {
 				var err error
-				artifactFile, err = ioutil.TempFile("", "azure_backup")
+				artifactFile, err = os.CreateTemp("", "azure_backup")
 				Expect(err).NotTo(HaveOccurred())
 				artifact = azure.NewArtifact(artifactFile.Name())
 			})
@@ -36,7 +34,7 @@ var _ = Describe("Artifact", func() {
 
 				Expect(err).NotTo(HaveOccurred())
 
-				fileContent, err := ioutil.ReadFile(artifactFile.Name())
+				fileContent, err := os.ReadFile(artifactFile.Name())
 
 				Expect(fileContent).To(MatchJSON(`{
 					"container_id": {
@@ -66,9 +64,9 @@ var _ = Describe("Artifact", func() {
 	Describe("Read", func() {
 		Context("when the artifact file is readable", func() {
 			It("reads the backups", func() {
-				artifactFile, err := ioutil.TempFile("", "azure_restore_artifact")
+				artifactFile, err := os.CreateTemp("", "azure_restore_artifact")
 				Expect(err).NotTo(HaveOccurred())
-				err = ioutil.WriteFile(artifactFile.Name(), []byte(`{
+				err = os.WriteFile(artifactFile.Name(), []byte(`{
 					"container_id": {
 						"name": "container_name",
 						"blobs": [
@@ -108,9 +106,9 @@ var _ = Describe("Artifact", func() {
 
 		Context("when the artifact file is not valid JSON", func() {
 			It("reports an error", func() {
-				artifactFile, err := ioutil.TempFile("", "azure_restore_artifact")
+				artifactFile, err := os.CreateTemp("", "azure_restore_artifact")
 				Expect(err).NotTo(HaveOccurred())
-				err = ioutil.WriteFile(artifactFile.Name(), []byte{}, 0644)
+				err = os.WriteFile(artifactFile.Name(), []byte{}, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				artifact = azure.NewArtifact(artifactFile.Name())

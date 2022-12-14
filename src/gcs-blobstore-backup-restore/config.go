@@ -2,7 +2,7 @@ package gcs
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 )
 
 type Config struct {
@@ -11,7 +11,7 @@ type Config struct {
 }
 
 func ParseConfig(configFilePath string) (map[string]Config, error) {
-	configContents, err := ioutil.ReadFile(configFilePath)
+	configContents, err := os.ReadFile(configFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,7 @@ func ParseConfig(configFilePath string) (map[string]Config, error) {
 }
 
 func ReadGCPServiceAccountKey(gcpConfigFilePath string) (string, error) {
-	gcpConfigContents, err := ioutil.ReadFile(gcpConfigFilePath)
+	gcpConfigContents, err := os.ReadFile(gcpConfigFilePath)
 	if err != nil {
 		return "", err
 	}

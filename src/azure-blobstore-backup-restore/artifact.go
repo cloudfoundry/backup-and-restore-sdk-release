@@ -2,7 +2,7 @@ package azure
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 )
 
 type Artifact struct {
@@ -14,7 +14,7 @@ func NewArtifact(path string) Artifact {
 }
 
 func (a Artifact) Read() (map[string]ContainerBackup, error) {
-	filesContents, err := ioutil.ReadFile(a.path)
+	filesContents, err := os.ReadFile(a.path)
 	if err != nil {
 		return nil, err
 	}
@@ -34,5 +34,5 @@ func (a Artifact) Write(backups map[string]ContainerBackup) error {
 		return err
 	}
 
-	return ioutil.WriteFile(a.path, filesContents, 0644)
+	return os.WriteFile(a.path, filesContents, 0644)
 }

@@ -3,7 +3,7 @@ package gcs
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 )
 
 //go:generate counterfeiter -o fakes/fake_artifact.go . BackupArtifact
@@ -34,11 +34,11 @@ func (a Artifact) Write(backups map[string]BucketBackup) error {
 		return err
 	}
 
-	return ioutil.WriteFile(a.path, filesContents, 0644)
+	return os.WriteFile(a.path, filesContents, 0644)
 }
 
 func (a Artifact) Read() (map[string]BucketBackup, error) {
-	fileContents, err := ioutil.ReadFile(a.path)
+	fileContents, err := os.ReadFile(a.path)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to read artifact file %s: %s", a.path, err.Error())
 	}
