@@ -2,7 +2,6 @@ package postgresql_mutual_tls_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 
@@ -290,9 +289,9 @@ var _ = Describe("postgres with mutual tls", func() {
 })
 
 func writeToFile(contents string) string {
-	file, err := ioutil.TempFile("", "")
+	file, err := os.CreateTemp("", "")
 	Expect(err).NotTo(HaveOccurred())
 	path := file.Name()
-	Expect(ioutil.WriteFile(path, []byte(contents), 0777)).To(Succeed())
+	Expect(os.WriteFile(path, []byte(contents), 0777)).To(Succeed())
 	return path
 }

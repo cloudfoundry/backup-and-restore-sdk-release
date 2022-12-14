@@ -1,8 +1,6 @@
 package azure_test
 
 import (
-	"io/ioutil"
-
 	"os"
 	"strconv"
 	"time"
@@ -38,7 +36,7 @@ var _ = Describe("Azure backup and restore", func() {
 		fileName3 = "test_file_3_" + strconv.FormatInt(time.Now().Unix(), 10)
 
 		var err error
-		localArtifactDirectory, err = ioutil.TempDir("", "azure-blobstore-")
+		localArtifactDirectory, err = os.MkdirTemp("", "azure-blobstore-")
 		Expect(err).NotTo(HaveOccurred())
 
 		instanceArtifactDirPath = "/tmp/azure-blobstore-backup-restorer" + strconv.FormatInt(time.Now().Unix(), 10)

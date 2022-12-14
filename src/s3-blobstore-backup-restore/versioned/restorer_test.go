@@ -6,9 +6,9 @@ import (
 
 	"s3-blobstore-backup-restore/versioned/fakes"
 
-	"s3-blobstore-backup-restore/versioned"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"s3-blobstore-backup-restore/versioned"
 )
 
 var _ = Describe("Restorer", func() {

@@ -3,13 +3,11 @@ package versioned_test
 import (
 	"os"
 
-	"io/ioutil"
-
 	"path/filepath"
 
-	"s3-blobstore-backup-restore/versioned"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"s3-blobstore-backup-restore/versioned"
 )
 
 var _ = Describe("FileArtifact", func() {
@@ -18,7 +16,7 @@ var _ = Describe("FileArtifact", func() {
 	var fileArtifact versioned.FileArtifact
 
 	BeforeEach(func() {
-		backupDir, _ = ioutil.TempDir("", "bbr_test_")
+		backupDir, _ = os.MkdirTemp("", "bbr_test_")
 		artifactPath = filepath.Join(backupDir, "blobstore.json")
 		fileArtifact = versioned.NewFileArtifact(artifactPath)
 	})
@@ -86,7 +84,7 @@ var _ = Describe("FileArtifact", func() {
 
 	Context("when the artifact has an invalid format", func() {
 		BeforeEach(func() {
-			ioutil.WriteFile(artifactPath, []byte("THIS IS NOT VALID JSON"), 0666)
+			os.WriteFile(artifactPath, []byte("THIS IS NOT VALID JSON"), 0666)
 		})
 
 		It("returns an error", func() {

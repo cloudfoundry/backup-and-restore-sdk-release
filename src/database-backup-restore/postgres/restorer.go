@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"io/ioutil"
-
 	"database-backup-restore/config"
 	"database-backup-restore/runner"
 )
@@ -31,7 +29,7 @@ func (r Restorer) Action(artifactFilePath string) error {
 		return err
 	}
 
-	listFile, err := ioutil.TempFile("", "backup-restore-sdk")
+	listFile, err := os.CreateTemp("", "backup-restore-sdk")
 	if err != nil {
 		return err
 	}

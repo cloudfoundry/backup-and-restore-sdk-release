@@ -25,8 +25,6 @@ import (
 
 	"strconv"
 
-	"io/ioutil"
-
 	"os"
 
 	. "github.com/onsi/ginkgo"
@@ -49,7 +47,7 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 	Context("when bpm is not enabled", func() {
 		BeforeEach(func() {
 			var err error
-			localArtifact, err = ioutil.TempFile("", "blobstore-")
+			localArtifact, err = os.CreateTemp("", "blobstore-")
 			Expect(err).NotTo(HaveOccurred())
 
 			liveRegion = MustHaveEnv("S3_UNVERSIONED_BUCKET_REGION")
@@ -122,7 +120,7 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 
 				Expect(session).Should(Exit(0))
 
-				fileContents, err := ioutil.ReadFile(localArtifact.Name())
+				fileContents, err := os.ReadFile(localArtifact.Name())
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fileContents).To(ContainSubstring("\"my_bucket\":{"))
@@ -195,7 +193,7 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 
 					Expect(session).Should(Exit(0))
 
-					fileContents, err := ioutil.ReadFile(localArtifact.Name())
+					fileContents, err := os.ReadFile(localArtifact.Name())
 
 					Expect(err).NotTo(HaveOccurred())
 					Expect(fileContents).To(ContainSubstring("\"my_bucket\":{"))
@@ -230,7 +228,7 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 	Context("when bpm is enabled", func() {
 		BeforeEach(func() {
 			var err error
-			localArtifact, err = ioutil.TempFile("", "blobstore-")
+			localArtifact, err = os.CreateTemp("", "blobstore-")
 			Expect(err).NotTo(HaveOccurred())
 
 			liveRegion = MustHaveEnv("S3_UNVERSIONED_BPM_BUCKET_REGION")
@@ -291,7 +289,7 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 	Context("when the same bucket is used for two bucket IDs", func() {
 		BeforeEach(func() {
 			var err error
-			localArtifact, err = ioutil.TempFile("", "blobstore-")
+			localArtifact, err = os.CreateTemp("", "blobstore-")
 			Expect(err).NotTo(HaveOccurred())
 
 			liveRegion = MustHaveEnv("S3_UNVERSIONED_BUCKET_REGION")
@@ -344,7 +342,7 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 					instanceArtifactDirPath+"/blobstore.json", localArtifact.Name())
 				Expect(session).Should(Exit(0))
 
-				fileContents, err := ioutil.ReadFile(localArtifact.Name())
+				fileContents, err := os.ReadFile(localArtifact.Name())
 				Expect(err).NotTo(HaveOccurred())
 
 				var backups map[string]incremental.Backup
@@ -353,9 +351,9 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 
 				Expect(backups).To(Equal(map[string]incremental.Backup{
 					"bucket1": {
-						BucketName:   backupBucket,
-						BucketRegion: backupRegion,
-						Blobs:        backups["bucket1"].Blobs, //skip
+						BucketName:             backupBucket,
+						BucketRegion:           backupRegion,
+						Blobs:                  backups["bucket1"].Blobs,                  //skip
 						SrcBackupDirectoryPath: backups["bucket1"].SrcBackupDirectoryPath, //skip
 					},
 					"bucket2": {
@@ -389,7 +387,7 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 	Context("when there are a larger number of files", func() {
 		BeforeEach(func() {
 			var err error
-			localArtifact, err = ioutil.TempFile("", "blobstore-")
+			localArtifact, err = os.CreateTemp("", "blobstore-")
 			Expect(err).NotTo(HaveOccurred())
 
 			liveRegion = MustHaveEnv("S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BUCKET_REGION")
@@ -445,7 +443,7 @@ var _ = Describe("S3 unversioned backup and restore", func() {
 
 		BeforeEach(func() {
 			var err error
-			localArtifact, err = ioutil.TempFile("", "blobstore-")
+			localArtifact, err = os.CreateTemp("", "blobstore-")
 			Expect(err).NotTo(HaveOccurred())
 
 			liveRegion = MustHaveEnv("S3_UNVERSIONED_BUCKET_REGION")

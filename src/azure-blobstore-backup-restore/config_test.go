@@ -1,8 +1,6 @@
 package azure_test
 
 import (
-	"io/ioutil"
-
 	"os"
 
 	"azure-blobstore-backup-restore"
@@ -17,7 +15,7 @@ var _ = Describe("ParseConfig", func() {
 		var config map[string]azure.ContainerConfig
 
 		BeforeEach(func() {
-			configFile, err = ioutil.TempFile("", "azure_config")
+			configFile, err = os.CreateTemp("", "azure_config")
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -29,7 +27,7 @@ var _ = Describe("ParseConfig", func() {
 					"azure_storage_key": "my-storage-key"
 				}
 			}`
-			ioutil.WriteFile(configFile.Name(), []byte(configJson), 0644)
+			os.WriteFile(configFile.Name(), []byte(configJson), 0644)
 
 			config, err = azure.ParseConfig(configFile.Name())
 
@@ -51,7 +49,7 @@ var _ = Describe("ParseConfig", func() {
 						"environment": "my-sovereign-cloud"
 					}
 				}`
-				ioutil.WriteFile(configFile.Name(), []byte(configJson), 0644)
+				os.WriteFile(configFile.Name(), []byte(configJson), 0644)
 
 				config, err = azure.ParseConfig(configFile.Name())
 
@@ -78,7 +76,7 @@ var _ = Describe("ParseConfig", func() {
 						}
 					}
 				}`
-				ioutil.WriteFile(configFile.Name(), []byte(configJson), 0644)
+				os.WriteFile(configFile.Name(), []byte(configJson), 0644)
 
 				config, err = azure.ParseConfig(configFile.Name())
 
@@ -106,9 +104,9 @@ var _ = Describe("ParseConfig", func() {
 
 	Context("when the config file is not valid", func() {
 		It("returns an error", func() {
-			configFile, err := ioutil.TempFile("", "azure_config")
+			configFile, err := os.CreateTemp("", "azure_config")
 			Expect(err).NotTo(HaveOccurred())
-			ioutil.WriteFile(configFile.Name(), []byte{}, 0000)
+			os.WriteFile(configFile.Name(), []byte{}, 0000)
 
 			_, err = azure.ParseConfig(configFile.Name())
 

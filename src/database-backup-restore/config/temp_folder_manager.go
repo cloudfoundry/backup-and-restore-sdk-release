@@ -1,7 +1,6 @@
 package config
 
 import (
-	"io/ioutil"
 	"os"
 )
 
@@ -10,7 +9,7 @@ type TempFolderManager struct {
 }
 
 func NewTempFolderManager() (TempFolderManager, error) {
-	folderPath, err := ioutil.TempDir("", "")
+	folderPath, err := os.MkdirTemp("", "")
 	if err != nil {
 		return TempFolderManager{}, err
 	}
@@ -18,12 +17,12 @@ func NewTempFolderManager() (TempFolderManager, error) {
 }
 
 func (m TempFolderManager) WriteTempFile(contents string) (string, error) {
-	file, err := ioutil.TempFile(m.folderPath, "")
+	file, err := os.CreateTemp(m.folderPath, "")
 	if err != nil {
 		return "", err
 	}
 
-	err = ioutil.WriteFile(file.Name(), []byte(contents), 0777)
+	err = os.WriteFile(file.Name(), []byte(contents), 0777)
 	if err != nil {
 		return "", err
 	}

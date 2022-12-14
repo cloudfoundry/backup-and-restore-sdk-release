@@ -1,8 +1,6 @@
 package gcs_test
 
 import (
-	"io/ioutil"
-
 	"os"
 
 	"gcs-blobstore-backup-restore"
@@ -18,7 +16,7 @@ var _ = Describe("Config", func() {
 			var config map[string]gcs.Config
 
 			BeforeEach(func() {
-				configFile, err = ioutil.TempFile("", "gcs_config")
+				configFile, err = os.CreateTemp("", "gcs_config")
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -29,7 +27,7 @@ var _ = Describe("Config", func() {
 					"backup_bucket_name": "backup_bucket"
 				}
 			}`
-				ioutil.WriteFile(configFile.Name(), []byte(configJson), 0644)
+				os.WriteFile(configFile.Name(), []byte(configJson), 0644)
 
 				config, err = gcs.ParseConfig(configFile.Name())
 
@@ -50,9 +48,9 @@ var _ = Describe("Config", func() {
 
 		Context("when the config file is not valid", func() {
 			It("returns an error", func() {
-				configFile, err := ioutil.TempFile("", "gcs_config")
+				configFile, err := os.CreateTemp("", "gcs_config")
 				Expect(err).NotTo(HaveOccurred())
-				ioutil.WriteFile(configFile.Name(), []byte{}, 0000)
+				os.WriteFile(configFile.Name(), []byte{}, 0000)
 
 				_, err = gcs.ParseConfig(configFile.Name())
 
@@ -68,13 +66,13 @@ var _ = Describe("Config", func() {
 			var config string
 
 			BeforeEach(func() {
-				configFile, err = ioutil.TempFile("", "gcs_config")
+				configFile, err = os.CreateTemp("", "gcs_config")
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("reads", func() {
 				configJson := `{"name":"value"}`
-				ioutil.WriteFile(configFile.Name(), []byte(configJson), 0644)
+				os.WriteFile(configFile.Name(), []byte(configJson), 0644)
 
 				config, err = gcs.ReadGCPServiceAccountKey(configFile.Name())
 

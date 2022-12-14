@@ -3,7 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 )
 
 type ConnectionConfig struct {
@@ -29,7 +29,7 @@ type CertTlsConfig struct {
 }
 
 func ParseAndValidateConnectionConfig(configPath string) (ConnectionConfig, error) {
-	configString, err := ioutil.ReadFile(configPath)
+	configString, err := os.ReadFile(configPath)
 	if err != nil {
 		return ConnectionConfig{}, fmt.Errorf("Fail reading config file: %s\n", err)
 	}
