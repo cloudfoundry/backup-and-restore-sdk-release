@@ -9,7 +9,7 @@ require (
 	github.com/onsi/gomega v1.24.1
 	golang.org/x/net v0.4.0
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
-	google.golang.org/api v0.104.0
+	google.golang.org/api v0.105.0
 )
 
 require (
