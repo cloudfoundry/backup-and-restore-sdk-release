@@ -758,7 +758,7 @@ jobs:
       stemcells:
       - jammy-stemcell/*.tgz
       releases:
-      - release-tarball/backup-and-restore-sdk-*.tgz
+      - release-tarball/*.tgz
       vars:
         deployment-name: database-backup-restorer
         availability_zone: z1
