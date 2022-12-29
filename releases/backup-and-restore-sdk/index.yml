@@ -5,6 +5,8 @@ builds:
     version: 1.11.1
   050a55aa-8627-4e9b-6200-c7d62e5fd3f3:
     version: 1.18.8
+  06d1b84f-9584-42ef-7ca6-06dacf3ed8d5:
+    version: 1.18.60
   0a362e73-3979-4e0c-701e-e6a1654fe72c:
     version: 1.18.6
   0b19829a-2267-4c0d-453f-44563d3f3bc1:
