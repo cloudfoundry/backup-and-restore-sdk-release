@@ -19,8 +19,8 @@ function checksum_callback() {
     local gpg_sig_url
     gpg_sig_url=$(download_url_callback "${version}").sig
 
-    # GNU GPG Keyring originally downloaded from ftp://ftp.gnu.org/gnu/gnu-keyring.gpg
-    gpg --quiet --import "$SCRIPT_RELATIVE_DIR/gnu-keyring.gpg"
+    curl -L "ftp://ftp.gnu.org/gnu/gnu-keyring.gpg" > "/tmp/gnu-keyring.gpg"
+    gpg --quiet --import "/tmp/gnu-keyring.gpg"
 
     curl -Ls "${gpg_sig_url}" -o "${downloaded_file}.sig" \
          | gpg --verify - "${downloaded_file}"
