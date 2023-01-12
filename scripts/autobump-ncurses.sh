@@ -11,7 +11,7 @@ DIRECTORY_LISTING="$(curl -s -L "${VERSIONS_URL}")"
 ALL_VERSIONS="$(echo ${DIRECTORY_LISTING} | grep ncurses | grep -Eo '[0-9]+(\.[0-9]+){1,2}[a-zA-Z]?' | sort | uniq)"
 export ALL_VERSIONS
 
-export DOWNLOADED_FILENAME="The docs say this is irrelevant but currently mandatory"
+export DOWNLOADED_FILENAME='ncurses-${VERSION}.tar.gz' # The docs say this is irrelevant but currently mandatory
 
 function checksum_callback() {
     local version="${1}"
