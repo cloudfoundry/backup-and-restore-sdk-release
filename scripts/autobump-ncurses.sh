@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-set -euo pipefail
+
+set -euxo pipefail
 
 SCRIPT_RELATIVE_DIR="$(dirname "$0")"
 
@@ -22,8 +22,8 @@ function checksum_callback() {
     curl -L "ftp://ftp.gnu.org/gnu/gnu-keyring.gpg" > "/tmp/gnu-keyring.gpg"
     gpg --quiet --import "/tmp/gnu-keyring.gpg"
 
-    curl -Ls "${gpg_sig_url}" -o "${downloaded_file}.sig" \
-         | gpg --verify - "${downloaded_file}"
+    curl -Ls "${gpg_sig_url}" -o "${downloaded_file}.sig"
+    gpg --verify "${downloaded_file}.sig" "${downloaded_file}"
 }
 
 function download_url_callback() {
