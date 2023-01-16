@@ -13,7 +13,7 @@ tar \
   "*/lib/private/libssl.so*" "*/lib/private/libcrypto.so*" \
   "*/share/"
 
-tar -xf ncurses/ncurses-6.3.tar.gz
+tar -xf ncurses/ncurses-6.4.tar.gz
 cd ncurses-*/
 ./configure \
   --with-abi-version=5 \
