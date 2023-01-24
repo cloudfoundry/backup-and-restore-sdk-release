@@ -33,8 +33,8 @@ github.com/onsi/ginkgo v1.16.5/go.mod h1:+E8gABHa3K6zRBolWtd+ROzc/U5bkGt0FwiG042
 github.com/onsi/ginkgo/v2 v2.7.0 h1:/XxtEV3I3Eif/HobnVx9YmJgk8ENdRsuUmM+fLCFNow=
 github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7JYyY=
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
-github.com/onsi/gomega v1.25.0 h1:Vw7br2PCDYijJHSfBOWhov+8cAnUf8MfMaIOV323l6Y=
-github.com/onsi/gomega v1.25.0/go.mod h1:r+zV744Re+DiYCIPRlYOTxn0YkOLcAnW8k1xXdMPGhM=
+github.com/onsi/gomega v1.26.0 h1:03cDLK28U6hWvCAns6NeydX3zIm4SF3ci69ulidS32Q=
+github.com/onsi/gomega v1.26.0/go.mod h1:r+zV744Re+DiYCIPRlYOTxn0YkOLcAnW8k1xXdMPGhM=
 github.com/pivotal-cf-experimental/go-binmock v0.0.0-20171027112700-f797157c64e9 h1:62uIXQ81WoQWGxhrjOO2eYMZ1tHOfvR9ezrOfZOfpDw=
 github.com/pivotal-cf-experimental/go-binmock v0.0.0-20171027112700-f797157c64e9/go.mod h1:yxdBig/RHJGWfhHgq1/KGUYDzy0ocPv3Ex67YXodrdk=
 github.com/pivotal-cf/go-binmock v0.0.0-20171027112700-f797157c64e9 h1:NYJ/BzqA8Htne8NFOhMyB5y5LjraRV0RIHAVY3FRnek=
