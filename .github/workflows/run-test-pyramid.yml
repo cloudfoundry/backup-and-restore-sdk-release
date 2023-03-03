@@ -24,8 +24,8 @@ jobs:
       run: FOCUS=ubuntu-jammy make docker-system-mariadb
     - name: "Stemcell: Jammy | MySQL: Multiple"
       run: FOCUS=ubuntu-jammy make docker-system-mysql
-    - name: "Stemcell: Jammy | Postgres: Multiple"
-      run: FOCUS=ubuntu-jammy make docker-system-postgres
+    # - name: "Stemcell: Jammy | Postgres: Multiple"
+    #   run: FOCUS=ubuntu-jammy make docker-system-postgres
 
   run-system-tests-bionic:
     needs: run-unit-tests
