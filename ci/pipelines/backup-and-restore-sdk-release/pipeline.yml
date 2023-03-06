@@ -64,7 +64,7 @@ groups:
   - claim-cf-deployment
   - deploy-s3-blobstore-sdk
   - deploy-database-sdk
-  - deploy-mariadb
+  - deploy-mysql
   - deploy-postgres
   - deploy-gcs-blobstore-sdk
   - deploy-azure-blobstore-sdk
@@ -692,7 +692,7 @@ jobs:
         - bpm-release/*.tgz
         - bosh-release-v271.7/*.tgz
 
-- name: deploy-mariadb
+- name: deploy-mysql
   serial: true
   plan:
   - in_parallel:
@@ -714,7 +714,7 @@ jobs:
       - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
-  - put: mysql-dev-deployment
+  - put: mysql-8-0-deployment
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/mysql.yml
       stemcells:
@@ -727,6 +727,7 @@ jobs:
         databases.ca: ((backup-and-restore-sdk-release-db-certs.mysql_ca_cert))
         databases.certificate: ((backup-and-restore-sdk-release-db-certs.mysql_client_cert))
         databases.private_key: ((backup-and-restore-sdk-release-db-certs.mysql_client_key))
+        mysql_version: 8.0
       source_file: source-file/source-file.yml
       releases:
       - bpm-release/*.tgz
@@ -772,7 +773,7 @@ jobs:
       passed:
       - deploy-database-sdk-on-airgapped-env
       - deploy-postgres
-      - deploy-mariadb
+      - deploy-mysql
     - get: cert-store
       resource: gcp-db-certs
     - get: cf-deployment-env
@@ -780,7 +781,7 @@ jobs:
       passed:
       - deploy-database-sdk-on-airgapped-env
       - deploy-postgres
-      - deploy-mariadb
+      - deploy-mysql
     - get: cryogenics-concourse-tasks
   - task: alias-env
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
@@ -1488,7 +1489,6 @@ jobs:
     params:
       PR_BASE: main
       PR_LABELS: ci
-
       GH_TOKEN: ((github.access_token))
       AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
       AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
