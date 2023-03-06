@@ -20,11 +20,17 @@ bosh-smiths-creds: &bosh-smiths-creds
 aws-region: &aws-region eu-west-1
 aws-backup-region: &aws-backup-region eu-central-1
 
-mysql-deployment-name: &mysql-deployment-name mysql-dev
-mysql-host: &mysql-host 10.0.255.9
-mysql-port: &mysql-port 3306
-mysql-username: &mysql-username root
-mysql-password: &mysql-password mysql_password
+mysql-5-7-deployment-name: &mysql-5-7-deployment-name mysql-5-7-dev
+mysql-5-7-host: &mysql-5-7-host 10.0.255.9
+mysql-5-7-port: &mysql-5-7-port 3306
+mysql-5-7-username: &mysql-5-7-username root
+mysql-5-7-password: &mysql-5-7-password mysql_password
+
+mysql-8-0-deployment-name: &mysql-8-0-deployment-name mysql-8-0-dev
+mysql-8-0-host: &mysql-8-0-host 10.0.255.10
+mysql-8-0-port: &mysql-8-0-port 3306
+mysql-8-0-username: &mysql-8-0-username root
+mysql-8-0-password: &mysql-8-0-password mysql_password
 
 postgres-10-deployment-name: &postgres-10-deployment-name postgres-10-dev
 postgres-10-host: &postgres-10-host 10.0.255.12
@@ -64,7 +70,7 @@ groups:
   - claim-cf-deployment
   - deploy-s3-blobstore-sdk
   - deploy-database-sdk
-  - deploy-mariadb
+  - deploy-mysql
   - deploy-postgres
   - deploy-gcs-blobstore-sdk
   - deploy-azure-blobstore-sdk
@@ -224,7 +230,6 @@ resources:
     disable_forks: true
     access_token: ((github.access_token))
     autosync_pr: true
-    watch_checks_interval: "600"
     assign_to: "@me"
 
 - name: version
@@ -322,10 +327,16 @@ resources:
     version_family: latest
   type: bosh-io-stemcell
 
-- name: mysql-dev-deployment
+- name: mysql-5-7-deployment
   type: bosh-deployment
   source:
-    deployment: *mysql-deployment-name
+    deployment: *mysql-5-7-deployment-name
+    skip_check: true
+
+- name: mysql-8-0-deployment
+  type: bosh-deployment
+  source:
+    deployment: *mysql-8-0-deployment-name
     skip_check: true
 
 - name: postgres-10-dev-deployment
@@ -692,7 +703,7 @@ jobs:
         - bpm-release/*.tgz
         - bosh-release-v271.7/*.tgz
 
-- name: deploy-mariadb
+- name: deploy-mysql
   serial: true
   plan:
   - in_parallel:
@@ -714,23 +725,46 @@ jobs:
       - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
-  - put: mysql-dev-deployment
-    params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/mysql.yml
-      stemcells:
-      - jammy-stemcell/*.tgz
-      vars:
-        deployment-name: *mysql-deployment-name
-        db_password: *mysql-password
-        db_host: *mysql-host
-        availability_zone: z1
-        databases.ca: ((backup-and-restore-sdk-release-db-certs.mysql_ca_cert))
-        databases.certificate: ((backup-and-restore-sdk-release-db-certs.mysql_client_cert))
-        databases.private_key: ((backup-and-restore-sdk-release-db-certs.mysql_client_key))
-      source_file: source-file/source-file.yml
-      releases:
-      - bpm-release/*.tgz
-      - pxc-release/*.tgz
+  - do:
+    #! It seems these 2 deployments cannot be performed in parallel as they
+    #! compile the same release against the same stemcell and therefore BOSH
+    #! refuses to grant some locks.
+    - put: mysql-5-7-deployment
+      params:
+        manifest: backup-and-restore-sdk-release/ci/manifests/mysql.yml
+        stemcells:
+        - jammy-stemcell/*.tgz
+        vars:
+          mysql_version: 5.7
+          deployment-name: *mysql-5-7-deployment-name
+          db_password: *mysql-5-7-password
+          db_host: *mysql-5-7-host
+          availability_zone: z1
+          databases.ca: ((backup-and-restore-sdk-release-db-certs.mysql_ca_cert))
+          databases.certificate: ((backup-and-restore-sdk-release-db-certs.mysql_client_cert))
+          databases.private_key: ((backup-and-restore-sdk-release-db-certs.mysql_client_key))
+        source_file: source-file/source-file.yml
+        releases:
+        - bpm-release/*.tgz
+        - pxc-release/*.tgz
+    - put: mysql-8-0-deployment
+      params:
+        manifest: backup-and-restore-sdk-release/ci/manifests/mysql.yml
+        stemcells:
+        - jammy-stemcell/*.tgz
+        vars:
+          mysql_version: 8.0
+          deployment-name: *mysql-8-0-deployment-name
+          db_password: *mysql-8-0-password
+          db_host: *mysql-8-0-host
+          availability_zone: z1
+          databases.ca: ((backup-and-restore-sdk-release-db-certs.mysql_ca_cert))
+          databases.certificate: ((backup-and-restore-sdk-release-db-certs.mysql_client_cert))
+          databases.private_key: ((backup-and-restore-sdk-release-db-certs.mysql_client_key))
+        source_file: source-file/source-file.yml
+        releases:
+        - bpm-release/*.tgz
+        - pxc-release/*.tgz
 
 - name: deploy-database-sdk-on-airgapped-env
   serial: true
@@ -772,7 +806,7 @@ jobs:
       passed:
       - deploy-database-sdk-on-airgapped-env
       - deploy-postgres
-      - deploy-mariadb
+      - deploy-mysql
     - get: cert-store
       resource: gcp-db-certs
     - get: cf-deployment-env
@@ -780,7 +814,7 @@ jobs:
       passed:
       - deploy-database-sdk-on-airgapped-env
       - deploy-postgres
-      - deploy-mariadb
+      - deploy-mysql
     - get: cryogenics-concourse-tasks
   - task: alias-env
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
@@ -808,15 +842,29 @@ jobs:
         POSTGRES_PORT: *postgres-11-port
         POSTGRES_USERNAME: *postgres-11-username
         TEST_SUITE_NAME: postgresql
-    - task: mariadb-system-tests
+    - task: mysql-5-7-system-tests
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
       params:
         <<: *bosh-smiths-creds
         TEST_SUITE_NAME: mysql
-        MYSQL_HOSTNAME: *mysql-host
-        MYSQL_PORT: *mysql-port
-        MYSQL_USERNAME: *mysql-username
-        MYSQL_PASSWORD: *mysql-password
+        MYSQL_HOSTNAME: *mysql-5-7-host
+        MYSQL_PORT: *mysql-5-7-port
+        MYSQL_USERNAME: *mysql-5-7-username
+        MYSQL_PASSWORD: *mysql-5-7-password
+        MYSQL_CA_CERT: ((backup-and-restore-sdk-release-db-certs.mysql_ca_cert))
+        MYSQL_CLIENT_CERT: ((backup-and-restore-sdk-release-db-certs.mysql_client_cert))
+        MYSQL_CLIENT_KEY: ((backup-and-restore-sdk-release-db-certs.mysql_client_key))
+        TEST_TLS_VERIFY_IDENTITY: false
+        TEST_TLS_MUTUAL_TLS: false
+    - task: mysql-8-0-system-tests
+      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
+      params:
+        <<: *bosh-smiths-creds
+        TEST_SUITE_NAME: mysql
+        MYSQL_HOSTNAME: *mysql-8-0-host
+        MYSQL_PORT: *mysql-8-0-port
+        MYSQL_USERNAME: *mysql-8-0-username
+        MYSQL_PASSWORD: *mysql-8-0-password
         MYSQL_CA_CERT: ((backup-and-restore-sdk-release-db-certs.mysql_ca_cert))
         MYSQL_CLIENT_CERT: ((backup-and-restore-sdk-release-db-certs.mysql_client_cert))
         MYSQL_CLIENT_KEY: ((backup-and-restore-sdk-release-db-certs.mysql_client_key))
@@ -1488,7 +1536,6 @@ jobs:
     params:
       PR_BASE: main
       PR_LABELS: ci
-
       GH_TOKEN: ((github.access_token))
       AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
       AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
