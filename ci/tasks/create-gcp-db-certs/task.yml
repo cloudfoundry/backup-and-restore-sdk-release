@@ -3,8 +3,7 @@ platform: linux
 
 image_resource:
   type: registry-image
-  source:
-    repository: cryogenics/essentials
+  source: {repository: pcfplatformrecovery/backup-and-restore}
 
 inputs:
 - name: backup-and-restore-sdk-release

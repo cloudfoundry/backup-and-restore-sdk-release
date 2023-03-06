@@ -4,7 +4,7 @@ platform: linux
 image_resource:
   type: registry-image
   source:
-    repository: cryogenics/essentials
+    repository: cryogenics/essentials-cf6
 
 inputs:
   - name: cf-deployment-env
