@@ -725,7 +725,10 @@ jobs:
       - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
-  - in_parallel:
+  - do:
+    #! It seems these 2 deployments cannot be performed in parallel as they
+    #! compile the same release against the same stemcell and therefore BOSH
+    #! refuses to grant some locks.
     - put: mysql-5-7-deployment
       params:
         manifest: backup-and-restore-sdk-release/ci/manifests/mysql.yml
