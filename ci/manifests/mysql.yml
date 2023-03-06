@@ -57,6 +57,7 @@ instance_groups:
   - name: pxc-mysql
     release: pxc
     properties:
+      mysql_version: ((mysql_version))
       admin_password: ((db_password))
       port: 3306
       monit_startup_timeout: 120
