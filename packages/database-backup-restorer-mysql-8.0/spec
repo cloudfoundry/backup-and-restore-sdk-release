@@ -5,4 +5,4 @@ dependencies: []
 
 files:
 - mysql/mysql-8.0.*.tar.xz
-- ncurses/ncurses-6.3.tar.gz
+- ncurses/ncurses-6.4.tar.gz
