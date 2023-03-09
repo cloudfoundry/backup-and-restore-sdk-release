@@ -51,7 +51,7 @@ describe 'gcs-blobstore-backup-restorer job' do
 
     context 'when backup is enabled' do
       it 'the metadata script disables the skip_bbr_scripts flag' do
-        metadata = metadata_template.render("enabled" => true)
+        metadata = metadata_template.render({"enabled" => true})
         expect(metadata).to include("skip_bbr_scripts: false")
       end
 
@@ -74,13 +74,15 @@ describe 'gcs-blobstore-backup-restorer job' do
       context 'and the backup bucket is the same as the live bucket' do
         it 'errors' do
           expect { buckets_template.render(
-            "enabled" => true,
-            "buckets" => {"droplets" => {
-                "bucket_name" => "my_bucket",
-                "backup_bucket_name" => "my_bucket",
-                "gcp_service_account_key" => "{}"
+            {
+              "enabled" => true,
+              "buckets" => {"droplets" => {
+                  "bucket_name" => "my_bucket",
+                  "backup_bucket_name" => "my_bucket",
+                  "gcp_service_account_key" => "{}"
+                  }
                 }
-              }
+            }
           ) }.to(raise_error(RuntimeError, "Invalid bucket configuration for 'droplets', bucket_name and backup_bucket_name must be distinct"))
         end
       end
@@ -153,8 +155,10 @@ describe 'gcs-blobstore-backup-restorer job' do
       context 'the GCS key provided is not valid JSON' do
         it 'errors' do
           expect { gcp_service_account_key_template.render(
-            "enabled" => true,
-            "gcp_service_account_key" => "{not valid json}"
+            {
+              "enabled" => true,
+              "gcp_service_account_key" => "{not valid json}"
+            }
           ) }.to(raise_error(RuntimeError, 'Invalid gcp_service_account_key provided; it is not valid JSON'))
         end
       end
@@ -162,16 +166,18 @@ describe 'gcs-blobstore-backup-restorer job' do
       context 'and the backup bucket is the same as a different live bucket' do
         it 'errors' do
           expect { buckets_template.render(
-            "enabled" => true,
-            "buckets" => {"droplets" => {
-                "bucket_name" => "bucket1",
-                "backup_bucket_name" => "bucket2",
-                "gcp_service_account_key" => "{}"
-              },
-              "packages" => {
-                "bucket_name" => "bucket2",
-                "backup_bucket_name" => "bucket3",
-                "gcp_service_account_key" => "{}"
+            {
+              "enabled" => true,
+              "buckets" => {"droplets" => {
+                  "bucket_name" => "bucket1",
+                  "backup_bucket_name" => "bucket2",
+                  "gcp_service_account_key" => "{}"
+                },
+                "packages" => {
+                  "bucket_name" => "bucket2",
+                  "backup_bucket_name" => "bucket3",
+                  "gcp_service_account_key" => "{}"
+                }
               }
             }
           ) }.to(raise_error(RuntimeError, "Invalid bucket configuration, 'bucket2' is used as a source bucket and a backup bucket"))

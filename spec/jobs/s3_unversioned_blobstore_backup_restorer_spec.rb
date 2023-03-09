@@ -61,11 +61,11 @@ describe 's3-unversioned-blobstore-backup-restorer job' do
 
       context 'and bpm is not enabled' do
         it 'does not template bpm' do
-          backup_script = backup_template.render("enabled" => true)
+          backup_script = backup_template.render({"enabled" => true})
           expect(backup_script).to include("backup")
           expect(backup_script).not_to include("/var/vcap/jobs/bpm/bin/bpm run s3-unversioned-blobstore-backup-restorer")
 
-          post_backup_unlock_script = post_backup_unlock_template.render("enabled" => true)
+          post_backup_unlock_script = post_backup_unlock_template.render({"enabled" => true})
           expect(post_backup_unlock_script).to include("unversioned-backup-complete")
           expect(post_backup_unlock_script).not_to include("/var/vcap/jobs/bpm/bin/bpm run s3-unversioned-blobstore-backup-restorer")
         end
@@ -200,7 +200,7 @@ describe 's3-unversioned-blobstore-backup-restorer job' do
 
       context 'when bpm is not enabled' do
         it 'does not template bpm' do
-          restore_script = restore_template.render("enabled" => true)
+          restore_script = restore_template.render({"enabled" => true})
           expect(restore_script).to include("restore")
           expect(restore_script).not_to include("/var/vcap/jobs/bpm/bin/bpm run s3-unversioned-blobstore-backup-restorer")
         end
@@ -219,7 +219,7 @@ describe 's3-unversioned-blobstore-backup-restorer job' do
     end
 
     it 'it disables the skip_bbr_scripts flag when the job is enabled' do
-      metadata = metadata_template.render("enabled" => true)
+      metadata = metadata_template.render({"enabled" => true})
       stdout_str, _, _ = Open3.capture3({'BBR_VERSION' => '1.4.0'}, "bash -c '#{metadata}'")
       expect(stdout_str).to include("skip_bbr_scripts: false")
     end
