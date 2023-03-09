@@ -1558,7 +1558,7 @@ jobs:
       BASE: main
       BRANCH: *golang-vendor-branch
       LABELS: ci,bump-golang
-      TITLE: Bump golang-1-linux to version ((.:golang-release-version))
+      TITLE: Bump golang-1-linux to ((.:golang-release-version))
       MESSAGE: |
         This is an automatically generated Pull Request from the Cryogenics CI Bot.
 
