@@ -6,10 +6,24 @@ set -euo pipefail
 # https://github.com/cloudfoundry-attic/bosh-lite/issues/439#issuecomment-348329967
 dockerd > /dev/null 2>&1 &
 
+##############################################################################################################
+# Opt-out of ephemeral nats creds
+# These changes break our tests because we are using
+# Xenial Stemcells from Bosh.io and Xenial is now deprecated.
+# https://github.com/cloudfoundry/bosh/commit/333a0143b6adc28ce786d4f78a0d03752ecf6c45
+##############################################################################################################
+cat <<'EOF'> /bosh-deployment/docker/short-lived-nats-creds.yml
+- path: /instance_groups/name=bosh/properties/director/enable_short_lived_nats_bootstrap_credentials?
+  type: replace
+  value: false
+EOF
+##############################################################################################################
+
 export BOSH_LOG_LEVEL=none
 bosh -n --tty create-env /bosh-deployment/bosh.yml \
   -o /bosh-deployment/docker/cpi.yml \
   -o /bosh-deployment/docker/unix-sock.yml \
+  -o /bosh-deployment/docker/short-lived-nats-creds.yml \
   -o /bosh-deployment/jumpbox-user.yml \
   --state=/workspace/state.json              \
   --vars-store /workspace/creds.yml          \
