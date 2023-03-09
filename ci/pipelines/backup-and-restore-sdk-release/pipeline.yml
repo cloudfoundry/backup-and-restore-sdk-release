@@ -280,6 +280,17 @@ resources:
     private_key: ((github.ssh_key))
     branch: main
 
+# A second resource is necessary for Golang bumps because when we push a branch
+# to this repo via this resourse, the subsequent get steps will start tracking
+# that branch, and not main as one would expect.
+- name: backup-and-restore-sdk-release-golang-bump
+  type: git
+  icon: github
+  source:
+    uri: git@github.com:cloudfoundry/backup-and-restore-sdk-release.git
+    private_key: ((github.ssh_key))
+    disable_ci_skip: true
+
 - name: backup-and-restore-sdk-release-main
   type: git
   icon: github
@@ -1484,30 +1495,70 @@ jobs:
     - get: golang-release
       trigger: true
     - get: backup-and-restore-sdk-release-main
+      params:
+        branch: main
   - task: bosh-vendor-package
     file: cryogenics-concourse-tasks/deps-automation/bosh-vendor-package/task.yml
     input_mapping:
       release: backup-and-restore-sdk-release-main
       vendored-package-release: golang-release
+    output_mapping:
+      release-with-updated-vendored-package: backup-and-restore-sdk-release-updated
     params:
       VENDORED_PACKAGE_NAME: golang-1-linux
       VENDOR_UPDATES_BRANCH: golang-vendor-updates
-      COMMIT_USERNAME: bump-golang CI job
-      COMMIT_USEREMAIL: mapbu-cryogenics@groups.vmware.com
       AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
       AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
-  - put: backup-and-restore-sdk-release-main
+  - task: update-go-directive-in-system-tests
+    file: cryogenics-concourse-tasks/tasks/bosh/update-go-directive/task.yml
     params:
-      repository: release-with-updated-vendored-package
-      branch: golang-vendor-updates
+      PATH_TO_GO_MODULE: src/system-tests
+    input_mapping:
+      bosh-release-repo-with-vendored-golang: golang-release
+      golang-project-repo: backup-and-restore-sdk-release-updated
+    output_mapping:
+      golang-project-repo: backup-and-restore-sdk-release-updated
+  - task: update-go-directive-in-s3-blobstore-backup-restore
+    file: cryogenics-concourse-tasks/tasks/bosh/update-go-directive/task.yml
+    params:
+      PATH_TO_GO_MODULE: src/s3-blobstore-backup-restore
+    input_mapping:
+      bosh-release-repo-with-vendored-golang: golang-release
+      golang-project-repo: backup-and-restore-sdk-release-updated
+    output_mapping:
+      golang-project-repo: backup-and-restore-sdk-release-updated
+  - task: update-go-directive-in-database-backup-restore
+    file: cryogenics-concourse-tasks/tasks/bosh/update-go-directive/task.yml
+    params:
+      PATH_TO_GO_MODULE: src/database-backup-restore
+    input_mapping:
+      bosh-release-repo-with-vendored-golang: golang-release
+      golang-project-repo: backup-and-restore-sdk-release-updated
+    output_mapping:
+      golang-project-repo: backup-and-restore-sdk-release-updated
+  - task: update-go-directive-in-azure-blobstore-backup-restore
+    file: cryogenics-concourse-tasks/tasks/bosh/update-go-directive/task.yml
+    params:
+      PATH_TO_GO_MODULE: src/azure-blobstore-backup-restore
+    input_mapping:
+      bosh-release-repo-with-vendored-golang: golang-release
+      golang-project-repo: backup-and-restore-sdk-release-updated
+    output_mapping:
+      golang-project-repo: backup-and-restore-sdk-release-updated
+  - load_var: golang-release-version
+    file: golang-release/.git/describe_ref
+  - put: backup-and-restore-sdk-release-golang-bump
+    params:
+      repository: backup-and-restore-sdk-release-updated
+      branch: &golang-vendor-branch bump-golang-vendor-((.:golang-release-version))
       force: true
   - task: create-golang-vendor-pull-request
     file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
     params:
       BASE: main
-      BRANCH: golang-vendor-updates
+      BRANCH: *golang-vendor-branch
       LABELS: ci,bump-golang
-      TITLE: Update vendored package golang-1-linux
+      TITLE: Bump golang-1-linux to version ((.:golang-release-version))
       MESSAGE: |
         This is an automatically generated Pull Request from the Cryogenics CI Bot.
 
@@ -1516,7 +1567,7 @@ jobs:
 
         If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
     input_mapping:
-      source-repo: backup-and-restore-sdk-release-main
+      source-repo: backup-and-restore-sdk-release-golang-bump
 
 - name: bump-mariadb
   plan:
