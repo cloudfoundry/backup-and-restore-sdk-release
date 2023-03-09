@@ -45,14 +45,14 @@ describe 'azure-blobstore-backup-restorer job' do
 
       context 'and bpm is not enabled' do
         it 'does not template bpm' do
-          config = backup_template.render("enabled" => true)
+          config = backup_template.render({"enabled" => true})
           expect(config).to include("backup")
           expect(config).not_to include("/var/vcap/jobs/bpm/bin/bpm run azure-blobstore-backup-restorer")
         end
       end
 
       it 'the metadata script disables the skip_bbr_scripts flag' do
-        metadata = metadata_template.render("enabled" => true)
+        metadata = metadata_template.render({ "enabled" => true })
         expect(metadata).to include("skip_bbr_scripts: false")
       end
     end
@@ -76,7 +76,7 @@ describe 'azure-blobstore-backup-restorer job' do
 
       context 'when bpm is not enabled' do
         it 'does not template bpm' do
-          config = restore_template.render("enabled" => true)
+          config = restore_template.render({"enabled" => true})
           expect(config).to include("restore")
           expect(config).not_to include("/var/vcap/jobs/bpm/bin/bpm run azure-blobstore-backup-restorer")
         end

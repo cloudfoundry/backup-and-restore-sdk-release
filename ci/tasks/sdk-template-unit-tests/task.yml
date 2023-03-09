@@ -19,7 +19,7 @@ platform: linux
 
 image_resource:
   type: registry-image
-  source: {repository: pcfplatformrecovery/backup-and-restore}
+  source: {repository: cryogenics/essentials}
 
 inputs:
 - name: backup-and-restore-sdk-release
@@ -32,6 +32,7 @@ run:
     set -e
 
     pushd "backup-and-restore-sdk-release"
+      bundle update --bundler
       bundle
       bundle exec rspec
     popd
