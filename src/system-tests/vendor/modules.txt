@@ -1,4 +1,4 @@
-# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.41
+# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.42
 ## explicit; go 1.14
 github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor
 # github.com/fsnotify/fsnotify v1.6.0
@@ -40,7 +40,7 @@ github.com/onsi/ginkgo/reporters/stenographer
 github.com/onsi/ginkgo/reporters/stenographer/support/go-colorable
 github.com/onsi/ginkgo/reporters/stenographer/support/go-isatty
 github.com/onsi/ginkgo/types
-# github.com/onsi/gomega v1.27.2
+# github.com/onsi/gomega v1.27.3
 ## explicit; go 1.18
 github.com/onsi/gomega
 github.com/onsi/gomega/format
@@ -90,7 +90,7 @@ gopkg.in/tomb.v1
 ## explicit
 gopkg.in/yaml.v3
 # s3-blobstore-backup-restore v0.0.0 => ../s3-blobstore-backup-restore
-## explicit; go 1.18
+## explicit; go 1.20
 s3-blobstore-backup-restore/blobpath
 s3-blobstore-backup-restore/incremental
 # s3-blobstore-backup-restore => ../s3-blobstore-backup-restore
