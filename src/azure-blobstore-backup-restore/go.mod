@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/Azure/azure-storage-blob-go v0.15.0
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.27.2
+	github.com/onsi/gomega v1.27.3
 	system-tests v0.0.0
 )
 
