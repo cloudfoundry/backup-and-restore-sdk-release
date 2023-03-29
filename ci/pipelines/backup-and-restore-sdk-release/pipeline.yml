@@ -60,7 +60,7 @@ vault_creds: &vault_creds
   secret_id: ((vault/resource_credentials.secret_id))
 
 groups:
-- name: pr-test-and-merge
+- name: test
   jobs:
   - unit-tests
   - contract-tests
@@ -84,7 +84,7 @@ groups:
   - unclaim-cf-deployment-airgapped
   - merge-pr
 
-- name: dependencies
+- name: bump
   jobs:
   - bump-golang
   - bump-mariadb
@@ -94,7 +94,7 @@ groups:
   - bump-boost
   - bump-libpcre2
 
-- name: shipit
+- name: release
   jobs:
   - check-for-changes
   - create-final-patch
