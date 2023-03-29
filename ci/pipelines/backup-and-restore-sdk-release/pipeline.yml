@@ -300,10 +300,10 @@ resources:
     branch: main
     disable_ci_skip: true
 
-- name: every-month
+- name: every-week
   type: time
   source: 
-    interval: 43200m # 60m*24h*30days
+    interval: 168h # 24h*7days
 
 - name: github-release
   type: github-release
@@ -1413,7 +1413,7 @@ jobs:
 - name: check-for-changes
   plan:
   - in_parallel:
-    - get: every-month
+    - get: every-week
       trigger: true
     - get: backup-and-restore-sdk-release-main
     - get: version
