@@ -1470,6 +1470,9 @@ jobs:
       tag_prefix: v
       globs:
       - backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
+  - put: version
+    params:
+      bump: patch
   - put: release
     params:
       file: backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
@@ -1483,9 +1486,6 @@ jobs:
         *BBR SDK*: version `((.:version-number))` has been published 🎉
         Next steps (cc <!subteam^S028XABEHAP>):
           1. Review the release notes and undraft the release <((.:github-release-url))|here>.
-  - put: version
-    params:
-      bump: patch
  
 # Dependency bumps
 - name: bump-golang
