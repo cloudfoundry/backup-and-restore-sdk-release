@@ -1473,16 +1473,16 @@ jobs:
   - put: release
     params:
       file: backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
-  - load_var: version-tag
+  - load_var: version-number
     file: version/number
   - load_var: github-release-url
     file: github-release/url
   - put: slack-cryo-notification
     params:
       text: |
-        A new release for $BUILD_PIPELINE_NAME has been published!
-        Release `((.:version-tag))` is now available <((.:github-release-url))|here>
-        View the pipeline <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|here>
+        *BBR SDK*: version `((.:version-number))` has been published 🎉
+        Next steps (cc <!subteam^S028XABEHAP>):
+          1. Review the release notes and undraft the release <((.:github-release-url))|here>.
   - put: version
     params:
       bump: patch
