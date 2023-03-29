@@ -1421,6 +1421,11 @@ jobs:
 - name: create-final-patch
   serial: true
   serial_groups: [version]
+  ensure:
+    do:
+    - put: version
+      params:
+        bump: patch
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
@@ -1470,9 +1475,6 @@ jobs:
       tag_prefix: v
       globs:
       - backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
-  - put: version
-    params:
-      bump: patch
   - put: release
     params:
       file: backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
