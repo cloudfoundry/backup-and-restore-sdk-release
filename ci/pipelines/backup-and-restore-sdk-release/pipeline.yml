@@ -60,7 +60,7 @@ vault_creds: &vault_creds
   secret_id: ((vault/resource_credentials.secret_id))
 
 groups:
-- name: pr-test-and-merge
+- name: test
   jobs:
   - unit-tests
   - contract-tests
@@ -84,7 +84,7 @@ groups:
   - unclaim-cf-deployment-airgapped
   - merge-pr
 
-- name: dependencies
+- name: bump
   jobs:
   - bump-golang
   - bump-mariadb
@@ -94,7 +94,7 @@ groups:
   - bump-boost
   - bump-libpcre2
 
-- name: shipit
+- name: release
   jobs:
   - check-for-changes
   - create-final-patch
@@ -300,10 +300,10 @@ resources:
     branch: main
     disable_ci_skip: true
 
-- name: every-month
+- name: every-week
   type: time
   source: 
-    interval: 43200m # 60m*24h*30days
+    interval: 168h # 24h*7days
 
 - name: github-release
   type: github-release
@@ -1413,7 +1413,7 @@ jobs:
 - name: check-for-changes
   plan:
   - in_parallel:
-    - get: every-month
+    - get: every-week
       trigger: true
     - get: backup-and-restore-sdk-release-main
     - get: version
@@ -1421,6 +1421,11 @@ jobs:
 - name: create-final-patch
   serial: true
   serial_groups: [version]
+  ensure:
+    do:
+    - put: version
+      params:
+        bump: patch
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
@@ -1473,19 +1478,16 @@ jobs:
   - put: release
     params:
       file: backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
-  - load_var: version-tag
+  - load_var: version-number
     file: version/number
   - load_var: github-release-url
     file: github-release/url
   - put: slack-cryo-notification
     params:
       text: |
-        A new release for $BUILD_PIPELINE_NAME has been published!
-        Release `((.:version-tag))` is now available <((.:github-release-url))|here>
-        View the pipeline <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|here>
-  - put: version
-    params:
-      bump: patch
+        *BBR SDK*: version `((.:version-number))` has been published 🎉
+        Next steps (cc <!subteam^S028XABEHAP>):
+          1. Review the release notes and undraft the release <((.:github-release-url))|here>.
  
 # Dependency bumps
 - name: bump-golang
