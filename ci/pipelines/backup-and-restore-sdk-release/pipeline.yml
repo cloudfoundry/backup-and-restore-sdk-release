@@ -93,6 +93,7 @@ groups:
   - bump-postgresql
   - bump-boost
   - bump-libpcre2
+  - bump-ci-tasks
 
 - name: release
   jobs:
@@ -105,6 +106,11 @@ resource_types:
   source:
     repository: pivotalservices/concourse-curl-resource
     tag: latest
+
+- name: cryogenics-essentials
+  type: registry-image
+  source:
+    repository: cryogenics/essentials
 
 - name: bosh-deployment
   type: docker-image
@@ -164,6 +170,13 @@ resources:
   type: bosh-io-release
   source:
     repository: cloudfoundry/bpm-release
+
+- icon: github
+  name:  backup-and-restore-sdk-release-bump-ci-tasks
+  source:
+    private_key: ((github.ssh_key))
+    uri: git@github.com:cloudfoundry/backup-and-restore-sdk-release
+  type: git
 
 - name: bosh-release-v271.7
   type: bosh-io-release
@@ -565,7 +578,6 @@ jobs:
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release
-      resource: backup-and-restore-sdk-release
       passed: [build-rc]
     - get: cryogenics-concourse-tasks
     - get: release
@@ -585,60 +597,7 @@ jobs:
   - task: allow-tunnel-from-jumpbox-to-database-vms
     input_mapping:
       env: cf-deployment-env
-    config:
-      platform: linux
-      image_resource:
-        type: registry-image
-        source:
-          repository: eu.gcr.io/mapbu-cryogenics/gcloud
-          username: _json_key
-          password: ((gcr.viewer_key))
-
-      params:
-        GCP_SERVICE_ACCOUNT_KEY: ((gcp/service_accounts/owner.json_key))
-        DEBUG: # any value will turn Debug mode on. Remove the param to disable debug.
-
-      inputs:
-        - name: env
-
-      run:
-        path: /bin/bash
-        args:
-          - -c
-          - |
-            [ -z "$DEBUG" ] || set -x
-
-            set -euo pipefail
-
-            : "${GCP_SERVICE_ACCOUNT_KEY:?}"
-
-            [ -d env ]
-
-            gcloud -q auth activate-service-account --key-file=<(echo "$GCP_SERVICE_ACCOUNT_KEY")
-            gcloud -q config set project "$(echo "$GCP_SERVICE_ACCOUNT_KEY" | jq -r '.project_id')"
-            gcloud -q config set compute/zone europe-west1-c
-
-            env_name="$(cat env/name)"
-
-            rule_name="${env_name}-jumpbox-to-databases"
-            gcloud compute firewall-rules delete "${rule_name}" --quiet || true
-            gcloud compute firewall-rules create "${rule_name}" \
-                   --network="${env_name}-network"     \
-                   --direction=INGRESS \
-                   --action=allow \
-                   --rules=tcp:5432,tcp:3306 \
-                   --source-tags="${env_name}-jumpbox" \
-                   --target-tags="${env_name}-internal" \
-                   --priority=999
-
-            cat <<EOF
-            ======================================================================
-            The following firewall EGRESS rules have been created
-            ----------------------------------------------------------------------
-
-            EOF
-
-            gcloud compute firewall-rules list --filter="${env_name}-internetless-"
+    file: backup-and-restore-sdk-release/ci/tasks/allow-tunnel-from-jumpbox-to-database-vms/task.yml
 
 - name: deploy-postgres
   serial: true
@@ -721,7 +680,6 @@ jobs:
     - get: bpm-release
     - get: pxc-release
     - get: backup-and-restore-sdk-release
-      resource: backup-and-restore-sdk-release
       passed:
       - claim-cf-deployment-airgapped
     - get: release-tarball
@@ -782,7 +740,6 @@ jobs:
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release
-      resource: backup-and-restore-sdk-release
       passed:
         - claim-cf-deployment-airgapped
     - get: release-tarball
@@ -897,7 +854,6 @@ jobs:
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release
-      resource: backup-and-restore-sdk-release
       passed: [build-rc]
     - get: cryogenics-concourse-tasks
     - get: release
@@ -910,67 +866,13 @@ jobs:
   - task: allow-tunnel-from-jumpbox-to-database-vms
     input_mapping:
       env: cf-deployment-env
-    config:
-      platform: linux
-      image_resource:
-        type: registry-image
-        source:
-          repository: eu.gcr.io/mapbu-cryogenics/gcloud
-          username: _json_key
-          password: ((gcr.viewer_key))
-
-      params:
-        GCP_SERVICE_ACCOUNT_KEY: ((gcp/service_accounts/owner.json_key))
-        DEBUG: # any value will turn Debug mode on. Remove the param to disable debug.
-
-      inputs:
-        - name: env
-
-      run:
-        path: /bin/bash
-        args:
-          - -c
-          - |
-            [ -z "$DEBUG" ] || set -x
-
-            set -euo pipefail
-
-            : "${GCP_SERVICE_ACCOUNT_KEY:?}"
-
-            [ -d env ]
-
-            gcloud -q auth activate-service-account --key-file=<(echo "$GCP_SERVICE_ACCOUNT_KEY")
-            gcloud -q config set project "$(echo "$GCP_SERVICE_ACCOUNT_KEY" | jq -r '.project_id')"
-            gcloud -q config set compute/zone europe-west1-c
-
-            env_name="$(cat env/name)"
-
-            rule_name="${env_name}-jumpbox-to-databases"
-            gcloud compute firewall-rules delete "${rule_name}" --quiet || true
-            gcloud compute firewall-rules create "${rule_name}" \
-                   --network="${env_name}-network"     \
-                   --direction=INGRESS \
-                   --action=allow \
-                   --rules=tcp:5432,tcp:3306 \
-                   --source-tags="${env_name}-jumpbox" \
-                   --target-tags="${env_name}-internal" \
-                   --priority=999
-
-            cat <<EOF
-            ======================================================================
-            The following firewall EGRESS rules have been created
-            ----------------------------------------------------------------------
-
-            EOF
-
-            gcloud compute firewall-rules list --filter="${env_name}-internetless-"
+    file: backup-and-restore-sdk-release/ci/tasks/allow-tunnel-from-jumpbox-to-database-vms/task.yml
 
 - name: deploy-database-sdk
   serial: true
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release
-      resource: backup-and-restore-sdk-release
       passed:
       - claim-cf-deployment
     - get: release-tarball
@@ -1002,7 +904,6 @@ jobs:
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release
-      resource: backup-and-restore-sdk-release
       passed:
       - claim-cf-deployment
     - get: release-tarball
@@ -1058,7 +959,6 @@ jobs:
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release
-      resource: backup-and-restore-sdk-release
       passed:
       - claim-cf-deployment
     - get: release-tarball
@@ -1095,7 +995,6 @@ jobs:
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release
-      resource: backup-and-restore-sdk-release
       passed:
       - claim-cf-deployment
     - get: release-tarball
@@ -1706,3 +1605,40 @@ jobs:
       GH_TOKEN: ((github.access_token))
       AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
       AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
+
+- name: bump-ci-tasks
+  plan:
+    - in_parallel:
+      - get: cryogenics-essentials
+        trigger: true
+      - get: cryogenics-concourse-tasks
+      - get: backup-and-restore-sdk-release-main
+    - in_parallel:
+      - load_var: cryogenics-essentials-version
+        file: cryogenics-essentials/tag
+      - task: bump-tasks
+        file: cryogenics-concourse-tasks/deps-automation/bump-concourse-tasks/task.yml
+        input_mapping:
+          repo: backup-and-restore-sdk-release-main
+          image: cryogenics-essentials
+        output_mapping:
+          repo: backup-and-restore-sdk-release-main
+    - put: backup-and-restore-sdk-release-bump-ci-tasks
+      params:
+        repository: backup-and-restore-sdk-release-main
+        branch: &bump-ci-task-branch bump-cryogenics-essentials-to-v((.:cryogenics-essentials-version))
+        force: true
+    - task: create-pull-request
+      file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
+      params:
+        BASE: main
+        BRANCH: *bump-ci-task-branch
+        LABELS: dependencies
+        TITLE: Bump cryogenics/essentials to v((.:cryogenics-essentials-version))
+        MESSAGE: |
+          This is an automatically generated Pull Request from the Cryogenics CI Bot.
+          I have detected a new version of [cryogenics/essentials](https://hub.docker.com/r/cryogenics/essentials/tags) and automatically bumped
+          this package to benefit from the latest changes.
+          If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+      input_mapping:
+        source-repo:  backup-and-restore-sdk-release-bump-ci-tasks
