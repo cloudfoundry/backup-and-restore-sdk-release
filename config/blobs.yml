@@ -18,10 +18,10 @@ mysql/mysql-5.7.40.tar.gz:
   size: 56523688
   object_id: b9e7459c-91e7-433d-4e6f-9618d02fd214
   sha: sha256:b967898bf360cf21c43f372975ff56970100d560213806e7a0fe74b4930f4b9b
-mysql/mysql-8.0.31-linux-glibc2.17-x86_64-minimal.tar.xz:
-  size: 60148296
-  object_id: 6029432e-38d0-4ff0-6af0-b55d25fbbff2
-  sha: sha256:925d51cd2b05af536d035eb2f6ffe3acf42dd2c43993f91fc98d925d56a937de
+mysql/mysql-8.0.32-linux-glibc2.17-x86_64-minimal.tar.xz:
+  size: 60201944
+  object_id: 42535a01-7473-47e1-4156-0ecfc1ffadc5
+  sha: sha256:eb234d529d29fb338d56b1c1d4414e712144986cb78a5e4f09a920579c4b654c
 ncurses/ncurses-6.4.tar.gz:
   size: 3612591
   object_id: 2e99f0f8-be87-480b-4e5a-9488e923e4d1
@@ -42,15 +42,15 @@ postgres/postgresql-10.23.tar.gz:
   size: 25493839
   object_id: 9e0e0f74-07cf-4600-60a5-90a278783d5f
   sha: sha256:39886b7fbf375fdd79e94b676d8346a62c3c190ccf00b3f763002c8fc8fb71f0
-postgres/postgresql-15.2.tar.gz:
-  size: 29811750
-  object_id: f7438a37-e7fd-43e0-6546-5c662e52b954
-  sha: sha256:eccd208f3e7412ad7bc4c648ecc87e0aa514e02c24a48f71bf9e46910bf284ca
-postgres/postgresql-13.10.tar.gz:
-  size: 28117237
-  object_id: 17fbc832-4227-43e9-5f49-ad372d922b9b
-  sha: sha256:a0a6b1b2e575fb15aa617fb77d3f2558ffd58a456e58d7d147539923d46d79cc
 postgres/postgresql-11.19.tar.gz:
   size: 26735155
   object_id: 67fadba3-d4da-4e61-6bbd-9d1e3b424f4b
   sha: sha256:e1cb916e325170fcdde1a02de25d26792ffe3a08c3f2e1b9c7fc95ae2cabae7a
+postgres/postgresql-13.10.tar.gz:
+  size: 28117237
+  object_id: 17fbc832-4227-43e9-5f49-ad372d922b9b
+  sha: sha256:a0a6b1b2e575fb15aa617fb77d3f2558ffd58a456e58d7d147539923d46d79cc
+postgres/postgresql-15.2.tar.gz:
+  size: 29811750
+  object_id: f7438a37-e7fd-43e0-6546-5c662e52b954
+  sha: sha256:eccd208f3e7412ad7bc4c648ecc87e0aa514e02c24a48f71bf9e46910bf284ca
