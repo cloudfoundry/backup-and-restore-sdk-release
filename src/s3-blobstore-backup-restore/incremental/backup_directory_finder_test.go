@@ -3,10 +3,11 @@ package incremental_test
 import (
 	"fmt"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"s3-blobstore-backup-restore/incremental"
 	"s3-blobstore-backup-restore/incremental/fakes"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Finder", func() {
