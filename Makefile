@@ -18,46 +18,34 @@ bump-postgres: config/private.yml ## update blobs, spec and packaging to Postgre
 supported-stemcells=\
   ubuntu-bionic \
   ubuntu-jammy  \
-  ubuntu-xenial \
 
 supported-mariadb=\
   ubuntu-bionic~~~10.9-jammy  \
   ubuntu-jammy~~~~10.9-jammy  \
-  ubuntu-xenial~~~10.9-jammy  \
   ubuntu-bionic~~~10.7-focal  \
   ubuntu-jammy~~~~10.7-focal  \
-  ubuntu-xenial~~~10.7-focal  \
   ubuntu-bionic~~~10.5-focal  \
   ubuntu-jammy~~~~10.5-focal  \
-  ubuntu-xenial~~~10.5-focal  \
   ubuntu-bionic~~~10.2-bionic \
   ubuntu-jammy~~~~10.2-bionic \
-  ubuntu-xenial~~~10.2-bionic \
 
 supported-mysql=\
   ubuntu-bionic~~~8.0-debian  \
   ubuntu-jammy~~~~8.0-debian  \
-  ubuntu-xenial~~~8.0-debian  \
   ubuntu-bionic~~~8.0-oracle  \
   ubuntu-jammy~~~~8.0-oracle  \
-  ubuntu-xenial~~~8.0-oracle  \
   ubuntu-bionic~~~5.7-debian  \
   ubuntu-jammy~~~~5.7-debian  \
-  ubuntu-xenial~~~5.7-debian  \
 
 supported-postgres=\
   ubuntu-bionic~~~15-bullseye  \
   ubuntu-jammy~~~~15-bullseye  \
-  ubuntu-xenial~~~15-bullseye  \
   ubuntu-bionic~~~13-bullseye  \
   ubuntu-jammy~~~~13-bullseye  \
-  ubuntu-xenial~~~13-bullseye  \
   ubuntu-bionic~~~11-bullseye  \
   ubuntu-jammy~~~~11-bullseye  \
-  ubuntu-xenial~~~11-bullseye  \
   ubuntu-bionic~~~10-bullseye  \
   ubuntu-jammy~~~~10-bullseye  \
-  ubuntu-xenial~~~10-bullseye  \
 
 
 docker-clean: ## remove containers created to run the tests
