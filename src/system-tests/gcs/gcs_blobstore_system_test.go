@@ -8,9 +8,10 @@ import (
 
 	"github.com/onsi/gomega/gexec"
 
+	. "system-tests"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "system-tests"
 )
 
 var (
