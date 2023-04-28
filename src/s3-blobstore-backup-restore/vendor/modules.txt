@@ -1,4 +1,4 @@
-# github.com/aws/aws-sdk-go v1.44.216
+# github.com/aws/aws-sdk-go v1.44.252
 ## explicit; go 1.11
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/arn
@@ -49,7 +49,7 @@ github.com/aws/aws-sdk-go/service/sso
 github.com/aws/aws-sdk-go/service/sso/ssoiface
 github.com/aws/aws-sdk-go/service/sts
 github.com/aws/aws-sdk-go/service/sts/stsiface
-# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.41
+# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.44
 ## explicit; go 1.14
 github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor
 # github.com/fsnotify/fsnotify v1.6.0
@@ -95,7 +95,7 @@ github.com/onsi/ginkgo/reporters/stenographer
 github.com/onsi/ginkgo/reporters/stenographer/support/go-colorable
 github.com/onsi/ginkgo/reporters/stenographer/support/go-isatty
 github.com/onsi/ginkgo/types
-# github.com/onsi/gomega v1.27.2
+# github.com/onsi/gomega v1.27.6
 ## explicit; go 1.18
 github.com/onsi/gomega
 github.com/onsi/gomega/format
@@ -144,7 +144,3 @@ gopkg.in/tomb.v1
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# system-tests v0.0.0 => ../system-tests
-## explicit; go 1.18
-system-tests
-# system-tests => ../system-tests
