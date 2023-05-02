@@ -14,10 +14,10 @@ mysql/mysql-5.6.51.tar.gz:
   size: 32411131
   object_id: a8edb89b-908d-41d2-564a-d3fef5ad21cf
   sha: sha256:262ccaf2930fca1f33787505dd125a7a04844f40d3421289a51974b5935d9abc
-mysql/mysql-5.7.40.tar.gz:
-  size: 56523688
-  object_id: b9e7459c-91e7-433d-4e6f-9618d02fd214
-  sha: sha256:b967898bf360cf21c43f372975ff56970100d560213806e7a0fe74b4930f4b9b
+mysql/mysql-5.7.42.tar.gz:
+  size: 56553748
+  object_id: 288e955d-5702-4464-4d32-723a89935417
+  sha: sha256:211cacb4b3e46dea59949092662be333ec677edb8bc41f4a6f2744e979ee19a2
 mysql/mysql-8.0.33-linux-glibc2.17-x86_64-minimal.tar.xz:
   size: 60181648
   object_id: a2efd5cb-ae50-449c-6b10-b296700e69ac

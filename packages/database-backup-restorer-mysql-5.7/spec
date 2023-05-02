@@ -22,4 +22,4 @@ dependencies:
 - libopenssl1
 
 files:
-- mysql/mysql-5.7.40.tar.gz
+- mysql/mysql-5.7.42.tar.gz
