@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export VERSIONS_URL='https://downloads.mysql.com/archives/community/'
+export VERSIONS_URL='https://endoflife.date/mysql'
 
 HTML="$(curl -s -L "${VERSIONS_URL}")"
-VALUES="$(echo "${HTML}" | xmllint --html --xpath "//select[@id='version']/option[@value=text()]/@value" - 2>/dev/null)"
+VALUES="$(echo "${HTML}" | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 ALL_VERSIONS="$(echo "${VALUES}" | grep -Eo '[0-9]+(\.[0-9]+){1,2}[a-zA-Z]?')"
 
 export BLOBS_PREFIX="mysql"
