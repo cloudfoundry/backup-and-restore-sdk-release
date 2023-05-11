@@ -7,9 +7,9 @@ require (
 	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.45
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.27.6
-	golang.org/x/net v0.9.0
-	golang.org/x/oauth2 v0.7.0
-	google.golang.org/api v0.121.0
+	golang.org/x/net v0.10.0
+	golang.org/x/oauth2 v0.8.0
+	google.golang.org/api v0.122.0
 )
 
 require (
@@ -28,7 +28,7 @@ require (
 	github.com/nxadm/tail v1.4.8 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.8.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
