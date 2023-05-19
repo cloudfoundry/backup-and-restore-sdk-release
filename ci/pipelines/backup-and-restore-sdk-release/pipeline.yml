@@ -107,11 +107,6 @@ resource_types:
     repository: pivotalservices/concourse-curl-resource
     tag: latest
 
-- name: cryogenics-essentials
-  type: registry-image
-  source:
-    repository: cryogenics/essentials
-
 - name: bosh-deployment
   type: docker-image
   source:
@@ -161,6 +156,11 @@ resource_types:
     repository: cftoolsmiths/toolsmiths-envs-resource
 
 resources:
+- name: cryogenics-essentials
+  type: registry-image
+  source:
+    repository: cryogenics/essentials
+
 - name: pxc-release
   type: bosh-io-release
   source:
@@ -1618,6 +1618,8 @@ jobs:
         file: cryogenics-essentials/tag
       - task: bump-tasks
         file: cryogenics-concourse-tasks/deps-automation/bump-concourse-tasks/task.yml
+        params:
+          TASKS_FOLDER: ci/tasks/
         input_mapping:
           repo: backup-and-restore-sdk-release-main
           image: cryogenics-essentials
