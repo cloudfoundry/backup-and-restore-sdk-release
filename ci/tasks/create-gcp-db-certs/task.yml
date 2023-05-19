@@ -1,21 +1,16 @@
----
 platform: linux
-
 image_resource:
   type: registry-image
   source:
     repository: cryogenics/essentials
-
+    tag: 0.1.51
 inputs:
-- name: backup-and-restore-sdk-release
-- name: terraform-state
-- name: gcp-db-certs
-
+  - name: backup-and-restore-sdk-release
+  - name: terraform-state
+  - name: gcp-db-certs
 outputs:
-- name: gcp-db-certs
-
+  - name: gcp-db-certs
 params:
   GCP_SERVICE_ACCOUNT_KEY:
-
 run:
   path: backup-and-restore-sdk-release/ci/tasks/create-gcp-db-certs/task.sh
