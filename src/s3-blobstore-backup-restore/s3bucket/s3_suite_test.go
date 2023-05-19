@@ -58,18 +58,18 @@ func mustCreateAWSConfigFile() {
 	}
 }
 
-func MustHaveEnvOrBeEmpty(keyname string) string {
-	val, exist := os.LookupEnv(keyname)
+func MustHaveEnvOrBeEmpty(keyName string) string {
+	val, exist := os.LookupEnv(keyName)
 	if !exist {
-		panic("Need " + keyname + " for the test")
+		panic("Need " + keyName + " for the test")
 	}
 	return val
 }
 
-func MustHaveEnv(keyname string) string {
-	val := os.Getenv(keyname)
+func MustHaveEnv(keyName string) string {
+	val := os.Getenv(keyName)
 	if val == "" {
-		panic("Need " + keyname + " for the test")
+		panic("Need " + keyName + " for the test")
 	}
 	return val
 }

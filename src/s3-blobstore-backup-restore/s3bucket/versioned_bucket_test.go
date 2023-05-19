@@ -26,13 +26,13 @@ var _ = Describe("VersionedBucket", func() {
 		}
 
 		BeforeEach(func() {
-			bucketName = setUpVersionedBucket(LiveRegion, S3Endpoint, creds)
+			bucketName = setUpVersionedBucket(LiveRegion, S3Endpoint)
 
-			firstVersionOfFile1 = uploadFile(bucketName, S3Endpoint, "test-1", "1-A", creds)
-			secondVersionOfFile1 = uploadFile(bucketName, S3Endpoint, "test-1", "1-B", creds)
-			thirdVersionOfFile1 = uploadFile(bucketName, S3Endpoint, "test-1", "1-C", creds)
-			firstVersionOfFile2 = uploadFile(bucketName, S3Endpoint, "test-2", "2-A", creds)
-			deleteFile(bucketName, S3Endpoint, "test-2", creds)
+			firstVersionOfFile1 = uploadFile(bucketName, S3Endpoint, "test-1", "1-A")
+			secondVersionOfFile1 = uploadFile(bucketName, S3Endpoint, "test-1", "1-B")
+			thirdVersionOfFile1 = uploadFile(bucketName, S3Endpoint, "test-1", "1-C")
+			firstVersionOfFile2 = uploadFile(bucketName, S3Endpoint, "test-2", "2-A")
+			deleteFile(bucketName, S3Endpoint, "test-2")
 
 			bucketObjectUnderTest, err = s3bucket.NewBucketWithRoleARN(bucketName, LiveRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
 
@@ -40,7 +40,7 @@ var _ = Describe("VersionedBucket", func() {
 		})
 
 		AfterEach(func() {
-			tearDownVersionedBucket(bucketName, S3Endpoint, creds)
+			tearDownVersionedBucket(bucketName, S3Endpoint)
 		})
 
 		Describe("ListVersions", func() {
@@ -86,15 +86,15 @@ var _ = Describe("VersionedBucket", func() {
 				var unversionedBucketName string
 
 				BeforeEach(func() {
-					unversionedBucketName = setUpUnversionedBucket(LiveRegion, S3Endpoint, creds)
-					uploadFile(unversionedBucketName, S3Endpoint, "unversioned-test", "UNVERSIONED-TEST", creds)
+					unversionedBucketName = setUpUnversionedBucket(LiveRegion, S3Endpoint)
+					uploadFile(unversionedBucketName, S3Endpoint, "unversioned-test", "UNVERSIONED-TEST")
 
 					bucketObjectUnderTest, err = s3bucket.NewBucketWithRoleARN(unversionedBucketName, LiveRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
 				AfterEach(func() {
-					tearDownBucket(unversionedBucketName, S3Endpoint, creds)
+					tearDownBucket(unversionedBucketName, S3Endpoint)
 				})
 
 				It("fails", func() {
@@ -116,7 +116,7 @@ var _ = Describe("VersionedBucket", func() {
 
 			Context("when the bucket is empty", func() {
 				BeforeEach(func() {
-					clearOutVersionedBucket(bucketName, S3Endpoint, creds)
+					clearOutVersionedBucket(bucketName, S3Endpoint)
 				})
 
 				It("works", func() {
@@ -134,15 +134,15 @@ var _ = Describe("VersionedBucket", func() {
 			Context("when the bucket is versioned", func() {
 
 				BeforeEach(func() {
-					unversionedBucketName = setUpVersionedBucket(LiveRegion, S3Endpoint, creds)
-					uploadFile(unversionedBucketName, S3Endpoint, "unversioned-test", "UNVERSIONED-TEST", creds)
+					unversionedBucketName = setUpVersionedBucket(LiveRegion, S3Endpoint)
+					uploadFile(unversionedBucketName, S3Endpoint, "unversioned-test", "UNVERSIONED-TEST")
 
 					bucketObjectUnderTest, err = s3bucket.NewBucketWithRoleARN(unversionedBucketName, LiveRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
 				AfterEach(func() {
-					tearDownVersionedBucket(unversionedBucketName, S3Endpoint, creds)
+					tearDownVersionedBucket(unversionedBucketName, S3Endpoint)
 				})
 
 				It("returns true", func() {
@@ -154,15 +154,15 @@ var _ = Describe("VersionedBucket", func() {
 
 			Context("when the bucket is not versioned", func() {
 				BeforeEach(func() {
-					unversionedBucketName = setUpUnversionedBucket(LiveRegion, S3Endpoint, creds)
-					uploadFile(unversionedBucketName, S3Endpoint, "unversioned-test", "UNVERSIONED-TEST", creds)
+					unversionedBucketName = setUpUnversionedBucket(LiveRegion, S3Endpoint)
+					uploadFile(unversionedBucketName, S3Endpoint, "unversioned-test", "UNVERSIONED-TEST")
 
 					bucketObjectUnderTest, err = s3bucket.NewBucketWithRoleARN(unversionedBucketName, LiveRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
 				AfterEach(func() {
-					tearDownBucket(unversionedBucketName, S3Endpoint, creds)
+					tearDownBucket(unversionedBucketName, S3Endpoint)
 				})
 
 				It("returns false", func() {
@@ -193,7 +193,7 @@ var _ = Describe("VersionedBucket", func() {
 			Context("when putting versions succeeds", func() {
 				It("restores files to versions specified in the backup and does not delete pre-existing blobs", func() {
 					Expect(err).NotTo(HaveOccurred())
-					Expect(getFileContents(bucketName, S3Endpoint, "test-1", creds)).To(Equal("1-B"))
+					Expect(getFileContents(bucketName, S3Endpoint, "test-1")).To(Equal("1-B"))
 				})
 			})
 
@@ -214,16 +214,10 @@ var _ = Describe("VersionedBucket", func() {
 			var versionOfFileWhichWasSubsequentlyDeleted string
 
 			BeforeEach(func() {
-				clearOutVersionedBucket(bucketName, S3Endpoint, creds)
-				secondaryBucketName = setUpVersionedBucket(BackupRegion, S3Endpoint, creds)
-				versionOfFileWhichWasSubsequentlyDeleted = uploadFile(
-					secondaryBucketName,
-					S3Endpoint,
-					"deleted-file-to-restore",
-					"file-contents",
-					creds,
-				)
-				deleteFile(secondaryBucketName, S3Endpoint, "deleted-file-to-restore", creds)
+				clearOutVersionedBucket(bucketName, S3Endpoint)
+				secondaryBucketName = setUpVersionedBucket(BackupRegion, S3Endpoint)
+				versionOfFileWhichWasSubsequentlyDeleted = uploadFile(secondaryBucketName, S3Endpoint, "deleted-file-to-restore", "file-contents")
+				deleteFile(secondaryBucketName, S3Endpoint, "deleted-file-to-restore")
 			})
 
 			JustBeforeEach(func() {
@@ -237,11 +231,11 @@ var _ = Describe("VersionedBucket", func() {
 
 			It("restores files from the secondary to the main bucket and does not delete pre-existing blobs", func() {
 				Expect(err).NotTo(HaveOccurred())
-				Expect(getFileContents(bucketName, S3Endpoint, "deleted-file-to-restore", creds)).To(Equal("file-contents"))
+				Expect(getFileContents(bucketName, S3Endpoint, "deleted-file-to-restore")).To(Equal("file-contents"))
 			})
 
 			AfterEach(func() {
-				tearDownVersionedBucket(secondaryBucketName, S3Endpoint, creds)
+				tearDownVersionedBucket(secondaryBucketName, S3Endpoint)
 			})
 		})
 	})
@@ -256,15 +250,15 @@ var _ = Describe("VersionedBucket", func() {
 				Secret: SecretKey,
 			}
 
-			destinationBucketName = setUpVersionedBucket(LiveRegion, S3Endpoint, creds)
+			destinationBucketName = setUpVersionedBucket(LiveRegion, S3Endpoint)
 
 			bucketObjectUnderTest, err = s3bucket.NewBucketWithRoleARN(destinationBucketName, LiveRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		AfterEach(func() {
-			clearOutVersionedBucket(destinationBucketName, S3Endpoint, creds)
-			tearDownBucket(destinationBucketName, S3Endpoint, creds)
+			clearOutVersionedBucket(destinationBucketName, S3Endpoint)
+			tearDownBucket(destinationBucketName, S3Endpoint)
 		})
 
 		It("works", func() {
@@ -276,9 +270,9 @@ var _ = Describe("VersionedBucket", func() {
 			)
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(listFiles(destinationBucketName, S3Endpoint, creds)).To(ConsistOf("big_file"))
+			Expect(listFiles(destinationBucketName, S3Endpoint)).To(ConsistOf("big_file"))
 
-			localFilePath := downloadFileToTmp(destinationBucketName, S3Endpoint, "big_file", creds)
+			localFilePath := downloadFileToTmp(destinationBucketName, S3Endpoint, "big_file")
 			Expect(shasum(localFilePath)).To(Equal("188f500de28479d67e7375566750472e58e4cec1"))
 		})
 	})
