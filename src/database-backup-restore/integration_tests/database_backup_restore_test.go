@@ -37,15 +37,9 @@ type TestEntry struct {
 }
 
 var _ = Describe("Backup and Restore DB Utility", func() {
-	var compiledSDKPath string
 	var artifactFile string
-	var err error
 
 	BeforeEach(func() {
-		compiledSDKPath, err = gexec.Build(
-			"database-backup-restore/cmd/database-backup-restore")
-		Expect(err).NotTo(HaveOccurred())
-
 		artifactFile = tempFilePath()
 	})
 
@@ -143,11 +137,7 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 			Entry("pg_dump_10 path missing", "PG_DUMP_10_PATH"),
 			Entry("pg_restore_10 path missing", "PG_RESTORE_10_PATH"),
 			Entry("pg_client path missing", "PG_CLIENT_PATH"),
-			Entry("pg_dump_9_6 path missing", "PG_DUMP_9_6_PATH"),
-			Entry("pg_restore_9_6 path missing", "PG_RESTORE_9_6_PATH"),
 			Entry("pg_client path missing", "PG_CLIENT_PATH"),
-			Entry("pg_dump_9_4 path missing", "PG_DUMP_9_4_PATH"),
-			Entry("pg_restore_9_4 path missing", "PG_RESTORE_9_4_PATH"),
 			Entry("mariadb_client path missing", "MARIADB_CLIENT_PATH"),
 			Entry("mariadb_dump path missing", "MARIADB_DUMP_PATH"),
 			Entry("mariadb_client path missing", "MARIADB_CLIENT_PATH"),

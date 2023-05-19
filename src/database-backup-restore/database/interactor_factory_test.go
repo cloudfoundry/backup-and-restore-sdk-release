@@ -40,16 +40,6 @@ var _ = Describe("InteractorFactory", func() {
 
 	BeforeEach(func() {
 		utilitiesConfig = config.UtilitiesConfig{
-			Postgres94: config.UtilityPaths{
-				Dump:    "pg_p_9_4_dump",
-				Restore: "pg_p_9_4_restore",
-				Client:  "pg_p_9_4_client",
-			},
-			Postgres96: config.UtilityPaths{
-				Dump:    "pg_p_9_6_dump",
-				Restore: "pg_p_9_6_restore",
-				Client:  "pg_p_9_6_client",
-			},
 			Postgres10: config.UtilityPaths{
 				Dump:    "pg_p_10_dump",
 				Restore: "pg_p_10_restore",
@@ -96,50 +86,6 @@ var _ = Describe("InteractorFactory", func() {
 		Context("when the action is 'backup'", func() {
 			BeforeEach(func() {
 				action = "backup"
-			})
-
-			Context("when the version is detected as 9.6", func() {
-				BeforeEach(func() {
-					postgresServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "9", Minor: "6", Patch: "1"}},
-						nil)
-				})
-
-				It("builds a database.TableCheckingInteractor", func() {
-					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(
-						database.NewTableCheckingInteractor(connectionConfig,
-							postgres.NewTableChecker(connectionConfig, "pg_p_9_6_client"),
-							postgres.NewBackuper(
-								connectionConfig,
-								tempFolderManager,
-								"pg_p_9_6_dump",
-							),
-						),
-					))
-				})
-			})
-
-			Context("when the version is detected as 9.4", func() {
-				BeforeEach(func() {
-					postgresServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "9", Minor: "4", Patch: "1"}},
-						nil)
-				})
-
-				It("builds a database.TableCheckingInteractor", func() {
-					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(
-						database.NewTableCheckingInteractor(connectionConfig,
-							postgres.NewTableChecker(connectionConfig, "pg_p_9_4_client"),
-							postgres.NewBackuper(
-								connectionConfig,
-								tempFolderManager,
-								"pg_p_9_4_dump",
-							),
-						),
-					))
-				})
 			})
 
 			Context("when the version is detected as 10.6", func() {
@@ -224,44 +170,6 @@ var _ = Describe("InteractorFactory", func() {
 		Context("when the action is 'restore'", func() {
 			BeforeEach(func() {
 				action = "restore"
-			})
-
-			Context("when the version is detected as 9.6", func() {
-				BeforeEach(func() {
-					postgresServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "9", Minor: "6", Patch: "1"}},
-						nil)
-				})
-
-				It("builds a database.TableCheckingInteractor", func() {
-					Expect(interactor).To(Equal(
-						postgres.NewRestorer(
-							connectionConfig,
-							tempFolderManager,
-							"pg_p_9_6_restore",
-						),
-					))
-					Expect(factoryError).NotTo(HaveOccurred())
-				})
-			})
-
-			Context("when the version is detected as 9.4", func() {
-				BeforeEach(func() {
-					postgresServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "9", Minor: "4", Patch: "1"}},
-						nil)
-				})
-
-				It("builds a database.TableCheckingInteractor", func() {
-					Expect(interactor).To(Equal(
-						postgres.NewRestorer(
-							connectionConfig,
-							tempFolderManager,
-							"pg_p_9_4_restore",
-						),
-					))
-					Expect(factoryError).NotTo(HaveOccurred())
-				})
 			})
 
 			Context("when the version is detected as 10.6", func() {
