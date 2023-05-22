@@ -1398,8 +1398,8 @@ jobs:
     - get: backup-and-restore-sdk-release-main
       params:
         branch: main
-  - task: bosh-vendor-package
-    file: cryogenics-concourse-tasks/deps-automation/bosh-vendor-package/task.yml
+  - task: bump-golang
+    file: cryogenics-concourse-tasks/deps-automation/bump-golang/task.yml
     input_mapping:
       release: backup-and-restore-sdk-release-main
       vendored-package-release: golang-release
