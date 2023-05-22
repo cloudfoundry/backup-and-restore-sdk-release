@@ -3,10 +3,10 @@ package s3bucket_test
 import (
 	"fmt"
 
-	"s3-blobstore-backup-restore/s3bucket"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"s3-blobstore-backup-restore/s3bucket"
 )
 
 var _ = Describe("IncrementalBucket", func() {
@@ -21,18 +21,18 @@ var _ = Describe("IncrementalBucket", func() {
 		BeforeEach(func() {
 
 			creds = s3bucket.AccessKey{Id: AccessKey, Secret: SecretKey}
-			liveBucketName = setUpUnversionedBucket(LiveRegion, S3Endpoint, creds)
-			uploadFile(liveBucketName, S3Endpoint, "path1/blob1", "blob1-content", creds)
-			uploadFile(liveBucketName, S3Endpoint, "live/location/leaf/node", "", creds)
-			uploadFile(liveBucketName, S3Endpoint, "path2/blob2", "", creds)
+			liveBucketName = setUpUnversionedBucket(LiveRegion, S3Endpoint)
+			uploadFile(liveBucketName, S3Endpoint, "path1/blob1", "blob1-content")
+			uploadFile(liveBucketName, S3Endpoint, "live/location/leaf/node", "")
+			uploadFile(liveBucketName, S3Endpoint, "path2/blob2", "")
 
 			var err error
-			liveBucket, err = s3bucket.NewBucket(liveBucketName, LiveRegion, S3Endpoint, creds, false, false)
+			liveBucket, err = s3bucket.NewBucketWithRoleARN(liveBucketName, LiveRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		AfterEach(func() {
-			tearDownBucket(liveBucketName, S3Endpoint, creds)
+			tearDownBucket(liveBucketName, S3Endpoint)
 		})
 
 		Describe("ListBlobs", func() {
@@ -50,7 +50,7 @@ var _ = Describe("IncrementalBucket", func() {
 
 				Context("when s3 list-objects errors", func() {
 					It("errors", func() {
-						bucketObjectUnderTest, err := s3bucket.NewBucket("does-not-exist", LiveRegion, S3Endpoint, creds, false, false)
+						bucketObjectUnderTest, err := s3bucket.NewBucketWithRoleARN("does-not-exist", LiveRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
 						Expect(err).NotTo(HaveOccurred())
 
 						_, err = bucketObjectUnderTest.ListBlobs("")
@@ -61,7 +61,7 @@ var _ = Describe("IncrementalBucket", func() {
 
 				Context("when the bucket has a lot of blobs", func() {
 					It("works", func() {
-						bucketObjectUnderTest, err := s3bucket.NewBucket("sdk-unversioned-big-bucket-integration-test", LiveRegion, S3Endpoint, creds, false, false)
+						bucketObjectUnderTest, err := s3bucket.NewBucketWithRoleARN("sdk-unversioned-big-bucket-integration-test", LiveRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
 						Expect(err).NotTo(HaveOccurred())
 
 						blobs, err := bucketObjectUnderTest.ListBlobs("")
@@ -85,8 +85,8 @@ var _ = Describe("IncrementalBucket", func() {
 		Describe("ListDirectories", func() {
 			Context("when there are several directories", func() {
 				BeforeEach(func() {
-					uploadFile(liveBucketName, S3Endpoint, "path1/another-blob", "", creds)
-					uploadFile(liveBucketName, S3Endpoint, "top-level-blob", "", creds)
+					uploadFile(liveBucketName, S3Endpoint, "path1/another-blob", "")
+					uploadFile(liveBucketName, S3Endpoint, "top-level-blob", "")
 				})
 
 				It("lists the top-level directories", func() {
@@ -99,7 +99,7 @@ var _ = Describe("IncrementalBucket", func() {
 
 			Context("when s3 list-objects errors", func() {
 				It("errors", func() {
-					bucketObjectUnderTest, err := s3bucket.NewBucket("does-not-exist", LiveRegion, S3Endpoint, creds, false, false)
+					bucketObjectUnderTest, err := s3bucket.NewBucketWithRoleARN("does-not-exist", LiveRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
 					Expect(err).NotTo(HaveOccurred())
 
 					_, err = bucketObjectUnderTest.ListDirectories()
@@ -110,14 +110,14 @@ var _ = Describe("IncrementalBucket", func() {
 
 		Describe("CopyBlobWithinBucket", func() {
 			It("copies the blob", func() {
-				blobs := listFiles(liveBucketName, S3Endpoint, creds)
+				blobs := listFiles(liveBucketName, S3Endpoint)
 				copyPath := "path1/blob1-copy"
 				Expect(blobs).NotTo(ContainElement(copyPath))
 
 				err := liveBucket.CopyBlobWithinBucket("path1/blob1", copyPath)
 
 				Expect(err).NotTo(HaveOccurred())
-				actualContents := getFileContents(liveBucketName, S3Endpoint, copyPath, creds)
+				actualContents := getFileContents(liveBucketName, S3Endpoint, copyPath)
 				Expect(actualContents).To(Equal("blob1-content"))
 			})
 
@@ -138,29 +138,29 @@ var _ = Describe("IncrementalBucket", func() {
 				)
 
 				BeforeEach(func() {
-					previouslyVersionedLiveBucketName = setUpVersionedBucket(LiveRegion, S3Endpoint, creds)
-					uploadFile(previouslyVersionedLiveBucketName, S3Endpoint, "path1/blob1", "blob1-content", creds)
+					previouslyVersionedLiveBucketName = setUpVersionedBucket(LiveRegion, S3Endpoint)
+					uploadFile(previouslyVersionedLiveBucketName, S3Endpoint, "path1/blob1", "blob1-content")
 
-					disableBucketVersioning(previouslyVersionedLiveBucketName, S3Endpoint, creds)
+					disableBucketVersioning(previouslyVersionedLiveBucketName, S3Endpoint)
 
 					var err error
-					previouslyVersionedLiveBucket, err = s3bucket.NewBucket(previouslyVersionedLiveBucketName, LiveRegion, S3Endpoint, creds, false, false)
+					previouslyVersionedLiveBucket, err = s3bucket.NewBucketWithRoleARN(previouslyVersionedLiveBucketName, LiveRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
 				AfterEach(func() {
-					tearDownVersionedBucket(previouslyVersionedLiveBucketName, S3Endpoint, creds)
+					tearDownVersionedBucket(previouslyVersionedLiveBucketName, S3Endpoint)
 				})
 
 				It("successfully copies the blob", func() {
-					blobs := listFiles(previouslyVersionedLiveBucketName, S3Endpoint, creds)
+					blobs := listFiles(previouslyVersionedLiveBucketName, S3Endpoint)
 					copyPath := "path1/blob1-copy"
 					Expect(blobs).NotTo(ContainElement(copyPath))
 
 					err := previouslyVersionedLiveBucket.CopyBlobWithinBucket("path1/blob1", copyPath)
 
 					Expect(err).NotTo(HaveOccurred())
-					actualContents := getFileContents(previouslyVersionedLiveBucketName, S3Endpoint, copyPath, creds)
+					actualContents := getFileContents(previouslyVersionedLiveBucketName, S3Endpoint, copyPath)
 					Expect(actualContents).To(Equal("blob1-content"))
 				})
 			})
@@ -174,15 +174,15 @@ var _ = Describe("IncrementalBucket", func() {
 
 			BeforeEach(func() {
 				creds = s3bucket.AccessKey{Id: AccessKey, Secret: SecretKey}
-				backupBucketName = setUpUnversionedBucket(BackupRegion, S3Endpoint, creds)
+				backupBucketName = setUpUnversionedBucket(BackupRegion, S3Endpoint)
 				var err error
-				backupBucket, err = s3bucket.NewBucket(backupBucketName, BackupRegion, S3Endpoint, creds, false, false)
+				backupBucket, err = s3bucket.NewBucketWithRoleARN(backupBucketName, BackupRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
 
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			AfterEach(func() {
-				tearDownBucket(backupBucketName, S3Endpoint, creds)
+				tearDownBucket(backupBucketName, S3Endpoint)
 			})
 
 			It("copies the blob", func() {
@@ -191,7 +191,7 @@ var _ = Describe("IncrementalBucket", func() {
 				err := backupBucket.CopyBlobFromBucket(liveBucket, blobPath, blobPath)
 
 				Expect(err).NotTo(HaveOccurred())
-				actualContents := getFileContents(backupBucketName, S3Endpoint, blobPath, creds)
+				actualContents := getFileContents(backupBucketName, S3Endpoint, blobPath)
 				Expect(actualContents).To(Equal("blob1-content"))
 			})
 
@@ -213,13 +213,13 @@ var _ = Describe("IncrementalBucket", func() {
 				err := liveBucket.UploadBlob(blobPath, "blob contents")
 
 				Expect(err).NotTo(HaveOccurred())
-				actualContents := getFileContents(liveBucketName, S3Endpoint, blobPath, creds)
+				actualContents := getFileContents(liveBucketName, S3Endpoint, blobPath)
 				Expect(actualContents).To(Equal("blob contents"))
 			})
 
 			Context("when the bucket does not exist", func() {
 				It("errors", func() {
-					bucket, err := s3bucket.NewBucket("does-not-exist", LiveRegion, S3Endpoint, creds, false, false)
+					bucket, err := s3bucket.NewBucketWithRoleARN("does-not-exist", LiveRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
 					Expect(err).NotTo(HaveOccurred())
 
 					err = bucket.UploadBlob("some/blob", "blob contents")
@@ -250,7 +250,7 @@ var _ = Describe("IncrementalBucket", func() {
 
 			Context("when the bucket does not exist", func() {
 				It("errors", func() {
-					bucket, err := s3bucket.NewBucket("does-not-exist", LiveRegion, S3Endpoint, creds, false, false)
+					bucket, err := s3bucket.NewBucketWithRoleARN("does-not-exist", LiveRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
 					Expect(err).NotTo(HaveOccurred())
 					_, err = bucket.HasBlob("does-not-exist-blob")
 
@@ -272,18 +272,18 @@ var _ = Describe("IncrementalBucket", func() {
 				Secret: SecretKey,
 			}
 
-			bucketName = setUpUnversionedBucket("eu-west-1", S3Endpoint, creds)
+			bucketName = setUpUnversionedBucket("eu-west-1", S3Endpoint)
 		})
 
 		AfterEach(func() {
-			tearDownBucket(bucketName, S3Endpoint, creds)
+			tearDownBucket(bucketName, S3Endpoint)
 		})
 
 		It("works", func() {
-			bucket, err := s3bucket.NewBucket(bucketName, LiveRegion, S3Endpoint, creds, false, false)
+			bucket, err := s3bucket.NewBucketWithRoleARN(bucketName, LiveRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
 			Expect(err).NotTo(HaveOccurred())
 
-			srcBucket, err := s3bucket.NewBucket(PreExistingBigFileBucketName, LiveRegion, S3Endpoint, creds, false, false)
+			srcBucket, err := s3bucket.NewBucketWithRoleARN(PreExistingBigFileBucketName, LiveRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = bucket.CopyBlobFromBucket(srcBucket, "big_file", "path/to/big_file")
@@ -292,11 +292,11 @@ var _ = Describe("IncrementalBucket", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			By("copying the large file")
-			Expect(listFiles(bucketName, S3Endpoint, creds)).To(ConsistOf("path/to/big_file"))
+			Expect(listFiles(bucketName, S3Endpoint)).To(ConsistOf("path/to/big_file"))
 
 			By("not corrupting the large file")
 			Expect(
-				shasum(downloadFileToTmp(bucketName, S3Endpoint, "path/to/big_file", creds))).To(Equal("91d50642dd930e9542c39d36f0516d45f4e1af0d"))
+				shasum(downloadFileToTmp(bucketName, S3Endpoint, "path/to/big_file"))).To(Equal("91d50642dd930e9542c39d36f0516d45f4e1af0d"))
 		})
 	})
 })

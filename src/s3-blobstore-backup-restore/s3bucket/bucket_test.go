@@ -1,108 +1,104 @@
 package s3bucket_test
 
 import (
-	"s3-blobstore-backup-restore/s3bucket"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/client"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/credentials/ec2rolecreds"
+	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"s3-blobstore-backup-restore/s3bucket"
 )
 
-var _ = Describe("Creating a bucket", func() {
-	It("adds the appropriate forcePathStyle property to the config object in the bucket", func() {
-		bucket, err := s3bucket.NewBucket("fred", "", "", s3bucket.AccessKey{}, false, true)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(bucket.UsesPathStyle()).To(BeTrue())
-
-		bucket, err = s3bucket.NewBucket("fred", "", "", s3bucket.AccessKey{}, false, false)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(bucket.UsesPathStyle()).To(BeFalse())
-	})
-})
-
 var _ = Describe("Creating an S3 Client", func() {
+	var creds aws.CredentialsProvider
+	var options *s3.Options
+	var spy = func(o *s3.Options) {
+		options = o
+		creds = o.Credentials
+	}
+
+	BeforeEach(func() {
+		options = nil
+		creds = nil
+	})
+
 	When("we are not using an IAMProfile", func() {
 		It("provides static credentials", func() {
-
-			s3Object, err := s3bucket.NewS3ClientImpl("", "", s3bucket.AccessKey{"user", "pass"}, false, false)
+			_, err := s3bucket.NewBucket("", "", "", s3bucket.AccessKey{Id: "user", Secret: "pass"}, false, false, spy)
 
 			Expect(err).NotTo(HaveOccurred())
-			creds, err := s3Object.Client.Config.Credentials.Get()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(creds.ProviderName).To(Equal("StaticProvider"))
+			Expect(creds).To(BeAssignableToTypeOf(&aws.CredentialsCache{}))
+			Expect(creds.(*aws.CredentialsCache).IsCredentialsProvider(&credentials.StaticCredentialsProvider{})).To(BeTrue())
 		})
 	})
 
 	When("we are using an IAMProfile", func() {
 		It("provides EC2 Role credentials", func() {
-			roleCredentials := &credentials.Credentials{}
+			_, err := s3bucket.NewBucket("", "", "", s3bucket.AccessKey{Id: "user", Secret: "pass"}, true, false, spy)
 
-			s3bucket.SetCredIAMProvider(func(c client.ConfigProvider, options ...func(*ec2rolecreds.EC2RoleProvider)) *credentials.Credentials {
-				return roleCredentials
+			Expect(err).NotTo(HaveOccurred())
+			Expect(creds).To(BeAssignableToTypeOf(&aws.CredentialsCache{}))
+			Expect(creds.(*aws.CredentialsCache).IsCredentialsProvider(&ec2rolecreds.Provider{})).To(BeTrue())
+		})
+	})
+
+	When("we are using an assumed role", func() {
+		It("provides the assumed role credentials", func() {
+			_, err := s3bucket.NewBucketWithRoleARN("", "", "", "someRole", s3bucket.AccessKey{Id: "C0FFEEC0C0ABEAD", Secret: "DEAFD011"}, false, false, spy)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(creds).To(BeAssignableToTypeOf(&stscreds.AssumeRoleProvider{}))
+		})
+	})
+
+	Context("bucket addresses", func() {
+
+		When("we want to use a path style", func() {
+			It("adds the appropriate property to the config object", func() {
+				_, err := s3bucket.NewBucket("", "", "", s3bucket.AccessKey{}, false, true, spy)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(options).NotTo(BeNil())
+				Expect(options.UsePathStyle).To(BeTrue())
 			})
+		})
 
-			s3Object, err := s3bucket.NewS3ClientImpl("", "", s3bucket.AccessKey{"user", "pass"}, true, false)
+		When("we want to use a v-host style", func() {
+			It("adds the appropriate property to the config object", func() {
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(s3Object.Client.Config.Credentials).To(BeIdenticalTo(roleCredentials))
+				_, err := s3bucket.NewBucket("", "", "", s3bucket.AccessKey{}, false, false, spy)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(options).NotTo(BeNil())
+				Expect(options.UsePathStyle).To(BeFalse())
+			})
 		})
 	})
 
-	When("we want to use a path style bucket addresses", func() {
-		It("adds the appropriate property to the config object", func() {
+	Describe("Determining blob size", func() {
+		When("the config specifies path style", func() {
+			It("Uses path style property for the client", func() {
+				bucket, err := s3bucket.NewBucket("fred", "", "", s3bucket.AccessKey{}, false, true, spy)
+				Expect(err).NotTo(HaveOccurred())
 
-			s3Object, err := s3bucket.NewS3ClientImpl("", "", s3bucket.AccessKey{}, false, true)
+				_, _ = bucket.GetBlobSizeImpl("", "", "", "")
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(s3Object.Client.Config.S3ForcePathStyle).To(Equal(aws.Bool(true)))
+				Expect(options.UsePathStyle).To(BeTrue())
+			})
 		})
-	})
 
-	When("we want to use a v-host style bucket addresses", func() {
-		It("adds the appropriate property to the config object", func() {
+		When("the config specifies vhost style", func() {
+			It("uses vhost property for the client", func() {
+				bucket, err := s3bucket.NewBucket("fred", "", "", s3bucket.AccessKey{}, false, false, spy)
+				Expect(err).NotTo(HaveOccurred())
 
-			s3Object, err := s3bucket.NewS3ClientImpl("", "", s3bucket.AccessKey{}, false, false)
+				_, _ = bucket.GetBlobSizeImpl("", "", "", "")
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(s3Object.Client.Config.S3ForcePathStyle).To(Equal(aws.Bool(false)))
-		})
-	})
-})
-
-var _ = Describe("Determining blob size", func() {
-
-	var pathStyle bool
-
-	BeforeEach(func() {
-		s3bucket.SetNewS3Client(func(regionName, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (*s3.S3, error) {
-			pathStyle = forcePathStyle
-			return s3bucket.NewS3ClientImpl(regionName, endpoint, accessKey, useIAMProfile, forcePathStyle)
-		})
-	})
-
-	When("the config specifies path style", func() {
-		It("Uses path style property for the client", func() {
-			bucket, err := s3bucket.NewBucket("fred", "", "", s3bucket.AccessKey{}, false, true)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, _ = bucket.GetBlobSizeImpl("", "", "", "")
-
-			Expect(pathStyle).To(Equal(true))
-		})
-	})
-
-	When("the config specifies vhost style", func() {
-		It("uses vhost property for the client", func() {
-			bucket, err := s3bucket.NewBucket("fred", "", "", s3bucket.AccessKey{}, false, false)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, _ = bucket.GetBlobSizeImpl("", "", "", "")
-
-			Expect(pathStyle).To(Equal(false))
+				Expect(options.UsePathStyle).To(BeFalse())
+			})
 		})
 	})
 })
