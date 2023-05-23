@@ -16,15 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
+set -eu
 set -x
 
 VERSION=$(cat version/number)
 export VERSION
 
-if [ -z "$RELEASE_NAME" ]; then
-  export RELEASE_NAME="backup-and-restore-sdk"
-fi
+export RELEASE_NAME="${RELEASE_NAME:-backup-and-restore-sdk}"
 
 pushd backup-and-restore-sdk-release
   bosh create-release \
