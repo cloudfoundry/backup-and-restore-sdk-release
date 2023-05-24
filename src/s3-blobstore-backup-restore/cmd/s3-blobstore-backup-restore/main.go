@@ -1,17 +1,15 @@
 package main
 
 import (
+	"encoding/json"
+	"errors"
+	"flag"
+	"fmt"
 	"log"
 	"os"
 	"time"
 
 	"s3-blobstore-backup-restore/unversioned"
-
-	"encoding/json"
-	"errors"
-	"flag"
-
-	"fmt"
 
 	"s3-blobstore-backup-restore/incremental"
 	"s3-blobstore-backup-restore/versioned"
@@ -59,7 +57,7 @@ func main() {
 			exitWithError("Failed to parse config", err)
 		}
 
-		buckets, err := versioned.BuildVersionedBuckets(bucketsConfig, versioned.NewVersionedBucket)
+		buckets, err := versioned.BuildVersionedBuckets(bucketsConfig, versioned.NewVersionedBucketWithRoleARN)
 		if err != nil {
 			exitWithError("Failed to establish build versioned buckets", err)
 		}
@@ -79,7 +77,7 @@ func main() {
 		}
 
 		if *flags.UnversionedBackupStart {
-			backupsToStart, err := unversioned.BuildBackupsToStart(bucketsConfig, unversioned.NewUnversionedBucket)
+			backupsToStart, err := unversioned.BuildBackupsToStart(bucketsConfig, unversioned.NewUnversionedBucketWithRoleARN)
 			if err != nil {
 				exitWithError("Failed to build backups to start", err)
 			}
@@ -88,7 +86,7 @@ func main() {
 			runner = incremental.NewBackupStarter(backupsToStart, clock{}, backupArtifact, existingBackupBlobsArtifact)
 		} else if *flags.UnversionedBackupComplete {
 			existingBackupBlobsArtifact := incremental.NewArtifact(flags.ExistingBackupBlobsArtifactFilePath)
-			backupsToComplete, err := unversioned.BuildBackupsToComplete(bucketsConfig, existingBackupBlobsArtifact, unversioned.NewUnversionedBucket)
+			backupsToComplete, err := unversioned.BuildBackupsToComplete(bucketsConfig, existingBackupBlobsArtifact, unversioned.NewUnversionedBucketWithRoleARN)
 			if err != nil {
 				exitWithError("Failed to build backups to complete", err)
 			}
@@ -97,7 +95,7 @@ func main() {
 			}
 		} else {
 			backupArtifact := incremental.NewArtifact(flags.ArtifactFilePath)
-			restoreBucketPairs, err := unversioned.BuildRestoreBucketPairs(bucketsConfig, backupArtifact, unversioned.NewUnversionedBucket)
+			restoreBucketPairs, err := unversioned.BuildRestoreBucketPairs(bucketsConfig, backupArtifact, unversioned.NewUnversionedBucketWithRoleARN)
 			if err != nil {
 				exitWithError("Failed to build restore bucket pairs", err)
 			}

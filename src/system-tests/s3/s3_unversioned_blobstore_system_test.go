@@ -20,13 +20,14 @@ import (
 	"encoding/json"
 	"os"
 	"strconv"
-	. "system-tests"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gexec"
 	. "github.com/onsi/gomega/gstruct"
+
+	. "system-tests"
 )
 
 var _ = Describe("S3 unversioned backup and restore", func() {
