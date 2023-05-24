@@ -561,8 +561,9 @@ jobs:
         BOSH_GW_USER: jumpbox
         BOSH_GW_HOST: "((infrastructure/director-with-iam-profile.jumpbox_host))"
         BOSH_GW_PRIVATE_KEY: "((infrastructure/director-with-iam-profile.jumpbox_ssh_key))"
-        AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
-        AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
+        AWS_ACCESS_KEY_ID: ((aws_credentials.cg_access_key_id))
+        AWS_SECRET_ACCESS_KEY: ((aws_credentials.cg_secret_access_key))
+        AWS_ASSUMED_ROLE_ARN: ((aws_credentials.cg_assumed_role_arn))
         AWS_TEST_BUCKET_NAME: iam-instance-role-test
         AWS_TEST_BUCKET_REGION: *aws-region
         AWS_TEST_CLONE_BUCKET_NAME: iam-instance-role-test-clone
@@ -1229,8 +1230,9 @@ jobs:
         <<: *bosh-smiths-creds
         TEST_SUITE_NAME: s3
         BOSH_DEPLOYMENT: s3-backuper
-        AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
-        AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
+        AWS_ACCESS_KEY_ID: ((aws_credentials.cg_access_key_id))
+        AWS_SECRET_ACCESS_KEY: ((aws_credentials.cg_secret_access_key))
+        AWS_ASSUMED_ROLE_ARN: ((aws_credentials.cg_assumed_role_arn))
         AWS_TEST_BUCKET_NAME: bbr-system-test-bucket
         AWS_TEST_BUCKET_REGION: *aws-region
         AWS_TEST_CLONE_BUCKET_NAME: bbr-system-test-bucket-clone

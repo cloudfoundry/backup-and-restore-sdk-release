@@ -89,7 +89,8 @@ func runAwsCommandOnBucketSuccessfully(args ...string) *bytes.Buffer {
 	outputBuffer := new(bytes.Buffer)
 	errorBuffer := new(bytes.Buffer)
 
-	awsCmd := exec.Command("aws", args...)
+	cmdArgs := append([]string{"--profile", assumedRoleProfileName}, args...)
+	awsCmd := exec.Command("aws", cmdArgs...)
 	awsCmd.Stdout = outputBuffer
 	awsCmd.Stderr = errorBuffer
 
