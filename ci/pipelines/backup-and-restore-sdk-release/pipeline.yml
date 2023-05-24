@@ -561,8 +561,9 @@ jobs:
         BOSH_GW_USER: jumpbox
         BOSH_GW_HOST: "((infrastructure/director-with-iam-profile.jumpbox_host))"
         BOSH_GW_PRIVATE_KEY: "((infrastructure/director-with-iam-profile.jumpbox_ssh_key))"
-        AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
-        AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
+        AWS_ACCESS_KEY_ID: ((aws_credentials.cg_access_key_id))
+        AWS_SECRET_ACCESS_KEY: ((aws_credentials.cg_secret_access_key))
+        AWS_ASSUMED_ROLE_ARN: ((aws_credentials.cg_assumed_role_arn))
         AWS_TEST_BUCKET_NAME: iam-instance-role-test
         AWS_TEST_BUCKET_REGION: *aws-region
         AWS_TEST_CLONE_BUCKET_NAME: iam-instance-role-test-clone
@@ -924,8 +925,9 @@ jobs:
       vars:
         deployment-name: s3-backuper
         availability_zone: z1
-        aws-access-key-id: ((aws_credentials.access_key_id))
-        aws-secret-access-key: ((aws_credentials.secret_access_key))
+        aws-access-key-id: ((aws_credentials.cg_access_key_id))
+        aws-secret-access-key: ((aws_credentials.cg_secret_access_key))
+        aws-assumed-role-arn: ((aws_credentials.cg_assumed_role_arn))
         s3-bucket-name: bbr-system-test-bucket
         s3-cloned-bucket-name: bbr-system-test-bucket-clone
         s3-region: *aws-region
@@ -1228,8 +1230,9 @@ jobs:
         <<: *bosh-smiths-creds
         TEST_SUITE_NAME: s3
         BOSH_DEPLOYMENT: s3-backuper
-        AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
-        AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
+        AWS_ACCESS_KEY_ID: ((aws_credentials.cg_access_key_id))
+        AWS_SECRET_ACCESS_KEY: ((aws_credentials.cg_secret_access_key))
+        AWS_ASSUMED_ROLE_ARN: ((aws_credentials.cg_assumed_role_arn))
         AWS_TEST_BUCKET_NAME: bbr-system-test-bucket
         AWS_TEST_BUCKET_REGION: *aws-region
         AWS_TEST_CLONE_BUCKET_NAME: bbr-system-test-bucket-clone
@@ -1338,8 +1341,9 @@ jobs:
       updated-release-repo: backup-and-restore-sdk-final-release
       updated-release-tarball: backup-and-restore-sdk-final-release-tarball
     params:
-      AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
-      AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
+      AWS_ACCESS_KEY_ID: ((aws_credentials.cg_access_key_id))
+      AWS_SECRET_ACCESS_KEY: ((aws_credentials.cg_secret_access_key))
+      AWS_ROLE_ARN: ((aws_credentials.cg_assumed_role_arn))
       GIT_USERNAME: Backup & Restore Concourse
       GIT_EMAIL: cf-lazarus@pivotal.io
       FINAL: true
@@ -1404,8 +1408,9 @@ jobs:
     params:
       VENDORED_PACKAGE_NAME: golang-1-linux
       VENDOR_UPDATES_BRANCH: golang-vendor-updates
-      AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
-      AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
+      AWS_ACCESS_KEY_ID: ((aws_credentials.cg_access_key_id))
+      AWS_SECRET_ACCESS_KEY: ((aws_credentials.cg_secret_access_key))
+      AWS_ASSUMED_ROLE: ((aws_credentials.cg_assumed_role_arn))
   - task: update-go-directive-in-system-tests
     file: cryogenics-concourse-tasks/tasks/bosh/update-go-directive/task.yml
     params:
@@ -1485,8 +1490,9 @@ jobs:
       PR_BASE: main
       PR_LABELS: ci
       GH_TOKEN: ((github.access_token))
-      AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
-      AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
+      AWS_ACCESS_KEY_ID: ((aws_credentials.cg_access_key_id))
+      AWS_SECRET_ACCESS_KEY: ((aws_credentials.cg_secret_access_key))
+      AWS_ASSUME_ROLE_ARN: ((aws_credentials.cg_assumed_role_arn))
 
 - name: bump-mysql
   plan:
@@ -1507,8 +1513,9 @@ jobs:
       PR_BASE: main
       PR_LABELS: ci
       GH_TOKEN: ((github.access_token))
-      AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
-      AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
+      AWS_ACCESS_KEY_ID: ((aws_credentials.cg_access_key_id))
+      AWS_SECRET_ACCESS_KEY: ((aws_credentials.cg_secret_access_key))
+      AWS_ASSUME_ROLE_ARN: ((aws_credentials.cg_assumed_role_arn))
 
 - name: bump-ncurses
   plan:
@@ -1530,8 +1537,9 @@ jobs:
       PR_LABELS: ci
 
       GH_TOKEN: ((github.access_token))
-      AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
-      AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
+      AWS_ACCESS_KEY_ID: ((aws_credentials.cg_access_key_id))
+      AWS_SECRET_ACCESS_KEY: ((aws_credentials.cg_secret_access_key))
+      AWS_ASSUME_ROLE_ARN: ((aws_credentials.cg_assumed_role_arn))
 
 - name: bump-postgresql
   plan:
@@ -1553,8 +1561,9 @@ jobs:
       PR_LABELS: ci
 
       GH_TOKEN: ((github.access_token))
-      AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
-      AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
+      AWS_ACCESS_KEY_ID: ((aws_credentials.cg_access_key_id))
+      AWS_SECRET_ACCESS_KEY: ((aws_credentials.cg_secret_access_key))
+      AWS_ASSUME_ROLE_ARN: ((aws_credentials.cg_assumed_role_arn))
 
 - name: bump-boost
   plan:
@@ -1576,8 +1585,9 @@ jobs:
       PR_LABELS: ci
 
       GH_TOKEN: ((github.access_token))
-      AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
-      AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
+      AWS_ACCESS_KEY_ID: ((aws_credentials.cg_access_key_id))
+      AWS_SECRET_ACCESS_KEY: ((aws_credentials.cg_secret_access_key))
+      AWS_ASSUME_ROLE_ARN: ((aws_credentials.cg_assumed_role_arn))
 
 - name: bump-libpcre2
   plan:
@@ -1599,8 +1609,9 @@ jobs:
       PR_LABELS: ci
 
       GH_TOKEN: ((github.access_token))
-      AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
-      AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
+      AWS_ACCESS_KEY_ID: ((aws_credentials.cg_access_key_id))
+      AWS_SECRET_ACCESS_KEY: ((aws_credentials.cg_secret_access_key))
+      AWS_ASSUME_ROLE_ARN: ((aws_credentials.cg_assumed_role_arn))
 
 - name: bump-ci-tasks
   plan:

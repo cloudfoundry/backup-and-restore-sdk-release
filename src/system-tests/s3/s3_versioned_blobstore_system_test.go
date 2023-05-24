@@ -17,15 +17,14 @@
 package s3_test
 
 import (
-	"time"
-
 	"strconv"
-
-	. "system-tests"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+
+	. "system-tests"
 )
 
 var _ = Describe("S3 versioned backup and restore", func() {
