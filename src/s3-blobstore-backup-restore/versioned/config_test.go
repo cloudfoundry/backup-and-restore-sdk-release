@@ -27,12 +27,13 @@ var _ = Describe("Versioned", func() {
 					Region:             "live-region2",
 					AwsAccessKeyId:     "my-id",
 					AwsSecretAccessKey: "my-secret-key",
+					AwsAssumedRoleArn:  "my-assumed-role-arn",
 					Endpoint:           "my-s3-endpoint.aws",
 					UseIAMProfile:      false,
 				},
 			}
 
-			buckets, err := versioned.BuildVersionedBuckets(configs, versioned.NewVersionedBucket)
+			buckets, err := versioned.BuildVersionedBuckets(configs, versioned.NewVersionedBucketWithRoleARN)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(buckets).To(HaveLen(2))
@@ -47,11 +48,11 @@ var _ = Describe("Versioned", func() {
 			fakeBucket := new(fakes.FakeBucket)
 
 			config := map[string]versioned.BucketConfig{
-				"bucket": versioned.BucketConfig{ForcePathStyle: forcePathStyle},
+				"bucket": {ForcePathStyle: forcePathStyle},
 			}
 
 			forcePathStyles := []bool{}
-			newBucketSpy := func(_, _, _ string, _ s3bucket.AccessKey, _, forcePathStyle bool) (versioned.Bucket, error) {
+			newBucketSpy := func(_, _, _, _ string, _ s3bucket.AccessKey, _, forcePathStyle bool) (versioned.Bucket, error) {
 				forcePathStyles = append(forcePathStyles, forcePathStyle)
 				return fakeBucket, nil
 			}

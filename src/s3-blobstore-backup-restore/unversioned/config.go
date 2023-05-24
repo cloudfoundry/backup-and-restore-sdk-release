@@ -8,14 +8,18 @@ import (
 )
 
 type UnversionedBucketConfig struct {
-	Name               string             `json:"name"`
-	Region             string             `json:"region"`
-	AwsAccessKeyId     string             `json:"aws_access_key_id"`
-	AwsSecretAccessKey string             `json:"aws_secret_access_key"`
-	Endpoint           string             `json:"endpoint"`
-	UseIAMProfile      bool               `json:"use_iam_profile"`
-	Backup             BackupBucketConfig `json:"backup"`
-	ForcePathStyle     bool               `json:"force_path_style"`
+	Name               string `json:"name"`
+	Region             string `json:"region"`
+	AwsAccessKeyId     string `json:"aws_access_key_id"`
+	AwsSecretAccessKey string `json:"aws_secret_access_key"`
+	// # Warning
+	//
+	// AwsAssumedRoleArn is provided as is and isn't thoroughly tested
+	AwsAssumedRoleArn string             `json:"aws_assumed_role_arn,omitempty"`
+	Endpoint          string             `json:"endpoint"`
+	UseIAMProfile     bool               `json:"use_iam_profile"`
+	Backup            BackupBucketConfig `json:"backup"`
+	ForcePathStyle    bool               `json:"force_path_style"`
 }
 
 type BackupBucketConfig struct {
@@ -23,7 +27,7 @@ type BackupBucketConfig struct {
 	Region string `json:"region"`
 }
 
-type NewBucket func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (Bucket, error)
+type NewBucket func(bucketName, bucketRegion, endpoint, roleARN string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (Bucket, error)
 
 func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket NewBucket) (map[string]incremental.BackupToStart, error) {
 	backupsToStart := make(map[string]incremental.BackupToStart)
@@ -33,6 +37,7 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket N
 			config.Name,
 			config.Region,
 			config.Endpoint,
+			config.AwsAssumedRoleArn,
 			s3bucket.AccessKey{
 				Id:     config.AwsAccessKeyId,
 				Secret: config.AwsSecretAccessKey,
@@ -52,6 +57,7 @@ func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket N
 			config.Backup.Name,
 			config.Backup.Region,
 			config.Endpoint,
+			config.AwsAssumedRoleArn,
 			s3bucket.AccessKey{
 				Id:     config.AwsAccessKeyId,
 				Secret: config.AwsSecretAccessKey,
@@ -122,6 +128,7 @@ func BuildBackupsToComplete(
 			config.Backup.Name,
 			config.Backup.Region,
 			config.Endpoint,
+			config.AwsAssumedRoleArn,
 			s3bucket.AccessKey{
 				Id:     config.AwsAccessKeyId,
 				Secret: config.AwsSecretAccessKey,
@@ -182,6 +189,7 @@ func BuildRestoreBucketPairs(
 			config.Name,
 			config.Region,
 			config.Endpoint,
+			config.AwsAssumedRoleArn,
 			s3bucket.AccessKey{
 				Id:     config.AwsAccessKeyId,
 				Secret: config.AwsSecretAccessKey,
@@ -202,6 +210,7 @@ func BuildRestoreBucketPairs(
 			backups[bucketID].BucketName,
 			backups[bucketID].BucketRegion,
 			config.Endpoint,
+			config.AwsAssumedRoleArn,
 			s3bucket.AccessKey{
 				Id:     config.AwsAccessKeyId,
 				Secret: config.AwsSecretAccessKey,
