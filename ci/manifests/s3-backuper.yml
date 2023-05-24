@@ -66,6 +66,7 @@ instance_groups:
           region: "((s3-region))"
           aws_access_key_id: "((aws-access-key-id))"
           aws_secret_access_key: "((aws-secret-access-key))"
+          aws_assumed_role_arn: "((aws-assumed-role-arn))"
   azs: [z1]
 - name: backuper-bpm
   instances: 1
@@ -87,6 +88,7 @@ instance_groups:
           region: "((s3-region))"
           aws_access_key_id: "((aws-access-key-id))"
           aws_secret_access_key: "((aws-secret-access-key))"
+          aws_assumed_role_arn: "((aws-assumed-role-arn))"
       bpm:
         enabled: true
   - name: bpm
@@ -112,6 +114,7 @@ instance_groups:
           region: "((s3-cloned-bucket-region))"
           aws_access_key_id: "((aws-access-key-id))"
           aws_secret_access_key: "((aws-secret-access-key))"
+          aws_assumed_role_arn: "((aws-assumed-role-arn))"
   azs: [z1]
 - name: versioned-backuper-unversioned-bucket
   instances: 1
@@ -133,6 +136,7 @@ instance_groups:
           region: "((s3-unversioned-bucket-region-for-versioned-backuper))"
           aws_access_key_id: "((aws-access-key-id))"
           aws_secret_access_key: "((aws-secret-access-key))"
+          aws_assumed_role_arn: "((aws-assumed-role-arn))"
   azs: [z1]
 - name: unversioned-custom-ca-cert-backuper
   instances: 1
@@ -201,6 +205,7 @@ instance_groups:
           region: "((s3-unversioned-bucket-region))"
           aws_access_key_id: "((aws-access-key-id))"
           aws_secret_access_key: "((aws-secret-access-key))"
+          aws_assumed_role_arn: "((aws-assumed-role-arn))"
           backup:
             name: "((s3-unversioned-backup-bucket-name))"
             region: "((s3-unversioned-backup-bucket-region))"
@@ -225,6 +230,7 @@ instance_groups:
             region: "((s3-unversioned-bucket-region))"
             aws_access_key_id: "((aws-access-key-id))"
             aws_secret_access_key: "((aws-secret-access-key))"
+            aws_assumed_role_arn: "((aws-assumed-role-arn))"
             backup:
               name: "((s3-unversioned-backup-bucket-name))"
               region: "((s3-unversioned-backup-bucket-region))"
@@ -233,6 +239,7 @@ instance_groups:
             region: "((s3-unversioned-bucket-region))"
             aws_access_key_id: "((aws-access-key-id))"
             aws_secret_access_key: "((aws-secret-access-key))"
+            aws_assumed_role_arn: "((aws-assumed-role-arn))"
             backup:
               name: "((s3-unversioned-backup-bucket-name))"
               region: "((s3-unversioned-backup-bucket-region))"
@@ -257,6 +264,7 @@ instance_groups:
           region: "((s3-unversioned-large-number-of-files-bucket-region))"
           aws_access_key_id: "((aws-access-key-id))"
           aws_secret_access_key: "((aws-secret-access-key))"
+          aws_assumed_role_arn: "((aws-assumed-role-arn))"
           backup:
             name: "((s3-unversioned-large-number-of-files-backup-bucket-name))"
             region: "((s3-unversioned-large-number-of-files-backup-bucket-region))"
@@ -281,6 +289,7 @@ instance_groups:
             region: "((s3-unversioned-clone-bucket-region))"
             aws_access_key_id: "((aws-access-key-id))"
             aws_secret_access_key: "((aws-secret-access-key))"
+            aws_assumed_role_arn: "((aws-assumed-role-arn))"
             backup:
               name: "((s3-unversioned-backup-bucket-name))"
               region: "((s3-unversioned-backup-bucket-region))"
@@ -309,6 +318,7 @@ instance_groups:
           region: "((s3-unversioned-bpm-bucket-region))"
           aws_access_key_id: "((aws-access-key-id))"
           aws_secret_access_key: "((aws-secret-access-key))"
+          aws_assumed_role_arn: "((aws-assumed-role-arn))"
           backup:
             name: "((s3-unversioned-bpm-backup-bucket-name))"
             region: "((s3-unversioned-bpm-backup-bucket-region))"
