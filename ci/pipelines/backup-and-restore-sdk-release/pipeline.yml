@@ -1338,8 +1338,9 @@ jobs:
       updated-release-repo: backup-and-restore-sdk-final-release
       updated-release-tarball: backup-and-restore-sdk-final-release-tarball
     params:
-      AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
-      AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
+      AWS_ACCESS_KEY_ID: ((aws_credentials.cg_access_key_id))
+      AWS_SECRET_ACCESS_KEY: ((aws_credentials.cg_secret_access_key))
+      AWS_ROLE_ARN: ((aws_credentials.cg_assumed_role_arn))
       GIT_USERNAME: Backup & Restore Concourse
       GIT_EMAIL: cf-lazarus@pivotal.io
       FINAL: true
