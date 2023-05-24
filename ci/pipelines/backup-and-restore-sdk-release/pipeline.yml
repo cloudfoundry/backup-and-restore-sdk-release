@@ -499,11 +499,6 @@ jobs:
       params: {pre: rc}
   - task: create-dev-release
     file: backup-and-restore-sdk-release/ci/tasks/create-dev-release/task.yml
-    input_mapping:
-      backup-and-restore-sdk-release: backup-and-restore-sdk-release
-    params:
-      AWS_ACCESS_KEY_ID: ((aws_credentials.access_key_id))
-      AWS_SECRET_ACCESS_KEY: ((aws_credentials.secret_access_key))
   - put: release
     params:
       file: backup-and-restore-sdk-release-build/backup-and-restore-sdk-*.tgz
