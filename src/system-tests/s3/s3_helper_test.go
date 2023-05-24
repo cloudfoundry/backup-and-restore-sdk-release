@@ -69,7 +69,7 @@ func ListFilesFromBucket(region, bucket string) []string {
 		"--bucket", bucket)
 
 	var response ListResponse
-	json.Unmarshal(outputBuffer.Bytes(), &response)
+	_ = json.Unmarshal(outputBuffer.Bytes(), &response)
 
 	var keys []string
 	for _, entry := range response.Contents {
@@ -102,7 +102,7 @@ func runAwsCommandOnBucketSuccessfully(args ...string) *bytes.Buffer {
 
 func WriteFileInBucket(region, bucket, key, body string) {
 	bodyFile, _ := os.CreateTemp("", "")
-	bodyFile.WriteString(body)
+	_, _ = bodyFile.WriteString(body)
 	bodyFile.Close()
 
 	runAwsCommandOnBucketSuccessfully(
@@ -124,7 +124,7 @@ func deleteVersionFromBucket(region, bucket, key, versionId string) string {
 		"--version-id", versionId)
 
 	var response PutResponse
-	json.Unmarshal(outputBuffer.Bytes(), &response)
+	_ = json.Unmarshal(outputBuffer.Bytes(), &response)
 
 	return response.VersionId
 }
@@ -137,7 +137,7 @@ func DeleteAllVersionsFromBucket(region, bucket string) {
 		"--bucket", bucket)
 
 	var response VersionsResponse
-	json.Unmarshal(outputBuffer.Bytes(), &response)
+	_ = json.Unmarshal(outputBuffer.Bytes(), &response)
 
 	for _, version := range response.Versions {
 		deleteVersionFromBucket(region, bucket, version.Key, version.VersionId)
@@ -157,7 +157,7 @@ func DeleteFileFromBucket(region, bucket, key string) string {
 		"--key", key)
 
 	var response PutResponse
-	json.Unmarshal(outputBuffer.Bytes(), &response)
+	_ = json.Unmarshal(outputBuffer.Bytes(), &response)
 
 	return response.VersionId
 }
