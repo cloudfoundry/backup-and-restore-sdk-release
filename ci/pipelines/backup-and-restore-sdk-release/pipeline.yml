@@ -926,7 +926,7 @@ jobs:
         availability_zone: z1
         aws-access-key-id: ((aws_credentials.cg_access_key_id))
         aws-secret-access-key: ((aws_credentials.cg_secret_access_key))
-        aws_assumed_role_arn: ((aws_credentials.cg_assumed_role_arn))
+        aws-assumed-role-arn: ((aws_credentials.cg_assumed_role_arn))
         s3-bucket-name: bbr-system-test-bucket
         s3-cloned-bucket-name: bbr-system-test-bucket-clone
         s3-region: *aws-region
