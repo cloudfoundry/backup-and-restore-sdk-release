@@ -19,7 +19,7 @@ var _ = Describe("Unversioned", func() {
 	var (
 		configs           map[string]unversioned.UnversionedBucketConfig
 		bucket1Config     unversioned.UnversionedBucketConfig
-		newBucket         unversioned.NewBucketWithRoleARN
+		newBucket         unversioned.NewBucket
 		fakeLiveBucket1   *unversionedFakes.FakeBucket
 		fakeBackupBucket1 *unversionedFakes.FakeBucket
 		fakeLiveBucket2   *unversionedFakes.FakeBucket
@@ -132,7 +132,7 @@ var _ = Describe("Unversioned", func() {
 
 		Context("when bucket initialisation fails", func() {
 			var (
-				newBucketFails unversioned.NewBucketWithRoleARN
+				newBucketFails unversioned.NewBucket
 				bucketToFail   string
 			)
 
@@ -491,7 +491,7 @@ var _ = Describe("Unversioned", func() {
 
 		Context("when bucket initialisation fails", func() {
 			var (
-				newBucketFails unversioned.NewBucketWithRoleARN
+				newBucketFails unversioned.NewBucket
 				bucketToFail   string
 			)
 

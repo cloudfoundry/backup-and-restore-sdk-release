@@ -18,10 +18,9 @@ type BucketConfig struct {
 	ForcePathStyle    bool   `json:"force_path_style"`
 }
 
-type NewBucket func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (Bucket, error)
-type NewBucketWithRoleARN func(bucketName, bucketRegion, endpoint, role string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (Bucket, error)
+type NewBucket func(bucketName, bucketRegion, endpoint, role string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (Bucket, error)
 
-func BuildVersionedBuckets(config map[string]BucketConfig, newbucket NewBucketWithRoleARN) (map[string]Bucket, error) {
+func BuildVersionedBuckets(config map[string]BucketConfig, newbucket NewBucket) (map[string]Bucket, error) {
 	var buckets = map[string]Bucket{}
 
 	for identifier, bucketConfig := range config {

@@ -27,10 +27,9 @@ type BackupBucketConfig struct {
 	Region string `json:"region"`
 }
 
-type NewBucket func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (Bucket, error)
-type NewBucketWithRoleARN func(bucketName, bucketRegion, endpoint, roleARN string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (Bucket, error)
+type NewBucket func(bucketName, bucketRegion, endpoint, roleARN string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (Bucket, error)
 
-func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket NewBucketWithRoleARN) (map[string]incremental.BackupToStart, error) {
+func BuildBackupsToStart(configs map[string]UnversionedBucketConfig, newBucket NewBucket) (map[string]incremental.BackupToStart, error) {
 	backupsToStart := make(map[string]incremental.BackupToStart)
 
 	for bucketID, config := range configs {
@@ -103,7 +102,7 @@ func bucketIsVersioned(bucket Bucket) error {
 func BuildBackupsToComplete(
 	configs map[string]UnversionedBucketConfig,
 	existingBlobsArtifact incremental.Artifact,
-	newBucket NewBucketWithRoleARN,
+	newBucket NewBucket,
 ) (map[string]incremental.BackupToComplete, error) {
 	backupsToComplete := map[string]incremental.BackupToComplete{}
 
@@ -165,7 +164,7 @@ func BuildBackupsToComplete(
 func BuildRestoreBucketPairs(
 	configs map[string]UnversionedBucketConfig,
 	artifact incremental.Artifact,
-	newBucket NewBucketWithRoleARN,
+	newBucket NewBucket,
 ) (map[string]incremental.RestoreBucketPair, error) {
 	pairs := map[string]incremental.RestoreBucketPair{}
 
