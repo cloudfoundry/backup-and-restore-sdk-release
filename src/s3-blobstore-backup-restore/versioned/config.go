@@ -9,14 +9,19 @@ type BucketConfig struct {
 	Region             string `json:"region"`
 	AwsAccessKeyId     string `json:"aws_access_key_id"`
 	AwsSecretAccessKey string `json:"aws_secret_access_key"`
-	Endpoint           string `json:"endpoint"`
-	UseIAMProfile      bool   `json:"use_iam_profile"`
-	ForcePathStyle     bool   `json:"force_path_style"`
+	// # Warning
+	//
+	// AwsAssumedRoleArn is provided as is and isn't thoroughly tested
+	AwsAssumedRoleArn string `json:"aws_assumed_role_arn,omitempty"`
+	Endpoint          string `json:"endpoint"`
+	UseIAMProfile     bool   `json:"use_iam_profile"`
+	ForcePathStyle    bool   `json:"force_path_style"`
 }
 
 type NewBucket func(bucketName, bucketRegion, endpoint string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (Bucket, error)
+type NewBucketWithRoleARN func(bucketName, bucketRegion, endpoint, role string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (Bucket, error)
 
-func BuildVersionedBuckets(config map[string]BucketConfig, newbucket NewBucket) (map[string]Bucket, error) {
+func BuildVersionedBuckets(config map[string]BucketConfig, newbucket NewBucketWithRoleARN) (map[string]Bucket, error) {
 	var buckets = map[string]Bucket{}
 
 	for identifier, bucketConfig := range config {
@@ -24,6 +29,7 @@ func BuildVersionedBuckets(config map[string]BucketConfig, newbucket NewBucket) 
 			bucketConfig.Name,
 			bucketConfig.Region,
 			bucketConfig.Endpoint,
+			bucketConfig.AwsAssumedRoleArn,
 			s3bucket.AccessKey{
 				Id:     bucketConfig.AwsAccessKeyId,
 				Secret: bucketConfig.AwsSecretAccessKey,

@@ -2,13 +2,12 @@ package versioned_test
 
 import (
 	"os"
-
 	"path/filepath"
-
-	"s3-blobstore-backup-restore/versioned"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"s3-blobstore-backup-restore/versioned"
 )
 
 var _ = Describe("FileArtifact", func() {
@@ -23,7 +22,7 @@ var _ = Describe("FileArtifact", func() {
 	})
 
 	AfterEach(func() {
-		os.RemoveAll(backupDir)
+		_ = os.RemoveAll(backupDir)
 	})
 
 	It("saves the artifact to a file", func() {
@@ -85,7 +84,7 @@ var _ = Describe("FileArtifact", func() {
 
 	Context("when the artifact has an invalid format", func() {
 		BeforeEach(func() {
-			os.WriteFile(artifactPath, []byte("THIS IS NOT VALID JSON"), 0666)
+			_ = os.WriteFile(artifactPath, []byte("THIS IS NOT VALID JSON"), 0666)
 		})
 
 		It("returns an error", func() {
