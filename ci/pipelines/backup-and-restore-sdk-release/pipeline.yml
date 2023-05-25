@@ -1410,7 +1410,7 @@ jobs:
       VENDOR_UPDATES_BRANCH: golang-vendor-updates
       AWS_ACCESS_KEY_ID: ((aws_credentials.cg_access_key_id))
       AWS_SECRET_ACCESS_KEY: ((aws_credentials.cg_secret_access_key))
-      AWS_ASSUMED_ROLE: ((aws_credentials.cg_assumed_role_arn))
+      AWS_ASSUME_ROLE_ARN: ((aws_credentials.cg_assumed_role_arn))
   - task: update-go-directive-in-system-tests
     file: cryogenics-concourse-tasks/tasks/bosh/update-go-directive/task.yml
     params:
