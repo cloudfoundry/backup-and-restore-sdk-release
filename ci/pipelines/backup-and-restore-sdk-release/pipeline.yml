@@ -1107,8 +1107,9 @@ jobs:
       env_name: bbr-sdk-external-rds-dbs
       delete_on_failure: true
       vars:
-        aws_access_key: ((aws_credentials.access_key_id))
-        aws_secret_key: ((aws_credentials.secret_access_key))
+        aws_access_key: ((aws_credentials.cg_access_key_id))
+        aws_secret_key: ((aws_credentials.cg_secret_access_key))
+        aws_assumed_role_arn: ((aws_credentials.cg_assumed_role_arn))
         aws_region: *aws-region
         mysql_5_7_password: ((backup-and-restore-sdk-release.rds_5_7_password))
         postgres_10_password: ((backup-and-restore-sdk-release.rds_postgres_10_password))
@@ -1413,7 +1414,7 @@ jobs:
       VENDOR_UPDATES_BRANCH: golang-vendor-updates
       AWS_ACCESS_KEY_ID: ((aws_credentials.cg_access_key_id))
       AWS_SECRET_ACCESS_KEY: ((aws_credentials.cg_secret_access_key))
-      AWS_ASSUMED_ROLE: ((aws_credentials.cg_assumed_role_arn))
+      AWS_ASSUME_ROLE_ARN: ((aws_credentials.cg_assumed_role_arn))
   - task: update-go-directive-in-system-tests
     file: cryogenics-concourse-tasks/tasks/bosh/update-go-directive/task.yml
     params:
