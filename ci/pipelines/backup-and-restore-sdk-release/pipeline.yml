@@ -101,6 +101,12 @@ groups:
   - create-final-patch
 
 resource_types:
+- name: semver-1-6 # Unlike the bundled version, supports AWS assume role; Remove after 1.6.0 or later becomes bundled
+  type: docker-image
+  source:
+    repository: concourse/semver-resource
+    tag: 1.6
+
 - name: file-url
   type: docker-image
   source:
@@ -246,14 +252,15 @@ resources:
     assign_to: "@me"
 
 - name: version
-  type: semver
+  type: semver-1-6
   icon: tag
   source:
     bucket: backup-and-restore-sdk-releases
     region_name: *aws-region
     key: current-dev-version
-    access_key_id: ((aws_credentials.access_key_id))
-    secret_access_key: ((aws_credentials.secret_access_key))
+    access_key_id: ((aws_credentials.cg_access_key_id))
+    secret_access_key: ((aws_credentials.cg_secret_access_key))
+    assume_role_arn: ((aws_credentials.cg_assumed_role_arn))
 
 - name: release
   type: s3
