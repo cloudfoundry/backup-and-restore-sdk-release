@@ -1,5 +1,5 @@
 ---
-bosh-lite-creds: &bosh-lite-creds
+bosh-lite-creds:
   BOSH_ENVIRONMENT: ((infrastructure/bosh-lite-director.director_url))
   BOSH_CLIENT: ((infrastructure/bosh-lite-director.director_username))
   BOSH_CLIENT_SECRET: ((infrastructure/bosh-lite-director.director_password))
@@ -46,7 +46,7 @@ postgres-11-password: &postgres-11-password postgres_password
 
 postgres-13-deployment-name: &postgres-13-deployment-name postgres-13-dev
 postgres-13-host: &postgres-13-host 10.0.255.14
-postgres-13-port: &postgres-13-port 5432
+postgres-13-port: 5432
 postgres-13-username: &postgres-13-username test_user
 postgres-13-password: &postgres-13-password postgres_password
 
@@ -244,7 +244,7 @@ resources:
   check_every: 1m
   icon: source-pull
   source:
-    repository: &repo cloudfoundry/backup-and-restore-sdk-release
+    repository: cloudfoundry/backup-and-restore-sdk-release
     base_branch: main
     disable_forks: true
     access_token: ((github.access_token))
@@ -269,8 +269,9 @@ resources:
     bucket: backup-and-restore-sdk-releases
     regexp: backup-and-restore-sdk-(.*).tgz
     region_name: *aws-region
-    access_key_id: ((aws_credentials.access_key_id))
-    secret_access_key: ((aws_credentials.secret_access_key))
+    access_key_id: ((aws_credentials.cg_access_key_id))
+    secret_access_key: ((aws_credentials.cg_secret_access_key))
+    aws_role_arn: ((aws_credentials.cg_assumed_role_arn))
 
 - name: gcp-db-certs
   type: vault
