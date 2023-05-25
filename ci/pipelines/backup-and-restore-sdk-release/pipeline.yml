@@ -547,6 +547,7 @@ jobs:
       passed:
       - deploy-s3-blobstore-sdk-with-iam-instance-profile
     - get: cryogenics-concourse-tasks
+      passed: [unit-tests]
   - in_parallel:
     - task: s3-with-iam-instance-profile
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
@@ -577,6 +578,7 @@ jobs:
     - get: backup-and-restore-sdk-release
       passed: [build-rc]
     - get: cryogenics-concourse-tasks
+      passed: [unit-tests]
     - get: release
       trigger: true
       passed: [build-rc]
@@ -620,7 +622,6 @@ jobs:
       trigger: true
       passed:
       - claim-cf-deployment-airgapped
-    - get: cryogenics-concourse-tasks
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
   - in_parallel:
@@ -781,6 +782,7 @@ jobs:
       - deploy-postgres
       - deploy-mysql
     - get: cryogenics-concourse-tasks
+      passed: [unit-tests]
   - task: alias-env
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
     input_mapping:
@@ -852,7 +854,6 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release
       passed: [build-rc]
-    - get: cryogenics-concourse-tasks
     - get: release
       trigger: true
       passed: [build-rc]
@@ -1029,6 +1030,7 @@ jobs:
       passed:
       - deploy-database-sdk
     - get: cryogenics-concourse-tasks
+      passed: [unit-tests]
     - get: gcp-db-certs
     - get: cf-deployment-env
       trigger: true
@@ -1092,6 +1094,7 @@ jobs:
       passed:
       - deploy-database-sdk
     - get: cryogenics-concourse-tasks
+      passed: [unit-tests]
     - get: cert-store
       resource: rds-ca-bundle
     - get: cf-deployment-env
@@ -1217,6 +1220,7 @@ jobs:
       - deploy-azure-blobstore-sdk
       - deploy-gcs-blobstore-sdk
     - get: cryogenics-concourse-tasks
+      passed: [unit-tests]
   - task: alias-env
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
     input_mapping:
@@ -1294,7 +1298,6 @@ jobs:
 - name: merge-pr
   serial: true
   plan:
-  - get: cryogenics-concourse-tasks
   - get: backup-and-restore-sdk-release
     trigger: true
     passed:
