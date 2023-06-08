@@ -1,4 +1,9 @@
 ---
+#! This pipeline is set manually
+#!
+#!  To set the pipeline, run:
+#!    fly set-pipeline -p bbr-sdk -c pipeline.yml
+
 bosh-lite-creds:
   BOSH_ENVIRONMENT: ((infrastructure/bosh-lite-director.director_url))
   BOSH_CLIENT: ((infrastructure/bosh-lite-director.director_username))
