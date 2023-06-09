@@ -19,7 +19,7 @@ function checksum_callback() {
 
     MAJOR_MINOR="$(echo "${VERSION}" | grep -Eo '[0-9]+\.[0-9]+')"
     CHECKSUM_JSON="$(curl -s -L "https://downloads.mariadb.org/rest-api/mariadb/${MAJOR_MINOR}/")"
-    EXPECTED_SHA256="$(echo "${CHECKSUM_JSON}" | jq -r --arg v "${VERSION}" '.releases[$v].files[] | select(.os == "Source").checksum.sha256sum')"
+    EXPECTED_SHA256="$(echo "${CHECKSUM_JSON}" | jq -r --arg v "${VERSION}" '.releases[$v].files[] | select(.os == "Source" and .package_type == "gzipped tar file").checksum.sha256sum')"
     echo "${EXPECTED_SHA256}  ${DOWNLOADED_FILE}" | sha256sum -c - || exit 1
 }
 
