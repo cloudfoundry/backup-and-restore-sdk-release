@@ -1186,6 +1186,29 @@ jobs:
           TEST_SSL_USER_REQUIRES_SSL: false
           TEST_SUITE_NAME: postgresql_tls
     - do:
+      - task: postgres-system-tests-13
+        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+        input_mapping:
+          terraform-state: terraform
+        params:
+          <<: *bosh-smiths-creds
+          DB_PREFIX: postgres_13
+          DB_TYPE: postgres
+          POSTGRES_PASSWORD: ((backup-and-restore-sdk-release.rds_postgres_13_password))
+          TEST_SUITE_NAME: postgresql
+      - task: postgres-tls-system-tests-13
+        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+        input_mapping:
+          terraform-state: terraform
+        params:
+          <<: *bosh-smiths-creds
+          DB_PREFIX: postgres_13
+          DB_TYPE: postgres
+          POSTGRES_CA_CERT_PATH: rds-combined-ca-bundle.pem
+          POSTGRES_PASSWORD: ((backup-and-restore-sdk-release.rds_postgres_13_password))
+          TEST_SSL_USER_REQUIRES_SSL: false
+          TEST_SUITE_NAME: postgresql_tls
+    - do:
       - task: maria-system-tests-10-6
         file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
         input_mapping:
