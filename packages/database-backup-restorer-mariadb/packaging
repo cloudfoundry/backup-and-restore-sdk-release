@@ -19,7 +19,7 @@
 # abort script on any command that exits with a non zero value
 set -e
 
-MARIADB_VERSION=10.6.13
+MARIADB_VERSION=10.6.14
 MY_DIR=$(pwd)
 
 cp -r /var/vcap/packages/libpcre2/lib/* /usr/local/lib/
