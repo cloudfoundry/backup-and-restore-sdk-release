@@ -18,10 +18,6 @@
 
 set -eu
 
-eval "$(ssh-agent)"
-chmod 400 github-sdk-key/key
-ssh-add github-sdk-key/key
-
 export GOPATH="$PWD/backup-and-restore-sdk-release:$GOPATH"
 
 pushd backup-and-restore-sdk-release/src/database-backup-restore

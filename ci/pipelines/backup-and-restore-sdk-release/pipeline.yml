@@ -355,13 +355,6 @@ resources:
     <<: *vault_creds
     path: /concourse/bosh-backup-restore/gcp-db-certs
 
-- name: github-sdk-key
-  type: vault
-  icon: lock
-  source:
-    <<: *vault_creds
-    path: /concourse/bosh-backup-restore/github-sdk
-
 - name: slack-cryo-notification
   type: slack-notification
   icon: bell-ring
@@ -508,7 +501,6 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release
       trigger: true
-    - get: github-sdk-key
     - get: cryogenics-concourse-tasks
   - in_parallel:
     - task: sdk-template-unit-tests
