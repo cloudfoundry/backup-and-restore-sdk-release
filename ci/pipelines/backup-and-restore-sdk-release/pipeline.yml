@@ -16,16 +16,16 @@ slack_webhook: &slack_webhook ((slack.webhook))
   #! slack_webhook was needed on 2023-06-30 to notify the team when we automatically cut a new release. Copied from Shared-Cryogenics/infrastructure-root/slack-webhooks in lastpass, originally generated (we think) by HelpNow+ ticket.
 toolsmiths_api_token: &toolsmiths_api_token ((toolsmiths.api_token))
   #! toolsmiths_api_token was needed on 2023-03-30 for claiming CF-D environments to run integration tests. The token was given to us by the #cf-toolsmiths team, and is in lastpass at Shared-Cryogenics/infrastructure-root/cryo-toolsmiths-api-token
-s3_director_creds: &s3_director_creds
-  #! the s3_director_creds were needed on 2023-07-03 to get access to our snowflake AWS S3 test bosh director. We can't use toolsmiths envs for this, because we need to test AWS S3 specifically. These creds were generated when we created the director, using the AWS account in cloudgate here: https://console.cloudgate.vmware.com/ui/#/cloud/116462199383/ou/ou-kw69-imy2w5hl/account/686843836666
-  BOSH_ENVIRONMENT: "((bbr/aws-s3-director-with-iam-profile.director_url))"
-  BOSH_CLIENT_SECRET: "((bbr/aws-s3-director-with-iam-profile.director_password))"
-  BOSH_CLIENT: "((bbr/aws-s3-director-with-iam-profile.director_username))"
-  BOSH_DEPLOYMENT: s3-backuper
-  BOSH_CA_CERT: "((bbr/aws-s3-director-with-iam-profile.director_ca_cert))"
-  BOSH_GW_USER: jumpbox
-  BOSH_GW_HOST: "((bbr/aws-s3-director-with-iam-profile.jumpbox_host))"
-  BOSH_GW_PRIVATE_KEY: "((bbr/aws-s3-director-with-iam-profile.jumpbox_ssh_key))"
+
+#! the following s3_director creds were needed on 2023-07-03 to get access to our snowflake AWS S3 test bosh director. We can't use toolsmiths envs for this, because we need to test AWS S3 specifically. These creds were generated when we created the director, using the AWS account in cloudgate here: https://console.cloudgate.vmware.com/ui/#/cloud/116462199383/ou/ou-kw69-imy2w5hl/account/686843836666
+s3_director_bosh_environment: &s3_director_bosh_environment "((bbr/aws-s3-director-with-iam-profile.director_url))"
+s3_director_bosh_client_secret: &s3_director_bosh_client_secret "((bbr/aws-s3-director-with-iam-profile.director_password))"
+s3_director_bosh_client: &s3_director_bosh_client "((bbr/aws-s3-director-with-iam-profile.director_username))"
+s3_director_bosh_ca_cert: &s3_director_bosh_ca_cert "((bbr/aws-s3-director-with-iam-profile.director_ca_cert))"
+s3_director_bosh_gw_host: &s3_director_bosh_gw_host "((bbr/aws-s3-director-with-iam-profile.jumpbox_host))"
+s3_director_bosh_gw_private_key: &s3_director_bosh_gw_private_key "((bbr/aws-s3-director-with-iam-profile.jumpbox_ssh_key))"
+#! end of s3_director creds
+
 aws_access_key_id: &aws_access_key_id ((bbr/aws_s3_creds.access_key_id))
   #! the aws_access_key_id was needed on 2023-07-03 to access blobstores and test buckets in the BBRSDK AWS project. Generated using AWS cloudgate here: https://console.cloudgate.vmware.com/ui/#/cloud/116462199383/ou/ou-kw69-imy2w5hl/account/686843836666
 aws_secret_access_key: &aws_secret_access_key ((bbr/aws_s3_creds.secret_access_key))
@@ -469,18 +469,16 @@ resources:
     deployment: azure-backuper
     skip_check: true
 
-- name: bbl-state-director-with-iam-profile
-  type: vault
-  source:
-    <<: *vault_creds
-    path: /concourse/common/infrastructure/bosh/aws-ec2
-    tarball: true
-
 - name: s3-backuper-with-iam-instance-profile-deployment
   type: bosh-deployment
   source:
     deployment: s3-backuper
-    skip_check: true
+    target: *s3_director_bosh_environment
+    client: *s3_director_bosh_client
+    client_secret: *s3_director_bosh_client_secret
+    ca_cert: *s3_director_bosh_ca_cert
+    jumpbox_url: *s3_director_bosh_gw_host
+    jumpbox_ssh_key: *s3_director_bosh_gw_private_key
 
 - name: database-backup-restorer-deployment
   type: bosh-deployment
@@ -592,14 +590,6 @@ jobs:
       resource: release
       passed: [build-rc]
     - get: jammy-stemcell-aws
-    - get: bbl-state-director-with-iam-profile
-      trigger: true
-  - task: generate-bosh-deployment-source-file
-    file: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.yml
-    input_mapping:
-      bbl-state-bosh-lite: bbl-state-director-with-iam-profile
-    params:
-      BBL_STATE: .
   - put: s3-backuper-with-iam-instance-profile-deployment
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/s3-backuper-with-iam-instance-profile.yml
@@ -611,7 +601,6 @@ jobs:
         deployment-name: s3-backuper
         s3-bucket-name: iam-instance-role-test
         s3-region: *aws-region
-      source_file: source-file/source-file.yml
 
 - name: system-tests-blobstore-backuper-with-iam-instance-profile
   serial: true
@@ -627,7 +616,14 @@ jobs:
     - task: s3-with-iam-instance-profile
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
       params:
-        <<: *s3_director_creds
+        BOSH_ENVIRONMENT: *s3_director_bosh_environment
+        BOSH_CLIENT_SECRET: *s3_director_bosh_client_secret
+        BOSH_CLIENT: *s3_director_bosh_client
+        BOSH_DEPLOYMENT: s3-backuper
+        BOSH_CA_CERT: *s3_director_bosh_ca_cert
+        BOSH_GW_USER: jumpbox
+        BOSH_GW_HOST: *s3_director_bosh_gw_host
+        BOSH_GW_PRIVATE_KEY: *s3_director_bosh_gw_private_key
         TEST_SUITE_NAME: s3
         FOCUS_SPEC: backs up and restores in-place # focus on one it to avoid redundant testing
         AWS_ACCESS_KEY_ID: *aws_access_key_id
