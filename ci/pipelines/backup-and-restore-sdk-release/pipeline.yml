@@ -837,8 +837,6 @@ jobs:
       - deploy-database-sdk-on-airgapped-env
       - deploy-postgres
       - deploy-mysql
-    - get: cert-store
-      resource: gcp-db-certs
     - get: cf-deployment-env
       trigger: true
       passed:
