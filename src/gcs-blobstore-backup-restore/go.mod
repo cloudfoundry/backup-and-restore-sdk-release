@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	cloud.google.com/go/storage v1.31.0
-	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.46
+	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.47
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.27.8
 	golang.org/x/net v0.12.0
