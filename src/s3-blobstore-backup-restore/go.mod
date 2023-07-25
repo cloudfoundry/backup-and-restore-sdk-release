@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.19.3
 	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.47
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.27.9
+	github.com/onsi/gomega v1.27.10
 )
 
 require (
