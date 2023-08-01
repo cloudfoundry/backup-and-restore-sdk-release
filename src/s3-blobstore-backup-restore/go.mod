@@ -3,9 +3,9 @@ module s3-blobstore-backup-restore
 go 1.20
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.19.1
+	github.com/aws/aws-sdk-go-v2 v1.20.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.29
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.37.1
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.20.1
 	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.47
 	github.com/onsi/ginkgo v1.16.5
@@ -13,16 +13,16 @@ require (
 )
 
 require (
-	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect
+	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.11 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.6 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.36 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.30 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.0.28 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.11 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.31 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.30 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.14.5 // indirect
-	github.com/aws/smithy-go v1.13.5 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.37 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.31 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.1.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.12 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.32 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.31 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.15.0 // indirect
+	github.com/aws/smithy-go v1.14.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
