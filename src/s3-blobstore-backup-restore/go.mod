@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.20.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.29
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.38.0
-	github.com/aws/aws-sdk-go-v2/service/sts v1.20.1
+	github.com/aws/aws-sdk-go-v2/service/sts v1.21.0
 	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.47
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.27.10
