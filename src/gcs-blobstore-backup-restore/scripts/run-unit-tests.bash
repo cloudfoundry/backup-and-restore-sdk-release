@@ -6,5 +6,5 @@ SRC_DIR="$(cd "$( dirname "$0" )/.." && pwd)"
 
 set -x
 pushd "$SRC_DIR"
-  ginkgo -mod vendor -r -keepGoing -p --skipPackage contract_test
+  go run github.com/onsi/ginkgo/v2/ginkgo -mod vendor -r --keep-going -p --skip-package contract_test
 popd
