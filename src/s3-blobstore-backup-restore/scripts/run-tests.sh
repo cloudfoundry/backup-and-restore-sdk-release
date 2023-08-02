@@ -18,4 +18,4 @@
 
 set -e
 
-ginkgo -trace -r -keepGoing --flakeAttempts=2
+go run github.com/onsi/ginkgo/v2/ginkgo -trace -r --keep-going --flake-attempts=2

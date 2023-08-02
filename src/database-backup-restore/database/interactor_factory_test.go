@@ -1,18 +1,17 @@
 package database_test
 
 import (
-	"fmt"
-	"os"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
 	"database-backup-restore/config"
 	"database-backup-restore/database"
 	"database-backup-restore/database/fakes"
 	"database-backup-restore/mysql"
 	"database-backup-restore/postgres"
 	"database-backup-restore/version"
+	"fmt"
+	"os"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("InteractorFactory", func() {
@@ -91,7 +90,7 @@ var _ = Describe("InteractorFactory", func() {
 			Context("when the version is detected as 10.6", func() {
 				BeforeEach(func() {
 					postgresServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "10", Minor: "6", Patch: "0"}},
+						version.DatabaseServerVersion{Implementation: "postgres", SemanticVersion: version.SemanticVersion{Major: "10", Minor: "6", Patch: "0"}},
 						nil)
 				})
 
@@ -113,7 +112,7 @@ var _ = Describe("InteractorFactory", func() {
 			Context("when the version is detected as 11", func() {
 				BeforeEach(func() {
 					postgresServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "11", Minor: "1", Patch: "0"}},
+						version.DatabaseServerVersion{Implementation: "postgres", SemanticVersion: version.SemanticVersion{Major: "11", Minor: "1", Patch: "0"}},
 						nil)
 				})
 
@@ -135,7 +134,7 @@ var _ = Describe("InteractorFactory", func() {
 			Context("when the version is detected as 13", func() {
 				BeforeEach(func() {
 					postgresServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "13", Minor: "2", Patch: "1"}},
+						version.DatabaseServerVersion{Implementation: "postgres", SemanticVersion: version.SemanticVersion{Major: "13", Minor: "2", Patch: "1"}},
 						nil)
 				})
 
@@ -157,7 +156,7 @@ var _ = Describe("InteractorFactory", func() {
 			Context("when the version is detected as 9.5", func() {
 				BeforeEach(func() {
 					postgresServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "9", Minor: "5", Patch: "1"}},
+						version.DatabaseServerVersion{Implementation: "postgres", SemanticVersion: version.SemanticVersion{Major: "9", Minor: "5", Patch: "1"}},
 						nil)
 				})
 
@@ -175,7 +174,7 @@ var _ = Describe("InteractorFactory", func() {
 			Context("when the version is detected as 10.6", func() {
 				BeforeEach(func() {
 					postgresServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "10", Minor: "6", Patch: "0"}},
+						version.DatabaseServerVersion{Implementation: "postgres", SemanticVersion: version.SemanticVersion{Major: "10", Minor: "6", Patch: "0"}},
 						nil)
 				})
 
@@ -194,7 +193,7 @@ var _ = Describe("InteractorFactory", func() {
 			Context("when the version is detected as 13", func() {
 				BeforeEach(func() {
 					postgresServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "13", Minor: "2", Patch: "1"}},
+						version.DatabaseServerVersion{Implementation: "postgres", SemanticVersion: version.SemanticVersion{Major: "13", Minor: "2", Patch: "1"}},
 						nil)
 				})
 
@@ -213,7 +212,7 @@ var _ = Describe("InteractorFactory", func() {
 			Context("when the version is detected as 9.5", func() {
 				BeforeEach(func() {
 					postgresServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"postgres", version.SemanticVersion{Major: "9", Minor: "5", Patch: "1"}},
+						version.DatabaseServerVersion{Implementation: "postgres", SemanticVersion: version.SemanticVersion{Major: "9", Minor: "5", Patch: "1"}},
 						nil)
 				})
 
@@ -252,7 +251,7 @@ var _ = Describe("InteractorFactory", func() {
 			Context("when the version is detected as MariaDB 10.*", func() {
 				BeforeEach(func() {
 					mysqlServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"mariadb", version.SemanticVersion{Major: "10", Minor: "3"}}, nil)
+						version.DatabaseServerVersion{Implementation: "mariadb", SemanticVersion: version.SemanticVersion{Major: "10", Minor: "3"}}, nil)
 				})
 
 				It("builds a mysql.Backuper", func() {
@@ -269,7 +268,7 @@ var _ = Describe("InteractorFactory", func() {
 			Context("when the version is detected as MySQL 5.6.37", func() {
 				BeforeEach(func() {
 					mysqlServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{"mysql", version.SemanticVersion{Major: "5", Minor: "6", Patch: "37"}}, nil)
+						version.DatabaseServerVersion{Implementation: "mysql", SemanticVersion: version.SemanticVersion{Major: "5", Minor: "6", Patch: "37"}}, nil)
 				})
 
 				It("builds a mysql.Backuper", func() {
@@ -287,8 +286,8 @@ var _ = Describe("InteractorFactory", func() {
 				BeforeEach(func() {
 					mysqlServerVersionDetector.GetVersionReturns(
 						version.DatabaseServerVersion{
-							"mysql",
-							version.SemanticVersion{
+							Implementation: "mysql",
+							SemanticVersion: version.SemanticVersion{
 								Major: "5",
 								Minor: "7",
 								Patch: "19"}},
@@ -311,8 +310,8 @@ var _ = Describe("InteractorFactory", func() {
 				BeforeEach(func() {
 					mysqlServerVersionDetector.GetVersionReturns(
 						version.DatabaseServerVersion{
-							"mysql",
-							version.SemanticVersion{
+							Implementation: "mysql",
+							SemanticVersion: version.SemanticVersion{
 								Major: "8",
 								Minor: "0",
 								Patch: "27"}},

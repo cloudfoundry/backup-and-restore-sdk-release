@@ -5,9 +5,6 @@ VOLUME /tls-certs
 VOLUME /shared-creds
 # https://boxboat.com/2017/01/23/volumes-and-dockerfiles-dont-mix/
 
-# Required to run the tests
-RUN go install github.com/onsi/ginkgo/ginkgo@latest
-
 # Tests assume the bosh binary is called bosh-cli
 RUN ln -s /usr/bin/bosh /usr/bin/bosh-cli
 
