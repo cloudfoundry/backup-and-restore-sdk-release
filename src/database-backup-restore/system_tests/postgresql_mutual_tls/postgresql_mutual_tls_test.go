@@ -5,8 +5,9 @@ import (
 	"os"
 	"strconv"
 
+	. "github.com/onsi/ginkgo/v2"
+
 	_ "github.com/lib/pq"
-	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 
