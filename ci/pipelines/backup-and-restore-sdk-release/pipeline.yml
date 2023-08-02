@@ -450,17 +450,17 @@ jobs:
       file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: s3-blobstore-backup-restore
-        GINKGO_EXTRA_FLAGS: -p --skipPackage s3bucket
+        GINKGO_EXTRA_FLAGS: -p --skip-package s3bucket
     - task: azure-blobstore-unit-tests
       file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: azure-blobstore-backup-restore
-        GINKGO_EXTRA_FLAGS: -p --skipPackage contract_test
+        GINKGO_EXTRA_FLAGS: -p --skip-package contract_test
     - task: gcs-blobstore-unit-tests
       file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: gcs-blobstore-backup-restore
-        GINKGO_EXTRA_FLAGS: -p --skipPackage contract_test
+        GINKGO_EXTRA_FLAGS: -p --skip-package contract_test
 
 - name: contract-tests
   serial: true

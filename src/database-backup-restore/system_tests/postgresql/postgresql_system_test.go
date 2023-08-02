@@ -17,50 +17,23 @@
 package postgresql
 
 import (
+	. "database-backup-restore/system_tests/utils"
 	"fmt"
-	"os"
-	"strconv"
-
 	_ "github.com/lib/pq"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
-
-	. "database-backup-restore/system_tests/utils"
-)
-
-var (
-	pgConnection *PostgresConnection
-
-	postgresHostName string
-	postgresUsername string
-	postgresPassword string
-	postgresPort     int
-
-	brJob JobInstance
+	"os"
 )
 
 var _ = Describe("postgres", func() {
 	var (
+		pgConnection *PostgresConnection
+
 		databaseName string
 		dbDumpPath   string
 		configPath   string
 	)
-
-	BeforeSuite(func() {
-		if os.Getenv("RUN_TESTS_WITHOUT_BOSH") != "true" {
-			brJob = JobInstance{
-				Deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
-				Instance:      MustHaveEnv("SDK_INSTANCE_GROUP"),
-				InstanceIndex: "0",
-			}
-		}
-
-		postgresHostName = MustHaveEnv("POSTGRES_HOSTNAME")
-		postgresPort, _ = strconv.Atoi(MustHaveEnv("POSTGRES_PORT"))
-		postgresPassword = MustHaveEnv("POSTGRES_PASSWORD")
-		postgresUsername = MustHaveEnv("POSTGRES_USERNAME")
-	})
 
 	BeforeEach(func() {
 		disambiguationString := DisambiguationString()

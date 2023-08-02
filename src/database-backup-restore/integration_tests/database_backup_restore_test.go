@@ -23,8 +23,7 @@ import (
 	"strings"
 	"time"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
@@ -48,60 +47,6 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 	})
 
 	Context("incorrect usage or invalid config", func() {
-		testCases := []TableEntry{
-			Entry("two actions provided", TestEntry{
-				arguments:      "--backup --restore",
-				expectedOutput: "Only one of: --backup or --restore can be provided",
-			}),
-			Entry("no action provided", TestEntry{
-				arguments:      "--artifact-file /foo --config foo",
-				expectedOutput: "Missing --backup or --restore flag",
-			}),
-			Entry("no config is passed", TestEntry{
-				arguments:      "--backup --artifact-file /foo",
-				expectedOutput: "Missing --config flag",
-			}),
-			Entry("the config is not accessible", TestEntry{
-				arguments:      "--backup --artifact-file /foo --config /foo/bar/bar.json",
-				expectedOutput: "no such file",
-			}),
-			Entry("the artifact-file is not provided", TestEntry{
-				arguments:       "--backup --config %s",
-				configGenerator: validPgConfig,
-				expectedOutput:  "Missing --artifact-file flag",
-			}),
-			Entry("is not a valid json", TestEntry{
-				arguments:       "--backup --artifact-file /foo --config %s",
-				configGenerator: invalidConfig,
-				expectedOutput:  "Could not parse config json",
-			}),
-			Entry("unsupported adapter", TestEntry{
-				arguments:       "--backup --artifact-file /foo --config %s",
-				configGenerator: invalidAdapterConfig,
-				expectedOutput:  "Unsupported adapter foo-server",
-			}),
-			Entry("empty list of tables field", TestEntry{
-				arguments:       "--backup --artifact-file /foo --config %s",
-				configGenerator: emptyTablesConfig,
-				expectedOutput:  "Tables specified but empty",
-			}),
-			Entry("tls block without ca", TestEntry{
-				arguments:       "--backup --artifact-file /foo --config %s",
-				configGenerator: tlsBlockWithoutCaConfig,
-				expectedOutput:  "TLS block specified without tls.cert.ca",
-			}),
-			Entry("client cert without client key", TestEntry{
-				arguments:       "--backup --artifact-file /foo --config %s",
-				configGenerator: missingClientKeyConfig,
-				expectedOutput:  "tls.cert.certificate specified but not tls.cert.private_key",
-			}),
-			Entry("client key without client cert", TestEntry{
-				arguments:       "--backup --artifact-file /foo --config %s",
-				configGenerator: missingClientCertConfig,
-				expectedOutput:  "tls.cert.private_key specified but not tls.cert.certificate",
-			}),
-		}
-
 		DescribeTable("raises the appropriate error when",
 			func(entry TestEntry) {
 				if entry.configGenerator != nil {
@@ -119,36 +64,63 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Err).To(gbytes.Say(entry.expectedOutput))
 			},
-			testCases...,
+			[]TableEntry{
+				Entry("two actions provided", TestEntry{
+					arguments:      "--backup --restore",
+					expectedOutput: "Only one of: --backup or --restore can be provided",
+				}),
+				Entry("no action provided", TestEntry{
+					arguments:      "--artifact-file /foo --config foo",
+					expectedOutput: "Missing --backup or --restore flag",
+				}),
+				Entry("no config is passed", TestEntry{
+					arguments:      "--backup --artifact-file /foo",
+					expectedOutput: "Missing --config flag",
+				}),
+				Entry("the config is not accessible", TestEntry{
+					arguments:      "--backup --artifact-file /foo --config /foo/bar/bar.json",
+					expectedOutput: "no such file",
+				}),
+				Entry("the artifact-file is not provided", TestEntry{
+					arguments:       "--backup --config %s",
+					configGenerator: validPgConfig,
+					expectedOutput:  "Missing --artifact-file flag",
+				}),
+				Entry("is not a valid json", TestEntry{
+					arguments:       "--backup --artifact-file /foo --config %s",
+					configGenerator: invalidConfig,
+					expectedOutput:  "Could not parse config json",
+				}),
+				Entry("unsupported adapter", TestEntry{
+					arguments:       "--backup --artifact-file /foo --config %s",
+					configGenerator: invalidAdapterConfig,
+					expectedOutput:  "Unsupported adapter foo-server",
+				}),
+				Entry("empty list of tables field", TestEntry{
+					arguments:       "--backup --artifact-file /foo --config %s",
+					configGenerator: emptyTablesConfig,
+					expectedOutput:  "Tables specified but empty",
+				}),
+				Entry("tls block without ca", TestEntry{
+					arguments:       "--backup --artifact-file /foo --config %s",
+					configGenerator: tlsBlockWithoutCaConfig,
+					expectedOutput:  "TLS block specified without tls.cert.ca",
+				}),
+				Entry("client cert without client key", TestEntry{
+					arguments:       "--backup --artifact-file /foo --config %s",
+					configGenerator: missingClientKeyConfig,
+					expectedOutput:  "tls.cert.certificate specified but not tls.cert.private_key",
+				}),
+				Entry("client key without client cert", TestEntry{
+					arguments:       "--backup --artifact-file /foo --config %s",
+					configGenerator: missingClientCertConfig,
+					expectedOutput:  "tls.cert.private_key specified but not tls.cert.certificate",
+				}),
+			},
 		)
 	})
 
 	Context("missing environment variables", func() {
-		requiredEnvVars := []TableEntry{
-			Entry("pg_dump_15 path missing", "PG_DUMP_15_PATH"),
-			Entry("pg_restore_15 path missing", "PG_RESTORE_15_PATH"),
-			Entry("pg_client path missing", "PG_CLIENT_PATH"),
-			Entry("pg_client path missing", "PG_CLIENT_PATH"),
-			Entry("pg_dump_13 path missing", "PG_DUMP_13_PATH"),
-			Entry("pg_restore_13 path missing", "PG_RESTORE_13_PATH"),
-			Entry("pg_dump_11 path missing", "PG_DUMP_11_PATH"),
-			Entry("pg_restore_11 path missing", "PG_RESTORE_11_PATH"),
-			Entry("pg_client path missing", "PG_CLIENT_PATH"),
-			Entry("pg_dump_10 path missing", "PG_DUMP_10_PATH"),
-			Entry("pg_restore_10 path missing", "PG_RESTORE_10_PATH"),
-			Entry("pg_client path missing", "PG_CLIENT_PATH"),
-			Entry("pg_client path missing", "PG_CLIENT_PATH"),
-			Entry("mariadb_client path missing", "MARIADB_CLIENT_PATH"),
-			Entry("mariadb_dump path missing", "MARIADB_DUMP_PATH"),
-			Entry("mariadb_client path missing", "MARIADB_CLIENT_PATH"),
-			Entry("mysql_client_5_6 path missing", "MYSQL_CLIENT_5_6_PATH"),
-			Entry("mysql_dump_5_6 path missing", "MYSQL_DUMP_5_6_PATH"),
-			Entry("mysql_client_5_6 path missing", "MYSQL_CLIENT_5_6_PATH"),
-			Entry("mysql_client_5_7 path missing", "MYSQL_CLIENT_5_7_PATH"),
-			Entry("mysql_dump_5_7 path missing", "MYSQL_DUMP_5_7_PATH"),
-			Entry("mysql_client_5_7 path missing", "MYSQL_CLIENT_5_7_PATH"),
-		}
-
 		DescribeTable("raises the appropriate error when",
 			func(missingEnvVar string) {
 				configPath, err := validPgConfig()
@@ -171,7 +143,28 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 				Eventually(session).Should(gexec.Exit(1))
 				Eventually(session.Err).Should(gbytes.Say(missingEnvVar + " must be set"))
 			},
-			requiredEnvVars...,
+			Entry("pg_dump_15 path missing", "PG_DUMP_15_PATH"),
+			Entry("pg_restore_15 path missing", "PG_RESTORE_15_PATH"),
+			Entry("pg_client path missing", "PG_CLIENT_PATH"),
+			Entry("pg_client path missing", "PG_CLIENT_PATH"),
+			Entry("pg_dump_13 path missing", "PG_DUMP_13_PATH"),
+			Entry("pg_restore_13 path missing", "PG_RESTORE_13_PATH"),
+			Entry("pg_dump_11 path missing", "PG_DUMP_11_PATH"),
+			Entry("pg_restore_11 path missing", "PG_RESTORE_11_PATH"),
+			Entry("pg_client path missing", "PG_CLIENT_PATH"),
+			Entry("pg_dump_10 path missing", "PG_DUMP_10_PATH"),
+			Entry("pg_restore_10 path missing", "PG_RESTORE_10_PATH"),
+			Entry("pg_client path missing", "PG_CLIENT_PATH"),
+			Entry("pg_client path missing", "PG_CLIENT_PATH"),
+			Entry("mariadb_client path missing", "MARIADB_CLIENT_PATH"),
+			Entry("mariadb_dump path missing", "MARIADB_DUMP_PATH"),
+			Entry("mariadb_client path missing", "MARIADB_CLIENT_PATH"),
+			Entry("mysql_client_5_6 path missing", "MYSQL_CLIENT_5_6_PATH"),
+			Entry("mysql_dump_5_6 path missing", "MYSQL_DUMP_5_6_PATH"),
+			Entry("mysql_client_5_6 path missing", "MYSQL_CLIENT_5_6_PATH"),
+			Entry("mysql_client_5_7 path missing", "MYSQL_CLIENT_5_7_PATH"),
+			Entry("mysql_dump_5_7 path missing", "MYSQL_DUMP_5_7_PATH"),
+			Entry("mysql_client_5_7 path missing", "MYSQL_CLIENT_5_7_PATH"),
 		)
 	})
 })

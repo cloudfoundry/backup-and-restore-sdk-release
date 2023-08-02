@@ -6,7 +6,8 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
+
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 )
@@ -187,7 +188,7 @@ func startTunnel(localPort int, remoteHost string, remotePort int, proxyUsername
 		"UserKnownHostsFile=/dev/null",
 		"-o",
 		"StrictHostKeyChecking=no",
-	), ginkgo.GinkgoWriter, ginkgo.GinkgoWriter)
+	), GinkgoWriter, GinkgoWriter)
 
 	time.Sleep(5 * time.Second)
 

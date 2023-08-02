@@ -3,7 +3,8 @@ package incremental_test
 import (
 	"s3-blobstore-backup-restore/incremental"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
+
 	. "github.com/onsi/gomega"
 )
 
