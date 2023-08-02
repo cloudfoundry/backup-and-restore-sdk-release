@@ -2,10 +2,8 @@ package postgresql_mutual_tls_test
 
 import (
 	"fmt"
-	"os"
-	"strconv"
-
 	. "github.com/onsi/ginkgo/v2"
+	"os"
 
 	_ "github.com/lib/pq"
 	. "github.com/onsi/gomega"
@@ -23,36 +21,11 @@ var _ = Describe("postgres with mutual tls", func() {
 
 		pgConnection *PostgresConnection
 
-		postgresHostName       string
-		postgresUsername       string
-		postgresPassword       string
-		postgresPort           int
-		postgresCaCert         string
-		postgresClientCert     string
-		postgresClientKey      string
 		postgresClientCertPath string
 		postgresClientKeyPath  string
 
 		brJob JobInstance
 	)
-
-	BeforeSuite(func() {
-		if os.Getenv("RUN_TESTS_WITHOUT_BOSH") != "true" {
-			brJob = JobInstance{
-				Deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
-				Instance:      MustHaveEnv("SDK_INSTANCE_GROUP"),
-				InstanceIndex: "0",
-			}
-		}
-
-		postgresHostName = MustHaveEnv("POSTGRES_HOSTNAME")
-		postgresPort, _ = strconv.Atoi(MustHaveEnv("POSTGRES_PORT"))
-		postgresPassword = MustHaveEnv("POSTGRES_PASSWORD")
-		postgresUsername = MustHaveEnv("POSTGRES_USERNAME")
-		postgresCaCert = os.Getenv("POSTGRES_CA_CERT")
-		postgresClientCert = os.Getenv("POSTGRES_CLIENT_CERT")
-		postgresClientKey = os.Getenv("POSTGRES_CLIENT_KEY")
-	})
 
 	BeforeEach(func() {
 		disambiguationString := DisambiguationString()

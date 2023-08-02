@@ -13,8 +13,8 @@ export GCP_SERVICE_ACCOUNT_KEY_PATH
 
 pushd "backup-and-restore-sdk-release/src/system-tests/${TEST_SUITE_NAME}"
   if [[ -n "${FOCUS_SPEC}" ]]; then
-    ginkgo -mod vendor -focus "${FOCUS_SPEC}" -v -r -trace
+    go run github.com/onsi/ginkgo/v2/ginkgo -mod vendor -focus "${FOCUS_SPEC}" -v -r --trace
   else
-    ginkgo -mod vendor -v -r -trace
+    go run github.com/onsi/ginkgo/v2/ginkgo -mod vendor -v -r --trace
   fi
 popd

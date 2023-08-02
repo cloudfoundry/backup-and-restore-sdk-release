@@ -2,13 +2,11 @@ package postgresql_tls_test
 
 import (
 	"fmt"
-	"os"
-	"strconv"
-
 	_ "github.com/lib/pq"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"os"
 
 	. "database-backup-restore/system_tests/utils"
 )
@@ -21,31 +19,7 @@ var _ = Describe("postgres with tls", func() {
 		configJson   string
 
 		pgConnection *PostgresConnection
-
-		postgresHostName string
-		postgresUsername string
-		postgresPassword string
-		postgresPort     int
-		postgresCaCert   string
-
-		brJob JobInstance
 	)
-
-	BeforeSuite(func() {
-		if os.Getenv("RUN_TESTS_WITHOUT_BOSH") != "true" {
-			brJob = JobInstance{
-				Deployment:    MustHaveEnv("SDK_DEPLOYMENT"),
-				Instance:      MustHaveEnv("SDK_INSTANCE_GROUP"),
-				InstanceIndex: "0",
-			}
-		}
-
-		postgresHostName = MustHaveEnv("POSTGRES_HOSTNAME")
-		postgresPort, _ = strconv.Atoi(MustHaveEnv("POSTGRES_PORT"))
-		postgresPassword = MustHaveEnv("POSTGRES_PASSWORD")
-		postgresUsername = MustHaveEnv("POSTGRES_USERNAME")
-		postgresCaCert = os.Getenv("POSTGRES_CA_CERT")
-	})
 
 	BeforeEach(func() {
 		disambiguationString := DisambiguationString()

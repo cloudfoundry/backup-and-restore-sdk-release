@@ -30,4 +30,4 @@ export BOSH_GW_PRIVATE_KEY="$ssh_proxy_key"
 export BOSH_ALL_PROXY="ssh+socks5://${BOSH_GW_USER}@${BOSH_GW_HOST}:22?private-key=${ssh_proxy_key}"
 
 cd backup-and-restore-sdk-release/src/database-backup-restore
-ginkgo -mod vendor -v -r "system_tests/${TEST_SUITE_NAME}" -trace
+go run github.com/onsi/ginkgo/v2/ginkgo -mod vendor -v -r "system_tests/${TEST_SUITE_NAME}" --trace
