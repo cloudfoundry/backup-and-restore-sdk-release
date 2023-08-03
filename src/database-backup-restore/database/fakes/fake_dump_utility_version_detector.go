@@ -29,15 +29,16 @@ func (fake *FakeDumpUtilityVersionDetector) GetVersion() (version.SemanticVersio
 	ret, specificReturn := fake.getVersionReturnsOnCall[len(fake.getVersionArgsForCall)]
 	fake.getVersionArgsForCall = append(fake.getVersionArgsForCall, struct {
 	}{})
+	stub := fake.GetVersionStub
+	fakeReturns := fake.getVersionReturns
 	fake.recordInvocation("GetVersion", []interface{}{})
 	fake.getVersionMutex.Unlock()
-	if fake.GetVersionStub != nil {
-		return fake.GetVersionStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.getVersionReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

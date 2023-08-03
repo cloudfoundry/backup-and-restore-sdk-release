@@ -78,15 +78,16 @@ func (fake *FakeBucket) CopyBlobToBucket(arg1 gcs.Bucket, arg2 string, arg3 stri
 		arg2 string
 		arg3 string
 	}{arg1, arg2, arg3})
+	stub := fake.CopyBlobToBucketStub
+	fakeReturns := fake.copyBlobToBucketReturns
 	fake.recordInvocation("CopyBlobToBucket", []interface{}{arg1, arg2, arg3})
 	fake.copyBlobToBucketMutex.Unlock()
-	if fake.CopyBlobToBucketStub != nil {
-		return fake.CopyBlobToBucketStub(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.copyBlobToBucketReturns
 	return fakeReturns.result1
 }
 
@@ -139,15 +140,16 @@ func (fake *FakeBucket) CopyBlobsToBucket(arg1 gcs.Bucket, arg2 string) error {
 		arg1 gcs.Bucket
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.CopyBlobsToBucketStub
+	fakeReturns := fake.copyBlobsToBucketReturns
 	fake.recordInvocation("CopyBlobsToBucket", []interface{}{arg1, arg2})
 	fake.copyBlobsToBucketMutex.Unlock()
-	if fake.CopyBlobsToBucketStub != nil {
-		return fake.CopyBlobsToBucketStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.copyBlobsToBucketReturns
 	return fakeReturns.result1
 }
 
@@ -199,15 +201,16 @@ func (fake *FakeBucket) DeleteBlob(arg1 string) error {
 	fake.deleteBlobArgsForCall = append(fake.deleteBlobArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.DeleteBlobStub
+	fakeReturns := fake.deleteBlobReturns
 	fake.recordInvocation("DeleteBlob", []interface{}{arg1})
 	fake.deleteBlobMutex.Unlock()
-	if fake.DeleteBlobStub != nil {
-		return fake.DeleteBlobStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.deleteBlobReturns
 	return fakeReturns.result1
 }
 
@@ -259,15 +262,16 @@ func (fake *FakeBucket) ListBlobs(arg1 string) ([]gcs.Blob, error) {
 	fake.listBlobsArgsForCall = append(fake.listBlobsArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.ListBlobsStub
+	fakeReturns := fake.listBlobsReturns
 	fake.recordInvocation("ListBlobs", []interface{}{arg1})
 	fake.listBlobsMutex.Unlock()
-	if fake.ListBlobsStub != nil {
-		return fake.ListBlobsStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.listBlobsReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -321,15 +325,16 @@ func (fake *FakeBucket) Name() string {
 	ret, specificReturn := fake.nameReturnsOnCall[len(fake.nameArgsForCall)]
 	fake.nameArgsForCall = append(fake.nameArgsForCall, struct {
 	}{})
+	stub := fake.NameStub
+	fakeReturns := fake.nameReturns
 	fake.recordInvocation("Name", []interface{}{})
 	fake.nameMutex.Unlock()
-	if fake.NameStub != nil {
-		return fake.NameStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.nameReturns
 	return fakeReturns.result1
 }
 

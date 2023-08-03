@@ -39,15 +39,16 @@ func (fake *FakeBackupArtifact) Read() (map[string]gcs.BucketBackup, error) {
 	ret, specificReturn := fake.readReturnsOnCall[len(fake.readArgsForCall)]
 	fake.readArgsForCall = append(fake.readArgsForCall, struct {
 	}{})
+	stub := fake.ReadStub
+	fakeReturns := fake.readReturns
 	fake.recordInvocation("Read", []interface{}{})
 	fake.readMutex.Unlock()
-	if fake.ReadStub != nil {
-		return fake.ReadStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.readReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -95,15 +96,16 @@ func (fake *FakeBackupArtifact) Write(arg1 map[string]gcs.BucketBackup) error {
 	fake.writeArgsForCall = append(fake.writeArgsForCall, struct {
 		arg1 map[string]gcs.BucketBackup
 	}{arg1})
+	stub := fake.WriteStub
+	fakeReturns := fake.writeReturns
 	fake.recordInvocation("Write", []interface{}{arg1})
 	fake.writeMutex.Unlock()
-	if fake.WriteStub != nil {
-		return fake.WriteStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.writeReturns
 	return fakeReturns.result1
 }
 

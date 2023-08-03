@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-//go:generate counterfeiter -o fakes/fake_artifact.go . Artifact
+//counterfeiter:generate -o fakes/fake_artifact.go . Artifact
 type Artifact interface {
 	Write(map[string]Backup) error
 	Load() (map[string]Backup, error)

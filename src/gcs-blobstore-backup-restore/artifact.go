@@ -6,7 +6,8 @@ import (
 	"os"
 )
 
-//go:generate counterfeiter -o fakes/fake_artifact.go . BackupArtifact
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
+//counterfeiter:generate -o fakes/fake_artifact.go . BackupArtifact
 type BackupArtifact interface {
 	Write(backups map[string]BucketBackup) error
 	Read() (map[string]BucketBackup, error)

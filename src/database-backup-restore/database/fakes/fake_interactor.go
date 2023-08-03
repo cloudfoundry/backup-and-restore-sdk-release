@@ -28,15 +28,16 @@ func (fake *FakeInteractor) Action(arg1 string) error {
 	fake.actionArgsForCall = append(fake.actionArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.ActionStub
+	fakeReturns := fake.actionReturns
 	fake.recordInvocation("Action", []interface{}{arg1})
 	fake.actionMutex.Unlock()
-	if fake.ActionStub != nil {
-		return fake.ActionStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.actionReturns
 	return fakeReturns.result1
 }
 

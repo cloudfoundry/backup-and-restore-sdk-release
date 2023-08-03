@@ -5,6 +5,7 @@ go 1.18
 require (
 	cloud.google.com/go/storage v1.31.0
 	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.47
+	github.com/maxbrunsfeld/counterfeiter/v6 v6.6.2
 	github.com/onsi/ginkgo/v2 v2.11.0
 	github.com/onsi/gomega v1.27.10
 	golang.org/x/net v0.13.0
@@ -29,6 +30,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.11.0 // indirect
+	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
 	golang.org/x/tools v0.10.0 // indirect

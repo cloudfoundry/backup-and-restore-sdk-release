@@ -2,7 +2,8 @@ package versioned
 
 import "s3-blobstore-backup-restore/s3bucket"
 
-//go:generate counterfeiter -o fakes/fake_bucket.go . Bucket
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
+//counterfeiter:generate -o fakes/fake_bucket.go . Bucket
 type Bucket interface {
 	Name() string
 	Region() string

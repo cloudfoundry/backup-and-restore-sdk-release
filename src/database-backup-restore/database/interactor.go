@@ -5,17 +5,18 @@ import (
 	"database-backup-restore/version"
 )
 
-//go:generate counterfeiter -o fakes/fake_interactor.go . Interactor
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
+//counterfeiter:generate -o fakes/fake_interactor.go . Interactor
 type Interactor interface {
 	Action(artifactFilePath string) error
 }
 
-//go:generate counterfeiter -o fakes/fake_server_version_detector.go . ServerVersionDetector
+//counterfeiter:generate -o fakes/fake_server_version_detector.go . ServerVersionDetector
 type ServerVersionDetector interface {
 	GetVersion(config.ConnectionConfig, config.TempFolderManager) (version.DatabaseServerVersion, error)
 }
 
-//go:generate counterfeiter -o fakes/fake_dump_utility_version_detector.go . DumpUtilityVersionDetector
+//counterfeiter:generate -o fakes/fake_dump_utility_version_detector.go . DumpUtilityVersionDetector
 type DumpUtilityVersionDetector interface {
 	GetVersion() (version.SemanticVersion, error)
 }

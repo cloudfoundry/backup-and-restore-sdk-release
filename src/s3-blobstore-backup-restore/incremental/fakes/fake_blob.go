@@ -2,16 +2,16 @@
 package fakes
 
 import (
-	"sync"
-
 	"s3-blobstore-backup-restore/incremental"
+	"sync"
 )
 
 type FakeBlob struct {
 	PathStub        func() string
 	pathMutex       sync.RWMutex
-	pathArgsForCall []struct{}
-	pathReturns     struct {
+	pathArgsForCall []struct {
+	}
+	pathReturns struct {
 		result1 string
 	}
 	pathReturnsOnCall map[int]struct {
@@ -24,16 +24,19 @@ type FakeBlob struct {
 func (fake *FakeBlob) Path() string {
 	fake.pathMutex.Lock()
 	ret, specificReturn := fake.pathReturnsOnCall[len(fake.pathArgsForCall)]
-	fake.pathArgsForCall = append(fake.pathArgsForCall, struct{}{})
+	fake.pathArgsForCall = append(fake.pathArgsForCall, struct {
+	}{})
+	stub := fake.PathStub
+	fakeReturns := fake.pathReturns
 	fake.recordInvocation("Path", []interface{}{})
 	fake.pathMutex.Unlock()
-	if fake.PathStub != nil {
-		return fake.PathStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.pathReturns.result1
+	return fakeReturns.result1
 }
 
 func (fake *FakeBlob) PathCallCount() int {
@@ -42,7 +45,15 @@ func (fake *FakeBlob) PathCallCount() int {
 	return len(fake.pathArgsForCall)
 }
 
+func (fake *FakeBlob) PathCalls(stub func() string) {
+	fake.pathMutex.Lock()
+	defer fake.pathMutex.Unlock()
+	fake.PathStub = stub
+}
+
 func (fake *FakeBlob) PathReturns(result1 string) {
+	fake.pathMutex.Lock()
+	defer fake.pathMutex.Unlock()
 	fake.PathStub = nil
 	fake.pathReturns = struct {
 		result1 string
@@ -50,6 +61,8 @@ func (fake *FakeBlob) PathReturns(result1 string) {
 }
 
 func (fake *FakeBlob) PathReturnsOnCall(i int, result1 string) {
+	fake.pathMutex.Lock()
+	defer fake.pathMutex.Unlock()
 	fake.PathStub = nil
 	if fake.pathReturnsOnCall == nil {
 		fake.pathReturnsOnCall = make(map[int]struct {
