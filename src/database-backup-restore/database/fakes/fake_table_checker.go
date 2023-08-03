@@ -35,15 +35,16 @@ func (fake *FakeTableChecker) FindMissingTables(arg1 []string) ([]string, error)
 	fake.findMissingTablesArgsForCall = append(fake.findMissingTablesArgsForCall, struct {
 		arg1 []string
 	}{arg1Copy})
+	stub := fake.FindMissingTablesStub
+	fakeReturns := fake.findMissingTablesReturns
 	fake.recordInvocation("FindMissingTables", []interface{}{arg1Copy})
 	fake.findMissingTablesMutex.Unlock()
-	if fake.FindMissingTablesStub != nil {
-		return fake.FindMissingTablesStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.findMissingTablesReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

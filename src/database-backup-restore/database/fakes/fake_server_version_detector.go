@@ -34,15 +34,16 @@ func (fake *FakeServerVersionDetector) GetVersion(arg1 config.ConnectionConfig, 
 		arg1 config.ConnectionConfig
 		arg2 config.TempFolderManager
 	}{arg1, arg2})
+	stub := fake.GetVersionStub
+	fakeReturns := fake.getVersionReturns
 	fake.recordInvocation("GetVersion", []interface{}{arg1, arg2})
 	fake.getVersionMutex.Unlock()
-	if fake.GetVersionStub != nil {
-		return fake.GetVersionStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.getVersionReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

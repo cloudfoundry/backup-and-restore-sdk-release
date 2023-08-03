@@ -15,7 +15,8 @@ import (
 	"github.com/Azure/azure-storage-blob-go/azblob"
 )
 
-//go:generate counterfeiter -o fakes/fake_container.go . Container
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
+//counterfeiter:generate -o fakes/fake_container.go . Container
 type Container interface {
 	Name() string
 	SoftDeleteEnabled() (bool, error)

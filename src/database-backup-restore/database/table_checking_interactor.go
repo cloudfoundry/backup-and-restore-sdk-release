@@ -8,7 +8,8 @@ import (
 	"database-backup-restore/config"
 )
 
-//go:generate counterfeiter -o fakes/fake_table_checker.go . TableChecker
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
+//counterfeiter:generate -o fakes/fake_table_checker.go . TableChecker
 type TableChecker interface {
 	FindMissingTables(tableNames []string) ([]string, error)
 }

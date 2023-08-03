@@ -2,61 +2,17 @@
 package fakes
 
 import (
-	"sync"
-
 	azure "azure-blobstore-backup-restore"
+	"sync"
 )
 
 type FakeContainer struct {
-	NameStub        func() string
-	nameMutex       sync.RWMutex
-	nameArgsForCall []struct{}
-	nameReturns     struct {
-		result1 string
-	}
-	nameReturnsOnCall map[int]struct {
-		result1 string
-	}
-	SoftDeleteEnabledStub        func() (bool, error)
-	softDeleteEnabledMutex       sync.RWMutex
-	softDeleteEnabledArgsForCall []struct{}
-	softDeleteEnabledReturns     struct {
-		result1 bool
-		result2 error
-	}
-	softDeleteEnabledReturnsOnCall map[int]struct {
-		result1 bool
-		result2 error
-	}
-	ListBlobsStub        func() ([]azure.BlobId, error)
-	listBlobsMutex       sync.RWMutex
-	listBlobsArgsForCall []struct{}
-	listBlobsReturns     struct {
-		result1 []azure.BlobId
-		result2 error
-	}
-	listBlobsReturnsOnCall map[int]struct {
-		result1 []azure.BlobId
-		result2 error
-	}
-	CopyBlobsFromSameStorageAccountStub        func(containerName string, blobIds []azure.BlobId) error
-	copyBlobsFromSameStorageAccountMutex       sync.RWMutex
-	copyBlobsFromSameStorageAccountArgsForCall []struct {
-		containerName string
-		blobIds       []azure.BlobId
-	}
-	copyBlobsFromSameStorageAccountReturns struct {
-		result1 error
-	}
-	copyBlobsFromSameStorageAccountReturnsOnCall map[int]struct {
-		result1 error
-	}
-	CopyBlobsFromDifferentStorageAccountStub        func(storageAccount azure.StorageAccount, containerName string, blobIds []azure.BlobId) error
+	CopyBlobsFromDifferentStorageAccountStub        func(azure.StorageAccount, string, []azure.BlobId) error
 	copyBlobsFromDifferentStorageAccountMutex       sync.RWMutex
 	copyBlobsFromDifferentStorageAccountArgsForCall []struct {
-		storageAccount azure.StorageAccount
-		containerName  string
-		blobIds        []azure.BlobId
+		arg1 azure.StorageAccount
+		arg2 string
+		arg3 []azure.BlobId
 	}
 	copyBlobsFromDifferentStorageAccountReturns struct {
 		result1 error
@@ -64,23 +20,263 @@ type FakeContainer struct {
 	copyBlobsFromDifferentStorageAccountReturnsOnCall map[int]struct {
 		result1 error
 	}
+	CopyBlobsFromSameStorageAccountStub        func(string, []azure.BlobId) error
+	copyBlobsFromSameStorageAccountMutex       sync.RWMutex
+	copyBlobsFromSameStorageAccountArgsForCall []struct {
+		arg1 string
+		arg2 []azure.BlobId
+	}
+	copyBlobsFromSameStorageAccountReturns struct {
+		result1 error
+	}
+	copyBlobsFromSameStorageAccountReturnsOnCall map[int]struct {
+		result1 error
+	}
+	ListBlobsStub        func() ([]azure.BlobId, error)
+	listBlobsMutex       sync.RWMutex
+	listBlobsArgsForCall []struct {
+	}
+	listBlobsReturns struct {
+		result1 []azure.BlobId
+		result2 error
+	}
+	listBlobsReturnsOnCall map[int]struct {
+		result1 []azure.BlobId
+		result2 error
+	}
+	NameStub        func() string
+	nameMutex       sync.RWMutex
+	nameArgsForCall []struct {
+	}
+	nameReturns struct {
+		result1 string
+	}
+	nameReturnsOnCall map[int]struct {
+		result1 string
+	}
+	SoftDeleteEnabledStub        func() (bool, error)
+	softDeleteEnabledMutex       sync.RWMutex
+	softDeleteEnabledArgsForCall []struct {
+	}
+	softDeleteEnabledReturns struct {
+		result1 bool
+		result2 error
+	}
+	softDeleteEnabledReturnsOnCall map[int]struct {
+		result1 bool
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *FakeContainer) CopyBlobsFromDifferentStorageAccount(arg1 azure.StorageAccount, arg2 string, arg3 []azure.BlobId) error {
+	var arg3Copy []azure.BlobId
+	if arg3 != nil {
+		arg3Copy = make([]azure.BlobId, len(arg3))
+		copy(arg3Copy, arg3)
+	}
+	fake.copyBlobsFromDifferentStorageAccountMutex.Lock()
+	ret, specificReturn := fake.copyBlobsFromDifferentStorageAccountReturnsOnCall[len(fake.copyBlobsFromDifferentStorageAccountArgsForCall)]
+	fake.copyBlobsFromDifferentStorageAccountArgsForCall = append(fake.copyBlobsFromDifferentStorageAccountArgsForCall, struct {
+		arg1 azure.StorageAccount
+		arg2 string
+		arg3 []azure.BlobId
+	}{arg1, arg2, arg3Copy})
+	stub := fake.CopyBlobsFromDifferentStorageAccountStub
+	fakeReturns := fake.copyBlobsFromDifferentStorageAccountReturns
+	fake.recordInvocation("CopyBlobsFromDifferentStorageAccount", []interface{}{arg1, arg2, arg3Copy})
+	fake.copyBlobsFromDifferentStorageAccountMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *FakeContainer) CopyBlobsFromDifferentStorageAccountCallCount() int {
+	fake.copyBlobsFromDifferentStorageAccountMutex.RLock()
+	defer fake.copyBlobsFromDifferentStorageAccountMutex.RUnlock()
+	return len(fake.copyBlobsFromDifferentStorageAccountArgsForCall)
+}
+
+func (fake *FakeContainer) CopyBlobsFromDifferentStorageAccountCalls(stub func(azure.StorageAccount, string, []azure.BlobId) error) {
+	fake.copyBlobsFromDifferentStorageAccountMutex.Lock()
+	defer fake.copyBlobsFromDifferentStorageAccountMutex.Unlock()
+	fake.CopyBlobsFromDifferentStorageAccountStub = stub
+}
+
+func (fake *FakeContainer) CopyBlobsFromDifferentStorageAccountArgsForCall(i int) (azure.StorageAccount, string, []azure.BlobId) {
+	fake.copyBlobsFromDifferentStorageAccountMutex.RLock()
+	defer fake.copyBlobsFromDifferentStorageAccountMutex.RUnlock()
+	argsForCall := fake.copyBlobsFromDifferentStorageAccountArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeContainer) CopyBlobsFromDifferentStorageAccountReturns(result1 error) {
+	fake.copyBlobsFromDifferentStorageAccountMutex.Lock()
+	defer fake.copyBlobsFromDifferentStorageAccountMutex.Unlock()
+	fake.CopyBlobsFromDifferentStorageAccountStub = nil
+	fake.copyBlobsFromDifferentStorageAccountReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeContainer) CopyBlobsFromDifferentStorageAccountReturnsOnCall(i int, result1 error) {
+	fake.copyBlobsFromDifferentStorageAccountMutex.Lock()
+	defer fake.copyBlobsFromDifferentStorageAccountMutex.Unlock()
+	fake.CopyBlobsFromDifferentStorageAccountStub = nil
+	if fake.copyBlobsFromDifferentStorageAccountReturnsOnCall == nil {
+		fake.copyBlobsFromDifferentStorageAccountReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.copyBlobsFromDifferentStorageAccountReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeContainer) CopyBlobsFromSameStorageAccount(arg1 string, arg2 []azure.BlobId) error {
+	var arg2Copy []azure.BlobId
+	if arg2 != nil {
+		arg2Copy = make([]azure.BlobId, len(arg2))
+		copy(arg2Copy, arg2)
+	}
+	fake.copyBlobsFromSameStorageAccountMutex.Lock()
+	ret, specificReturn := fake.copyBlobsFromSameStorageAccountReturnsOnCall[len(fake.copyBlobsFromSameStorageAccountArgsForCall)]
+	fake.copyBlobsFromSameStorageAccountArgsForCall = append(fake.copyBlobsFromSameStorageAccountArgsForCall, struct {
+		arg1 string
+		arg2 []azure.BlobId
+	}{arg1, arg2Copy})
+	stub := fake.CopyBlobsFromSameStorageAccountStub
+	fakeReturns := fake.copyBlobsFromSameStorageAccountReturns
+	fake.recordInvocation("CopyBlobsFromSameStorageAccount", []interface{}{arg1, arg2Copy})
+	fake.copyBlobsFromSameStorageAccountMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *FakeContainer) CopyBlobsFromSameStorageAccountCallCount() int {
+	fake.copyBlobsFromSameStorageAccountMutex.RLock()
+	defer fake.copyBlobsFromSameStorageAccountMutex.RUnlock()
+	return len(fake.copyBlobsFromSameStorageAccountArgsForCall)
+}
+
+func (fake *FakeContainer) CopyBlobsFromSameStorageAccountCalls(stub func(string, []azure.BlobId) error) {
+	fake.copyBlobsFromSameStorageAccountMutex.Lock()
+	defer fake.copyBlobsFromSameStorageAccountMutex.Unlock()
+	fake.CopyBlobsFromSameStorageAccountStub = stub
+}
+
+func (fake *FakeContainer) CopyBlobsFromSameStorageAccountArgsForCall(i int) (string, []azure.BlobId) {
+	fake.copyBlobsFromSameStorageAccountMutex.RLock()
+	defer fake.copyBlobsFromSameStorageAccountMutex.RUnlock()
+	argsForCall := fake.copyBlobsFromSameStorageAccountArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeContainer) CopyBlobsFromSameStorageAccountReturns(result1 error) {
+	fake.copyBlobsFromSameStorageAccountMutex.Lock()
+	defer fake.copyBlobsFromSameStorageAccountMutex.Unlock()
+	fake.CopyBlobsFromSameStorageAccountStub = nil
+	fake.copyBlobsFromSameStorageAccountReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeContainer) CopyBlobsFromSameStorageAccountReturnsOnCall(i int, result1 error) {
+	fake.copyBlobsFromSameStorageAccountMutex.Lock()
+	defer fake.copyBlobsFromSameStorageAccountMutex.Unlock()
+	fake.CopyBlobsFromSameStorageAccountStub = nil
+	if fake.copyBlobsFromSameStorageAccountReturnsOnCall == nil {
+		fake.copyBlobsFromSameStorageAccountReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.copyBlobsFromSameStorageAccountReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeContainer) ListBlobs() ([]azure.BlobId, error) {
+	fake.listBlobsMutex.Lock()
+	ret, specificReturn := fake.listBlobsReturnsOnCall[len(fake.listBlobsArgsForCall)]
+	fake.listBlobsArgsForCall = append(fake.listBlobsArgsForCall, struct {
+	}{})
+	stub := fake.ListBlobsStub
+	fakeReturns := fake.listBlobsReturns
+	fake.recordInvocation("ListBlobs", []interface{}{})
+	fake.listBlobsMutex.Unlock()
+	if stub != nil {
+		return stub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeContainer) ListBlobsCallCount() int {
+	fake.listBlobsMutex.RLock()
+	defer fake.listBlobsMutex.RUnlock()
+	return len(fake.listBlobsArgsForCall)
+}
+
+func (fake *FakeContainer) ListBlobsCalls(stub func() ([]azure.BlobId, error)) {
+	fake.listBlobsMutex.Lock()
+	defer fake.listBlobsMutex.Unlock()
+	fake.ListBlobsStub = stub
+}
+
+func (fake *FakeContainer) ListBlobsReturns(result1 []azure.BlobId, result2 error) {
+	fake.listBlobsMutex.Lock()
+	defer fake.listBlobsMutex.Unlock()
+	fake.ListBlobsStub = nil
+	fake.listBlobsReturns = struct {
+		result1 []azure.BlobId
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeContainer) ListBlobsReturnsOnCall(i int, result1 []azure.BlobId, result2 error) {
+	fake.listBlobsMutex.Lock()
+	defer fake.listBlobsMutex.Unlock()
+	fake.ListBlobsStub = nil
+	if fake.listBlobsReturnsOnCall == nil {
+		fake.listBlobsReturnsOnCall = make(map[int]struct {
+			result1 []azure.BlobId
+			result2 error
+		})
+	}
+	fake.listBlobsReturnsOnCall[i] = struct {
+		result1 []azure.BlobId
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeContainer) Name() string {
 	fake.nameMutex.Lock()
 	ret, specificReturn := fake.nameReturnsOnCall[len(fake.nameArgsForCall)]
-	fake.nameArgsForCall = append(fake.nameArgsForCall, struct{}{})
+	fake.nameArgsForCall = append(fake.nameArgsForCall, struct {
+	}{})
+	stub := fake.NameStub
+	fakeReturns := fake.nameReturns
 	fake.recordInvocation("Name", []interface{}{})
 	fake.nameMutex.Unlock()
-	if fake.NameStub != nil {
-		return fake.NameStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.nameReturns.result1
+	return fakeReturns.result1
 }
 
 func (fake *FakeContainer) NameCallCount() int {
@@ -89,7 +285,15 @@ func (fake *FakeContainer) NameCallCount() int {
 	return len(fake.nameArgsForCall)
 }
 
+func (fake *FakeContainer) NameCalls(stub func() string) {
+	fake.nameMutex.Lock()
+	defer fake.nameMutex.Unlock()
+	fake.NameStub = stub
+}
+
 func (fake *FakeContainer) NameReturns(result1 string) {
+	fake.nameMutex.Lock()
+	defer fake.nameMutex.Unlock()
 	fake.NameStub = nil
 	fake.nameReturns = struct {
 		result1 string
@@ -97,6 +301,8 @@ func (fake *FakeContainer) NameReturns(result1 string) {
 }
 
 func (fake *FakeContainer) NameReturnsOnCall(i int, result1 string) {
+	fake.nameMutex.Lock()
+	defer fake.nameMutex.Unlock()
 	fake.NameStub = nil
 	if fake.nameReturnsOnCall == nil {
 		fake.nameReturnsOnCall = make(map[int]struct {
@@ -111,16 +317,19 @@ func (fake *FakeContainer) NameReturnsOnCall(i int, result1 string) {
 func (fake *FakeContainer) SoftDeleteEnabled() (bool, error) {
 	fake.softDeleteEnabledMutex.Lock()
 	ret, specificReturn := fake.softDeleteEnabledReturnsOnCall[len(fake.softDeleteEnabledArgsForCall)]
-	fake.softDeleteEnabledArgsForCall = append(fake.softDeleteEnabledArgsForCall, struct{}{})
+	fake.softDeleteEnabledArgsForCall = append(fake.softDeleteEnabledArgsForCall, struct {
+	}{})
+	stub := fake.SoftDeleteEnabledStub
+	fakeReturns := fake.softDeleteEnabledReturns
 	fake.recordInvocation("SoftDeleteEnabled", []interface{}{})
 	fake.softDeleteEnabledMutex.Unlock()
-	if fake.SoftDeleteEnabledStub != nil {
-		return fake.SoftDeleteEnabledStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.softDeleteEnabledReturns.result1, fake.softDeleteEnabledReturns.result2
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeContainer) SoftDeleteEnabledCallCount() int {
@@ -129,7 +338,15 @@ func (fake *FakeContainer) SoftDeleteEnabledCallCount() int {
 	return len(fake.softDeleteEnabledArgsForCall)
 }
 
+func (fake *FakeContainer) SoftDeleteEnabledCalls(stub func() (bool, error)) {
+	fake.softDeleteEnabledMutex.Lock()
+	defer fake.softDeleteEnabledMutex.Unlock()
+	fake.SoftDeleteEnabledStub = stub
+}
+
 func (fake *FakeContainer) SoftDeleteEnabledReturns(result1 bool, result2 error) {
+	fake.softDeleteEnabledMutex.Lock()
+	defer fake.softDeleteEnabledMutex.Unlock()
 	fake.SoftDeleteEnabledStub = nil
 	fake.softDeleteEnabledReturns = struct {
 		result1 bool
@@ -138,6 +355,8 @@ func (fake *FakeContainer) SoftDeleteEnabledReturns(result1 bool, result2 error)
 }
 
 func (fake *FakeContainer) SoftDeleteEnabledReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.softDeleteEnabledMutex.Lock()
+	defer fake.softDeleteEnabledMutex.Unlock()
 	fake.SoftDeleteEnabledStub = nil
 	if fake.softDeleteEnabledReturnsOnCall == nil {
 		fake.softDeleteEnabledReturnsOnCall = make(map[int]struct {
@@ -151,171 +370,19 @@ func (fake *FakeContainer) SoftDeleteEnabledReturnsOnCall(i int, result1 bool, r
 	}{result1, result2}
 }
 
-func (fake *FakeContainer) ListBlobs() ([]azure.BlobId, error) {
-	fake.listBlobsMutex.Lock()
-	ret, specificReturn := fake.listBlobsReturnsOnCall[len(fake.listBlobsArgsForCall)]
-	fake.listBlobsArgsForCall = append(fake.listBlobsArgsForCall, struct{}{})
-	fake.recordInvocation("ListBlobs", []interface{}{})
-	fake.listBlobsMutex.Unlock()
-	if fake.ListBlobsStub != nil {
-		return fake.ListBlobsStub()
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.listBlobsReturns.result1, fake.listBlobsReturns.result2
-}
-
-func (fake *FakeContainer) ListBlobsCallCount() int {
-	fake.listBlobsMutex.RLock()
-	defer fake.listBlobsMutex.RUnlock()
-	return len(fake.listBlobsArgsForCall)
-}
-
-func (fake *FakeContainer) ListBlobsReturns(result1 []azure.BlobId, result2 error) {
-	fake.ListBlobsStub = nil
-	fake.listBlobsReturns = struct {
-		result1 []azure.BlobId
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeContainer) ListBlobsReturnsOnCall(i int, result1 []azure.BlobId, result2 error) {
-	fake.ListBlobsStub = nil
-	if fake.listBlobsReturnsOnCall == nil {
-		fake.listBlobsReturnsOnCall = make(map[int]struct {
-			result1 []azure.BlobId
-			result2 error
-		})
-	}
-	fake.listBlobsReturnsOnCall[i] = struct {
-		result1 []azure.BlobId
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeContainer) CopyBlobsFromSameStorageAccount(containerName string, blobIds []azure.BlobId) error {
-	var blobIdsCopy []azure.BlobId
-	if blobIds != nil {
-		blobIdsCopy = make([]azure.BlobId, len(blobIds))
-		copy(blobIdsCopy, blobIds)
-	}
-	fake.copyBlobsFromSameStorageAccountMutex.Lock()
-	ret, specificReturn := fake.copyBlobsFromSameStorageAccountReturnsOnCall[len(fake.copyBlobsFromSameStorageAccountArgsForCall)]
-	fake.copyBlobsFromSameStorageAccountArgsForCall = append(fake.copyBlobsFromSameStorageAccountArgsForCall, struct {
-		containerName string
-		blobIds       []azure.BlobId
-	}{containerName, blobIdsCopy})
-	fake.recordInvocation("CopyBlobsFromSameStorageAccount", []interface{}{containerName, blobIdsCopy})
-	fake.copyBlobsFromSameStorageAccountMutex.Unlock()
-	if fake.CopyBlobsFromSameStorageAccountStub != nil {
-		return fake.CopyBlobsFromSameStorageAccountStub(containerName, blobIds)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.copyBlobsFromSameStorageAccountReturns.result1
-}
-
-func (fake *FakeContainer) CopyBlobsFromSameStorageAccountCallCount() int {
-	fake.copyBlobsFromSameStorageAccountMutex.RLock()
-	defer fake.copyBlobsFromSameStorageAccountMutex.RUnlock()
-	return len(fake.copyBlobsFromSameStorageAccountArgsForCall)
-}
-
-func (fake *FakeContainer) CopyBlobsFromSameStorageAccountArgsForCall(i int) (string, []azure.BlobId) {
-	fake.copyBlobsFromSameStorageAccountMutex.RLock()
-	defer fake.copyBlobsFromSameStorageAccountMutex.RUnlock()
-	return fake.copyBlobsFromSameStorageAccountArgsForCall[i].containerName, fake.copyBlobsFromSameStorageAccountArgsForCall[i].blobIds
-}
-
-func (fake *FakeContainer) CopyBlobsFromSameStorageAccountReturns(result1 error) {
-	fake.CopyBlobsFromSameStorageAccountStub = nil
-	fake.copyBlobsFromSameStorageAccountReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeContainer) CopyBlobsFromSameStorageAccountReturnsOnCall(i int, result1 error) {
-	fake.CopyBlobsFromSameStorageAccountStub = nil
-	if fake.copyBlobsFromSameStorageAccountReturnsOnCall == nil {
-		fake.copyBlobsFromSameStorageAccountReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.copyBlobsFromSameStorageAccountReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeContainer) CopyBlobsFromDifferentStorageAccount(storageAccount azure.StorageAccount, containerName string, blobIds []azure.BlobId) error {
-	var blobIdsCopy []azure.BlobId
-	if blobIds != nil {
-		blobIdsCopy = make([]azure.BlobId, len(blobIds))
-		copy(blobIdsCopy, blobIds)
-	}
-	fake.copyBlobsFromDifferentStorageAccountMutex.Lock()
-	ret, specificReturn := fake.copyBlobsFromDifferentStorageAccountReturnsOnCall[len(fake.copyBlobsFromDifferentStorageAccountArgsForCall)]
-	fake.copyBlobsFromDifferentStorageAccountArgsForCall = append(fake.copyBlobsFromDifferentStorageAccountArgsForCall, struct {
-		storageAccount azure.StorageAccount
-		containerName  string
-		blobIds        []azure.BlobId
-	}{storageAccount, containerName, blobIdsCopy})
-	fake.recordInvocation("CopyBlobsFromDifferentStorageAccount", []interface{}{storageAccount, containerName, blobIdsCopy})
-	fake.copyBlobsFromDifferentStorageAccountMutex.Unlock()
-	if fake.CopyBlobsFromDifferentStorageAccountStub != nil {
-		return fake.CopyBlobsFromDifferentStorageAccountStub(storageAccount, containerName, blobIds)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.copyBlobsFromDifferentStorageAccountReturns.result1
-}
-
-func (fake *FakeContainer) CopyBlobsFromDifferentStorageAccountCallCount() int {
-	fake.copyBlobsFromDifferentStorageAccountMutex.RLock()
-	defer fake.copyBlobsFromDifferentStorageAccountMutex.RUnlock()
-	return len(fake.copyBlobsFromDifferentStorageAccountArgsForCall)
-}
-
-func (fake *FakeContainer) CopyBlobsFromDifferentStorageAccountArgsForCall(i int) (azure.StorageAccount, string, []azure.BlobId) {
-	fake.copyBlobsFromDifferentStorageAccountMutex.RLock()
-	defer fake.copyBlobsFromDifferentStorageAccountMutex.RUnlock()
-	return fake.copyBlobsFromDifferentStorageAccountArgsForCall[i].storageAccount, fake.copyBlobsFromDifferentStorageAccountArgsForCall[i].containerName, fake.copyBlobsFromDifferentStorageAccountArgsForCall[i].blobIds
-}
-
-func (fake *FakeContainer) CopyBlobsFromDifferentStorageAccountReturns(result1 error) {
-	fake.CopyBlobsFromDifferentStorageAccountStub = nil
-	fake.copyBlobsFromDifferentStorageAccountReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeContainer) CopyBlobsFromDifferentStorageAccountReturnsOnCall(i int, result1 error) {
-	fake.CopyBlobsFromDifferentStorageAccountStub = nil
-	if fake.copyBlobsFromDifferentStorageAccountReturnsOnCall == nil {
-		fake.copyBlobsFromDifferentStorageAccountReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.copyBlobsFromDifferentStorageAccountReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
 func (fake *FakeContainer) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.copyBlobsFromDifferentStorageAccountMutex.RLock()
+	defer fake.copyBlobsFromDifferentStorageAccountMutex.RUnlock()
+	fake.copyBlobsFromSameStorageAccountMutex.RLock()
+	defer fake.copyBlobsFromSameStorageAccountMutex.RUnlock()
+	fake.listBlobsMutex.RLock()
+	defer fake.listBlobsMutex.RUnlock()
 	fake.nameMutex.RLock()
 	defer fake.nameMutex.RUnlock()
 	fake.softDeleteEnabledMutex.RLock()
 	defer fake.softDeleteEnabledMutex.RUnlock()
-	fake.listBlobsMutex.RLock()
-	defer fake.listBlobsMutex.RUnlock()
-	fake.copyBlobsFromSameStorageAccountMutex.RLock()
-	defer fake.copyBlobsFromSameStorageAccountMutex.RUnlock()
-	fake.copyBlobsFromDifferentStorageAccountMutex.RLock()
-	defer fake.copyBlobsFromDifferentStorageAccountMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

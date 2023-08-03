@@ -14,7 +14,8 @@ import (
 
 const readWriteScope = "https://www.googleapis.com/auth/devstorage.read_write"
 
-//go:generate counterfeiter -o fakes/fake_bucket.go . Bucket
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
+//counterfeiter:generate -o fakes/fake_bucket.go . Bucket
 type Bucket interface {
 	Name() string
 	ListBlobs(prefix string) ([]Blob, error)

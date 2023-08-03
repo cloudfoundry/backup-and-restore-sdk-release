@@ -79,15 +79,16 @@ func (fake *FakeBucket) CopyVersion(arg1 string, arg2 string, arg3 string, arg4 
 		arg3 string
 		arg4 string
 	}{arg1, arg2, arg3, arg4})
+	stub := fake.CopyVersionStub
+	fakeReturns := fake.copyVersionReturns
 	fake.recordInvocation("CopyVersion", []interface{}{arg1, arg2, arg3, arg4})
 	fake.copyVersionMutex.Unlock()
-	if fake.CopyVersionStub != nil {
-		return fake.CopyVersionStub(arg1, arg2, arg3, arg4)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.copyVersionReturns
 	return fakeReturns.result1
 }
 
@@ -138,15 +139,16 @@ func (fake *FakeBucket) IsVersioned() (bool, error) {
 	ret, specificReturn := fake.isVersionedReturnsOnCall[len(fake.isVersionedArgsForCall)]
 	fake.isVersionedArgsForCall = append(fake.isVersionedArgsForCall, struct {
 	}{})
+	stub := fake.IsVersionedStub
+	fakeReturns := fake.isVersionedReturns
 	fake.recordInvocation("IsVersioned", []interface{}{})
 	fake.isVersionedMutex.Unlock()
-	if fake.IsVersionedStub != nil {
-		return fake.IsVersionedStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.isVersionedReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -193,15 +195,16 @@ func (fake *FakeBucket) ListVersions() ([]s3bucket.Version, error) {
 	ret, specificReturn := fake.listVersionsReturnsOnCall[len(fake.listVersionsArgsForCall)]
 	fake.listVersionsArgsForCall = append(fake.listVersionsArgsForCall, struct {
 	}{})
+	stub := fake.ListVersionsStub
+	fakeReturns := fake.listVersionsReturns
 	fake.recordInvocation("ListVersions", []interface{}{})
 	fake.listVersionsMutex.Unlock()
-	if fake.ListVersionsStub != nil {
-		return fake.ListVersionsStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.listVersionsReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -248,15 +251,16 @@ func (fake *FakeBucket) Name() string {
 	ret, specificReturn := fake.nameReturnsOnCall[len(fake.nameArgsForCall)]
 	fake.nameArgsForCall = append(fake.nameArgsForCall, struct {
 	}{})
+	stub := fake.NameStub
+	fakeReturns := fake.nameReturns
 	fake.recordInvocation("Name", []interface{}{})
 	fake.nameMutex.Unlock()
-	if fake.NameStub != nil {
-		return fake.NameStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.nameReturns
 	return fakeReturns.result1
 }
 
@@ -300,15 +304,16 @@ func (fake *FakeBucket) Region() string {
 	ret, specificReturn := fake.regionReturnsOnCall[len(fake.regionArgsForCall)]
 	fake.regionArgsForCall = append(fake.regionArgsForCall, struct {
 	}{})
+	stub := fake.RegionStub
+	fakeReturns := fake.regionReturns
 	fake.recordInvocation("Region", []interface{}{})
 	fake.regionMutex.Unlock()
-	if fake.RegionStub != nil {
-		return fake.RegionStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.regionReturns
 	return fakeReturns.result1
 }
 

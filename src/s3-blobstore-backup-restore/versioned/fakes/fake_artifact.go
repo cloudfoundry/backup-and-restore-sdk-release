@@ -39,15 +39,16 @@ func (fake *FakeArtifact) Load() (map[string]versioned.BucketSnapshot, error) {
 	ret, specificReturn := fake.loadReturnsOnCall[len(fake.loadArgsForCall)]
 	fake.loadArgsForCall = append(fake.loadArgsForCall, struct {
 	}{})
+	stub := fake.LoadStub
+	fakeReturns := fake.loadReturns
 	fake.recordInvocation("Load", []interface{}{})
 	fake.loadMutex.Unlock()
-	if fake.LoadStub != nil {
-		return fake.LoadStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.loadReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -95,15 +96,16 @@ func (fake *FakeArtifact) Save(arg1 map[string]versioned.BucketSnapshot) error {
 	fake.saveArgsForCall = append(fake.saveArgsForCall, struct {
 		arg1 map[string]versioned.BucketSnapshot
 	}{arg1})
+	stub := fake.SaveStub
+	fakeReturns := fake.saveReturns
 	fake.recordInvocation("Save", []interface{}{arg1})
 	fake.saveMutex.Unlock()
-	if fake.SaveStub != nil {
-		return fake.SaveStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.saveReturns
 	return fakeReturns.result1
 }
 

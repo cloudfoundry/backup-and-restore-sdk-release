@@ -2,16 +2,16 @@
 package fakes
 
 import (
-	"sync"
-
 	"s3-blobstore-backup-restore/incremental"
+	"sync"
 )
 
 type FakeClock struct {
 	NowStub        func() string
 	nowMutex       sync.RWMutex
-	nowArgsForCall []struct{}
-	nowReturns     struct {
+	nowArgsForCall []struct {
+	}
+	nowReturns struct {
 		result1 string
 	}
 	nowReturnsOnCall map[int]struct {
@@ -24,16 +24,19 @@ type FakeClock struct {
 func (fake *FakeClock) Now() string {
 	fake.nowMutex.Lock()
 	ret, specificReturn := fake.nowReturnsOnCall[len(fake.nowArgsForCall)]
-	fake.nowArgsForCall = append(fake.nowArgsForCall, struct{}{})
+	fake.nowArgsForCall = append(fake.nowArgsForCall, struct {
+	}{})
+	stub := fake.NowStub
+	fakeReturns := fake.nowReturns
 	fake.recordInvocation("Now", []interface{}{})
 	fake.nowMutex.Unlock()
-	if fake.NowStub != nil {
-		return fake.NowStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.nowReturns.result1
+	return fakeReturns.result1
 }
 
 func (fake *FakeClock) NowCallCount() int {
@@ -42,7 +45,15 @@ func (fake *FakeClock) NowCallCount() int {
 	return len(fake.nowArgsForCall)
 }
 
+func (fake *FakeClock) NowCalls(stub func() string) {
+	fake.nowMutex.Lock()
+	defer fake.nowMutex.Unlock()
+	fake.NowStub = stub
+}
+
 func (fake *FakeClock) NowReturns(result1 string) {
+	fake.nowMutex.Lock()
+	defer fake.nowMutex.Unlock()
 	fake.NowStub = nil
 	fake.nowReturns = struct {
 		result1 string
@@ -50,6 +61,8 @@ func (fake *FakeClock) NowReturns(result1 string) {
 }
 
 func (fake *FakeClock) NowReturnsOnCall(i int, result1 string) {
+	fake.nowMutex.Lock()
+	defer fake.nowMutex.Unlock()
 	fake.NowStub = nil
 	if fake.nowReturnsOnCall == nil {
 		fake.nowReturnsOnCall = make(map[int]struct {

@@ -1,6 +1,7 @@
 package incremental
 
-//go:generate counterfeiter -o fakes/fake_bucket.go . Bucket
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
+//counterfeiter:generate -o fakes/fake_bucket.go . Bucket
 type Bucket interface {
 	Name() string
 	Region() string
@@ -12,7 +13,7 @@ type Bucket interface {
 	HasBlob(path string) (bool, error)
 }
 
-//go:generate counterfeiter -o fakes/fake_blob.go . Blob
+//counterfeiter:generate -o fakes/fake_blob.go . Blob
 type Blob interface {
 	Path() string
 }
