@@ -3,10 +3,11 @@ package incremental_test
 import (
 	"errors"
 
+	. "github.com/onsi/ginkgo/v2"
+
 	"s3-blobstore-backup-restore/incremental"
 	"s3-blobstore-backup-restore/incremental/fakes"
 
-	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 

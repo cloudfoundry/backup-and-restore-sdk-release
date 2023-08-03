@@ -7,9 +7,10 @@ import (
 	"fmt"
 
 	"azure-blobstore-backup-restore"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	. "system-tests/azure"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Container", func() {

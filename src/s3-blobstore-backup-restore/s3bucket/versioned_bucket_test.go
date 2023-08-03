@@ -1,7 +1,7 @@
 package s3bucket_test
 
 import (
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"s3-blobstore-backup-restore/s3bucket"

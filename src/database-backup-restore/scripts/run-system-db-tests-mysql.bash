@@ -62,7 +62,7 @@ pushd "$SRC_DIR"
   # for that reason, we need to resolve the MYSQL_HOST before running the tests
   export MYSQL_HOSTNAME="$(getent hosts ${MYSQL_HOSTNAME} | awk '{ print $1 }')"
 
-  ginkgo -mod vendor -r -v "system_tests/mysql" -trace
+  go run github.com/onsi/ginkgo/v2/ginkgo -mod vendor -r -v "system_tests/mysql" --trace
 popd
 
 bosh -n --tty -d "${SDK_DEPLOYMENT}" delete-deployment

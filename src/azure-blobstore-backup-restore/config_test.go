@@ -3,8 +3,10 @@ package azure_test
 import (
 	"os"
 
+	. "github.com/onsi/ginkgo/v2"
+
 	"azure-blobstore-backup-restore"
-	. "github.com/onsi/ginkgo"
+
 	. "github.com/onsi/gomega"
 )
 

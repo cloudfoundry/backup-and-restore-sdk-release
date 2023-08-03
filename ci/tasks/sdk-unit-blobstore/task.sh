@@ -19,7 +19,7 @@
 set -eu
 
 pushd "backup-and-restore-sdk-release/src/$PACKAGE_NAME"
-  ginkgo_cmd="ginkgo -mod vendor -r -keepGoing"
+  ginkgo_cmd="go run github.com/onsi/ginkgo/v2/ginkgo -mod vendor -r --keep-going"
 
   if [[ -n "$GINKGO_EXTRA_FLAGS" ]]; then
     ginkgo_cmd="$ginkgo_cmd $GINKGO_EXTRA_FLAGS"

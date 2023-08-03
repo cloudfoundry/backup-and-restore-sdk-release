@@ -9,7 +9,7 @@ const (
 )
 
 type Blob struct {
-	name string `json:"name"`
+	name string
 }
 
 func NewBlob(name string) Blob {

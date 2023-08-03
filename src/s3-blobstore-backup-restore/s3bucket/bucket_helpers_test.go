@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	. "github.com/onsi/ginkgo/v2"
 	"io"
 	"os"
 	"os/exec"
@@ -11,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 )

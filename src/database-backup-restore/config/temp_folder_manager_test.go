@@ -3,7 +3,7 @@ package config_test
 import (
 	. "database-backup-restore/config"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"os"

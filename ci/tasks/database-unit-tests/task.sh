@@ -25,5 +25,5 @@ ssh-add github-sdk-key/key
 export GOPATH="$PWD/backup-and-restore-sdk-release:$GOPATH"
 
 pushd backup-and-restore-sdk-release/src/database-backup-restore
-  ginkgo -r -v -skipPackage system_tests
+  go run github.com/onsi/ginkgo/v2/ginkgo -r -v --skip-package system_tests
 popd
