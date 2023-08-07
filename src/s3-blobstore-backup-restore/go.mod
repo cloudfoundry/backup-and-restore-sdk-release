@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.31
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/sts v1.21.1
-	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.47
+	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.48
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.6.2
 	github.com/onsi/ginkgo/v2 v2.11.0
 	github.com/onsi/gomega v1.27.10
@@ -27,11 +27,12 @@ require (
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/google/pprof v0.0.0-20230602150820-91b7bce49751 // indirect
-	golang.org/x/mod v0.11.0 // indirect
+	github.com/google/pprof v0.0.0-20230728192033-2ba5b33183c6 // indirect
+	github.com/kr/text v0.2.0 // indirect
+	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
-	golang.org/x/tools v0.10.0 // indirect
+	golang.org/x/tools v0.11.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
