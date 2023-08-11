@@ -16,7 +16,7 @@
 
 set -e
 
-POSTGRES_VERSION=11.20
+POSTGRES_VERSION=11.21
 
 tar xzf postgres/postgresql-${POSTGRES_VERSION}.tar.gz
 
