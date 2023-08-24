@@ -167,10 +167,15 @@ resource_types:
     repository: cftoolsmiths/toolsmiths-envs-resource
 
 resources:
-- name: cryogenics-essentials
+- name: image-cryogenics-essentials
   type: registry-image
   source:
     repository: cryogenics/essentials
+
+- name: image-backup-restore
+  type: registry-image
+  source:
+    repository: pcfplatformrecovery/backup-and-restore
 
 - name: pxc-release
   type: bosh-io-release
@@ -1516,11 +1521,13 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
+    - get: image-backup-restore
     - get: daily-trigger
       trigger: true
 
   - task: bump-mariadb
     file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
+    image: image-backup-restore
     input_mapping:
       task-repo: cryogenics-concourse-tasks
       bump-repo: backup-and-restore-sdk-release-main
@@ -1586,11 +1593,13 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
+    - get: image-backup-restore
     - get: daily-trigger
       trigger: true
 
   - task: bump-postgresql
     file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
+    image: image-backup-restore
     input_mapping:
       task-repo: cryogenics-concourse-tasks
       bump-repo: backup-and-restore-sdk-release-main
@@ -1610,10 +1619,12 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
+    - get: image-backup-restore
     - get: daily-trigger
       trigger: true
 
   - task: bump-boost
+    image: image-backup-restore
     file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
     input_mapping:
       task-repo: cryogenics-concourse-tasks
@@ -1623,7 +1634,6 @@ jobs:
     params:
       PR_BASE: main
       PR_LABELS: ci
-
       GH_TOKEN: ((github.access_token))
       AWS_ACCESS_KEY_ID: ((aws_credentials.cg_access_key_id))
       AWS_SECRET_ACCESS_KEY: ((aws_credentials.cg_secret_access_key))
@@ -1656,20 +1666,20 @@ jobs:
 - name: bump-ci-tasks
   plan:
     - in_parallel:
-      - get: cryogenics-essentials
+      - get: image-cryogenics-essentials
         trigger: true
       - get: cryogenics-concourse-tasks
       - get: backup-and-restore-sdk-release-main
     - in_parallel:
       - load_var: cryogenics-essentials-version
-        file: cryogenics-essentials/tag
+        file: image-cryogenics-essentials/tag
       - task: bump-tasks
         file: cryogenics-concourse-tasks/deps-automation/bump-concourse-tasks/task.yml
         params:
           TASKS_FOLDER: ci/tasks/
         input_mapping:
           repo: backup-and-restore-sdk-release-main
-          image: cryogenics-essentials
+          image: image-cryogenics-essentials
         output_mapping:
           repo: backup-and-restore-sdk-release-main
     - put: backup-and-restore-sdk-release-bump-ci-tasks
