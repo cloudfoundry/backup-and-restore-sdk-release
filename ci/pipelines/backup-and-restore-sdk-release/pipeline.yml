@@ -68,6 +68,7 @@ groups:
 - name: test
   jobs:
   - unit-tests
+  - check-for-cves
   - contract-tests
   - build-rc
   - deploy-s3-blobstore-sdk-with-iam-instance-profile
@@ -436,6 +437,19 @@ resources:
     deployment: gcs-backuper
     skip_check: true
 
+- name: git-concourse-cve-scan
+  type: git
+  source:
+    uri: git@github.com:pivotal/concourse-cve-scan.git
+    branch: main
+    private_key: ((github.ssh_key))
+- name: github-release-tas-cve
+  type: github-release
+  source:
+    access_token: ((github.access_token))
+    repository: tas-cve
+    user: pivotal
+
 jobs:
 - name: unit-tests
   serial: true
@@ -466,6 +480,25 @@ jobs:
       params:
         PACKAGE_NAME: gcs-blobstore-backup-restore
         GINKGO_EXTRA_FLAGS: -p --skip-package contract_test
+
+- name: check-for-cves
+  plan:
+    - in_parallel:
+        - get: git-concourse-cve-scan
+        - get: github-release-tas-cve
+        - get: backup-and-restore-sdk-release
+          trigger: true
+    - task: run-scan
+      file: git-concourse-cve-scan/tasks/scan/scan.yml
+      input_mapping:
+        concourse-cve-scan: git-concourse-cve-scan
+        tas-cve: github-release-tas-cve
+        target-bosh-release: backup-and-restore-sdk-release
+      params:
+        DRY_RUN: true
+        GRYPE_FAILURE_LEVEL: high #! Can be any of: none | negligible | low | medium | high | critical
+        RELEASE_NAME: fim
+        RELEASE_VERSION: pre-release-cve-scan
 
 - name: contract-tests
   serial: true
