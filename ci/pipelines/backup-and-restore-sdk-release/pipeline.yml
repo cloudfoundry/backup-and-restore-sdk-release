@@ -92,6 +92,7 @@ groups:
 
 - name: bump
   jobs:
+  - bump-openssl-1
   - bump-golang
   - bump-mariadb
   - bump-mysql
@@ -1596,6 +1597,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ((aws_credentials.cg_access_key_id))
       AWS_SECRET_ACCESS_KEY: ((aws_credentials.cg_secret_access_key))
       AWS_ASSUME_ROLE_ARN: ((aws_credentials.cg_assumed_role_arn))
+
 - name: bump-mysql
   plan:
   - in_parallel:
