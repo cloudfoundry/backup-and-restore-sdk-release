@@ -2,6 +2,15 @@
 
 set -eu
 
+if ls director-with-iam-profile/*.yml; then
+  BOSH_GW_PRIVATE_KEY=$(bosh int ${PWD}/director-with-iam-profile/*.yml --path /jumpbox_ssh_key )
+  BOSH_GW_HOST_PORT=$(bosh int ${PWD}/director-with-iam-profile/*.yml --path /jumpbox_url )
+  BOSH_ENVIRONMENT=$(bosh int ${PWD}/director-with-iam-profile/*.yml --path /target )
+  BOSH_CLIENT_SECRET=$(bosh int ${PWD}/director-with-iam-profile/*.yml --path /client_secret )
+  BOSH_CLIENT=$(bosh int ${PWD}/director-with-iam-profile/*.yml --path /client )
+  BOSH_CA_CERT=$(bosh int ${PWD}/director-with-iam-profile/*.yml --path /ca_cert )
+fi
+
 echo -e "${BOSH_GW_PRIVATE_KEY}" > "${PWD}/ssh.key"
 chmod 0600 "${PWD}/ssh.key"
 export BOSH_GW_PRIVATE_KEY="${PWD}/ssh.key"
