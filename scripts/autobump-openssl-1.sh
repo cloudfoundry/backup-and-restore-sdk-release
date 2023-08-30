@@ -17,7 +17,8 @@ function checksum_callback() {
     DOWNLOADED_FILE="${2}"
 
     #check if old or new version because the old versions have a different path than the new versions
-    if curl -s ${VERSIONS_URL} |grep "${VERSION}"; then
+    # the output for curl needs to be redirected to /dev/null, because we call the callback like this:  RETURN=$(function checksum_callback 1.1.1)
+    if curl -s ${VERSIONS_URL} |grep "${VERSION}" &2> /dev/null; then
       DOWNLOAD_URL="${VERSIONS_URL}/openssl-${VERSION}.tar.gz"
       SHA_URL="${DOWNLOAD_URL}.sha256"
     else
