@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-
 set -eu
 
 if ls director-with-iam-profile/*.yml; then
-  BOSH_GW_PRIVATE_KEY=$(bosh int ${PWD}/director-with-iam-profile/*.yml --path /jumpbox_ssh_key )
-  BOSH_GW_HOST_PORT=$(bosh int ${PWD}/director-with-iam-profile/*.yml --path /jumpbox_url )
-  BOSH_ENVIRONMENT=$(bosh int ${PWD}/director-with-iam-profile/*.yml --path /target )
-  BOSH_CLIENT_SECRET=$(bosh int ${PWD}/director-with-iam-profile/*.yml --path /client_secret )
-  BOSH_CLIENT=$(bosh int ${PWD}/director-with-iam-profile/*.yml --path /client )
-  BOSH_CA_CERT=$(bosh int ${PWD}/director-with-iam-profile/*.yml --path /ca_cert )
+  export BOSH_GW_PRIVATE_KEY=$( yq .jumpbox_ssh_key director-with-iam-profile/*.yml -r )
+  export BOSH_GW_HOST_PORT=$( yq .jumpbox_url ${PWD}/director-with-iam-profile/*.yml -r )
+  export BOSH_GW_HOST=$( echo ${BOSH_GW_HOST_PORT} | cut -f1 -d: )
+  export BOSH_ENVIRONMENT=$( yq .target ${PWD}/director-with-iam-profile/*.yml -r )
+  export BOSH_CLIENT_SECRET=$( yq .client_secret ${PWD}/director-with-iam-profile/*.yml -r )
+  export BOSH_CLIENT=$( yq .client ${PWD}/director-with-iam-profile/*.yml -r )
+  export BOSH_CA_CERT=$( yq .ca_cert ${PWD}/director-with-iam-profile/*.yml -r )
 fi
 
 echo -e "${BOSH_GW_PRIVATE_KEY}" > "${PWD}/ssh.key"
