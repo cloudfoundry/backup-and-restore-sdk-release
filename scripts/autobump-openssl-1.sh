@@ -52,6 +52,6 @@ function extract_version_callback() {
   echo $(grep -Eo '[0-9]+(\.[0-9]+){1,2}[a-z]' <<<$1)
 }
 function new_version_callback() {
-  echo "AUTO"
+  echo "MINOR"
 }
 
