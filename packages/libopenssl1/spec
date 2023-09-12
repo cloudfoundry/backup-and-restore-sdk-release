@@ -4,4 +4,4 @@ name: libopenssl1
 dependencies: []
 
 files:
-- openssl/openssl-1.1.1v.tar.gz
+- openssl/openssl-1.1.1w.tar.gz
