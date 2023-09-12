@@ -26,10 +26,10 @@ ncurses/ncurses-6.4.tar.gz:
   size: 3612591
   object_id: 2e99f0f8-be87-480b-4e5a-9488e923e4d1
   sha: sha256:6931283d9ac87c5073f30b6290c4c75f21632bb4fc3603ac8100812bed248159
-openssl/openssl-1.1.1v.tar.gz:
-  size: 9893443
-  object_id: 74631bc8-f9bc-418c-46a6-64b7caa83482
-  sha: sha256:d6697e2871e77238460402e9362d47d18382b15ef9f246aba6c7bd780d38a6b0
+openssl/openssl-1.1.1w.tar.gz:
+  size: 9893384
+  object_id: 8ebd05e7-9a12-4a1c-7a2d-5142e99bbcc0
+  sha: sha256:cf3098950cb4d853ad95c0841f1f9c6d3dc102dccfcacd521d93925208b76ac8
 postgres/postgresql-10.23.tar.gz:
   size: 25493839
   object_id: 9e0e0f74-07cf-4600-60a5-90a278783d5f
