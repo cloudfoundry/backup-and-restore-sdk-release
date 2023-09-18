@@ -501,6 +501,8 @@ jobs:
       file: backup-and-restore-sdk-release/ci/tasks/sdk-template-unit-tests/task.yml
     - task: databases-unit-tests
       file: backup-and-restore-sdk-release/ci/tasks/database-unit-tests/task.yml
+      params:
+        GITHUB_SDK_KEY: *git_ssh_key
       privileged: true
     - task: s3-blobstore-unit-tests
       file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
