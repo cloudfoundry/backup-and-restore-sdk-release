@@ -150,76 +150,81 @@ groups:
   - create-final-patch
 
 resource_types:
+  - name: gcs-resource
+    type: registry-image
+    source:
+      repository: harbor-repo.vmware.com/dockerhub-proxy-cache/frodenas/gcs-resource
 - name: semver-1-6 # Unlike the bundled version, supports AWS assume role; Remove after 1.6.0 or later becomes bundled
-  type: docker-image
+  type: registry-image
   source:
-    repository: concourse/semver-resource
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/concourse/semver-resource
     tag: 1.6
 
 - name: file-url
-  type: docker-image
+  type: registry-image
   source:
-    repository: pivotalservices/concourse-curl-resource
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/pivotalservices/concourse-curl-resource
     tag: latest
 
 - name: bosh-deployment
-  type: docker-image
+  type: registry-image
   source:
-    repository: cloudfoundry/bosh-deployment-resource
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/cloudfoundry/bosh-deployment-resource
 
 - name: bosh-io-stemcell
-  type: docker-image
+  type: registry-image
   source:
-    repository: concourse/bosh-io-stemcell-resource
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/concourse/bosh-io-stemcell-resource
+    tag: latest
 
 - name: custom-terraform
-  type: docker-image
+  type: registry-image
   source:
-    repository: ljfranklin/terraform-resource
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/ljfranklin/terraform-resource
     tag: 0.14.2
 
 - name: slack-notification
-  type: docker-image
+  type: registry-image
   source:
-    repository: cfcommunity/slack-notification-resource
-
-- name: vault
-  type: docker-image
-  source:
-    repository: wfernandes/vault-resource
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/cfcommunity/slack-notification-resource
     tag: latest
 
 - name: pull-request
-  type: docker-image
+  type: registry-image
   source:
-    repository: cryogenics/pr-queue-resource
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/cryogenics/pr-queue-resource
+    tag: latest
 
 - name: gitgat
-  type: docker-image
+  type: registry-image
   source:
-    repository: cryogenics/concourse-gitgat-resource
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/cryogenics/concourse-gitgat-resource
     tag: latest
 
 - name: dynamic-metalink
-  type: docker-image
+  type: registry-image
   source:
-    repository: dpb587/dynamic-metalink-resource
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/dpb587/dynamic-metalink-resource
+    tag: latest
 
 - name: pcf-pool
-  type: docker-image
+  type: registry-image
   source:
-    repository: cftoolsmiths/toolsmiths-envs-resource
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/cftoolsmiths/toolsmiths-envs-resource
+    tag: latest
 
 resources:
 - name: image-cryogenics-essentials
   type: registry-image
   source:
-    repository: cryogenics/essentials
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/cryogenics/essentials
+    tag: latest
 
 - name: image-backup-restore
   type: registry-image
   source:
-    repository: pcfplatformrecovery/backup-and-restore
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/pcfplatformrecovery/backup-and-restore
+    tag: latest
 
 - name: pxc-release
   type: bosh-io-release
@@ -680,6 +685,7 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: image-cryogenics-essentials
     - get: bpm-release
     - get: bosh-release-v260.3
     - get: bosh-release-v271.7
@@ -701,6 +707,7 @@ jobs:
       passed:
       - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
+    image: image-cryogenics-essentials
     file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
   - in_parallel:
     - put: postgres-10-dev-deployment
@@ -753,6 +760,7 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: image-cryogenics-essentials
     - get: bpm-release
     - get: pxc-release
     - get: backup-and-restore-sdk-release
@@ -769,6 +777,7 @@ jobs:
       passed:
       - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
+    image: image-cryogenics-essentials
     file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
   - do:
     #! It seems these 2 deployments cannot be performed in parallel as they
@@ -1480,6 +1489,7 @@ jobs:
   plan:
   - in_parallel:
     - get: cryogenics-concourse-tasks
+    - get: image-cryogenics-essentials
     - get: golang-release
       trigger: true
     - get: backup-and-restore-sdk-release-main
@@ -1498,6 +1508,7 @@ jobs:
       <<: *AWS_ACCESS
   - task: update-go-directive-in-system-tests
     file: cryogenics-concourse-tasks/tasks/bosh/update-go-directive/task.yml
+    image: image-cryogenics-essentials
     params:
       PATH_TO_GO_MODULE: src/system-tests
     input_mapping:
