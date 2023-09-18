@@ -150,10 +150,6 @@ groups:
   - create-final-patch
 
 resource_types:
-  - name: gcs-resource
-    type: registry-image
-    source:
-      repository: harbor-repo.vmware.com/dockerhub-proxy-cache/frodenas/gcs-resource
 - name: semver-1-6 # Unlike the bundled version, supports AWS assume role; Remove after 1.6.0 or later becomes bundled
   type: registry-image
   source:
@@ -465,6 +461,14 @@ resources:
     deployment: database-backup-restorer
     skip_check: true
 
+- name: gcp-db-certs-zip
+  type: s3
+  source:
+    region_name: eu-west-1
+    bucket: bbr-terraform-states
+    versioned_file: gcp-db-certs.zip
+    <<: *aws_credentials_s3
+
 - name: gcs-blobstore-sdk-deployment
   type: bosh-deployment
   source:
@@ -491,7 +495,6 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release
       trigger: true
-    - get: github-sdk-key
     - get: cryogenics-concourse-tasks
   - in_parallel:
     - task: sdk-template-unit-tests
@@ -861,7 +864,7 @@ jobs:
       - deploy-postgres
       - deploy-mysql
     - get: cert-store
-      resource: gcp-db-certs
+      resource: gcp-db-certs-zip
     - get: cf-deployment-env
       trigger: true
       passed:
@@ -885,6 +888,7 @@ jobs:
         POSTGRES_PASSWORD: *postgres-10-password
         POSTGRES_PORT: *postgres-10-port
         POSTGRES_USERNAME: *postgres-10-username
+        ZIP_PASSWORD: *gcp_certs_zip_pass
         TEST_SUITE_NAME: postgresql
         <<: *bosh-smiths-creds
     - task: postgres-system-tests-11
@@ -894,6 +898,7 @@ jobs:
         POSTGRES_PASSWORD: *postgres-11-password
         POSTGRES_PORT: *postgres-11-port
         POSTGRES_USERNAME: *postgres-11-username
+        ZIP_PASSWORD: *gcp_certs_zip_pass
         TEST_SUITE_NAME: postgresql
         <<: *bosh-smiths-creds
     - task: mysql-5-7-system-tests
@@ -1104,7 +1109,7 @@ jobs:
       - deploy-database-sdk
     - get: cryogenics-concourse-tasks
       passed: [unit-tests]
-    - get: gcp-db-certs
+    - get: gcp-db-certs-zip
     - get: cf-deployment-env
       trigger: true
       passed:
@@ -1137,10 +1142,11 @@ jobs:
       params:
         GCP_SERVICE_ACCOUNT_KEY: *service_accounts_gcp_mapbu_cryogenics_owner
         PROJECT_NAME: mapbu-cryogenics
+        ZIP_PASSWORD: *gcp_certs_zip_pass
       ensure:
-        put: gcp-db-certs
+        put: gcp-db-certs-zip
         params:
-          data: gcp-db-certs
+          file: gcp-db-certs-zip/gcp-db-certs.zip
   - in_parallel:
     - do:
       - task: mysql-system-tests-5.7
