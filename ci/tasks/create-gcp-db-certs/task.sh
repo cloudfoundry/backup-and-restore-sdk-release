@@ -27,6 +27,6 @@ unzip -P ${ZIP_PASSWORD} -o -d gcp-db-certs/ gcp-db-certs-zip/gcp-db-certs.zip
     save_server_certs "postgres_9_6_mutual_tls"
   popd
 )
-zip -P ${ZIP_PASSWORD} gcp-db-certs-zip/gcp-db-certs.zip ./gcp-db-certs/*
+zip -j -P ${ZIP_PASSWORD} gcp-db-certs-zip/gcp-db-certs.zip ./gcp-db-certs/*
 
 
