@@ -140,6 +140,7 @@ bosh-smiths-creds: &bosh-smiths-creds
 groups:
 - name: test
   jobs:
+  - lint-pipeline
   - unit-tests
   - check-for-cves
   - contract-tests
@@ -241,6 +242,11 @@ resource_types:
     tag: latest
 
 resources:
+- name: bash
+  type: registry-image
+  source:
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/library/bash
+
 - name: image-cryogenics-essentials
   type: registry-image
   source:
@@ -520,12 +526,29 @@ resources:
     user: pivotal
 
 jobs:
+- name: lint-pipeline
+  serial: true
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release
+      trigger: true
+    - get: cryogenics-concourse-tasks
+    - get: bash
+  - task: check-pipeline-for-stray-secrets
+    image: bash
+    file: cryogenics-concourse-tasks/pipeline-linting/check-pipeline-for-stray-secrets/task.yml
+    input_mapping:
+      cryogenics-concourse-tasks: cryogenics-concourse-tasks
+      pipeline-repo: backup-and-restore-sdk-release
+    params:
+      PIPELINE_TO_CHECK: ./pipeline-repo/ci/pipelines/backup-and-restore-sdk-release/pipeline.yml
 - name: unit-tests
   serial: true
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release
       trigger: true
+      passed: ["lint-pipeline"]
     - get: cryogenics-concourse-tasks
   - in_parallel:
     - task: sdk-template-unit-tests
