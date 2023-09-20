@@ -16,8 +16,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -eu
-
+set -euE
+mkdir -p github-sdk-key
+echo -e "${GITHUB_SDK_KEY}" > github-sdk-key/key
+trap 'rm github-sdk-key/key' EXIT
 eval "$(ssh-agent)"
 chmod 400 github-sdk-key/key
 ssh-add github-sdk-key/key

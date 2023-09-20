@@ -22,6 +22,10 @@ terraform_output() {
   terraform output -state=terraform-state/terraform.tfstate "$1" | jq -r .
 }
 
+if [[ -f cert-store/gcp-db-certs.zip ]]; then
+  unzip -o -P ${ZIP_PASSWORD} -d cert-store cert-store/gcp-db-certs.zip
+fi 
+
 if [ "$DB_TYPE" == "mysql" ]; then
   export MYSQL_HOSTNAME="$( terraform_output "${DB_PREFIX}_address" )"
 
