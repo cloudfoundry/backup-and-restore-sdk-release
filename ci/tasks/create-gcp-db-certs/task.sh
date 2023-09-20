@@ -9,14 +9,14 @@ save_server_certs() {
   local instance_name; instance_name="$(terraform output -state=../terraform-state/terraform.tfstate "${1}_name" | jq -r .)"
 
   gcloud sql instances describe "$instance_name" --format='value(serverCaCert.cert)' > "${certs_prefix}-test-server-cert.pem"
-  if ! gcloud sql ssl-certs list --instance "$instance_name" | grep "test-client-cert "
+  if ! gcloud sql ssl client-certs list --instance "$instance_name" | grep "test-client-cert "
   then
     rm -f "${certs_prefix}-test-client-key.pem"
-    gcloud sql ssl-certs create test-client-cert "${certs_prefix}-test-client-key.pem" --instance "$instance_name"
-    gcloud sql ssl-certs describe test-client-cert --instance "$instance_name" --format='value(cert)' > "${certs_prefix}-test-client-cert.pem"
+    gcloud sql ssl client-certs create test-client-cert "${certs_prefix}-test-client-key.pem" --instance "$instance_name"
+    gcloud sql ssl client-certs describe test-client-cert --instance "$instance_name" --format='value(cert)' > "${certs_prefix}-test-client-cert.pem"
   fi
 }
-
+unzip -P ${ZIP_PASSWORD} -o -d gcp-db-certs/ gcp-db-certs-zip/gcp-db-certs.zip
 (
   pushd gcp-db-certs
     gcloud auth activate-service-account --key-file=<(echo "$GCP_SERVICE_ACCOUNT_KEY")
@@ -26,4 +26,7 @@ save_server_certs() {
     save_server_certs "postgres_9_6"
     save_server_certs "postgres_9_6_mutual_tls"
   popd
- )
+)
+zip -j -P ${ZIP_PASSWORD} gcp-db-certs-zip/gcp-db-certs.zip ./gcp-db-certs/*
+
+
