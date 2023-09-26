@@ -609,8 +609,10 @@ jobs:
       trigger: true
       passed:
       - unit-tests
+    - get: image-cryogenics-essentials
   - in_parallel:
     - task: aws-s3-blobstore-contract-tests
+      image: image-cryogenics-essentials
       file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: s3-blobstore-backup-restore/s3bucket
@@ -621,12 +623,14 @@ jobs:
         <<: *S3_AWS
     - task: gcs-blobstore-contract-tests
       file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
+      image: image-cryogenics-essentials
       params:
         PACKAGE_NAME: gcs-blobstore-backup-restore/contract_test
         GCP_SERVICE_ACCOUNT_KEY: *service_accounts_gcp_cf_backup_and_restore_owner_role_json_key
         GCP_PROJECT_NAME: cf-backup-and-restore
     - task: azure-blobstore-contract-tests
       file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
+      image: image-cryogenics-essentials
       params:
         PACKAGE_NAME: azure-blobstore-backup-restore/contract_test
         AZURE_STORAGE_ACCOUNT: *azure_credentials_storage_account_1
