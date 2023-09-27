@@ -1688,11 +1688,13 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
+    - get: image-cryogenics-essentials
     - get: daily-trigger
       trigger: true
 
   - task: bump-mysql
     file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
+    image: image-cryogenics-essentials
     input_mapping:
       task-repo: cryogenics-concourse-tasks
       bump-repo: backup-and-restore-sdk-release-main
@@ -1709,11 +1711,13 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
+    - get: image-cryogenics-essentials
     - get: daily-trigger
       trigger: true
 
   - task: bump-ncurses
     file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
+    image: image-cryogenics-essentials
     input_mapping:
       task-repo: cryogenics-concourse-tasks
       bump-repo: backup-and-restore-sdk-release-main
@@ -1778,11 +1782,13 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
+    - get: image-cryogenics-essentials
     - get: daily-trigger
       trigger: true
 
   - task: bump-libpcre2
     file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
+    image: image-cryogenics-essentials
     input_mapping:
       task-repo: cryogenics-concourse-tasks
       bump-repo: backup-and-restore-sdk-release-main
@@ -1805,6 +1811,7 @@ jobs:
       - load_var: cryogenics-essentials-version
         file: image-cryogenics-essentials/tag
       - task: bump-tasks
+        image: image-cryogenics-essentials
         file: cryogenics-concourse-tasks/deps-automation/bump-concourse-tasks/task.yml
         params:
           TASKS_FOLDER: ci/tasks/
@@ -1819,6 +1826,7 @@ jobs:
         branch: &bump-ci-task-branch bump-cryogenics-essentials-to-v((.:cryogenics-essentials-version))
         force: true
     - task: create-pull-request
+      image: image-cryogenics-essentials
       file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
       params:
         BASE: main
