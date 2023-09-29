@@ -651,7 +651,9 @@ jobs:
       trigger: true
     - get: version
       params: {pre: rc}
+    - get: image-cryogenics-essentials
   - task: create-dev-release
+    image: image-cryogenics-essentials
     file: backup-and-restore-sdk-release/ci/tasks/create-dev-release/task.yml
   - put: release
     params:
