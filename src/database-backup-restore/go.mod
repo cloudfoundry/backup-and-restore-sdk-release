@@ -5,7 +5,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.7.0
 	github.com/onsi/ginkgo/v2 v2.12.1
-	github.com/onsi/gomega v1.27.10
+	github.com/onsi/gomega v1.28.0
 	github.com/pivotal-cf-experimental/go-binmock v0.0.0-20171027112700-f797157c64e9
 )
 
