@@ -252,7 +252,7 @@ resources:
 - name: image-cryogenics-essentials
   type: registry-image
   source:
-    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/cryogenics/essentials
+    repository: harbor-repo.vmware.com/cryogenics/essentials
     tag: latest
 
 - name: image-backup-restore
