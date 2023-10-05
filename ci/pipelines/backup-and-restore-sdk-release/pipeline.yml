@@ -253,7 +253,6 @@ resources:
   type: registry-image
   source:
     repository: harbor-repo.vmware.com/cryogenics/essentials
-    tag: latest
 
 - name: image-backup-restore
   type: registry-image
