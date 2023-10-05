@@ -3,17 +3,15 @@ image_resource:
   type: registry-image
   source:
     repository: harbor-repo.vmware.com/cryogenics/essentials
-    tag: 0.1.70
+    tag: latest
 inputs:
   - name: backup-and-restore-sdk-release
   - name: terraform-state
   - name: gcp-db-certs-zip
 outputs:
   - name: gcp-db-certs-zip
-
 params:
   GCP_SERVICE_ACCOUNT_KEY:
-  # this got added manually to the runway vault. It just adds a layer of felt security to have a PW protected zip with db credentials. The bucket shouldn't be public anyway, but better safe than sorry
   ZIP_PASSWORD: ((bbr/db-cert-zip-password.pass))
 run:
   path: backup-and-restore-sdk-release/ci/tasks/create-gcp-db-certs/task.sh
