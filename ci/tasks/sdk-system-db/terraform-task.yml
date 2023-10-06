@@ -3,7 +3,7 @@ image_resource:
   type: registry-image
   source:
     repository: harbor-repo.vmware.com/cryogenics/essentials
-    tag: 0.1.70
+    tag: 0.1.74
 inputs:
   - name: backup-and-restore-sdk-release
   - name: terraform-state
@@ -39,4 +39,4 @@ params:
   TEST_TLS_VERIFY_IDENTITY: true
   TEST_SSL_USER_REQUIRES_SSL: true
   TEST_SUITE_NAME:
-  ZIP_PASSWORD: 
+  ZIP_PASSWORD:
