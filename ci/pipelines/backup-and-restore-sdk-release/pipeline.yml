@@ -1382,7 +1382,7 @@ jobs:
       - deploy-gcs-blobstore-sdk
     - get: cryogenics-concourse-tasks
       passed: [unit-tests]
-    -get: image-cryogenics-essentials
+    - get: image-cryogenics-essentials
   - task: alias-env
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
