@@ -926,6 +926,7 @@ jobs:
       - deploy-mysql
     - get: cert-store
       resource: gcp-db-certs-zip
+    - get: image-cryogenics-essentials
     - get: cf-deployment-env
       trigger: true
       passed:
@@ -1244,6 +1245,7 @@ jobs:
       trigger: true
       passed:
       - deploy-database-sdk
+    - get: image-cryogenics-essentials
   - put: terraform
     params:
       terraform_source: cryogenics-concourse-tasks/pipelines/backup-and-restore-sdk-release/terraform/bbr-sdk-system-tests/aws/
