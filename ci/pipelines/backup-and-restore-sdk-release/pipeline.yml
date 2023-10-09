@@ -926,7 +926,6 @@ jobs:
       - deploy-mysql
     - get: cert-store
       resource: gcp-db-certs-zip
-    - get: image-cryogenics-essentials
     - get: cf-deployment-env
       trigger: true
       passed:
