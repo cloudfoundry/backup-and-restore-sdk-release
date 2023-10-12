@@ -6,11 +6,11 @@ require (
 	cloud.google.com/go/storage v1.33.0
 	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.51
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.7.0
-	github.com/onsi/ginkgo/v2 v2.12.1
+	github.com/onsi/ginkgo/v2 v2.13.0
 	github.com/onsi/gomega v1.28.0
 	golang.org/x/net v0.16.0
 	golang.org/x/oauth2 v0.13.0
-	google.golang.org/api v0.145.0
+	google.golang.org/api v0.146.0
 )
 
 require (
