@@ -100,7 +100,7 @@ func downloadFileToTmp(bucket, endpoint, key string) string {
 		"--key", key,
 		bodyFile.Name())
 
-	runAwsCommandWithTimeout(baseCmd, 15*time.Minute)
+	runAwsCommandWithTimeout(baseCmd, 20*time.Minute)
 
 	return bodyFile.Name()
 }
