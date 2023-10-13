@@ -10,7 +10,8 @@
 
 aws-region: &aws-region eu-west-1
 aws-backup-region: &aws-backup-region eu-central-1
-number_of_claim_env_retries: &number_of_claim_env_retries 5
+attempts: &number_of_contract_test_retries 2
+claim-retries: &number_of_claim_retries 5
 
 aws-access: &aws-access
 #! the aws_access_key_id was needed on 2023-07-03 to access blobstores and test buckets in the BBRSDK AWS project. Generated using AWS cloudgate here: https://console.cloudgate.vmware.com/ui/#/cloud/116462199383/ou/ou-kw69-imy2w5hl/account/686843836666
@@ -612,6 +613,7 @@ jobs:
     - get: image-cryogenics-essentials
   - in_parallel:
     - task: aws-s3-blobstore-contract-tests
+      attempts: *number_of_contract_test_retries
       image: image-cryogenics-essentials
       file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
       params:
@@ -737,7 +739,7 @@ jobs:
       trigger: true
       passed: [build-rc]
     - put: cf-deployment-env
-      attempts: *number_of_claim_env_retries
+      attempts: *number_of_claim_retries
       params:
         action: claim
         env_file: cf-deployment-env/metadata
@@ -999,7 +1001,7 @@ jobs:
       trigger: true
       passed: [build-rc]
     - put: cf-deployment-env
-      attempts: *number_of_claim_env_retries
+      attempts: *number_of_claim_retries
       params:
         action: claim
         env_file: cf-deployment-env/metadata
