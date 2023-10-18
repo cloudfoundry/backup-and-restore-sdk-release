@@ -706,7 +706,7 @@ jobs:
         TEST_SUITE_NAME: s3
         FOCUS_SPEC: backs up and restores in-place # focus on one it to avoid redundant testing
         BOSH_DEPLOYMENT: s3-backuper
-        BOSH_GW_USER: jumpbox
+        BOSH_GW_USER: ubuntu
         AWS_TEST_BUCKET_NAME: iam-instance-role-test
         AWS_TEST_BUCKET_REGION: *aws-region
         AWS_TEST_CLONE_BUCKET_NAME: iam-instance-role-test-clone
