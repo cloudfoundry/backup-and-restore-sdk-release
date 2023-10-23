@@ -12,8 +12,8 @@ cloud.google.com/go/storage v1.33.0/go.mod h1:Hhh/dogNRGca7IWv1RC2YqEn0c0G77ctA/
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
-github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.52 h1:EIemF1a1Pc0+ey12rO4npVezo3v6IDp5rpfC//4eHRY=
-github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.52/go.mod h1:Wf4IjZUwS/H38/oKIrHSZHRaW22imNdnPkROA7+c8IY=
+github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.53 h1:NdGxaZq/Dd4Gt/AsE3fhxERJ/oeT4pzt0SvxZUiPcx4=
+github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.53/go.mod h1:Am6OYyo7K8pPbkAtQY7lCnRiG3hiwU5t51rslRFnWXg=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
