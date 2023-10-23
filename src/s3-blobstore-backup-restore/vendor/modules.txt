@@ -90,7 +90,7 @@ github.com/aws/smithy-go/time
 github.com/aws/smithy-go/transport/http
 github.com/aws/smithy-go/transport/http/internal/io
 github.com/aws/smithy-go/waiter
-# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.52
+# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.53
 ## explicit; go 1.21
 github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor
 # github.com/go-logr/logr v1.2.4

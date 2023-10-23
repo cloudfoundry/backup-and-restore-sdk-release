@@ -28,8 +28,8 @@ github.com/aws/aws-sdk-go-v2/service/sts v1.23.2 h1:0BkLfgeDjfZnZ+MhB3ONb01u9pwF
 github.com/aws/aws-sdk-go-v2/service/sts v1.23.2/go.mod h1:Eows6e1uQEsc4ZaHANmsPRzAKcVDrcmjjWiih2+HUUQ=
 github.com/aws/smithy-go v1.15.0 h1:PS/durmlzvAFpQHDs4wi4sNNP9ExsqZh6IlfdHXgKK8=
 github.com/aws/smithy-go v1.15.0/go.mod h1:Tg+OJXh4MB2R/uN61Ko2f6hTZwB/ZYGOtib8J3gBHzA=
-github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.52 h1:EIemF1a1Pc0+ey12rO4npVezo3v6IDp5rpfC//4eHRY=
-github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.52/go.mod h1:Wf4IjZUwS/H38/oKIrHSZHRaW22imNdnPkROA7+c8IY=
+github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.53 h1:NdGxaZq/Dd4Gt/AsE3fhxERJ/oeT4pzt0SvxZUiPcx4=
+github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.53/go.mod h1:Am6OYyo7K8pPbkAtQY7lCnRiG3hiwU5t51rslRFnWXg=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
