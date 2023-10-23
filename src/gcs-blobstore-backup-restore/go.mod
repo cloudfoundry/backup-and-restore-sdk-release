@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	cloud.google.com/go/storage v1.33.0
-	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.52
+	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.53
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.7.0
 	github.com/onsi/ginkgo/v2 v2.13.0
 	github.com/onsi/gomega v1.28.0
