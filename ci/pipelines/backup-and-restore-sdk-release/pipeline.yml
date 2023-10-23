@@ -1506,6 +1506,7 @@ jobs:
     - get: cryogenics-concourse-tasks
     - get: image-cryogenics-essentials
   - task: create-final-release
+    image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/bosh-tasks/create-release/task.yml
     input_mapping:
       release-repo: backup-and-restore-sdk-release-main
