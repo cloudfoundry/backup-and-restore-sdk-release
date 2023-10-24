@@ -8,6 +8,13 @@
 #! Secrets we need to run this pipeline
 #! ************************************
 
+#! this needs to come first, else all other vars can't be resolved.
+#! cerberus creds are required to access the teams vault instance managed by cerberus. The creds have been created manually via the vault-cli targetting the teams cerberus vault. Example steps to create an approle are here: https://developer.hashicorp.com/vault/docs/auth/approle the required value for policies is `restricted-admin` the auth method is mounted on the standard path.
+cerberus: &cerberus
+  role_id: ((cerberus-auth.role_id))
+  secret_id: ((cerberus-auth.secret_id))
+
+
 aws-region: &aws-region eu-west-1
 aws-backup-region: &aws-backup-region eu-central-1
 attempts: &number_of_contract_test_retries 2
@@ -15,10 +22,10 @@ claim-retries: &number_of_claim_retries 5
 
 aws-access: &aws-access
 #! the aws_access_key_id was needed on 2023-07-03 to access blobstores and test buckets in the BBRSDK AWS project. Generated using AWS cloudgate here: https://console.cloudgate.vmware.com/ui/#/cloud/116462199383/ou/ou-kw69-imy2w5hl/account/686843836666
-  aws-access-key-id: &aws_access_key ((bbr/aws_s3_creds.access_key_id))
-  aws-secret-access-key: &aws_secret_key ((bbr/aws_s3_creds.secret_access_key))
+  aws-access-key-id: &aws_access_key ((cerberus:bbr/aws_s3_creds.access_key_id))
+  aws-secret-access-key: &aws_secret_key ((cerberus:bbr/aws_s3_creds.secret_access_key))
 #! the aws_assumed_role_arn was needed on 2023-07-03 to access blobstores and test buckets in the BBRSDK AWS project. Generated using AWS cloudgate here: https://console.cloudgate.vmware.com/ui/#/cloud/116462199383/ou/ou-kw69-imy2w5hl/account/686843836666
-  aws-assumed-role-arn: &aws_role_arn ((bbr/aws_s3_creds.assumed_role_arn))
+  aws-assumed-role-arn: &aws_role_arn ((cerberus:bbr/aws_s3_creds.assumed_role_arn))
 
 #! following are the various snippets containing the aws secrets.
 S3_AWS: &S3_AWS
@@ -45,43 +52,45 @@ aws_credentials_tf: &aws_credentials_tf
 #! Generated using our BBR Azure account here: https://portal.azure.com/#@pivotalio.onmicrosoft.com/resource/subscriptions/e9e0dbcc-42dd-45fb-823c-45103db37dd3/overview
 #! you can sign in to azure at https://portal.azure.com using either username USER@vmware.com or USER@pivotalazure.vmware.com , depending on how old your login is.
 azure:
-   azure_credentials_storage_account_1: &azure_credentials_storage_account_1 ((bbr/azure_creds.storage_account_1))
-   azure_credentials_storage_key_1: &azure_credentials_storage_key_1 ((bbr/azure_creds.storage_key_1))
-   azure_credentials_storage_account_2: &azure_credentials_storage_account_2 ((bbr/azure_creds.storage_account_2))
-   azure_credentials_storage_key_2: &azure_credentials_storage_key_2 ((bbr/azure_creds.storage_key_2))
-   azure_storage_account_no_soft_delete: &azure_storage_account_no_soft_delete ((bbr/azure_creds.storage_account_no_soft_delete))
-   azure_storage_key_no_soft_delete: &azure_storage_key_no_soft_delete ((bbr/azure_creds.storage_key_no_soft_delete))
+   azure_credentials_storage_account_1: &azure_credentials_storage_account_1 ((cerberus:bbr/azure_creds.storage_account_1))
+   azure_credentials_storage_key_1: &azure_credentials_storage_key_1 ((cerberus:bbr/azure_creds.storage_key_1))
+   azure_credentials_storage_account_2: &azure_credentials_storage_account_2 ((cerberus:bbr/azure_creds.storage_account_2))
+   azure_credentials_storage_key_2: &azure_credentials_storage_key_2 ((cerberus:bbr/azure_creds.storage_key_2))
+   azure_storage_account_no_soft_delete: &azure_storage_account_no_soft_delete ((cerberus:bbr/azure_creds.storage_account_no_soft_delete))
+   azure_storage_key_no_soft_delete: &azure_storage_key_no_soft_delete ((cerberus:bbr/azure_creds.storage_key_no_soft_delete))
 
 gcp:
   #! service_accounts_bucket_owner_json_key was needed on 2023-07-03 for deploying database infra for testing. Generated using personal creds in the mapbu-cryogenics GCP account.
-  service_accounts_bucket_owner_json_key: &service_accounts_bucket_owner_json_key ((gcp/service_accounts/bucket_owner.json_key))
+  service_accounts_bucket_owner_json_key: &service_accounts_bucket_owner_json_key ((cerberus:gcp/service_accounts/bucket_owner.json_key))
 #! service_accounts_gcp_cf_backup_and_restore_owner_role_json_key was needed on 2023-07-03 for actually running the GCP tests. Presumably it has lower privileges than the other two GCP keys?. Generated using personal creds in the mapbu-cryogenics GCP account.
-  service_accounts_gcp_cf_backup_and_restore_owner_role_json_key: &service_accounts_gcp_cf_backup_and_restore_owner_role_json_key ((gcp/service_accounts/owner_role.json_key))
+  service_accounts_gcp_cf_backup_and_restore_owner_role_json_key: &service_accounts_gcp_cf_backup_and_restore_owner_role_json_key ((cerberus:gcp/service_accounts/owner_role.json_key))
   #! service_accounts_gcp_mapbu_cryogenics_owner was needed on 2023-07-03 for cutting internet, and deploying database infra for testing. Generated using personal creds in the mapbu-cryogenics GCP account.
-  service_accounts_gcp_mapbu_cryogenics_owner: &service_accounts_gcp_mapbu_cryogenics_owner ((gcp/service_accounts/owner.json_key))
+  service_accounts_gcp_mapbu_cryogenics_owner: &service_accounts_gcp_mapbu_cryogenics_owner ((cerberus:gcp/service_accounts/owner.json_key))
 
 #! gcp_certs_zip_pass was needed on 2023-07-03 to password protect the zip that contains connection credentials for GCP/RDS DB Instances. They are generated in `task: create-gcp-db-certs`. The password itself was manually generated and put into vault. 
-gcp_certs_zip_pass: &gcp_certs_zip_pass ((bbr/db-cert-zip-password.pass))
+gcp_certs_zip_pass: &gcp_certs_zip_pass ((cerberus:bbr/db-cert-zip-password.pass))
 
 git:
 #! git_token was needed on 2023-07-03 to access PRs. Generated by using github account in lastpass at Shared-Cryogenics/infrastructure-root/github-ci-account
-  token: &git_token ((github.access_token))
+  token: &git_token ((cerberus:github.access_token))
 #! git_ssh_key was needed on 2023-07-03 to access private repos. Generated via uploading a public key to github.com
-  ssh_key: &git_ssh_key ((github.ssh_key)) 
+  ssh_key: &git_ssh_key ((cerberus:github.ssh_key)) 
 
 #! slack_webhook was needed on 2023-06-30 to notify the team when we automatically cut a new release. Copied from Shared-Cryogenics/infrastructure-root/slack-webhooks in lastpass, originally generated (we think) by HelpNow+ ticket.
-slack_webhook: &slack_webhook ((slack.webhook))
+slack_webhook: &slack_webhook ((cerberus:slack.webhook))
 
 #! toolsmiths_api_token was needed on 2023-03-30 for claiming CF-D environments to run integration tests. The token was given to us by the #cf-toolsmiths team, and is in lastpass at Shared-Cryogenics/infrastructure-root/cryo-toolsmiths-api-token
-toolsmiths_api_token: &toolsmiths_api_token ((toolsmiths.api_token))
+toolsmiths_api_token: &toolsmiths_api_token ((cerberus:toolsmiths.api_token))
 
 #! The following external DB creds were needed on 2023-07-03 for testing the BBR SDK with some external databases.
 external_db_passwords: &external_db_passwords
-  mysql_5_7_password: &mysql_5_7_password ((bbr/sdk-external-db-creds.rds_5_7_password))
-  postgres_10_password: &postgres_10_password ((bbr/sdk-external-db-creds.rds_postgres_10_password))
-  postgres_11_password: &postgres_11_password ((bbr/sdk-external-db-creds.rds_postgres_11_password))
-  postgres_13_password: &postgres_13_password ((bbr/sdk-external-db-creds.rds_postgres_13_password))
-  mariadb_10_password: &mariadb_10_password ((bbr/sdk-external-db-creds.rds_mariadb_10_password))
+  
+  mysql_5_7_gcp_password: &mysql_5_7_gcp_password ((cerberus:bbr/sdk-external-db-creds.gcp_mysql_5_7_password))
+  mysql_5_7_password: &mysql_5_7_password ((cerberus:bbr/sdk-external-db-creds.rds_5_7_password))
+  postgres_10_password: &postgres_10_password ((cerberus:bbr/sdk-external-db-creds.rds_postgres_10_password))
+  postgres_11_password: &postgres_11_password ((cerberus:bbr/sdk-external-db-creds.rds_postgres_11_password))
+  postgres_13_password: &postgres_13_password ((cerberus:bbr/sdk-external-db-creds.rds_postgres_13_password))
+  mariadb_10_password: &mariadb_10_password ((cerberus:bbr/sdk-external-db-creds.rds_mariadb_10_password))
 
 #! The following DB certs were needed on 2023-07-03 for deploying some databases, and then connecting to them in our tests. Generated out of whole cloth, they don't refer to any external infra.
 mysql-5-7-deployment-name: &mysql-5-7-deployment-name mysql-5-7-dev
@@ -92,9 +101,9 @@ mysql_common: &mysql_common
   MYSQL_USERNAME: &mysql-username root
   MYSQL_PASSWORD: &mysql-password mysql_password
 msysq_certs_common: &msysq_certs_common
-  databases.ca: &mysql_ca_cert ((bbr/sdk-db-certs.mysql_ca_cert))
-  databases.certificate: &mysql_cert ((bbr/sdk-db-certs.mysql_client_cert))
-  databases.private_key: &mysql_private_key ((bbr/sdk-db-certs.mysql_client_key))
+  databases.ca: &mysql_ca_cert ((cerberus:bbr/sdk-db-certs.mysql_ca_cert))
+  databases.certificate: &mysql_cert ((cerberus:bbr/sdk-db-certs.mysql_client_cert))
+  databases.private_key: &mysql_private_key ((cerberus:bbr/sdk-db-certs.mysql_client_key))
 
 mysql_params_5: &mysql_params_5
   MYSQL_HOSTNAME: *mysql-5-7-host
@@ -113,8 +122,8 @@ mysql_params_8: &mysql_params_8
   MYSQL_CLIENT_KEY: *mysql_private_key
   <<: *mysql_common
 
-minio-access-key: &minio_access_key ((bbr/minio-creds.access_key))
-minio-secret-key: &minio_secret_key ((bbr/minio-creds.secret_key))
+minio-access-key: &minio_access_key ((cerberus:bbr/minio-creds.access_key))
+minio-secret-key: &minio_secret_key ((cerberus:bbr/minio-creds.secret_key))
 
 postgres-10-deployment-name: &postgres-10-deployment-name postgres-10-dev
 postgres-10-host: &postgres-10-host 10.0.255.12
@@ -141,6 +150,14 @@ bosh-smiths-creds: &bosh-smiths-creds
   BOSH_GW_HOST: ((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))
   BOSH_GW_PRIVATE_KEY: ((.:pooled-env.INSTANCE_JUMPBOX_PRIVATE))
 
+var_sources:
+- name: cerberus
+  type: vault
+  config:
+    auth_backend: approle
+    auth_params: *cerberus
+    url: https://vault.console.cerberus.vmware.com/add164e1-f7fe-4e62-a548-a65690758636/
+    path_prefix: secret
 groups:
 - name: test
   jobs:
@@ -1198,7 +1215,7 @@ jobs:
           director-external-ip: ((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))
           director-jumpbox-ip: ((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))
           gcp-key: *service_accounts_gcp_mapbu_cryogenics_owner
-          mysql-5-7-password: ((bbr/sdk-external-db-creds.gcp_mysql_5_7_password))
+          mysql-5-7-password: *mysql_5_7_gcp_password  
       get_params:
         output_statefile: true
     - task: create-gcp-db-certs
@@ -1229,7 +1246,7 @@ jobs:
           MYSQL_CA_CERT_PATH: gcp-mysql_5_7-test-server-cert.pem
           MYSQL_CLIENT_CERT_PATH: gcp-mysql_5_7-test-client-cert.pem
           MYSQL_CLIENT_KEY_PATH: gcp-mysql_5_7-test-client-key.pem
-          MYSQL_PASSWORD: ((bbr/sdk-external-db-creds.gcp_mysql_5_7_password))
+          MYSQL_PASSWORD: *mysql_5_7_gcp_password 
           ZIP_PASSWORD: *gcp_certs_zip_pass
           TEST_SUITE_NAME: mysql
           TEST_TLS_VERIFY_IDENTITY: false
