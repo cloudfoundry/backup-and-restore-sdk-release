@@ -12,7 +12,7 @@ require (
 	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.53
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.7.0
 	github.com/onsi/ginkgo/v2 v2.13.0
-	github.com/onsi/gomega v1.28.0
+	github.com/onsi/gomega v1.28.1
 )
 
 require (
@@ -28,7 +28,7 @@ require (
 	github.com/aws/smithy-go v1.15.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/pprof v0.0.0-20230926050212-f7f687d19a98 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	golang.org/x/mod v0.13.0 // indirect
