@@ -767,11 +767,6 @@ jobs:
       cryogenics-tasks: cryogenics-concourse-tasks
     params:
       GCP_SERVICE_ACCOUNT_KEY: *service_accounts_gcp_mapbu_cryogenics_owner
-  - task: allow-tunnel-from-jumpbox-to-database-vms
-    input_mapping:
-      env: cf-deployment-env
-    file: backup-and-restore-sdk-release/ci/tasks/allow-tunnel-from-jumpbox-to-database-vms/task.yml
-
 - name: deploy-postgres
   serial: true
   plan:
@@ -814,6 +809,9 @@ jobs:
           db_host: *postgres-10-host
           <<: *pg_deployment_common
           availability_zone: z1
+          vm_extensions: ["cf-tcp-router-network-properties"]
+        ops_files: 
+        - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
         source_file: source-file/source-file.yml
     - put: postgres-11-dev-deployment
       params:
@@ -825,6 +823,9 @@ jobs:
           db_host: *postgres-11-host
           <<: *pg_deployment_common
           availability_zone: z1
+          vm_extensions: ["cf-tcp-router-network-properties"]
+        ops_files: 
+        - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
         source_file: source-file/source-file.yml
         releases:
         - postgres-release-v37/*.tgz
@@ -839,6 +840,9 @@ jobs:
           db_host: *postgres-13-host
           <<: *pg_deployment_common
           availability_zone: z1
+          vm_extensions: ["cf-tcp-router-network-properties"]
+        ops_files: 
+        - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
         source_file: source-file/source-file.yml
         releases:
         - bpm-release/*.tgz
@@ -883,6 +887,9 @@ jobs:
           db_host: *mysql-5-7-host
           availability_zone: z1
           <<: *msysq_certs_common
+          vm_extensions: ["cf-tcp-router-network-properties"]
+        ops_files: 
+        - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
         source_file: source-file/source-file.yml
         releases:
         - bpm-release/*.tgz
@@ -899,6 +906,9 @@ jobs:
           db_host: *mysql-8-0-host
           availability_zone: z1
           <<: *msysq_certs_common
+          vm_extensions: ["cf-tcp-router-network-properties"]
+        ops_files: 
+        - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
         source_file: source-file/source-file.yml
         releases:
         - bpm-release/*.tgz
