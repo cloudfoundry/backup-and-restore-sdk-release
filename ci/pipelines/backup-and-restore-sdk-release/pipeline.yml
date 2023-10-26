@@ -785,7 +785,6 @@ jobs:
         duration: 24h
         resource: cf-deployment-env-airgapped
         timeout: 6h
-
 - name: deploy-postgres
   serial: true
   plan:
