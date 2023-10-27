@@ -14,6 +14,8 @@ cerberus: &cerberus
   role_id: ((cerberus-auth.role_id))
   secret_id: ((cerberus-auth.secret_id))
 
+shepherd_account_key: &shepherd_account_key ((cerberus:shepherd.sa_key))
+  #! shepherd_account_key was needed on 2023-10-26 to claim shepherd environments. It was created using `shepherd create service-account` after logging in with WS1.
 
 aws-region: &aws-region eu-west-1
 aws-backup-region: &aws-backup-region eu-central-1
@@ -78,9 +80,6 @@ git:
 
 #! slack_webhook was needed on 2023-06-30 to notify the team when we automatically cut a new release. Copied from Shared-Cryogenics/infrastructure-root/slack-webhooks in lastpass, originally generated (we think) by HelpNow+ ticket.
 slack_webhook: &slack_webhook ((cerberus:slack.webhook))
-
-#! toolsmiths_api_token was needed on 2023-03-30 for claiming CF-D environments to run integration tests. The token was given to us by the #cf-toolsmiths team, and is in lastpass at Shared-Cryogenics/infrastructure-root/cryo-toolsmiths-api-token
-toolsmiths_api_token: &toolsmiths_api_token ((cerberus:toolsmiths.api_token))
 
 #! The following external DB creds were needed on 2023-07-03 for testing the BBR SDK with some external databases.
 external_db_passwords: &external_db_passwords
@@ -208,6 +207,12 @@ resource_types:
   source:
     repository: harbor-repo.vmware.com/dockerhub-proxy-cache/concourse/semver-resource
     tag: 1.6
+    
+- name: shepherd
+  source:
+    tag: v1
+    repository: us-west2-docker.pkg.dev/shepherd-268822/shepherd2/concourse-resource
+  type: registry-image
 
 - name: file-url
   type: registry-image
@@ -326,13 +331,30 @@ resources:
     repository: cloudfoundry/postgres-release
     regexp: 37
 
-- name: cf-deployment-env
+- name: cf-deployment-env-non-airgapped
   icon: pool
-  type: pcf-pool
+  type: shepherd
   source:
-    api_token: *toolsmiths_api_token
-    hostname: environments.toolsmiths.cf-app.com
-    pool_name: cryo_cf-deployment
+    url: https://v2.shepherd.run
+    service-account-key: *shepherd_account_key
+    compatibility-mode: environments-app
+    lease:
+      namespace: cryogenics
+      pool:
+        namespace: official
+        name: cfd
+
+- name: cf-deployment-env-airgapped
+  type: shepherd
+  source:
+    url: https://v2.shepherd.run
+    service-account-key: *shepherd_account_key
+    lease:
+      namespace: cryogenics
+      template:
+        namespace: binj
+        name: gcp-cfd-airgap-template
+        revision: "1.0"
 
 - name: rds-ca-bundle
   type: file-url
@@ -755,18 +777,14 @@ jobs:
     - get: release
       trigger: true
       passed: [build-rc]
-    - put: cf-deployment-env
+    - put: cf-deployment-env-airgapped
       attempts: *number_of_claim_retries
+      timeout: 6h
       params:
-        action: claim
-        env_file: cf-deployment-env/metadata
-  - task: cut-internet
-    file: cryogenics-concourse-tasks/tasks/toolsmiths/cut-internet-from-cf-deployment/task.yml
-    input_mapping:
-      cf-deployment-env: cf-deployment-env
-      cryogenics-tasks: cryogenics-concourse-tasks
-    params:
-      GCP_SERVICE_ACCOUNT_KEY: *service_accounts_gcp_mapbu_cryogenics_owner
+        action: create
+        duration: 24h
+        resource: cf-deployment-env-airgapped
+        timeout: 6h
 - name: deploy-postgres
   serial: true
   plan:
@@ -788,13 +806,15 @@ jobs:
       passed:
       - claim-cf-deployment-airgapped
     - get: jammy-stemcell
-    - get: cf-deployment-env
+    - get: cf-deployment-env-airgapped
       trigger: true
       passed:
       - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
     file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    input_mapping:
+      cf-deployment-env: cf-deployment-env-airgapped
   - in_parallel:
     - put: postgres-10-dev-deployment
       params:
@@ -864,13 +884,15 @@ jobs:
       passed:
       - claim-cf-deployment-airgapped
     - get: jammy-stemcell
-    - get: cf-deployment-env
+    - get: cf-deployment-env-airgapped
       trigger: true
       passed:
       - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
     file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    input_mapping:
+      cf-deployment-env: cf-deployment-env-airgapped
   - do:
     #! It seems these 2 deployments cannot be performed in parallel as they
     #! compile the same release against the same stemcell and therefore BOSH
@@ -927,12 +949,14 @@ jobs:
       passed:
         - claim-cf-deployment-airgapped
     - get: jammy-stemcell
-    - get: cf-deployment-env
+    - get: cf-deployment-env-airgapped
       trigger: true
       passed:
         - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    input_mapping:
+      cf-deployment-env: cf-deployment-env-airgapped
   - put: database-backup-restorer-deployment
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/database-backup-restorer.yml
@@ -943,6 +967,9 @@ jobs:
       vars:
         deployment-name: database-backup-restorer
         availability_zone: z1
+        vm_extensions: ["cf-tcp-router-network-properties"]
+      ops_files: 
+      - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
       source_file: source-file/source-file.yml
 
 - name: system-tests-internal-dbs
@@ -957,7 +984,7 @@ jobs:
       - deploy-mysql
     - get: cert-store
       resource: gcp-db-certs-zip
-    - get: cf-deployment-env
+    - get: cf-deployment-env-airgapped
       trigger: true
       passed:
       - deploy-database-sdk-on-airgapped-env
@@ -971,7 +998,7 @@ jobs:
     image: image-cryogenics-essentials
     input_mapping:
       cryogenics-tasks: cryogenics-concourse-tasks
-      toolsmiths-env: cf-deployment-env
+      toolsmiths-env: cf-deployment-env-airgapped
   - load_var: pooled-env
     file: bosh-env/metadata.yml
   - in_parallel:
@@ -1010,14 +1037,14 @@ jobs:
 
 - name: unclaim-cf-deployment-airgapped
   plan:
-  - get: cf-deployment-env
+  - get: cf-deployment-env-airgapped
     trigger: true
     passed:
     - system-tests-internal-dbs
-  - put: cf-deployment-env
+  - put: cf-deployment-env-airgapped
     params:
-      action: unclaim
-      env_file: cf-deployment-env/metadata
+      action: release
+      resource: cf-deployment-env-airgapped
 
 - name: claim-cf-deployment
   plan:
@@ -1027,15 +1054,14 @@ jobs:
     - get: release
       trigger: true
       passed: [build-rc]
-    - put: cf-deployment-env
+    - put: cf-deployment-env-non-airgapped
       attempts: *number_of_claim_retries
+      timeout: 6h
       params:
-        action: claim
-        env_file: cf-deployment-env/metadata
-  - task: allow-tunnel-from-jumpbox-to-database-vms
-    input_mapping:
-      env: cf-deployment-env
-    file: backup-and-restore-sdk-release/ci/tasks/allow-tunnel-from-jumpbox-to-database-vms/task.yml
+        action: create
+        duration: 24h
+        resource: cf-deployment-env-non-airgapped
+        timeout: 6h
 
 - name: deploy-database-sdk
   serial: true
@@ -1050,12 +1076,14 @@ jobs:
       passed:
       - claim-cf-deployment
     - get: jammy-stemcell
-    - get: cf-deployment-env
+    - get: cf-deployment-env-non-airgapped
       trigger: true
       passed:
       - claim-cf-deployment
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    input_mapping:
+      cf-deployment-env: cf-deployment-env-non-airgapped
   - put: database-backup-restorer-deployment
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/database-backup-restorer.yml
@@ -1066,6 +1094,9 @@ jobs:
       vars:
         deployment-name: database-backup-restorer
         availability_zone: z1
+        vm_extensions: ["cf-tcp-router-network-properties"]
+      ops_files: 
+      - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
       source_file: source-file/source-file.yml
 
 - name: deploy-s3-blobstore-sdk
@@ -1081,12 +1112,14 @@ jobs:
       passed:
       - claim-cf-deployment
     - get: jammy-stemcell
-    - get: cf-deployment-env
+    - get: cf-deployment-env-non-airgapped
       trigger: true
       passed:
       - claim-cf-deployment
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    input_mapping:
+      cf-deployment-env: cf-deployment-env-non-airgapped
   - put: aws-blobstore-sdk-deployment
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/s3-backuper.yml
@@ -1120,6 +1153,9 @@ jobs:
         s3-unversioned-clone-bucket-name: sdk-unversioned-clone
         s3-unversioned-clone-bucket-region: us-east-1
         <<: *aws-access
+        vm_extensions: ["cf-tcp-router-network-properties"]
+      ops_files: 
+      - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
       source_file: source-file/source-file.yml
 
 - name: deploy-azure-blobstore-sdk
@@ -1135,12 +1171,14 @@ jobs:
       passed:
       - claim-cf-deployment
     - get: jammy-stemcell
-    - get: cf-deployment-env
+    - get: cf-deployment-env-non-airgapped
       trigger: true
       passed:
       - claim-cf-deployment
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    input_mapping:
+      cf-deployment-env: cf-deployment-env-non-airgapped
   - put: azure-blobstore-sdk-deployment
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/azure-backuper.yml
@@ -1171,12 +1209,14 @@ jobs:
       passed:
       - claim-cf-deployment
     - get: jammy-stemcell
-    - get: cf-deployment-env
+    - get: cf-deployment-env-non-airgapped
       trigger: true
       passed:
       - claim-cf-deployment
   - task: generate-bosh-deployment-source-file
     file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    input_mapping:
+      cf-deployment-env: cf-deployment-env-non-airgapped
   - put: gcs-blobstore-sdk-deployment
     params:
       manifest: backup-and-restore-sdk-release/ci/manifests/gcs-backuper.yml
@@ -1202,7 +1242,7 @@ jobs:
     - get: cryogenics-concourse-tasks
       passed: [unit-tests]
     - get: gcp-db-certs-zip
-    - get: cf-deployment-env
+    - get: cf-deployment-env-non-airgapped
       trigger: true
       passed:
       - deploy-database-sdk
@@ -1211,7 +1251,7 @@ jobs:
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
     input_mapping:
       cryogenics-tasks: cryogenics-concourse-tasks
-      toolsmiths-env: cf-deployment-env
+      toolsmiths-env: cf-deployment-env-non-airgapped
   - load_var: pooled-env
     file: bosh-env/metadata.yml
   - do:
@@ -1272,7 +1312,7 @@ jobs:
       passed: [unit-tests]
     - get: cert-store
       resource: rds-ca-bundle
-    - get: cf-deployment-env
+    - get: cf-deployment-env-non-airgapped
       trigger: true
       passed:
       - deploy-database-sdk
@@ -1293,7 +1333,7 @@ jobs:
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
     input_mapping:
       cryogenics-tasks: cryogenics-concourse-tasks
-      toolsmiths-env: cf-deployment-env
+      toolsmiths-env: cf-deployment-env-non-airgapped
   - load_var: pooled-env
     file: bosh-env/metadata.yml
   - in_parallel:
@@ -1406,7 +1446,7 @@ jobs:
       - deploy-s3-blobstore-sdk
       - deploy-azure-blobstore-sdk
       - deploy-gcs-blobstore-sdk
-    - get: cf-deployment-env
+    - get: cf-deployment-env-non-airgapped
       trigger: true
       passed:
       - deploy-database-sdk
@@ -1421,7 +1461,7 @@ jobs:
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
     input_mapping:
       cryogenics-tasks: cryogenics-concourse-tasks
-      toolsmiths-env: cf-deployment-env
+      toolsmiths-env: cf-deployment-env-non-airgapped
   - load_var: pooled-env
     file: bosh-env/metadata.yml
   - in_parallel:
@@ -1478,16 +1518,16 @@ jobs:
 
 - name: unclaim-cf-deployment
   plan:
-  - get: cf-deployment-env
+  - get: cf-deployment-env-non-airgapped
     trigger: true
     passed:
     - system-tests-external-dbs-gcp
     - system-tests-external-dbs-rds
     - system-tests-blobstore-backuper
-  - put: cf-deployment-env
+  - put: cf-deployment-env-non-airgapped
     params:
-      action: unclaim
-      env_file: cf-deployment-env/metadata
+      action: release
+      resource: cf-deployment-env-non-airgapped
 
 - name: merge-pr
   serial: true
