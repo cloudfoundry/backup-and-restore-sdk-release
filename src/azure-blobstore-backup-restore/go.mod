@@ -8,7 +8,7 @@ require (
 	github.com/Azure/azure-storage-blob-go v0.15.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.7.0
 	github.com/onsi/ginkgo/v2 v2.13.0
-	github.com/onsi/gomega v1.28.1
+	github.com/onsi/gomega v1.29.0
 	system-tests v0.0.0
 )
 
