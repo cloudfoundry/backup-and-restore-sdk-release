@@ -354,7 +354,7 @@ resources:
       template:
         namespace: binj
         name: gcp-cfd-airgap-template
-        revision: "1.0"
+        revision: "1.2"
 
 - name: rds-ca-bundle
   type: file-url
