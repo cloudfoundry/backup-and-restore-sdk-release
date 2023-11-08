@@ -2,7 +2,7 @@
 #! This pipeline is set manually
 #!
 #!  To set the pipeline, run:
-#!    fly set-pipeline -p backup-and-restore-sdk-release -c pipeline.yml
+#!    fly set-pipeline -p backup-and-restore-sdk-release -c ci/pipelines/backup-and-restore-sdk-release/pipeline.yml
 
 #! ************************************
 #! Secrets we need to run this pipeline
@@ -1640,6 +1640,7 @@ jobs:
       params:
         branch: main
   - task: bump-golang
+    image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/deps-automation/bump-golang/task.yml
     input_mapping:
       release: backup-and-restore-sdk-release-main
