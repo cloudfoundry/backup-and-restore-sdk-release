@@ -20,4 +20,4 @@ name: database-backup-restorer-postgres-11
 dependencies: []
 
 files:
-- postgres/postgresql-11.21.tar.gz
+- postgres/postgresql-11.22.tar.gz
