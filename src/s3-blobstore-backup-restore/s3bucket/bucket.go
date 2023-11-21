@@ -185,7 +185,7 @@ func (b Bucket) ListVersions() ([]Version, error) {
 			version := Version{
 				Key:      *v.Key,
 				Id:       *v.VersionId,
-				IsLatest: v.IsLatest,
+				IsLatest: *v.IsLatest,
 			}
 			versions = append(versions, version)
 		}
@@ -298,7 +298,7 @@ func (b Bucket) getBlobSize(bucketName, bucketRegion, blobKey, versionID string)
 		return 0, fmt.Errorf("failed to get blob size for blob '%s' in bucket '%s': %s", blobKey, bucketName, err)
 	}
 
-	return headObjectOutput.ContentLength, nil
+	return *headObjectOutput.ContentLength, nil
 }
 
 func sizeInMbs(sizeInBytes int64) int64 {
@@ -341,14 +341,14 @@ func (b Bucket) copyVersionWithMultipart(copySourceString, destinationKey string
 			UploadId:        aws.String(*createOutput.UploadId),
 			CopySource:      aws.String(copySourceString),
 			CopySourceRange: aws.String(fmt.Sprintf("bytes=%d-%d", partStart, partEnd)),
-			PartNumber:      partNumber,
+			PartNumber:      aws.Int32(partNumber),
 		})
 
 		if err != nil {
 			uploadErrors = append(uploadErrors, fmt.Errorf("failed to upload part with range: %d-%d: %s", partStart, partEnd, err))
 		} else {
 			parts = append(parts, types.CompletedPart{
-				PartNumber: partNumber,
+				PartNumber: aws.Int32(partNumber),
 				ETag:       copyPartOutput.CopyPartResult.ETag,
 			})
 		}
@@ -369,7 +369,7 @@ func (b Bucket) copyVersionWithMultipart(copySourceString, destinationKey string
 	}
 
 	sort.Slice(parts, func(i, j int) bool {
-		return parts[i].PartNumber < parts[j].PartNumber
+		return *parts[i].PartNumber < *parts[j].PartNumber
 	})
 
 	_, err = b.s3Client.CompleteMultipartUpload(context.TODO(), &s3.CompleteMultipartUploadInput{
