@@ -102,16 +102,14 @@ func (b Bucket) listFiles(subfolder string) ([]string, error) {
 		Bucket: aws.String(b.name),
 		Prefix: aws.String(subfolder),
 	}
+	client := *b.s3Client
 
-	paginator := s3.NewListObjectsV2Paginator(b.s3Client, params)
-	for paginator.HasMorePages() {
-		output, err := paginator.NextPage(context.TODO())
-		if err != nil {
-			return nil, fmt.Errorf("failed to list blobs from bucket %s: %s", b.name, err)
-		}
-		for _, file := range output.Contents {
-			files = append(files, *file.Key)
-		}
+	output, err := client.ListObjectsV2(context.Background(), params)
+	if err != nil {
+		return nil, err
+	}
+	for _, file := range output.Contents {
+		files = append(files, *file.Key)
 	}
 
 	if subfolder != "" {
@@ -402,36 +400,38 @@ func newS3Client(regionName, endpoint string, accessKey AccessKey, useIAMProfile
 
 func newS3ClientWithAssumedRole(regionName, endpoint string, accessKey AccessKey, useIAMProfile, forcePathStyle bool, role string, fns ...func(*s3.Options)) (*s3.Client, error) {
 	staticCredentialsProvider := aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(accessKey.Id, accessKey.Secret, ""))
-
-	var creds aws.CredentialsProvider
+	config := aws.Config{
+		Credentials: staticCredentialsProvider,
+	}
 
 	if role != "" {
-		stsOptions := sts.Options{
-			Credentials: staticCredentialsProvider,
-			Region:      regionName,
-		}
-		if endpoint != "" {
-			stsOptions.EndpointResolver = sts.EndpointResolverFromURL(endpoint)
-		}
-		stsClient := sts.New(stsOptions)
-		creds = stscreds.NewAssumeRoleProvider(stsClient, role)
+		sts_creds := stscreds.NewAssumeRoleProvider(sts.NewFromConfig(config), role, func(o *stscreds.AssumeRoleOptions) {
+			o.TokenProvider = stscreds.StdinTokenProvider
+		})
+		config.Credentials = aws.NewCredentialsCache(sts_creds)
 	} else if useIAMProfile {
-		creds = aws.NewCredentialsCache(ec2rolecreds.New())
-	} else {
-		creds = staticCredentialsProvider
+		config.Credentials = aws.NewCredentialsCache(ec2rolecreds.New())
 	}
 
 	options := s3.Options{
-		Credentials:  creds,
 		Region:       regionName,
 		UsePathStyle: forcePathStyle,
+		Credentials:  config.Credentials,
 	}
-
 	if endpoint != "" {
-		options.EndpointResolver = s3.EndpointResolverFromURL(endpoint)
+		options.EndpointResolverV2 = s3.NewDefaultEndpointResolverV2()
+		options.BaseEndpoint = aws.String(endpoint)
 	}
 
-	client := s3.New(options, fns...)
-
-	return client, nil
+	client_s := sts.New(sts.Options{
+		Region:      regionName,
+		Credentials: config.Credentials,
+	})
+	sts_out, err := client_s.GetCallerIdentity(context.Background(), &sts.GetCallerIdentityInput{})
+	fmt.Println(sts_out)
+	fmt.Println(err)
+	client := s3.New(options)
+	out, err := client.ListBuckets(context.Background(), &s3.ListBucketsInput{})
+	fmt.Println(out)
+	return client, err
 }
