@@ -172,7 +172,8 @@ func (b Bucket) ListVersions() ([]Version, error) {
 	var versions []Version
 
 	paginator := s3.NewListObjectVersionsPaginator(b.s3Client, &s3.ListObjectVersionsInput{
-		Bucket: aws.String(b.name),
+		Bucket:  aws.String(b.name),
+		MaxKeys: aws.Int32(1000),
 	})
 
 	for paginator.HasMorePages() {
