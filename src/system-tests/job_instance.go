@@ -32,7 +32,6 @@ type JobInstance struct {
 	Deployment                string
 	Name                      string
 	Index                     string
-	OptionalEventuallyTimeout string
 }
 
 func (i *JobInstance) Run(command string) *gexec.Session {
@@ -86,12 +85,6 @@ func (i *JobInstance) runBosh(args ...string) *gexec.Session {
 
 	session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
-
-	if i.OptionalEventuallyTimeout != "" {
-		Eventually(session, i.OptionalEventuallyTimeout).Should(Exit())
-	} else {
-		Eventually(session).Should(Exit())
-	}
-
+	Eventually(session, "30m").Should(Exit())
 	return session
 }

@@ -7,7 +7,7 @@ toolchain go1.21.0
 require (
 	github.com/aws/aws-sdk-go-v2 v1.23.1
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.1
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.43.1
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.25.4
 	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.56
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.7.0

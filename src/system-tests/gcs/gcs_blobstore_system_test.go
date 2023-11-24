@@ -75,7 +75,6 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 			})
 
 			It("creates a backup and restores", func() {
-				instance.OptionalEventuallyTimeout = "30m"
 				By("successfully running a backup", func() {
 					instance.RunSuccessfully("sudo BBR_ARTIFACT_DIRECTORY=" + instanceArtifactDirPath +
 						" /var/vcap/jobs/gcs-blobstore-backup-restorer/bin/bbr/backup")
