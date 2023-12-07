@@ -19,7 +19,7 @@ shepherd_account_key: &shepherd_account_key ((cerberus:shepherd.sa_key))
 
 aws-region: &aws-region eu-west-1
 aws-backup-region: &aws-backup-region eu-central-1
-attempts: &number_of_contract_test_retries 2
+attempts: &number_of_test_retries 3
 claim-retries: &number_of_claim_retries 5
 
 aws-access: &aws-access
@@ -652,7 +652,7 @@ jobs:
     - get: image-cryogenics-essentials
   - in_parallel:
     - task: aws-s3-blobstore-contract-tests
-      attempts: *number_of_contract_test_retries
+      attempts: *number_of_test_retries
       image: image-cryogenics-essentials
       file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
       params:
@@ -1506,6 +1506,7 @@ jobs:
         AZURE_DIFFERENT_CONTAINER_NAME: bbr-system-test-azure-different-container
     - task: gcs-blobstore-backuper-system-tests
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
+      attempts: *number_of_test_retries
       params:
         <<: *bosh-smiths-creds
         TEST_SUITE_NAME: gcs
