@@ -1,12 +1,12 @@
 set -e
 
-POSTGRES_VERSION=15.5
+POSTGRES15_VERSION=15.5
 
-mkdir -p postgresql-${POSTGRES_VERSION}
+mkdir -p postgresql-${POSTGRES15_VERSION}
 
-tar xzf postgres/postgresql-${POSTGRES_VERSION}.tar.gz --strip-components=1 -C postgresql-${POSTGRES_VERSION}
+tar xzf postgres/postgresql-${POSTGRES15_VERSION}.tar.gz --strip-components=1 -C postgresql-${POSTGRES15_VERSION}
 
-pushd postgresql-${POSTGRES_VERSION}
+pushd postgresql-${POSTGRES15_VERSION}
   ./configure --prefix=${BOSH_INSTALL_TARGET} --with-openssl
 
   pushd src/bin/pg_config
