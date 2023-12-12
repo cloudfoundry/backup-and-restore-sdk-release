@@ -16,11 +16,11 @@
 
 set -e
 
-POSTGRES_VERSION=13.13
+POSTGRES13_VERSION=13.13
 
-tar xzf postgres/postgresql-${POSTGRES_VERSION}.tar.gz
+tar xzf postgres/postgresql-${POSTGRES13_VERSION}.tar.gz
 
-pushd postgresql-${POSTGRES_VERSION}
+pushd postgresql-${POSTGRES13_VERSION}
   ./configure --prefix=${BOSH_INSTALL_TARGET} --with-openssl
 
   pushd src/bin/pg_config

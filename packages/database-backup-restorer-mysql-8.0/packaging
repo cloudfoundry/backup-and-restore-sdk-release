@@ -2,18 +2,21 @@
 
 set -o errexit
 
+MYSQL80_VERSION=8.0.35
+NCURSES_VERSION=6.4
+
 tar \
   --directory="${BOSH_INSTALL_TARGET}" \
   --strip-components=1 \
   --wildcards \
   --extract \
-  --file mysql/mysql-8.0*.tar.xz \
+  --file mysql/mysql-${MYSQL80_VERSION}*.tar.xz \
   "*/README" "*/LICENSE" \
   "*/bin/mysql" "*/bin/mysqldump" \
   "*/lib/private/libssl.so*" "*/lib/private/libcrypto.so*" \
   "*/share/"
 
-tar -xf ncurses/ncurses-6.4.tar.gz
+tar -xf ncurses/ncurses-${NCURSES_VERSION}.tar.gz
 cd ncurses-*/
 ./configure \
   --with-abi-version=5 \

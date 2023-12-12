@@ -22,4 +22,4 @@ dependencies:
 - libopenssl1
 
 files:
-- mariadb/mariadb-10.6.16.tar.gz
+- mariadb/mariadb-*.tar.gz
