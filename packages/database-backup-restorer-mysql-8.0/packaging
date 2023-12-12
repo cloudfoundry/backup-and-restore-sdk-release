@@ -10,7 +10,7 @@ tar \
   --strip-components=1 \
   --wildcards \
   --extract \
-  --file mysql/mysql-${MYSQL80_VERSION}.tar.xz \
+  --file mysql/mysql-${MYSQL80_VERSION}*.tar.xz \
   "*/README" "*/LICENSE" \
   "*/bin/mysql" "*/bin/mysqldump" \
   "*/lib/private/libssl.so*" "*/lib/private/libcrypto.so*" \
