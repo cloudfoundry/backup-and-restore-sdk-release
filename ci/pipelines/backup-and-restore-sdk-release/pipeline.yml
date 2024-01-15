@@ -84,9 +84,9 @@ slack_webhook: &slack_webhook ((cerberus:slack.webhook))
 
 #! The following external DB creds were needed on 2023-07-03 for testing the BBR SDK with some external databases.
 external_db_passwords: &external_db_passwords
-  
   postgres_11_password: &postgres_11_password ((cerberus:bbr/sdk-external-db-creds.rds_postgres_11_password))
   postgres_13_password: &postgres_13_password ((cerberus:bbr/sdk-external-db-creds.rds_postgres_13_password))
+  postgres_15_password: &postgres_15_password ((cerberus:bbr/sdk-external-db-creds.rds_postgres_15_password))
   mariadb_10_password: &mariadb_10_password ((cerberus:bbr/sdk-external-db-creds.rds_mariadb_10_password))
 
 mysql_common: &mysql_common
@@ -1198,6 +1198,18 @@ jobs:
   - load_var: pooled-env
     file: bosh-env/metadata.yml
   - in_parallel:
+    - task: postgres-tls-system-tests-15
+      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+      input_mapping:
+        terraform-state: terraform
+      params:
+        <<: *bosh-smiths-creds
+        DB_PREFIX: postgres_15
+        DB_TYPE: postgres
+        POSTGRES_CA_CERT_PATH: rds-combined-ca-bundle.pem
+        POSTGRES_PASSWORD: *postgres_15_password
+        TEST_SSL_USER_REQUIRES_SSL: false
+        TEST_SUITE_NAME: postgresql_tls
     - do:
       - task: postgres-system-tests-11
         file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
