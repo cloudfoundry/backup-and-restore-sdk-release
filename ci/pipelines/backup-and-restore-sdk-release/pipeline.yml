@@ -77,6 +77,9 @@ git:
   token: &git_token ((cerberus:github.access_token))
 #! git_ssh_key was needed on 2023-07-03 to access private repos. Generated via uploading a public key to github.com
   ssh_key: &git_ssh_key ((cerberus:github.ssh_key)) 
+#! git.email and git.user were used on 2024-01-15 for committing bumped blobs to git. They refer to the team github-ci account from lastpass.
+  email: &github_email ((cerberus:github.email))
+  user: &github_user ((cerberus:github.user))
 
 #! slack_webhook was needed on 2023-06-30 to notify the team when we automatically cut a new release. Copied from Shared-Cryogenics/infrastructure-root/slack-webhooks in lastpass, originally generated (we think) by HelpNow+ ticket.
 slack_webhook: &slack_webhook ((cerberus:slack.webhook))
@@ -189,7 +192,7 @@ groups:
   - bump-openssl-1
   - bump-golang
   - bump-mariadb
-  - bump-mysql
+  - bump-mysql-8
   - bump-ncurses
   - bump-postgresql
   - bump-boost
@@ -202,6 +205,11 @@ groups:
   - create-final-patch
 
 resource_types:
+- name: ftp
+  type: registry-image
+  source:
+    repository: harbor-repo.vmware.com/cryogenics/concourse-ftp-resource
+    tag: latest
 - name: semver-1-6 # Unlike the bundled version, supports AWS assume role; Remove after 1.6.0 or later becomes bundled
   type: registry-image
   source:
@@ -268,6 +276,13 @@ resource_types:
     tag: latest
 
 resources:
+- name: mysql-server-8-blob
+  type: ftp
+  source:
+    url: "https://dev.mysql.com/downloads/mysql/8.0.html?tpl=platform&os=2&version=8.0&osva=#downloads"
+    static_download_url_path: "https://dev.mysql.com/get/Downloads/MySQL-8.0/"
+    version_regex: "mysql-(?P<version>[0-9]*.[0-9]*.[0-9]*)-linux-glibc.*-x86_64-minimal.tar.xz"
+    filename_mode: true
 - name: bash
   type: registry-image
   source:
@@ -423,13 +438,14 @@ resources:
 # A second resource is necessary for Golang bumps because when we push a branch
 # to this repo via this resourse, the subsequent get steps will start tracking
 # that branch, and not main as one would expect.
-- name: backup-and-restore-sdk-release-golang-bump
+- name: backup-and-restore-sdk-release-write-only
   type: git
   icon: github
   source:
     uri: git@github.com:cloudfoundry/backup-and-restore-sdk-release.git
     private_key: *git_ssh_key
     disable_ci_skip: true
+    ignore_paths: [ "non_existing_file_used_to_avoid_resource_caching" ]
 
 - name: backup-and-restore-sdk-release-main
   type: git
@@ -1694,7 +1710,7 @@ jobs:
       golang-project-repo: backup-and-restore-sdk-release-updated
   - load_var: golang-release-version
     file: golang-release/.git/describe_ref
-  - put: backup-and-restore-sdk-release-golang-bump
+  - put: backup-and-restore-sdk-release-write-only
     params:
       repository: backup-and-restore-sdk-release-updated
       branch: &golang-vendor-branch bump-golang-vendor-((.:golang-release-version))
@@ -1715,7 +1731,7 @@ jobs:
 
         If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
     input_mapping:
-      source-repo: backup-and-restore-sdk-release-golang-bump
+      source-repo: backup-and-restore-sdk-release-write-only
 
 - name: bump-mariadb
   plan:
@@ -1763,28 +1779,55 @@ jobs:
       GH_TOKEN: *git_token
       <<: *AWS_ACCESS
 
-- name: bump-mysql
+- name: bump-mysql-8
+  old_name: bump-mysql
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
     - get: image-cryogenics-essentials
-    - get: daily-trigger
+    - get: mysql-server-8-blob
       trigger: true
+  - load_var: mysql-server-8-version
+    file: mysql-server-8-blob/version
+    format: raw
 
-  - task: bump-mysql
-    file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
+  - task: bump-mysql-8-blob
+    file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
     image: image-cryogenics-essentials
     input_mapping:
-      task-repo: cryogenics-concourse-tasks
-      bump-repo: backup-and-restore-sdk-release-main
-    vars:
-      bump-script: scripts/autobump-mysql.sh
+      distributed-package: mysql-server-8-blob
+      bosh-release: backup-and-restore-sdk-release-main
     params:
-      PR_BASE: main
-      PR_LABELS: ci
-      GH_TOKEN: *git_token
       <<: *AWS_ACCESS
+      GIT_USERNAME: *github_user
+      GIT_EMAIL: *github_email
+      GIT_BRANCH: &bump-mysql-server-8-branch bump-mysql-server-8-to-((.:mysql-server-8-version))
+      BLOB_NAME: mysql
+      BLOB_EXTENSION: linux-glibc2.17-x86_64-minimal.tar.xz
+  - put: backup-and-restore-sdk-release-write-only
+    params:
+      repository: bosh-release-updated
+      force: true
+      branch: *bump-mysql-server-8-branch
+  - task: create-pull-request
+    image: image-cryogenics-essentials
+    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
+    params:
+      BASE: main
+      BRANCH: *bump-mysql-server-8-branch
+      LABELS: ci,bump-mysql
+      TITLE: Bump mysql-server to version ((.:mysql-server-8-version))
+      MESSAGE: |
+        This is an automatically generated Pull Request from the Cryogenics CI Bot.
+
+        I have detected a new version of [mysql-8](https://dev.mysql.com/downloads/mysql/8.0.html) and automatically bumped
+        this package to benefit from the latest changes.
+
+        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+    input_mapping:
+      source-repo: backup-and-restore-sdk-release-write-only
+
 
 - name: bump-ncurses
   plan:
