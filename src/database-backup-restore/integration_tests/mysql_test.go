@@ -347,6 +347,26 @@ var _ = Describe("MySQL", func() {
 					)
 				})
 			})
+			Context("when the server has a reviously supported mysql version", func() {
+				BeforeEach(func() {
+					fakeMysqlClient80.WhenCalledWith(
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--skip-column-names",
+						"--silent",
+						`--execute=SELECT VERSION()`,
+					).WillPrintToStdOut("MYSQL server version 5.7.20")
+				})
+
+				It("fails because of a version mismatch", func() {
+					Expect(fakeMysqlClient80.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					Expect(session).Should(gexec.Exit(1))
+					Expect(string(session.Err.Contents())).Should(ContainSubstring(
+						"unsupported version of mysql: 5.7"),
+					)
+				})
+			})
 
 			Context("when the server has an unsupported mysql minor version", func() {
 				BeforeEach(func() {
