@@ -169,7 +169,7 @@ func (c *PostgresConnection) connectionString(hostname string, port int, dbName,
 	connectionString := fmt.Sprintf("postgresql://%s:%s@%s:%d/%s?sslmode=%s", c.username, c.password, hostname, port, dbName, sslMode)
 
 	if c.clientCertPath != "" && c.clientKeyPath != "" {
-		connectionString = connectionString + fmt.Sprintf(",sslcert=%s,sslkey=%s", c.clientCertPath, c.clientKeyPath)
+		connectionString = connectionString + fmt.Sprintf("&sslcert=%s&sslkey=%s", c.clientCertPath, c.clientKeyPath)
 	}
 
 	return connectionString
