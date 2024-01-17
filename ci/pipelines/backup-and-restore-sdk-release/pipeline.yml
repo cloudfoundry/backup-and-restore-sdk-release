@@ -1621,6 +1621,7 @@ jobs:
       GIT_BRANCH: &bump-mysql-server-8-branch bump-mysql-server-8-to-((.:mysql-server-8-version))
       BLOB_NAME: mysql
       BLOB_EXTENSION: linux-glibc2.17-x86_64-minimal.tar.xz
+      REMOVE_MULTIPLE_BLOBS: true
   - put: backup-and-restore-sdk-release-write-only
     params:
       repository: bosh-release-updated
