@@ -283,7 +283,7 @@ resources:
 - name: pxc-release
   type: bosh-io-release
   source:
-    repository: cloudfoundry-incubator/pxc-release
+    repository: cloudfoundry/pxc-release
 
 - name: bpm-release
   type: bosh-io-release
@@ -871,7 +871,7 @@ jobs:
         stemcells:
         - jammy-stemcell/*.tgz
         vars:
-          mysql_version: 8.0
+          mysql_version: "8.0"
           deployment-name: *mysql-8-0-deployment-name
           db_password: *mysql-password
           db_host: *mysql-8-0-host
