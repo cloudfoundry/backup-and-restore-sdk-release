@@ -10,14 +10,6 @@ mariadb/mariadb-10.6.16.tar.gz:
   size: 98224346
   object_id: 01be95fa-a7ab-4640-5d15-4ca3295c2290
   sha: sha256:5ef83843e796dcda9aea47b24690ddf6d848f43f43e11f9d9a0cc21c78fbb9cf
-mysql/mysql-5.6.51.tar.gz:
-  size: 32411131
-  object_id: a8edb89b-908d-41d2-564a-d3fef5ad21cf
-  sha: sha256:262ccaf2930fca1f33787505dd125a7a04844f40d3421289a51974b5935d9abc
-mysql/mysql-5.7.44.tar.gz:
-  size: 56570597
-  object_id: 92e82aaa-6a33-40b7-5940-2366d90ad636
-  sha: sha256:d03d8ff688862c40da3488451072a4b2178a86b53b4a7546ee5f864bb15cd919
 mysql/mysql-8.0.35-linux-glibc2.17-x86_64-minimal.tar.xz:
   size: 60580384
   object_id: 34fc2ee9-6d4a-40d2-6b47-0c26b5e15525
@@ -30,10 +22,6 @@ openssl/openssl-1.1.1w.tar.gz:
   size: 9893384
   object_id: 8ebd05e7-9a12-4a1c-7a2d-5142e99bbcc0
   sha: sha256:cf3098950cb4d853ad95c0841f1f9c6d3dc102dccfcacd521d93925208b76ac8
-postgres/postgresql-10.23.tar.gz:
-  size: 25493839
-  object_id: 9e0e0f74-07cf-4600-60a5-90a278783d5f
-  sha: sha256:39886b7fbf375fdd79e94b676d8346a62c3c190ccf00b3f763002c8fc8fb71f0
 postgres/postgresql-11.22.tar.gz:
   size: 26826810
   object_id: 00576d0f-f9a2-4210-7db0-f1d1687c3327
