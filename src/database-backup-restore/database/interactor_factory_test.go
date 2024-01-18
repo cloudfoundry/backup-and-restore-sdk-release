@@ -39,41 +39,11 @@ var _ = Describe("InteractorFactory", func() {
 
 	BeforeEach(func() {
 		utilitiesConfig = config.UtilitiesConfig{
-			Postgres10: config.UtilityPaths{
-				Dump:    "pg_p_10_dump",
-				Restore: "pg_p_10_restore",
-				Client:  "pg_p_10_client",
-			},
-			Postgres11: config.UtilityPaths{
-				Dump:    "pg_p_11_dump",
-				Restore: "pg_p_11_restore",
-				Client:  "pg_p_11_client",
-			},
-			Postgres13: config.UtilityPaths{
-				Dump:    "pg_p_13_dump",
-				Restore: "pg_p_13_restore",
-				Client:  "pg_p_13_client",
-			},
-			Mariadb: config.UtilityPaths{
-				Dump:    "mariadb_dump",
-				Restore: "mariadb_restore",
-				Client:  "mariadb_client",
-			},
-			Mysql56: config.UtilityPaths{
-				Dump:    "mysql_56_dump",
-				Restore: "mysql_56_restore",
-				Client:  "mysql_56_client",
-			},
-			Mysql57: config.UtilityPaths{
-				Dump:    "mysql_57_dump",
-				Restore: "mysql_57_restore",
-				Client:  "mysql_57_client",
-			},
-			Mysql80: config.UtilityPaths{
-				Dump:    "mysql_80_dump",
-				Restore: "mysql_80_restore",
-				Client:  "mysql_80_client",
-			},
+			Postgres11: config.UtilityPaths{Dump: "pg_p_11_dump", Restore: "pg_p_11_restore", Client: "pg_p_11_client"},
+			Postgres13: config.UtilityPaths{Dump: "pg_p_13_dump", Restore: "pg_p_13_restore", Client: "pg_p_13_client"},
+			Postgres15: config.UtilityPaths{Dump: "pg_p_15_dump", Restore: "pg_p_15_restore", Client: "pg_p_15_client"},
+			Mariadb:    config.UtilityPaths{Dump: "mariadb_dump", Restore: "mariadb_restore", Client: "mariadb_client"},
+			Mysql80:    config.UtilityPaths{Dump: "mysql_80_dump", Restore: "mysql_80_restore", Client: "mysql_80_client"},
 		}
 	})
 
@@ -85,28 +55,6 @@ var _ = Describe("InteractorFactory", func() {
 		Context("when the action is 'backup'", func() {
 			BeforeEach(func() {
 				action = "backup"
-			})
-
-			Context("when the version is detected as 10.6", func() {
-				BeforeEach(func() {
-					postgresServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{Implementation: "postgres", SemanticVersion: version.SemanticVersion{Major: "10", Minor: "6", Patch: "0"}},
-						nil)
-				})
-
-				It("builds a database.TableCheckingInteractor", func() {
-					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(
-						database.NewTableCheckingInteractor(connectionConfig,
-							postgres.NewTableChecker(connectionConfig, "pg_p_10_client"),
-							postgres.NewBackuper(
-								connectionConfig,
-								tempFolderManager,
-								"pg_p_10_dump",
-							),
-						),
-					))
-				})
 			})
 
 			Context("when the version is detected as 11", func() {
@@ -152,11 +100,32 @@ var _ = Describe("InteractorFactory", func() {
 					))
 				})
 			})
-
-			Context("when the version is detected as 9.5", func() {
+			Context("when the version is detected as 15", func() {
 				BeforeEach(func() {
 					postgresServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{Implementation: "postgres", SemanticVersion: version.SemanticVersion{Major: "9", Minor: "5", Patch: "1"}},
+						version.DatabaseServerVersion{Implementation: "postgres", SemanticVersion: version.SemanticVersion{Major: "15", Minor: "2", Patch: "1"}},
+						nil)
+				})
+
+				It("builds a database.TableCheckingInteractor", func() {
+					Expect(factoryError).NotTo(HaveOccurred())
+					Expect(interactor).To(Equal(
+						database.NewTableCheckingInteractor(connectionConfig,
+							postgres.NewTableChecker(connectionConfig, "pg_p_15_client"),
+							postgres.NewBackuper(
+								connectionConfig,
+								tempFolderManager,
+								"pg_p_15_dump",
+							),
+						),
+					))
+				})
+			})
+
+			Context("when the version is detected as below 11", func() {
+				BeforeEach(func() {
+					postgresServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{Implementation: "postgres", SemanticVersion: version.SemanticVersion{Major: "10", Minor: "5", Patch: "1"}},
 						nil)
 				})
 
@@ -171,10 +140,21 @@ var _ = Describe("InteractorFactory", func() {
 				action = "restore"
 			})
 
-			Context("when the version is detected as 10.6", func() {
+			Context("when the version is detected as below 11", func() {
 				BeforeEach(func() {
 					postgresServerVersionDetector.GetVersionReturns(
 						version.DatabaseServerVersion{Implementation: "postgres", SemanticVersion: version.SemanticVersion{Major: "10", Minor: "6", Patch: "0"}},
+						nil)
+				})
+				It("fails to build database.TableCheckingInteractor", func() {
+					Expect(factoryError).To(MatchError(ContainSubstring("unsupported version of postgres")))
+				})
+			})
+
+			Context("when the version is detected as 11", func() {
+				BeforeEach(func() {
+					postgresServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{Implementation: "postgres", SemanticVersion: version.SemanticVersion{Major: "11", Minor: "2", Patch: "1"}},
 						nil)
 				})
 
@@ -183,13 +163,12 @@ var _ = Describe("InteractorFactory", func() {
 						postgres.NewRestorer(
 							connectionConfig,
 							tempFolderManager,
-							"pg_p_10_restore",
+							"pg_p_11_restore",
 						),
 					))
 					Expect(factoryError).NotTo(HaveOccurred())
 				})
 			})
-
 			Context("when the version is detected as 13", func() {
 				BeforeEach(func() {
 					postgresServerVersionDetector.GetVersionReturns(
@@ -208,18 +187,25 @@ var _ = Describe("InteractorFactory", func() {
 					Expect(factoryError).NotTo(HaveOccurred())
 				})
 			})
-
-			Context("when the version is detected as 9.5", func() {
+			Context("when the version is detected as 15", func() {
 				BeforeEach(func() {
 					postgresServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{Implementation: "postgres", SemanticVersion: version.SemanticVersion{Major: "9", Minor: "5", Patch: "1"}},
+						version.DatabaseServerVersion{Implementation: "postgres", SemanticVersion: version.SemanticVersion{Major: "15", Minor: "2", Patch: "1"}},
 						nil)
 				})
 
-				It("fails to build database.TableCheckingInteractor", func() {
-					Expect(factoryError).To(MatchError(ContainSubstring("unsupported version of postgres")))
+				It("builds a database.TableCheckingInteractor", func() {
+					Expect(interactor).To(Equal(
+						postgres.NewRestorer(
+							connectionConfig,
+							tempFolderManager,
+							"pg_p_15_restore",
+						),
+					))
+					Expect(factoryError).NotTo(HaveOccurred())
 				})
 			})
+
 		})
 
 		Context("when the server version detection fails", func() {
@@ -261,47 +247,6 @@ var _ = Describe("InteractorFactory", func() {
 						"mariadb_dump",
 						mysql.NewLegacySSLOptionsProvider(tempFolderManager),
 						mysql.NewEmptyAdditionalOptionsProvider(),
-					)))
-				})
-			})
-
-			Context("when the version is detected as MySQL 5.6.37", func() {
-				BeforeEach(func() {
-					mysqlServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{Implementation: "mysql", SemanticVersion: version.SemanticVersion{Major: "5", Minor: "6", Patch: "37"}}, nil)
-				})
-
-				It("builds a mysql.Backuper", func() {
-					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewBackuper(
-						connectionConfig,
-						"mysql_56_dump",
-						mysql.NewLegacySSLOptionsProvider(tempFolderManager),
-						mysql.NewPurgeGTIDOptionProvider(),
-					)))
-				})
-			})
-
-			Context("when the version is detected as MySQL 5.7.19", func() {
-				BeforeEach(func() {
-					mysqlServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{
-							Implementation: "mysql",
-							SemanticVersion: version.SemanticVersion{
-								Major: "5",
-								Minor: "7",
-								Patch: "19"}},
-						nil,
-					)
-				})
-
-				It("builds a mysql.Backuper", func() {
-					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewBackuper(
-						connectionConfig,
-						"mysql_57_dump",
-						mysql.NewDefaultSSLProvider(tempFolderManager),
-						mysql.NewPurgeGTIDOptionProvider(),
 					)))
 				})
 			})
@@ -374,42 +319,6 @@ var _ = Describe("InteractorFactory", func() {
 						"mariadb_restore",
 						mysql.NewLegacySSLOptionsProvider(tempFolderManager)),
 					))
-				})
-			})
-
-			Context("when the version is detected as MySQL 5.6.37", func() {
-				BeforeEach(func() {
-					mysqlServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{
-							"mysql",
-							version.SemanticVersion{Major: "5", Minor: "6", Patch: "37"}}, nil)
-				})
-
-				It("builds a mysql.Restorer", func() {
-					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewRestorer(
-						connectionConfig,
-						"mysql_56_restore",
-						mysql.NewLegacySSLOptionsProvider(tempFolderManager)),
-					))
-				})
-			})
-
-			Context("when the version is detected as MySQL 5.7.19", func() {
-				BeforeEach(func() {
-					mysqlServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{
-							"mysql",
-							version.SemanticVersion{Major: "5", Minor: "7", Patch: "19"}}, nil)
-				})
-
-				It("builds a mysql.Restorer", func() {
-					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewRestorer(
-						connectionConfig,
-						"mysql_57_restore",
-						mysql.NewDefaultSSLProvider(tempFolderManager),
-					)))
 				})
 			})
 

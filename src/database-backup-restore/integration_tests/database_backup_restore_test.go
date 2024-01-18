@@ -152,19 +152,11 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 			Entry("pg_dump_11 path missing", "PG_DUMP_11_PATH"),
 			Entry("pg_restore_11 path missing", "PG_RESTORE_11_PATH"),
 			Entry("pg_client path missing", "PG_CLIENT_PATH"),
-			Entry("pg_dump_10 path missing", "PG_DUMP_10_PATH"),
-			Entry("pg_restore_10 path missing", "PG_RESTORE_10_PATH"),
 			Entry("pg_client path missing", "PG_CLIENT_PATH"),
 			Entry("pg_client path missing", "PG_CLIENT_PATH"),
 			Entry("mariadb_client path missing", "MARIADB_CLIENT_PATH"),
 			Entry("mariadb_dump path missing", "MARIADB_DUMP_PATH"),
 			Entry("mariadb_client path missing", "MARIADB_CLIENT_PATH"),
-			Entry("mysql_client_5_6 path missing", "MYSQL_CLIENT_5_6_PATH"),
-			Entry("mysql_dump_5_6 path missing", "MYSQL_DUMP_5_6_PATH"),
-			Entry("mysql_client_5_6 path missing", "MYSQL_CLIENT_5_6_PATH"),
-			Entry("mysql_client_5_7 path missing", "MYSQL_CLIENT_5_7_PATH"),
-			Entry("mysql_dump_5_7 path missing", "MYSQL_DUMP_5_7_PATH"),
-			Entry("mysql_client_5_7 path missing", "MYSQL_CLIENT_5_7_PATH"),
 		)
 	})
 })
