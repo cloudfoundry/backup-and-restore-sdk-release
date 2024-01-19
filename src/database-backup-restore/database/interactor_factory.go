@@ -115,12 +115,6 @@ func (f InteractorFactory) getUtilitiesForMySQL(mysqlVersion version.DatabaseSer
 	case implementation == "mariadb" && semVer.MajorVersionMatches(version.SemVer("10", "x", "x")):
 		return f.utilitiesConfig.Mariadb.Dump, f.utilitiesConfig.Mariadb.Restore, nil
 	case implementation == "mysql":
-		if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "6", "38")) {
-			return f.utilitiesConfig.Mysql56.Dump, f.utilitiesConfig.Mysql56.Restore, nil
-		}
-		if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "7", "20")) {
-			return f.utilitiesConfig.Mysql57.Dump, f.utilitiesConfig.Mysql57.Restore, nil
-		}
 		if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("8", "0", "0")) {
 			return f.utilitiesConfig.Mysql80.Dump, f.utilitiesConfig.Mysql80.Restore, nil
 		}
@@ -131,8 +125,7 @@ func (f InteractorFactory) getUtilitiesForMySQL(mysqlVersion version.DatabaseSer
 
 func (f InteractorFactory) getSSLCommandProvider(mysqlVersion version.DatabaseServerVersion) mysql.SSLOptionsProvider {
 	switch {
-	case mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "7", "20")),
-		mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("8", "0", "0")):
+	case mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("8", "0", "0")):
 		return mysql.NewDefaultSSLProvider(f.tempFolderManager)
 	default:
 		return mysql.NewLegacySSLOptionsProvider(f.tempFolderManager)
@@ -140,21 +133,16 @@ func (f InteractorFactory) getSSLCommandProvider(mysqlVersion version.DatabaseSe
 }
 
 func (f InteractorFactory) getAdditionalOptionsProvider(mysqlVersion version.DatabaseServerVersion) mysql.AdditionalOptionsProvider {
-	if mysqlVersion.Implementation == "mariadb" || mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "5", "20")) {
-		return mysql.NewEmptyAdditionalOptionsProvider()
-	} else {
+	if mysqlVersion.Implementation != "mariadb" {
 		return mysql.NewPurgeGTIDOptionProvider()
 	}
+
+	return mysql.NewEmptyAdditionalOptionsProvider()
 }
 
 func (f InteractorFactory) getUtilitiesForPostgres(postgresVersion version.DatabaseServerVersion) (string, string, string, error) {
 	semVer := postgresVersion.SemanticVersion
-	if semVer.MajorVersionMatches(version.SemVer("10", "x", "x")) {
-		return f.utilitiesConfig.Postgres10.Client,
-			f.utilitiesConfig.Postgres10.Dump,
-			f.utilitiesConfig.Postgres10.Restore,
-			nil
-	} else if semVer.MajorVersionMatches(version.SemVer("11", "x", "x")) {
+	if semVer.MajorVersionMatches(version.SemVer("11", "x", "x")) {
 		return f.utilitiesConfig.Postgres11.Client,
 			f.utilitiesConfig.Postgres11.Dump,
 			f.utilitiesConfig.Postgres11.Restore,
