@@ -41,9 +41,6 @@ supported-mysql=\
   ubuntu-bionic~~~8.0-oracle  \
   ubuntu-jammy~~~~8.0-oracle  \
   ubuntu-xenial~~~8.0-oracle  \
-  ubuntu-bionic~~~5.7-debian  \
-  ubuntu-jammy~~~~5.7-debian  \
-  ubuntu-xenial~~~5.7-debian  \
 
 supported-postgres=\
   ubuntu-bionic~~~15-bullseye  \
@@ -55,9 +52,6 @@ supported-postgres=\
   ubuntu-bionic~~~11-bullseye  \
   ubuntu-jammy~~~~11-bullseye  \
   ubuntu-xenial~~~11-bullseye  \
-  ubuntu-bionic~~~10-bullseye  \
-  ubuntu-jammy~~~~10-bullseye  \
-  ubuntu-xenial~~~10-bullseye  \
 
 
 docker-clean: ## remove containers created to run the tests
