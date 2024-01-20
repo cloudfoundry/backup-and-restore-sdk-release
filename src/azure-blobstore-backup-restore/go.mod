@@ -7,7 +7,7 @@ toolchain go1.21.0
 require (
 	github.com/Azure/azure-storage-blob-go v0.15.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.8.1
-	github.com/onsi/ginkgo/v2 v2.14.0
+	github.com/onsi/ginkgo/v2 v2.15.0
 	github.com/onsi/gomega v1.31.0
 	system-tests v0.0.0
 )
