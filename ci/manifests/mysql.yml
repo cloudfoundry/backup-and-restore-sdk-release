@@ -20,7 +20,7 @@ name: ((deployment-name))
 releases:
 - name: pxc
   version: latest
-  url: https://bosh.io/d/github.com/cloudfoundry-incubator/pxc-release
+  url: https://bosh.io/releases/github.com/cloudfoundry/pxc-release
 - name: bpm
   version: latest
   url: https://bosh.io/d/github.com/cloudfoundry/bpm-release
@@ -57,7 +57,7 @@ instance_groups:
   - name: pxc-mysql
     release: pxc
     properties:
-      mysql_version: ((mysql_version))
+      mysql_version: "((mysql_version))"
       admin_password: ((db_password))
       port: 3306
       monit_startup_timeout: 120

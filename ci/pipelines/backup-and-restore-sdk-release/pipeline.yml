@@ -66,8 +66,6 @@ gcp:
   service_accounts_bucket_owner_json_key: &service_accounts_bucket_owner_json_key ((cerberus:gcp/service_accounts/bucket_owner.json_key))
 #! service_accounts_gcp_cf_backup_and_restore_owner_role_json_key was needed on 2023-07-03 for actually running the GCP tests. Presumably it has lower privileges than the other two GCP keys?. Generated using personal creds in the mapbu-cryogenics GCP account.
   service_accounts_gcp_cf_backup_and_restore_owner_role_json_key: &service_accounts_gcp_cf_backup_and_restore_owner_role_json_key ((cerberus:gcp/service_accounts/owner_role.json_key))
-  #! service_accounts_gcp_mapbu_cryogenics_owner was needed on 2023-07-03 for cutting internet, and deploying database infra for testing. Generated using personal creds in the mapbu-cryogenics GCP account.
-  service_accounts_gcp_mapbu_cryogenics_owner: &service_accounts_gcp_mapbu_cryogenics_owner ((cerberus:gcp/service_accounts/owner.json_key))
 
 #! gcp_certs_zip_pass was needed on 2023-07-03 to password protect the zip that contains connection credentials for GCP/RDS DB Instances. They are generated in `task: create-gcp-db-certs`. The password itself was manually generated and put into vault. 
 gcp_certs_zip_pass: &gcp_certs_zip_pass ((cerberus:bbr/db-cert-zip-password.pass))
@@ -77,23 +75,19 @@ git:
   token: &git_token ((cerberus:github.access_token))
 #! git_ssh_key was needed on 2023-07-03 to access private repos. Generated via uploading a public key to github.com
   ssh_key: &git_ssh_key ((cerberus:github.ssh_key)) 
+#! git.email and git.user were used on 2024-01-15 for committing bumped blobs to git. They refer to the team github-ci account from lastpass.
+  email: &github_email ((cerberus:github.email))
+  user: &github_user ((cerberus:github.user))
 
 #! slack_webhook was needed on 2023-06-30 to notify the team when we automatically cut a new release. Copied from Shared-Cryogenics/infrastructure-root/slack-webhooks in lastpass, originally generated (we think) by HelpNow+ ticket.
 slack_webhook: &slack_webhook ((cerberus:slack.webhook))
 
 #! The following external DB creds were needed on 2023-07-03 for testing the BBR SDK with some external databases.
 external_db_passwords: &external_db_passwords
-  
-  mysql_5_7_gcp_password: &mysql_5_7_gcp_password ((cerberus:bbr/sdk-external-db-creds.gcp_mysql_5_7_password))
-  mysql_5_7_password: &mysql_5_7_password ((cerberus:bbr/sdk-external-db-creds.rds_5_7_password))
-  postgres_10_password: &postgres_10_password ((cerberus:bbr/sdk-external-db-creds.rds_postgres_10_password))
   postgres_11_password: &postgres_11_password ((cerberus:bbr/sdk-external-db-creds.rds_postgres_11_password))
   postgres_13_password: &postgres_13_password ((cerberus:bbr/sdk-external-db-creds.rds_postgres_13_password))
+  postgres_15_password: &postgres_15_password ((cerberus:bbr/sdk-external-db-creds.rds_postgres_15_password))
   mariadb_10_password: &mariadb_10_password ((cerberus:bbr/sdk-external-db-creds.rds_mariadb_10_password))
-
-#! The following DB certs were needed on 2023-07-03 for deploying some databases, and then connecting to them in our tests. Generated out of whole cloth, they don't refer to any external infra.
-mysql-5-7-deployment-name: &mysql-5-7-deployment-name mysql-5-7-dev
-mysql-5-7-host: &mysql-5-7-host 10.0.255.9
 
 mysql_common: &mysql_common
   MYSQL_PORT: &mysql-port 3306
@@ -103,13 +97,6 @@ msysq_certs_common: &msysq_certs_common
   databases.ca: &mysql_ca_cert ((cerberus:bbr/sdk-db-certs.mysql_ca_cert))
   databases.certificate: &mysql_cert ((cerberus:bbr/sdk-db-certs.mysql_client_cert))
   databases.private_key: &mysql_private_key ((cerberus:bbr/sdk-db-certs.mysql_client_key))
-
-mysql_params_5: &mysql_params_5
-  MYSQL_HOSTNAME: *mysql-5-7-host
-  MYSQL_CA_CERT: *mysql_ca_cert
-  MYSQL_CLIENT_CERT: *mysql_cert
-  MYSQL_CLIENT_KEY: *mysql_private_key
-  <<: *mysql_common
 
 mysql-8-0-deployment-name: &mysql-8-0-deployment-name mysql-8-0-dev
 mysql-8-0-host: &mysql-8-0-host 10.0.255.10
@@ -124,8 +111,6 @@ mysql_params_8: &mysql_params_8
 minio-access-key: &minio_access_key ((cerberus:bbr/minio-creds.access_key))
 minio-secret-key: &minio_secret_key ((cerberus:bbr/minio-creds.secret_key))
 
-postgres-10-deployment-name: &postgres-10-deployment-name postgres-10-dev
-postgres-10-host: &postgres-10-host 10.0.255.12
 postgres_common: &postgres_common
   POSTGRES_PORT: &postgres-port 5432
   POSTGRES_USERNAME: &postgres-username test_user
@@ -174,7 +159,6 @@ groups:
   - deploy-postgres
   - deploy-gcs-blobstore-sdk
   - deploy-azure-blobstore-sdk
-  - system-tests-external-dbs-gcp
   - system-tests-external-dbs-rds
   - system-tests-blobstore-backuper
   - unclaim-cf-deployment
@@ -189,7 +173,7 @@ groups:
   - bump-openssl-1
   - bump-golang
   - bump-mariadb
-  - bump-mysql
+  - bump-mysql-8
   - bump-ncurses
   - bump-postgresql
   - bump-boost
@@ -202,6 +186,11 @@ groups:
   - create-final-patch
 
 resource_types:
+- name: ftp
+  type: registry-image
+  source:
+    repository: harbor-repo.vmware.com/cryogenics/concourse-ftp-resource
+    tag: latest
 - name: semver-1-6 # Unlike the bundled version, supports AWS assume role; Remove after 1.6.0 or later becomes bundled
   type: registry-image
   source:
@@ -268,6 +257,13 @@ resource_types:
     tag: latest
 
 resources:
+- name: mysql-server-8-blob
+  type: ftp
+  source:
+    url: "https://dev.mysql.com/downloads/mysql/8.0.html?tpl=platform&os=2&version=8.0&osva=#downloads"
+    static_download_url_path: "https://dev.mysql.com/get/Downloads/MySQL-8.0/"
+    version_regex: "mysql-(?P<version>[0-9]*.[0-9]*.[0-9]*)-linux-glibc.*-x86_64-minimal.tar.xz"
+    filename_mode: true
 - name: bash
   type: registry-image
   source:
@@ -287,7 +283,7 @@ resources:
 - name: pxc-release
   type: bosh-io-release
   source:
-    repository: cloudfoundry-incubator/pxc-release
+    repository: cloudfoundry/pxc-release
 
 - name: bpm-release
   type: bosh-io-release
@@ -423,13 +419,14 @@ resources:
 # A second resource is necessary for Golang bumps because when we push a branch
 # to this repo via this resourse, the subsequent get steps will start tracking
 # that branch, and not main as one would expect.
-- name: backup-and-restore-sdk-release-golang-bump
+- name: backup-and-restore-sdk-release-write-only
   type: git
   icon: github
   source:
     uri: git@github.com:cloudfoundry/backup-and-restore-sdk-release.git
     private_key: *git_ssh_key
     disable_ci_skip: true
+    ignore_paths: [ "non_existing_file_used_to_avoid_resource_caching" ]
 
 - name: backup-and-restore-sdk-release-main
   type: git
@@ -478,22 +475,10 @@ resources:
     version_family: latest
   type: bosh-io-stemcell
 
-- name: mysql-5-7-deployment
-  type: bosh-deployment
-  source:
-    deployment: *mysql-5-7-deployment-name
-    skip_check: true
-
 - name: mysql-8-0-deployment
   type: bosh-deployment
   source:
     deployment: *mysql-8-0-deployment-name
-    skip_check: true
-
-- name: postgres-10-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *postgres-10-deployment-name
     skip_check: true
 
 - name: postgres-11-dev-deployment
@@ -736,7 +721,6 @@ jobs:
       passed:
       - deploy-s3-blobstore-sdk-with-iam-instance-profile
     - get: cryogenics-concourse-tasks
-      passed: [unit-tests]
     - get: director-with-iam-profile
   - in_parallel:
     - task: s3-with-iam-instance-profile
@@ -773,7 +757,6 @@ jobs:
     - get: backup-and-restore-sdk-release
       passed: [build-rc]
     - get: cryogenics-concourse-tasks
-      passed: [unit-tests]
     - get: release
       trigger: true
       passed: [build-rc]
@@ -816,23 +799,6 @@ jobs:
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
   - in_parallel:
-    - put: postgres-10-dev-deployment
-      params:
-        manifest: backup-and-restore-sdk-release/ci/manifests/postgres-10.yml
-        stemcells:
-        - jammy-stemcell/*.tgz
-        releases:
-        - bpm-release/*.tgz
-        - bosh-release-v268.6/*.tgz
-        vars:
-          deployment-name: *postgres-10-deployment-name
-          db_host: *postgres-10-host
-          <<: *pg_deployment_common
-          availability_zone: z1
-          vm_extensions: ["cf-tcp-router-network-properties"]
-        ops_files: 
-        - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
-        source_file: source-file/source-file.yml
     - put: postgres-11-dev-deployment
       params:
         manifest: backup-and-restore-sdk-release/ci/manifests/postgres-11.yml
@@ -894,35 +860,18 @@ jobs:
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
   - do:
-    #! It seems these 2 deployments cannot be performed in parallel as they
+    #! Before 2024/01/15 there were two deployments done here. The comment is left in place
+    #! to avoid debugging a future issue if we ever need a 2nd mysql deployment again.
+    #! It seems that 2 deployments cannot be performed in parallel if they
     #! compile the same release against the same stemcell and therefore BOSH
     #! refuses to grant some locks.
-    - put: mysql-5-7-deployment
-      params:
-        manifest: backup-and-restore-sdk-release/ci/manifests/mysql.yml
-        stemcells:
-        - jammy-stemcell/*.tgz
-        vars:
-          mysql_version: 5.7
-          deployment-name: *mysql-5-7-deployment-name
-          db_password: *mysql-password
-          db_host: *mysql-5-7-host
-          availability_zone: z1
-          <<: *msysq_certs_common
-          vm_extensions: ["cf-tcp-router-network-properties"]
-        ops_files: 
-        - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
-        source_file: source-file/source-file.yml
-        releases:
-        - bpm-release/*.tgz
-        - pxc-release/*.tgz
     - put: mysql-8-0-deployment
       params:
         manifest: backup-and-restore-sdk-release/ci/manifests/mysql.yml
         stemcells:
         - jammy-stemcell/*.tgz
         vars:
-          mysql_version: 8.0
+          mysql_version: "8.0"
           deployment-name: *mysql-8-0-deployment-name
           db_password: *mysql-password
           db_host: *mysql-8-0-host
@@ -991,7 +940,6 @@ jobs:
       - deploy-postgres
       - deploy-mysql
     - get: cryogenics-concourse-tasks
-      passed: [unit-tests]
   - task: alias-env
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
@@ -1002,14 +950,6 @@ jobs:
   - load_var: pooled-env
     file: bosh-env/metadata.yml
   - in_parallel:
-    - task: postgres-system-tests-10
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
-      params:
-        POSTGRES_HOSTNAME: *postgres-10-host
-        ZIP_PASSWORD: *gcp_certs_zip_pass
-        TEST_SUITE_NAME: postgresql
-        <<: *bosh-smiths-creds
-        <<: *postgres_common
     - task: postgres-system-tests-11
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
       params:
@@ -1018,14 +958,6 @@ jobs:
         TEST_SUITE_NAME: postgresql
         <<: *bosh-smiths-creds
         <<: *postgres_common
-    - task: mysql-5-7-system-tests
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
-      params:
-        TEST_SUITE_NAME: mysql
-        TEST_TLS_VERIFY_IDENTITY: false
-        TEST_TLS_MUTUAL_TLS: false
-        <<: *bosh-smiths-creds
-        <<: *mysql_params_5
     - task: mysql-8-0-system-tests
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
       params:
@@ -1231,76 +1163,6 @@ jobs:
         gcs-backup-bucket-name: bbr-system-test-gcs-backup-bucket
       source_file: source-file/source-file.yml
 
-- name: system-tests-external-dbs-gcp
-  serial: true
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release
-      passed:
-      - deploy-database-sdk
-    - get: image-cryogenics-essentials
-    - get: cryogenics-concourse-tasks
-      passed: [unit-tests]
-    - get: gcp-db-certs-zip
-    - get: cf-deployment-env-non-airgapped
-      trigger: true
-      passed:
-      - deploy-database-sdk
-  - task: alias-env
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
-    input_mapping:
-      cryogenics-tasks: cryogenics-concourse-tasks
-      toolsmiths-env: cf-deployment-env-non-airgapped
-  - load_var: pooled-env
-    file: bosh-env/metadata.yml
-  - do:
-    - put: gcp-terraform
-      resource: terraform
-      params:
-        terraform_source: cryogenics-concourse-tasks/pipelines/backup-and-restore-sdk-release/terraform/bbr-sdk-system-tests/gcp
-        env_name: bbr-sdk-external-gcp-dbs
-        delete_on_failure: true
-        vars:
-          director-external-ip: ((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))
-          director-jumpbox-ip: ((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))
-          gcp-key: *service_accounts_gcp_mapbu_cryogenics_owner
-          mysql-5-7-password: *mysql_5_7_gcp_password  
-      get_params:
-        output_statefile: true
-    - task: create-gcp-db-certs
-      file: backup-and-restore-sdk-release/ci/tasks/create-gcp-db-certs/task.yml
-      image: image-cryogenics-essentials
-      input_mapping:
-        terraform-state: gcp-terraform
-      params:
-        GCP_SERVICE_ACCOUNT_KEY: *service_accounts_gcp_mapbu_cryogenics_owner
-        PROJECT_NAME: mapbu-cryogenics
-        ZIP_PASSWORD: *gcp_certs_zip_pass
-      ensure:
-        put: gcp-db-certs-zip
-        params:
-          file: gcp-db-certs-zip/gcp-db-certs.zip
-  - in_parallel:
-    - do:
-      - task: mysql-system-tests-5.7
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
-        input_mapping:
-          terraform-state: gcp-terraform
-          cert-store: gcp-db-certs-zip
-        params:
-          <<: *bosh-smiths-creds
-          DB_PREFIX: mysql_5_7
-          DB_TYPE: mysql
-          #! if you change these names, you'll also need to change chem in backup-and-restore-sdk-release/ci/tasks/create-gcp-db-certs/task.sh
-          MYSQL_CA_CERT_PATH: gcp-mysql_5_7-test-server-cert.pem
-          MYSQL_CLIENT_CERT_PATH: gcp-mysql_5_7-test-client-cert.pem
-          MYSQL_CLIENT_KEY_PATH: gcp-mysql_5_7-test-client-key.pem
-          MYSQL_PASSWORD: *mysql_5_7_gcp_password 
-          ZIP_PASSWORD: *gcp_certs_zip_pass
-          TEST_SUITE_NAME: mysql
-          TEST_TLS_VERIFY_IDENTITY: false
-
 - name: system-tests-external-dbs-rds
   serial: true
   plan:
@@ -1309,7 +1171,6 @@ jobs:
       passed:
       - deploy-database-sdk
     - get: cryogenics-concourse-tasks
-      passed: [unit-tests]
     - get: cert-store
       resource: rds-ca-bundle
     - get: cf-deployment-env-non-airgapped
@@ -1337,29 +1198,18 @@ jobs:
   - load_var: pooled-env
     file: bosh-env/metadata.yml
   - in_parallel:
-    - do:
-      - task: postgres-system-tests-10
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
-        input_mapping:
-          terraform-state: terraform
-        params:
-          <<: *bosh-smiths-creds
-          DB_PREFIX: postgres_10
-          DB_TYPE: postgres
-          POSTGRES_PASSWORD: *postgres_10_password
-          TEST_SUITE_NAME: postgresql
-      - task: postgres-tls-system-tests-10
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
-        input_mapping:
-          terraform-state: terraform
-        params:
-          <<: *bosh-smiths-creds
-          DB_PREFIX: postgres_10
-          DB_TYPE: postgres
-          POSTGRES_CA_CERT_PATH: rds-combined-ca-bundle.pem
-          POSTGRES_PASSWORD: *postgres_10_password
-          TEST_SSL_USER_REQUIRES_SSL: false
-          TEST_SUITE_NAME: postgresql_tls
+    - task: postgres-tls-system-tests-15
+      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+      input_mapping:
+        terraform-state: terraform
+      params:
+        <<: *bosh-smiths-creds
+        DB_PREFIX: postgres_15
+        DB_TYPE: postgres
+        POSTGRES_CA_CERT_PATH: rds-combined-ca-bundle.pem
+        POSTGRES_PASSWORD: *postgres_15_password
+        TEST_SSL_USER_REQUIRES_SSL: false
+        TEST_SUITE_NAME: postgresql_tls
     - do:
       - task: postgres-system-tests-11
         file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
@@ -1420,21 +1270,6 @@ jobs:
           TEST_SUITE_NAME: mysql
           TEST_TLS_MUTUAL_TLS: false
           TEST_TLS_VERIFY_IDENTITY: false
-    - do:
-      - task: mysql-system-tests-5.7
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
-        input_mapping:
-          terraform-state: terraform
-        params:
-          <<: *bosh-smiths-creds
-          TEST_TLS_MUTUAL_TLS: false
-          DB_PREFIX: mysql_5_7
-          MYSQL_PASSWORD: *mysql_5_7_password
-          TEST_SUITE_NAME: mysql
-          DB_TYPE: mysql
-          MYSQL_PORT: 3306
-          MYSQL_USERNAME: root
-          MYSQL_CA_CERT_PATH: rds-combined-ca-bundle.pem
 
 - name: system-tests-blobstore-backuper
   serial: true
@@ -1454,7 +1289,6 @@ jobs:
       - deploy-azure-blobstore-sdk
       - deploy-gcs-blobstore-sdk
     - get: cryogenics-concourse-tasks
-      passed: [unit-tests]
     - get: image-cryogenics-essentials
   - task: alias-env
     image: image-cryogenics-essentials
@@ -1522,7 +1356,6 @@ jobs:
   - get: cf-deployment-env-non-airgapped
     trigger: true
     passed:
-    - system-tests-external-dbs-gcp
     - system-tests-external-dbs-rds
     - system-tests-blobstore-backuper
   - put: cf-deployment-env-non-airgapped
@@ -1537,7 +1370,6 @@ jobs:
     trigger: true
     passed:
     - system-tests-internal-dbs
-    - system-tests-external-dbs-gcp
     - system-tests-external-dbs-rds
     - system-tests-blobstore-backuper
     - system-tests-blobstore-backuper-with-iam-instance-profile
@@ -1694,7 +1526,7 @@ jobs:
       golang-project-repo: backup-and-restore-sdk-release-updated
   - load_var: golang-release-version
     file: golang-release/.git/describe_ref
-  - put: backup-and-restore-sdk-release-golang-bump
+  - put: backup-and-restore-sdk-release-write-only
     params:
       repository: backup-and-restore-sdk-release-updated
       branch: &golang-vendor-branch bump-golang-vendor-((.:golang-release-version))
@@ -1715,7 +1547,7 @@ jobs:
 
         If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
     input_mapping:
-      source-repo: backup-and-restore-sdk-release-golang-bump
+      source-repo: backup-and-restore-sdk-release-write-only
 
 - name: bump-mariadb
   plan:
@@ -1763,28 +1595,56 @@ jobs:
       GH_TOKEN: *git_token
       <<: *AWS_ACCESS
 
-- name: bump-mysql
+- name: bump-mysql-8
+  old_name: bump-mysql
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
     - get: image-cryogenics-essentials
-    - get: daily-trigger
+    - get: mysql-server-8-blob
       trigger: true
+  - load_var: mysql-server-8-version
+    file: mysql-server-8-blob/version
+    format: raw
 
-  - task: bump-mysql
-    file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
+  - task: bump-mysql-8-blob
+    file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
     image: image-cryogenics-essentials
     input_mapping:
-      task-repo: cryogenics-concourse-tasks
-      bump-repo: backup-and-restore-sdk-release-main
-    vars:
-      bump-script: scripts/autobump-mysql.sh
+      distributed-package: mysql-server-8-blob
+      bosh-release: backup-and-restore-sdk-release-main
     params:
-      PR_BASE: main
-      PR_LABELS: ci
-      GH_TOKEN: *git_token
       <<: *AWS_ACCESS
+      GIT_USERNAME: *github_user
+      GIT_EMAIL: *github_email
+      GIT_BRANCH: &bump-mysql-server-8-branch bump-mysql-server-8-to-((.:mysql-server-8-version))
+      BLOB_NAME: mysql
+      BLOB_EXTENSION: linux-glibc2.17-x86_64-minimal.tar.xz
+      REMOVE_MULTIPLE_BLOBS: true
+  - put: backup-and-restore-sdk-release-write-only
+    params:
+      repository: bosh-release-updated
+      force: true
+      branch: *bump-mysql-server-8-branch
+  - task: create-pull-request
+    image: image-cryogenics-essentials
+    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
+    params:
+      BASE: main
+      BRANCH: *bump-mysql-server-8-branch
+      LABELS: ci,bump-mysql
+      TITLE: Bump mysql-server to version ((.:mysql-server-8-version))
+      MESSAGE: |
+        This is an automatically generated Pull Request from the Cryogenics CI Bot.
+
+        I have detected a new version of [mysql-8](https://dev.mysql.com/downloads/mysql/8.0.html) and automatically bumped
+        this package to benefit from the latest changes.
+
+        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+    input_mapping:
+      source-repo: backup-and-restore-sdk-release-write-only
+
 
 - name: bump-ncurses
   plan:
