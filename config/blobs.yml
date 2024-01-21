@@ -22,10 +22,6 @@ openssl/openssl-1.1.1w.tar.gz:
   size: 9893384
   object_id: 8ebd05e7-9a12-4a1c-7a2d-5142e99bbcc0
   sha: sha256:cf3098950cb4d853ad95c0841f1f9c6d3dc102dccfcacd521d93925208b76ac8
-postgres/postgresql-10.23.tar.gz:
-  size: 25493839
-  object_id: 9e0e0f74-07cf-4600-60a5-90a278783d5f
-  sha: sha256:39886b7fbf375fdd79e94b676d8346a62c3c190ccf00b3f763002c8fc8fb71f0
 postgres/postgresql-11.22.tar.gz:
   size: 26826810
   object_id: 00576d0f-f9a2-4210-7db0-f1d1687c3327
