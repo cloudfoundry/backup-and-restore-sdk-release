@@ -1622,6 +1622,7 @@ jobs:
       BLOB_NAME: mysql
       BLOB_EXTENSION: linux-glibc2.17-x86_64-minimal.tar.xz
       REMOVE_MULTIPLE_BLOBS: true
+      BLOB_DIRECTORY: mysql/
   - put: backup-and-restore-sdk-release-write-only
     params:
       repository: bosh-release-updated
