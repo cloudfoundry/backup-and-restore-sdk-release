@@ -10,10 +10,10 @@ mariadb/mariadb-10.6.16.tar.gz:
   size: 98224346
   object_id: 01be95fa-a7ab-4640-5d15-4ca3295c2290
   sha: sha256:5ef83843e796dcda9aea47b24690ddf6d848f43f43e11f9d9a0cc21c78fbb9cf
-mysql/mysql-8.0.35-linux-glibc2.17-x86_64-minimal.tar.xz:
-  size: 60580384
-  object_id: 34fc2ee9-6d4a-40d2-6b47-0c26b5e15525
-  sha: sha256:9c5fa242c4fd213ea875ae149dede0daffb91666215d568b66bd99233e1442a4
+mysql/mysql-8.0.36-linux-glibc2.17-x86_64-minimal.tar.xz:
+  size: 60593260
+  object_id: 84707527-f032-4483-7b4f-8cb0808254f1
+  sha: sha256:23d704336a8a31b513b706567cfca10a11e0a1bb71e25c1ade8e229400d6280c
 ncurses/ncurses-6.4.tar.gz:
   size: 3612591
   object_id: 2e99f0f8-be87-480b-4e5a-9488e923e4d1
