@@ -18,6 +18,13 @@
 
 set -e
 
+# on xenial we provide a still supported openssl version, since some
+# of the below binaries are compiled against it, we need to make the 
+# path for the shared object files known...
+if lsb_release -a | grep xenial; then
+  export LD_LIBRARY_PATH=/var/vcap/packages/libopenssl/
+fi
+
 export PG_DUMP_11_PATH="/var/vcap/packages/database-backup-restorer-postgres-11/bin/pg_dump"
 export PG_RESTORE_11_PATH="/var/vcap/packages/database-backup-restorer-postgres-11/bin/pg_restore"
 
