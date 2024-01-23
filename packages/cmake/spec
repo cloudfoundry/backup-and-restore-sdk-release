@@ -1,0 +1,5 @@
+---
+name: cmake
+dependencies: []
+files:
+  - cmake/cmake-*.tar.gz

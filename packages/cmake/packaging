@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -eux
+
+if grep xenial < /etc/os-release
+then
+  number_of_cores="$(( $(lscpu -p=core | tail -n 1) + 1 ))"
+
+  tar xzf cmake/cmake-*.tar.gz
+
+  cd cmake-*
+  ./bootstrap  --prefix="${BOSH_INSTALL_TARGET}"
+  make -j${number_of_cores}
+  make install
+fi
