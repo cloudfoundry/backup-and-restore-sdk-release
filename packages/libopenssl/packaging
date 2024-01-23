@@ -16,12 +16,8 @@
 # limitations under the License.
 set -e
 
-OPENSSL_VERSION=1.1.1w
-
-tar xzf openssl/openssl-${OPENSSL_VERSION}.tar.gz
-
-cd openssl-${OPENSSL_VERSION}
-export CFLAGS=-fPIC
-./config --prefix=${BOSH_INSTALL_TARGET} --static -static
+tar xzf openssl/openssl-*.tar.gz
+cd openssl-*
+./config --prefix=${BOSH_INSTALL_TARGET} --openssldir=${BOSH_INSTALL_TARGET}
 make
-make install
+make install_sw #install_sw will leave out docs / manpages...

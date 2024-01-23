@@ -1,0 +1,7 @@
+---
+name: libopenssl
+
+dependencies: []
+
+files:
+- openssl/openssl-*.tar.gz
