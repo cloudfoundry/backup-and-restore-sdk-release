@@ -170,7 +170,7 @@ groups:
 
 - name: bump
   jobs:
-  - bump-openssl-1
+  - bump-openssl
   - bump-golang
   - bump-mariadb
   - bump-mysql-8
@@ -257,6 +257,12 @@ resource_types:
     tag: latest
 
 resources:
+- name: openssl
+  type: http
+  source:
+    url: https://www.openssl.org/source/
+    version_regex: "^openssl-(?P<version>.*).tar.gz$"
+
 - name: mysql-server-8-blob
   type: ftp
   source:
@@ -1573,28 +1579,56 @@ jobs:
       GH_TOKEN: *git_token
       <<: *AWS_ACCESS
 
-- name: bump-openssl-1
+- name: bump-openssl
+  old_name: bump-openssl-1
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
     - get: image-backup-restore
-    - get: daily-trigger
+    - get: openssl
       trigger: true
-
-  - task: bump-openssl-1
-    file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
-    image: image-backup-restore
+  - load_var: openssl-version
+    file: openssl/version
+    format: raw
+  - task: bump-openssl
+    file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
+    image: image-cryogenics-essentials
     input_mapping:
-      task-repo: cryogenics-concourse-tasks
-      bump-repo: backup-and-restore-sdk-release-main
-    vars:
-      bump-script: scripts/autobump-openssl-1.sh
+      distributed-package: openssl
+      bosh-release: backup-and-restore-sdk-release-main
     params:
-      PR_BASE: main
-      PR_LABELS: ci
-      GH_TOKEN: *git_token
       <<: *AWS_ACCESS
+      GIT_USERNAME: *github_user
+      GIT_EMAIL: *github_email
+      GIT_BRANCH: &bump-openssl-branch bump-openssl-to-((.:openssl-version))
+      BLOB_NAME: openssl
+      BLOB_EXTENSION: .tar.gz
+      REMOVE_MULTIPLE_BLOBS: false
+      BLOB_DIRECTORY: openssl/
+      UPDATE_REFERENCES: yes
+  - put: backup-and-restore-sdk-release-write-only
+    params:
+      repository: bosh-release-updated
+      force: true
+      branch: *bump-openssl-branch
+  - task: create-pull-request
+    image: image-cryogenics-essentials
+    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
+    params:
+      BASE: main
+      BRANCH: *bump-openssl-branch
+      LABELS: ci
+      TITLE: Bump openssl to version ((.:openssl-version))
+      MESSAGE: |
+        This is an automatically generated Pull Request from the Cryogenics CI Bot.
+
+        I have detected a new version of [openssl](https://www.openssl.org/source/) and automatically bumped
+        this package to benefit from the latest changes.
+
+        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+    input_mapping:
+      source-repo: backup-and-restore-sdk-release-write-only
 
 - name: bump-mysql-8
   old_name: bump-mysql
