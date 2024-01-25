@@ -22,24 +22,33 @@ set -e
 MARIADB_VERSION=10.6.16
 MY_DIR=$(pwd)
 
+
+# This is a bit weird and usually won't work. As the stuff we copy below will only
+# ever be present on a compilation VM. But it turns out that mariadb cmake setup 
+# will try to download libpcre2 from github if it is not found on the system. 
+# There is also no option to specify an external location as the options for WITH_PCRE
+# only recognize `auto`, `bundled` or `system`
 cp -r /var/vcap/packages/libpcre2/lib/* /usr/local/lib/
 cp -r /var/vcap/packages/libpcre2/bin/* /usr/local/bin/
 cp -r /var/vcap/packages/libpcre2/include/* /usr/local/include
+
 
 tar xzf mariadb/mariadb-${MARIADB_VERSION}.tar.gz
 (
   set -e
   cd mariadb-${MARIADB_VERSION}
-
   mkdir bld
   cd bld
 
-  cmake .. \
+  cmake ../ \
       -DCMAKE_INSTALL_PREFIX=${BOSH_INSTALL_TARGET} \
-      -DWITHOUT_SERVER=ON \
-      -DWITH_SSL=/var/vcap/packages/libopenssl1 \
+      -DCMAKE_BUILD_TYPE=MinSizeRel \
       -DBUILD_STATIC_LIBS=ON \
+      -DWITHOUT_SERVER=ON \
+      -DWITH_EMBEDDED_SERVER=OFF \
+      -DWITH_SSL=system \
       -DWITH_WSREP=ON \
+      -DWITH_SYSTEMD=no \
       -DWITH_INNODB_DISALLOW_WRITES=1 \
       -DWITH_PCRE=system
 
@@ -68,6 +77,7 @@ tar xzf mariadb/mariadb-${MARIADB_VERSION}.tar.gz
   tail -n 1000 build.out
 
   rm -rf ${BOSH_INSTALL_TARGET}/mysql-test/
+  rm -rf ${BOSH_INSTALL_TARGET}/man
 
   echo -n "${MARIADB_VERSION}-MariaDB" > ${BOSH_INSTALL_TARGET}/VERSION
 )
