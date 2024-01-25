@@ -170,7 +170,6 @@ groups:
 
 - name: bump
   jobs:
-  - bump-openssl-1
   - bump-golang
   - bump-mariadb
   - bump-mysql-8
@@ -1572,29 +1571,6 @@ jobs:
       GH_TOKEN: *git_token
       <<: *AWS_ACCESS
 
-- name: bump-openssl-1
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-main
-    - get: cryogenics-concourse-tasks
-    - get: image-backup-restore
-    - get: daily-trigger
-      trigger: true
-
-  - task: bump-openssl-1
-    file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
-    image: image-backup-restore
-    input_mapping:
-      task-repo: cryogenics-concourse-tasks
-      bump-repo: backup-and-restore-sdk-release-main
-    vars:
-      bump-script: scripts/autobump-openssl-1.sh
-    params:
-      PR_BASE: main
-      PR_LABELS: ci
-      GH_TOKEN: *git_token
-      <<: *AWS_ACCESS
-
 - name: bump-mysql-8
   old_name: bump-mysql
   plan:
@@ -1621,9 +1597,9 @@ jobs:
       GIT_BRANCH: &bump-mysql-server-8-branch bump-mysql-server-8-to-((.:mysql-server-8-version))
       BLOB_NAME: mysql
       BLOB_EXTENSION: linux-glibc2.17-x86_64-minimal.tar.xz
-      REMOVE_MULTIPLE_BLOBS: true
       BLOB_DIRECTORY: mysql/
       UPDATE_REFERENCES: yes
+      REMOVE_MULTIPLE_BLOBS: only-variable-name:MYSQL80_VERSION
   - put: backup-and-restore-sdk-release-write-only
     params:
       repository: bosh-release-updated
