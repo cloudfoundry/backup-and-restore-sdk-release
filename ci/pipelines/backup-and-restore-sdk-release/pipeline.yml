@@ -90,10 +90,10 @@ external_db_passwords: &external_db_passwords
   mariadb_10_password: &mariadb_10_password ((cerberus:bbr/sdk-external-db-creds.rds_mariadb_10_password))
 
 mysql_common: &mysql_common
-  MYSQL_PORT: &mysql-port 3306
-  MYSQL_USERNAME: &mysql-username root
+  MYSQL_PORT: 3306
+  MYSQL_USERNAME: root
   MYSQL_PASSWORD: &mysql-password mysql_password
-msysq_certs_common: &msysq_certs_common
+mysql_certs_common: &mysql_certs_common
   databases.ca: &mysql_ca_cert ((cerberus:bbr/sdk-db-certs.mysql_ca_cert))
   databases.certificate: &mysql_cert ((cerberus:bbr/sdk-db-certs.mysql_client_cert))
   databases.private_key: &mysql_private_key ((cerberus:bbr/sdk-db-certs.mysql_client_key))
@@ -112,7 +112,7 @@ minio-access-key: &minio_access_key ((cerberus:bbr/minio-creds.access_key))
 minio-secret-key: &minio_secret_key ((cerberus:bbr/minio-creds.secret_key))
 
 postgres_common: &postgres_common
-  POSTGRES_PORT: &postgres-port 5432
+  POSTGRES_PORT: 5432
   POSTGRES_USERNAME: &postgres-username test_user
   POSTGRES_PASSWORD: &postgres-password postgres_password
 pg_deployment_common: &pg_deployment_common
@@ -170,7 +170,6 @@ groups:
 
 - name: bump
   jobs:
-  - bump-openssl-1
   - bump-golang
   - bump-mariadb
   - bump-mysql-8
@@ -191,11 +190,12 @@ resource_types:
   source:
     repository: harbor-repo.vmware.com/cryogenics/concourse-ftp-resource
     tag: latest
-- name: semver-1-6 # Unlike the bundled version, supports AWS assume role; Remove after 1.6.0 or later becomes bundled
+
+- name: semver-1-6 # Unlike the bundled version, supports AWS assume role; Remove after Concourse upgrade to 7.10.0, which has it bundled
   type: registry-image
   source:
     repository: harbor-repo.vmware.com/dockerhub-proxy-cache/concourse/semver-resource
-    tag: 1.6
+    tag: "1.6"
     
 - name: shepherd
   source:
@@ -290,12 +290,15 @@ resources:
   source:
     repository: cloudfoundry/bpm-release
 
-- icon: github
-  name:  backup-and-restore-sdk-release-bump-ci-tasks
+- name:  backup-and-restore-sdk-release-bump-ci-tasks
+  type: git
+  icon: github
   source:
     private_key: *git_ssh_key
     uri: git@github.com:cloudfoundry/backup-and-restore-sdk-release
-  type: git
+    commit_filter:
+      exclude:
+      - ;resource comment; This resource is used exclusively for pushing new changes
 
 - name: bosh-release-v271.7
   type: bosh-io-release
@@ -313,19 +316,19 @@ resources:
   type: bosh-io-release
   source:
     repository: cloudfoundry/bosh
-    regexp: 260.3
+    regexp: "260.3"
 
 - name: postgres-release-v30
   type: bosh-io-release
   source:
     repository: cloudfoundry/postgres-release
-    regexp: 30
+    regexp: "30"
 
 - name: postgres-release-v37
   type: bosh-io-release
   source:
     repository: cloudfoundry/postgres-release
-    regexp: 37
+    regexp: "37"
 
 - name: cf-deployment-env-non-airgapped
   icon: pool
@@ -369,8 +372,6 @@ resources:
       prefix: bbr-sdk-pr-tests
       credentials: *service_accounts_bucket_owner_json_key
 
-
-
 - name: backup-and-restore-sdk-release
   type: pull-request
   check_every: 1m
@@ -401,7 +402,6 @@ resources:
     region_name: *aws-region
     <<: *aws_credentials_s3
 
-
 - name: slack-cryo-notification
   type: slack-notification
   icon: bell-ring
@@ -416,9 +416,6 @@ resources:
     private_key: *git_ssh_key
     branch: main
 
-# A second resource is necessary for Golang bumps because when we push a branch
-# to this repo via this resourse, the subsequent get steps will start tracking
-# that branch, and not main as one would expect.
 - name: backup-and-restore-sdk-release-write-only
   type: git
   icon: github
@@ -426,7 +423,9 @@ resources:
     uri: git@github.com:cloudfoundry/backup-and-restore-sdk-release.git
     private_key: *git_ssh_key
     disable_ci_skip: true
-    ignore_paths: [ "non_existing_file_used_to_avoid_resource_caching" ]
+    commit_filter:
+      exclude:
+      - ;resource comment; This resource is used exclusively for pushing new changes
 
 - name: backup-and-restore-sdk-release-main
   type: git
@@ -877,7 +876,7 @@ jobs:
           db_password: *mysql-password
           db_host: *mysql-8-0-host
           availability_zone: z1
-          <<: *msysq_certs_common
+          <<: *mysql_certs_common
           vm_extensions: ["cf-tcp-router-network-properties"]
         ops_files: 
         - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
@@ -944,7 +943,6 @@ jobs:
   - task: alias-env
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
-    image: image-cryogenics-essentials
     input_mapping:
       cryogenics-tasks: cryogenics-concourse-tasks
       toolsmiths-env: cf-deployment-env-airgapped
@@ -1567,29 +1565,6 @@ jobs:
       bump-repo: backup-and-restore-sdk-release-main
     vars:
       bump-script: scripts/autobump-mariadb.sh
-    params:
-      PR_BASE: main
-      PR_LABELS: ci
-      GH_TOKEN: *git_token
-      <<: *AWS_ACCESS
-
-- name: bump-openssl-1
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-main
-    - get: cryogenics-concourse-tasks
-    - get: image-backup-restore
-    - get: daily-trigger
-      trigger: true
-
-  - task: bump-openssl-1
-    file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
-    image: image-backup-restore
-    input_mapping:
-      task-repo: cryogenics-concourse-tasks
-      bump-repo: backup-and-restore-sdk-release-main
-    vars:
-      bump-script: scripts/autobump-openssl-1.sh
     params:
       PR_BASE: main
       PR_LABELS: ci
