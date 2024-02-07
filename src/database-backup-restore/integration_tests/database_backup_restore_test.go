@@ -157,6 +157,10 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 			Entry("mariadb_client path missing", "MARIADB_CLIENT_PATH"),
 			Entry("mariadb_dump path missing", "MARIADB_DUMP_PATH"),
 			Entry("mariadb_client path missing", "MARIADB_CLIENT_PATH"),
+			Entry("mysql_client_8_0 path missing", "MYSQL_CLIENT_8_0_PATH"),
+			Entry("mysql_dump_8_0 path missing", "MYSQL_DUMP_8_0_PATH"),
+			Entry("mysql_client_5_7 path missing", "MYSQL_CLIENT_5_7_PATH"),
+			Entry("mysql_dump_5_7 path missing", "MYSQL_DUMP_5_7_PATH"),
 		)
 	})
 })
