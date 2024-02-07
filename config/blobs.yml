@@ -14,10 +14,18 @@ mysql/mysql-8.0.36-linux-glibc2.17-x86_64-minimal.tar.xz:
   size: 60593260
   object_id: 84707527-f032-4483-7b4f-8cb0808254f1
   sha: sha256:23d704336a8a31b513b706567cfca10a11e0a1bb71e25c1ade8e229400d6280c
+mysql/mysql-5.7.44.tar.gz:
+  size: 56570597
+  object_id: 92e82aaa-6a33-40b7-5940-2366d90ad636
+  sha: sha256:d03d8ff688862c40da3488451072a4b2178a86b53b4a7546ee5f864bb15cd919
 ncurses/ncurses-6.4.tar.gz:
   size: 3612591
   object_id: 2e99f0f8-be87-480b-4e5a-9488e923e4d1
   sha: sha256:6931283d9ac87c5073f30b6290c4c75f21632bb4fc3603ac8100812bed248159
+openssl/openssl-1.1.1w.tar.gz:
+  size: 9893384
+  object_id: 8ebd05e7-9a12-4a1c-7a2d-5142e99bbcc0
+  sha: sha256:cf3098950cb4d853ad95c0841f1f9c6d3dc102dccfcacd521d93925208b76ac8
 postgres/postgresql-11.22.tar.gz:
   size: 26826810
   object_id: 00576d0f-f9a2-4210-7db0-f1d1687c3327
