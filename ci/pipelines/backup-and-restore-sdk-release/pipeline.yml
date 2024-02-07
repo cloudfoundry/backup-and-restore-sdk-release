@@ -98,6 +98,18 @@ mysql_certs_common: &mysql_certs_common
   databases.certificate: &mysql_cert ((cerberus:bbr/sdk-db-certs.mysql_client_cert))
   databases.private_key: &mysql_private_key ((cerberus:bbr/sdk-db-certs.mysql_client_key))
 
+
+mysql-5-7-deployment-name: &mysql-5-7-deployment-name mysql-5-7-dev
+mysql-5-7-host: &mysql-5-7-host 10.0.255.9
+
+mysql_params_5_7: &mysql_params_5_7
+  MYSQL_HOSTNAME: *mysql-5-7-host
+  MYSQL_CA_CERT: *mysql_ca_cert
+  MYSQL_CLIENT_CERT: *mysql_cert
+  MYSQL_CLIENT_KEY: *mysql_private_key
+  <<: *mysql_common
+
+
 mysql-8-0-deployment-name: &mysql-8-0-deployment-name mysql-8-0-dev
 mysql-8-0-host: &mysql-8-0-host 10.0.255.10
 
@@ -480,6 +492,12 @@ resources:
     deployment: *mysql-8-0-deployment-name
     skip_check: true
 
+- name: mysql-5-7-deployment
+  type: bosh-deployment
+  source:
+    deployment: *mysql-5-7-deployment-name
+    skip_check: true
+
 - name: postgres-11-dev-deployment
   type: bosh-deployment
   source:
@@ -859,8 +877,6 @@ jobs:
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
   - do:
-    #! Before 2024/01/15 there were two deployments done here. The comment is left in place
-    #! to avoid debugging a future issue if we ever need a 2nd mysql deployment again.
     #! It seems that 2 deployments cannot be performed in parallel if they
     #! compile the same release against the same stemcell and therefore BOSH
     #! refuses to grant some locks.
@@ -875,6 +891,26 @@ jobs:
           deployment-name: *mysql-8-0-deployment-name
           db_password: *mysql-password
           db_host: *mysql-8-0-host
+          availability_zone: z1
+          <<: *mysql_certs_common
+          vm_extensions: ["cf-tcp-router-network-properties"]
+        ops_files: 
+        - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
+        source_file: source-file/source-file.yml
+        releases:
+        - bpm-release/*.tgz
+        - pxc-release/*.tgz
+    - put: mysql-5-7-deployment
+      timeout: 2h
+      params:
+        manifest: backup-and-restore-sdk-release/ci/manifests/mysql.yml
+        stemcells:
+        - jammy-stemcell/*.tgz
+        vars:
+          mysql_version: "5.7"
+          deployment-name: *mysql-5-7-deployment-name
+          db_password: *mysql-password
+          db_host: *mysql-5-7-host
           availability_zone: z1
           <<: *mysql_certs_common
           vm_extensions: ["cf-tcp-router-network-properties"]
@@ -965,6 +1001,14 @@ jobs:
         TEST_TLS_MUTUAL_TLS: false
         <<: *bosh-smiths-creds
         <<: *mysql_params_8
+    - task: mysql-5-7-system-tests
+      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
+      params:
+        TEST_SUITE_NAME: mysql
+        TEST_TLS_VERIFY_IDENTITY: false
+        TEST_TLS_MUTUAL_TLS: false
+        <<: *bosh-smiths-creds
+        <<: *mysql_params_5_7
 
 - name: unclaim-cf-deployment-airgapped
   plan:
