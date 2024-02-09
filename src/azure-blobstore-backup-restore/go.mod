@@ -1,6 +1,6 @@
 module azure-blobstore-backup-restore
 
-go 1.21.7
+go 1.22.0
 
 require (
 	github.com/Azure/azure-storage-blob-go v0.15.0
