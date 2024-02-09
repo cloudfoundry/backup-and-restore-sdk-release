@@ -6,18 +6,18 @@ libpcre2/pcre2-10.42.tar.gz:
   size: 2397194
   object_id: 108c3b1c-687e-40dc-5768-6a353bafd4fa
   sha: sha256:c33b418e3b936ee3153de2c61cc638e7e4fe3156022a5c77d0711bcbb9d64f1f
-mariadb/mariadb-10.6.16.tar.gz:
-  size: 98224346
-  object_id: 01be95fa-a7ab-4640-5d15-4ca3295c2290
-  sha: sha256:5ef83843e796dcda9aea47b24690ddf6d848f43f43e11f9d9a0cc21c78fbb9cf
-mysql/mysql-8.0.36-linux-glibc2.17-x86_64-minimal.tar.xz:
-  size: 60593260
-  object_id: 84707527-f032-4483-7b4f-8cb0808254f1
-  sha: sha256:23d704336a8a31b513b706567cfca10a11e0a1bb71e25c1ade8e229400d6280c
+mariadb/mariadb-10.6.17.tar.gz:
+  size: 99067793
+  object_id: c299f9bf-d7f2-4a13-56dc-75beb35461a3
+  sha: sha256:fb41b0702059c046832d60138733acb73e4c0e5a1a0681061709d25591e4b086
 mysql/mysql-5.7.44.tar.gz:
   size: 56570597
   object_id: 92e82aaa-6a33-40b7-5940-2366d90ad636
   sha: sha256:d03d8ff688862c40da3488451072a4b2178a86b53b4a7546ee5f864bb15cd919
+mysql/mysql-8.0.36-linux-glibc2.17-x86_64-minimal.tar.xz:
+  size: 60593260
+  object_id: 84707527-f032-4483-7b4f-8cb0808254f1
+  sha: sha256:23d704336a8a31b513b706567cfca10a11e0a1bb71e25c1ade8e229400d6280c
 ncurses/ncurses-6.4.tar.gz:
   size: 3612591
   object_id: 2e99f0f8-be87-480b-4e5a-9488e923e4d1
