@@ -50,7 +50,7 @@ hostssl all  all  0.0.0.0/0  md5
 EOF
   elif [[ "${ENABLE_TLS}" == "mutual" ]]; then
 
-      if postgres --version | grep -o "15.5"; then
+      if postgres --version | grep -o "15.6"; then
 cat << 'EOF' > /var/lib/postgresql/data/pg_hba.conf
 hostssl all  all  0.0.0.0/0  md5 clientcert=verify-full
 EOF
