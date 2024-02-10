@@ -454,7 +454,7 @@ var _ = Describe("Postgres", func() {
 		Context("Postgres database server is version 15", func() {
 			BeforeEach(func() {
 				fakePgClient.WhenCalled().WillPrintToStdOut(
-					" PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc " +
+					" PostgreSQL 15.6 on x86_64-pc-linux-gnu, compiled by gcc " +
 						"(Ubuntu 5.4.0-6ubuntu1~16.04.12) 5.4.0 20160609, 64-bit").
 					WillExitWith(0)
 			})
@@ -779,7 +779,7 @@ var _ = Describe("Postgres", func() {
 		Context("Postgres database server is version 15", func() {
 			BeforeEach(func() {
 				fakePgClient.WhenCalled().WillPrintToStdOut(
-					" PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc " +
+					" PostgreSQL 15.6 on x86_64-pc-linux-gnu, compiled by gcc " +
 						"(Ubuntu 5.4.0-6ubuntu1~16.04.12) 5.4.0 20160609, 64-bit").
 					WillExitWith(0)
 			})
