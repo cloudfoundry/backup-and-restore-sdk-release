@@ -195,6 +195,9 @@ groups:
   jobs:
   - check-for-changes
   - create-final-patch
+  - manual-bump-bbr-sdk-major
+  - manual-bump-bbr-sdk-patch
+  - manual-bump-bbr-sdk-minor
 
 resource_types:
 - name: ftp
@@ -1802,3 +1805,39 @@ jobs:
           If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
       input_mapping:
         source-repo:  backup-and-restore-sdk-release-bump-ci-tasks
+
+- name: manual-bump-bbr-sdk-patch
+  serial_groups:
+  - bbr-sdk-version
+  plan:
+  - get: version
+    resource: version
+    params:
+      bump: final
+  - put: version
+    params:
+      bump: patch
+
+- name: manual-bump-bbr-sdk-minor
+  serial_groups:
+  - bbr-sdk-version
+  plan:
+  - get: version
+    resource: version
+    params:
+      bump: final
+  - put: version
+    params:
+      bump: minor
+
+- name: manual-bump-bbr-sdk-major
+  serial_groups:
+  - bbr-sdk-version
+  plan:
+  - get: version
+    resource: version
+    params:
+      bump: final
+  - put: version
+    params:
+      bump: major
