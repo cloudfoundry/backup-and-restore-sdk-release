@@ -6,18 +6,18 @@ libpcre2/pcre2-10.42.tar.gz:
   size: 2397194
   object_id: 108c3b1c-687e-40dc-5768-6a353bafd4fa
   sha: sha256:c33b418e3b936ee3153de2c61cc638e7e4fe3156022a5c77d0711bcbb9d64f1f
-mariadb/mariadb-10.6.16.tar.gz:
-  size: 98224346
-  object_id: 01be95fa-a7ab-4640-5d15-4ca3295c2290
-  sha: sha256:5ef83843e796dcda9aea47b24690ddf6d848f43f43e11f9d9a0cc21c78fbb9cf
-mysql/mysql-8.0.36-linux-glibc2.17-x86_64-minimal.tar.xz:
-  size: 60593260
-  object_id: 84707527-f032-4483-7b4f-8cb0808254f1
-  sha: sha256:23d704336a8a31b513b706567cfca10a11e0a1bb71e25c1ade8e229400d6280c
+mariadb/mariadb-10.6.17.tar.gz:
+  size: 99067793
+  object_id: c299f9bf-d7f2-4a13-56dc-75beb35461a3
+  sha: sha256:fb41b0702059c046832d60138733acb73e4c0e5a1a0681061709d25591e4b086
 mysql/mysql-5.7.44.tar.gz:
   size: 56570597
   object_id: 92e82aaa-6a33-40b7-5940-2366d90ad636
   sha: sha256:d03d8ff688862c40da3488451072a4b2178a86b53b4a7546ee5f864bb15cd919
+mysql/mysql-8.0.36-linux-glibc2.17-x86_64-minimal.tar.xz:
+  size: 60593260
+  object_id: 84707527-f032-4483-7b4f-8cb0808254f1
+  sha: sha256:23d704336a8a31b513b706567cfca10a11e0a1bb71e25c1ade8e229400d6280c
 ncurses/ncurses-6.4.tar.gz:
   size: 3612591
   object_id: 2e99f0f8-be87-480b-4e5a-9488e923e4d1
@@ -30,11 +30,11 @@ postgres/postgresql-11.22.tar.gz:
   size: 26826810
   object_id: 00576d0f-f9a2-4210-7db0-f1d1687c3327
   sha: sha256:6445a4e1533c1e8bb616d4a3784bdc4c0226b541f6f0c8d996d9f27d581d49c3
-postgres/postgresql-13.13.tar.gz:
-  size: 28230222
-  object_id: 6e4b574b-2a92-4450-67d3-8a493629c047
-  sha: sha256:68b102de6f04a9ca32031f2f45a91a6e09e6a69a8679414d102b75b56f8f6a39
-postgres/postgresql-15.5.tar.gz:
-  size: 30261268
-  object_id: 8754b857-4cb6-4e30-47e5-be6272466fbb
-  sha: sha256:9f29a89e5ffd0ed0cdf44e53df244f52a30f9e010333f46031d753815fa9ca67
+postgres/postgresql-13.14.tar.gz:
+  size: 28255826
+  object_id: e74160b4-112f-4a0c-5453-5b2f55852f3b
+  sha: sha256:003fea1564136d98ac05eef8f118c24d854410875b0bb3bfc43d180390eff803
+postgres/postgresql-15.6.tar.gz:
+  size: 30299236
+  object_id: f6b63b1c-f837-463e-7dc2-f3a6a9bb50ff
+  sha: sha256:3a08314af1714671213a8a4f6bd646d0b1cdc94b029e8988944ab04d4b8cf2d2
