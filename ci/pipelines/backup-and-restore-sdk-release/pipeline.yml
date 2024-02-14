@@ -183,6 +183,7 @@ groups:
 - name: bump
   jobs:
   - bump-golang
+  - bump-ruby
   - bump-mariadb
   - bump-mysql-8
   - bump-ncurses
@@ -450,6 +451,13 @@ resources:
     private_key: *git_ssh_key
     branch: main
     disable_ci_skip: true
+
+- name: git-ruby-bosh-release
+  type: git
+  check_every: 24h
+  source:
+    uri: https://github.com/bosh-packages/ruby-release.git
+    tag_filter: v*
 
 - name: every-week
   type: time
@@ -1594,6 +1602,45 @@ jobs:
         If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
     input_mapping:
       source-repo: backup-and-restore-sdk-release-write-only
+
+- name: bump-ruby
+  plan:
+  - get: backup-and-restore-sdk-release-main
+  - get: cryogenics-concourse-tasks
+  - get: git-ruby-bosh-release
+    trigger: true
+  - task: detect-ruby-version
+    file: cryogenics-concourse-tasks/deps-automation/detect-version-from-ruby-bosh-release/task.yml
+    input_mapping:
+      ruby-release: git-ruby-bosh-release
+  - load_var: new-ruby-version
+    file: ruby-version/version
+  - task: bump-ruby
+    file: cryogenics-concourse-tasks/deps-automation/bump-ruby/task.yml
+    input_mapping:
+      repo-to-bump: backup-and-restore-sdk-release-main
+    params:
+      GIT_USERNAME: *github_user
+      GIT_EMAIL: *github_email
+      NEW_RUBY_VERSION: ((.:new-ruby-version))
+  - put: backup-and-restore-sdk-release-write-only
+    params:
+      branch: &ruby-bump-branch bump-ruby-to-((.:new-ruby-version))
+      force: true
+      repository: bumped-repo
+  - task: create-pull-request
+    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
+    input_mapping:
+      source-repo: backup-and-restore-sdk-release-write-only
+    params:
+      BASE: main
+      BRANCH: *ruby-bump-branch
+      LABELS: dependencies
+      TITLE: Bump Ruby to ((.:new-ruby-version))
+      MESSAGE: |
+        This is an automatically generated Pull Request from the Cryogenics CI Bot.
+        I have detected a new version of Ruby and automatically bumped this package to benefit from the latest changes.
+        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
 
 - name: bump-mariadb
   plan:
