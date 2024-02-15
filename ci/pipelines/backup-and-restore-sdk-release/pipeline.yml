@@ -296,7 +296,7 @@ resources:
   source:
     url: "https://dev.mysql.com/downloads/mysql/8.0.html?tpl=platform&os=2&version=8.0&osva=#downloads"
     static_download_url_path: "https://dev.mysql.com/get/Downloads/MySQL-8.0/"
-    version_regex: "mysql-(?P<version>[0-9]*.[0-9]*.[0-9]*)-linux-glibc.*-x86_64-minimal.tar.xz"
+    version_regex: "mysql-(?P<version>[0-9]*.[0-9]*.[0-9]*)-linux-glibc.*-x86_64-minimal.tar.xz$"
     filename_mode: true
 - name: bash
   type: registry-image
