@@ -272,6 +272,11 @@ resource_types:
     tag: latest
 
 resources:
+- name: mariadb-10-6-blob
+  type: ftp
+  source:
+    url: https://mirror.mariadb.org/mariadb-10.6.*/bintar-linux-systemd-x86_64/
+    version_regex: "mariadb-(?P<version>10.6.[0-9]*)-linux-systemd-x86_64.tar.gz$" 
 - name: mysql-server-8-blob
   type: ftp
   source:
@@ -1647,22 +1652,47 @@ jobs:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
     - get: image-backup-restore
-    - get: daily-trigger
+    - get: mariadb-10-6-blob
       trigger: true
-
-  - task: bump-mariadb
-    file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
-    image: image-backup-restore
+  - load_var: mariadb-10-6-version
+    file: mariadb-10-6-blob/version
+  - task: bump-mariadb-10-6-blob
+    file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
+    image: image-cryogenics-essentials
     input_mapping:
-      task-repo: cryogenics-concourse-tasks
-      bump-repo: backup-and-restore-sdk-release-main
-    vars:
-      bump-script: scripts/autobump-mariadb.sh
+      distributed-package: mariadb-10-6-blob
+      bosh-release: backup-and-restore-sdk-release-main
     params:
-      PR_BASE: main
-      PR_LABELS: ci
-      GH_TOKEN: *git_token
       <<: *AWS_ACCESS
+      GIT_USERNAME: *github_user
+      GIT_EMAIL: *github_email
+      GIT_BRANCH: &bump-mariadb-10-6-branch bump-mariadb-10-6-to-((.:mariadb-10-6-version))
+      BLOB_NAME: mariadb
+      BLOB_EXTENSION: .tar.gz
+      BLOB_DIRECTORY: mariadb/
+      UPDATE_REFERENCES: yes
+  - put: backup-and-restore-sdk-release-write-only
+    params:
+      repository: bosh-release-updated
+      force: true
+      branch: *bump-mariadb-10-6-branch
+  - task: create-pull-request
+    image: image-cryogenics-essentials
+    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
+    params:
+      BASE: main
+      BRANCH: *bump-mariadb-10-6-branch
+      LABELS: ci,bump-mariadb
+      TITLE: Bump mariadb-server to version ((.:mariadb-10-6-version))
+      MESSAGE: |
+        This is an automatically generated Pull Request from the Cryogenics CI Bot.
+
+        I have detected a new version of [mariadb-10-6](https://mirror.mariadb.org/) and automatically bumped
+        this package to benefit from the latest changes.
+
+        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+    input_mapping:
+      source-repo: backup-and-restore-sdk-release-write-only
 
 - name: bump-mysql-8
   old_name: bump-mysql
