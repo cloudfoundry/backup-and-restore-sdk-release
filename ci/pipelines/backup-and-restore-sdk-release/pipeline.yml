@@ -277,6 +277,15 @@ resources:
   source:
     url: https://mirror.mariadb.org/mariadb-10.6.*/bintar-linux-systemd-x86_64/
     version_regex: "mariadb-(?P<version>10.6.[0-9]*)-linux-systemd-x86_64.tar.gz$" 
+- name: libpcre2-blob
+  type: github-release
+  source:
+    owner: PCRE2Project
+    repository: pcre2
+    access_token: *git_token
+    tag_filter: pcre2-([0-9]*.[0-9]*)
+    order_by: time
+
 - name: mysql-server-8-blob
   type: ftp
   source:
@@ -1690,6 +1699,51 @@ jobs:
         I have detected a new version of [mariadb-10-6](https://mirror.mariadb.org/) and automatically bumped
         this package to benefit from the latest changes.
 
+- name: bump-libpcre2
+  old_name: bump-libpcre2
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release-main
+    - get: cryogenics-concourse-tasks
+    - get: image-cryogenics-essentials
+    - get: libpcre2-blob
+      trigger: true
+  - load_var: libpcre2-version
+    file: libpcre2-blob/version
+    format: raw
+
+  - task: bump-libpcre2-blob
+    file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
+    image: image-cryogenics-essentials
+    input_mapping:
+      distributed-package: libpcre2-blob
+      bosh-release: backup-and-restore-sdk-release-main
+    params:
+      <<: *AWS_ACCESS
+      GIT_USERNAME: *github_user
+      GIT_EMAIL: *github_email
+      GIT_BRANCH: &bump-libpcre2-branch bump-libpcre2-to-((.:libpcre2-version))
+      BLOB_NAME: pcre2
+      BLOB_EXTENSION: .tar.gz
+      BLOB_DIRECTORY: libpcre2/
+      UPDATE_REFERENCES: yes
+  - put: backup-and-restore-sdk-release-write-only
+    params:
+      repository: bosh-release-updated
+      force: true
+      branch: *bump-libpcre2-branch
+  - task: create-pull-request
+    image: image-cryogenics-essentials
+    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
+    params:
+      BASE: main
+      BRANCH: *bump-libpcre2-branch
+      LABELS: ci,bump-libpcre2
+      TITLE: Bump libpcre2-server to version ((.:libpcre2-version))
+      MESSAGE: |
+        This is an automatically generated Pull Request from the Cryogenics CI Bot.
+        I have detected a new version of [libpcre2](https://github.com/PCRE2Project/pcre2/releases) and automatically bumped
+        this package to benefit from the latest changes.
         If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
     input_mapping:
       source-repo: backup-and-restore-sdk-release-write-only
@@ -1792,29 +1846,6 @@ jobs:
       PR_BASE: main
       PR_LABELS: ci
 
-      GH_TOKEN: *git_token
-      <<: *AWS_ACCESS
-
-- name: bump-libpcre2
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-main
-    - get: cryogenics-concourse-tasks
-    - get: image-cryogenics-essentials
-    - get: daily-trigger
-      trigger: true
-
-  - task: bump-libpcre2
-    file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
-    image: image-cryogenics-essentials
-    input_mapping:
-      task-repo: cryogenics-concourse-tasks
-      bump-repo: backup-and-restore-sdk-release-main
-    vars:
-      bump-script: scripts/autobump-libpcre2.sh
-    params:
-      PR_BASE: main
-      PR_LABELS: ci
       GH_TOKEN: *git_token
       <<: *AWS_ACCESS
 
