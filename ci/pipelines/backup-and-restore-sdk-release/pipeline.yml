@@ -187,10 +187,11 @@ groups:
   - bump-mariadb
   - bump-mysql-8
   - bump-ncurses
-  - bump-postgresql
-  - bump-boost
   - bump-libpcre2
   - bump-ci-tasks
+  - bump-postgres-11
+  - bump-postgres-13
+  - bump-postgres-15
 
 - name: release
   jobs:
@@ -273,12 +274,46 @@ resource_types:
     tag: latest
 
 resources:
+- name: mariadb-10-6-blob
+  type: ftp
+  source:
+    url: https://mirror.mariadb.org/mariadb-10.6.*/bintar-linux-systemd-x86_64/
+    version_regex: "mariadb-(?P<version>10.6.[0-9]*)-linux-systemd-x86_64.tar.gz$" 
+- name: ncurses-blob
+  type: ftp
+  source:
+    url: ftp://ftp.gnu.org/pub/gnu/ncurses/
+    version_regex: "ncurses-(?P<version>[0-9]*.[0-9]*).tar.gz$"
+- name: postgres-11-blob
+  type: ftp
+  source:
+    url: https://ftp.postgresql.org/pub/source/v11.*/
+    version_regex: postgresql-(?P<version>[0-9]*.[0-9]*).tar.gz$
+- name: postgres-13-blob
+  type: ftp
+  source:
+    url: https://ftp.postgresql.org/pub/source/v13.*/
+    version_regex: postgresql-(?P<version>[0-9]*.[0-9]*).tar.gz$
+- name: postgres-15-blob
+  type: ftp
+  source:
+    url: https://ftp.postgresql.org/pub/source/v15.*/
+    version_regex: postgresql-(?P<version>[0-9]*.[0-9]*).tar.gz$
+- name: libpcre2-blob
+  type: github-release
+  source:
+    owner: PCRE2Project
+    repository: pcre2
+    access_token: *git_token
+    tag_filter: pcre2-([0-9]*.[0-9]*)
+    order_by: time
+
 - name: mysql-server-8-blob
   type: ftp
   source:
     url: "https://dev.mysql.com/downloads/mysql/8.0.html?tpl=platform&os=2&version=8.0&osva=#downloads"
     static_download_url_path: "https://dev.mysql.com/get/Downloads/MySQL-8.0/"
-    version_regex: "mysql-(?P<version>[0-9]*.[0-9]*.[0-9]*)-linux-glibc.*-x86_64-minimal.tar.xz"
+    version_regex: "mysql-(?P<version>[0-9]*.[0-9]*.[0-9]*)-linux-glibc.*-x86_64-minimal.tar.xz$"
     filename_mode: true
 - name: bash
   type: registry-image
@@ -289,12 +324,6 @@ resources:
   type: registry-image
   source:
     repository: harbor-repo.vmware.com/cryogenics/essentials
-
-- name: image-backup-restore
-  type: registry-image
-  source:
-    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/pcfplatformrecovery/backup-and-restore
-    tag: latest
 
 - name: pxc-release
   type: bosh-io-release
@@ -479,11 +508,6 @@ resources:
   source:
     uri: https://github.com/bosh-packages/golang-release.git
     tag_filter: v*
-
-- name: daily-trigger
-  type: time
-  source:
-    days: [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday' ]
 
 - name: jammy-stemcell-aws
   type: bosh-io-stemcell
@@ -1647,23 +1671,295 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
-    - get: image-backup-restore
-    - get: daily-trigger
+    - get: image-cryogenics-essentials
+    - get: mariadb-10-6-blob
       trigger: true
-
-  - task: bump-mariadb
-    file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
-    image: image-backup-restore
+  - load_var: mariadb-10-6-version
+    file: mariadb-10-6-blob/version
+  - task: bump-mariadb-10-6-blob
+    file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
+    image: image-cryogenics-essentials
     input_mapping:
-      task-repo: cryogenics-concourse-tasks
-      bump-repo: backup-and-restore-sdk-release-main
-    vars:
-      bump-script: scripts/autobump-mariadb.sh
+      distributed-package: mariadb-10-6-blob
+      bosh-release: backup-and-restore-sdk-release-main
     params:
-      PR_BASE: main
-      PR_LABELS: ci
-      GH_TOKEN: *git_token
       <<: *AWS_ACCESS
+      GIT_USERNAME: *github_user
+      GIT_EMAIL: *github_email
+      GIT_BRANCH: &bump-mariadb-10-6-branch bump-mariadb-10-6-to-((.:mariadb-10-6-version))
+      BLOB_NAME: mariadb
+      BLOB_EXTENSION: .tar.gz
+      BLOB_DIRECTORY: mariadb/
+      UPDATE_REFERENCES: yes
+  - put: backup-and-restore-sdk-release-write-only
+    params:
+      repository: bosh-release-updated
+      force: true
+      branch: *bump-mariadb-10-6-branch
+  - task: create-pull-request
+    image: image-cryogenics-essentials
+    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
+    params:
+      BASE: main
+      BRANCH: *bump-mariadb-10-6-branch
+      LABELS: ci,bump-mariadb
+      TITLE: Bump mariadb-server to version ((.:mariadb-10-6-version))
+      MESSAGE: |
+        This is an automatically generated Pull Request from the Cryogenics CI Bot.
+
+        I have detected a new version of [mariadb-10-6](https://mirror.mariadb.org/) and automatically bumped
+        this package to benefit from the latest changes.
+
+- name: bump-ncurses
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release-main
+    - get: cryogenics-concourse-tasks
+    - get: image-cryogenics-essentials
+    - get: ncurses-blob
+      trigger: true
+  - load_var: ncurses-version
+    file: ncurses-blob/version
+    format: raw
+
+  - task: bump-ncurses-blob
+    file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
+    image: image-cryogenics-essentials
+    input_mapping:
+      distributed-package: ncurses-blob
+      bosh-release: backup-and-restore-sdk-release-main
+    params:
+      <<: *AWS_ACCESS
+      GIT_USERNAME: *github_user
+      GIT_EMAIL: *github_email
+      GIT_BRANCH: &bump-ncurses-branch bump-ncurses-to-((.:ncurses-version))
+      BLOB_NAME: ncurses
+      BLOB_EXTENSION: .tar.gz
+      BLOB_DIRECTORY: ncurses/
+      UPDATE_REFERENCES: yes
+  - put: backup-and-restore-sdk-release-write-only
+    params:
+      repository: bosh-release-updated
+      force: true
+      branch: *bump-ncurses-branch
+  - task: create-pull-request
+    image: image-cryogenics-essentials
+    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
+    params:
+      BASE: main
+      BRANCH: *bump-ncurses-branch
+      LABELS: ci,bump-ncurses
+      TITLE: Bump ncurses-server to version ((.:ncurses-version))
+      MESSAGE: |
+        This is an automatically generated Pull Request from the Cryogenics CI Bot.
+
+        I have detected a new version of [ncurses](https://ftp.gnu.org/pub/gnu/ncurses/) and automatically bumped
+        this package to benefit from the latest changes.
+
+        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+    input_mapping:
+      source-repo: backup-and-restore-sdk-release-write-only
+
+- name: bump-postgres-11
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release-main
+    - get: cryogenics-concourse-tasks
+    - get: image-cryogenics-essentials
+    - get: postgres-11-blob
+      trigger: true
+  - load_var: postgres-11-version
+    file: postgres-11-blob/version
+    format: raw
+  - task: bump-postgres-11-blob
+    file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
+    image: image-cryogenics-essentials
+    input_mapping:
+      distributed-package: postgres-11-blob
+      bosh-release: backup-and-restore-sdk-release-main
+    params:
+      <<: *AWS_ACCESS
+      GIT_USERNAME: *github_user
+      GIT_EMAIL: *github_email
+      GIT_BRANCH: &bump-postgres-11-branch bump-postgres-11-to-((.:postgres-11-version))
+      BLOB_NAME: postgresql
+      BLOB_EXTENSION: .tar.gz
+      KEEP_BLOBS_FILTER: postgres-13,postgres-15
+      BLOB_DIRECTORY: postgres/
+      UPDATE_REFERENCES: yes
+  - put: backup-and-restore-sdk-release-write-only
+    params:
+      repository: bosh-release-updated
+      force: true
+      branch: *bump-postgres-11-branch
+  - task: create-pull-request
+    image: image-cryogenics-essentials
+    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
+    params:
+      BASE: main
+      BRANCH: *bump-postgres-11-branch
+      LABELS: ci,bump-postgres
+      TITLE: Bump postgres-11-server to version ((.:postgres-11-version))
+      MESSAGE: |
+        This is an automatically generated Pull Request from the Cryogenics CI Bot.
+
+        I have detected a new version of [postgres-11](https://ftp.postgresql.org/pub/source/) and automatically bumped
+        this package to benefit from the latest changes.
+
+        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+    input_mapping:
+      source-repo: backup-and-restore-sdk-release-write-only
+
+- name: bump-postgres-13
+  old_name: bump-postgres-13
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release-main
+    - get: cryogenics-concourse-tasks
+    - get: image-cryogenics-essentials
+    - get: postgres-13-blob
+      trigger: true
+  - load_var: postgres-13-version
+    file: postgres-13-blob/version
+    format: raw
+  - task: bump-postgres-13-blob
+    file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
+    image: image-cryogenics-essentials
+    input_mapping:
+      distributed-package: postgres-13-blob
+      bosh-release: backup-and-restore-sdk-release-main
+    params:
+      <<: *AWS_ACCESS
+      GIT_USERNAME: *github_user
+      GIT_EMAIL: *github_email
+      GIT_BRANCH: &bump-postgres-13-branch bump-postgres-13-to-((.:postgres-13-version))
+      BLOB_NAME: postgresql
+      BLOB_EXTENSION: .tar.gz
+      KEEP_BLOBS_FILTER: postgres-11,postgres-15
+      BLOB_DIRECTORY: postgres/
+      UPDATE_REFERENCES: yes
+  - put: backup-and-restore-sdk-release-write-only
+    params:
+      repository: bosh-release-updated
+      force: true
+      branch: *bump-postgres-13-branch
+  - task: create-pull-request
+    image: image-cryogenics-essentials
+    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
+    params:
+      BASE: main
+      BRANCH: *bump-postgres-13-branch
+      LABELS: ci,bump-postgres
+      TITLE: Bump postgres-13-server to version ((.:postgres-13-version))
+      MESSAGE: |
+        This is an automatically generated Pull Request from the Cryogenics CI Bot.
+
+        I have detected a new version of [postgres-13](https://ftp.postgresql.org/pub/source/) and automatically bumped
+        this package to benefit from the latest changes.
+
+        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+    input_mapping:
+      source-repo: backup-and-restore-sdk-release-write-only
+
+- name: bump-postgres-15
+  old_name: bump-postgres-15
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release-main
+    - get: cryogenics-concourse-tasks
+    - get: image-cryogenics-essentials
+    - get: postgres-15-blob
+      trigger: true
+  - load_var: postgres-15-version
+    file: postgres-15-blob/version
+    format: raw
+  - task: bump-postgres-15-blob
+    file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
+    image: image-cryogenics-essentials
+    input_mapping:
+      distributed-package: postgres-15-blob
+      bosh-release: backup-and-restore-sdk-release-main
+    params:
+      <<: *AWS_ACCESS
+      GIT_USERNAME: *github_user
+      GIT_EMAIL: *github_email
+      GIT_BRANCH: &bump-postgres-15-branch bump-postgres-15-to-((.:postgres-15-version))
+      BLOB_NAME: postgresql
+      BLOB_EXTENSION: .tar.gz
+      KEEP_BLOBS_FILTER: postgres-11,postgres-13
+      BLOB_DIRECTORY: postgres/
+      UPDATE_REFERENCES: yes
+  - put: backup-and-restore-sdk-release-write-only
+    params:
+      repository: bosh-release-updated
+      force: true
+      branch: *bump-postgres-15-branch
+  - task: create-pull-request
+    image: image-cryogenics-essentials
+    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
+    params:
+      BASE: main
+      BRANCH: *bump-postgres-15-branch
+      LABELS: ci,bump-postgres
+      TITLE: Bump postgres-15-server to version ((.:postgres-15-version))
+      MESSAGE: |
+        This is an automatically generated Pull Request from the Cryogenics CI Bot.
+
+        I have detected a new version of [postgres-15](https://ftp.postgresql.org/pub/source/) and automatically bumped
+        this package to benefit from the latest changes.
+
+        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+    input_mapping:
+      source-repo: backup-and-restore-sdk-release-write-only
+
+- name: bump-libpcre2
+  old_name: bump-libpcre2
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release-main
+    - get: cryogenics-concourse-tasks
+    - get: image-cryogenics-essentials
+    - get: libpcre2-blob
+      trigger: true
+  - load_var: libpcre2-version
+    file: libpcre2-blob/version
+    format: raw
+
+  - task: bump-libpcre2-blob
+    file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
+    image: image-cryogenics-essentials
+    input_mapping:
+      distributed-package: libpcre2-blob
+      bosh-release: backup-and-restore-sdk-release-main
+    params:
+      <<: *AWS_ACCESS
+      GIT_USERNAME: *github_user
+      GIT_EMAIL: *github_email
+      GIT_BRANCH: &bump-libpcre2-branch bump-libpcre2-to-((.:libpcre2-version))
+      BLOB_NAME: pcre2
+      BLOB_EXTENSION: .tar.gz
+      BLOB_DIRECTORY: libpcre2/
+      UPDATE_REFERENCES: yes
+  - put: backup-and-restore-sdk-release-write-only
+    params:
+      repository: bosh-release-updated
+      force: true
+      branch: *bump-libpcre2-branch
+  - task: create-pull-request
+    image: image-cryogenics-essentials
+    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
+    params:
+      BASE: main
+      BRANCH: *bump-libpcre2-branch
+      LABELS: ci,bump-libpcre2
+      TITLE: Bump libpcre2-server to version ((.:libpcre2-version))
+      MESSAGE: |
+        This is an automatically generated Pull Request from the Cryogenics CI Bot.
+        I have detected a new version of [libpcre2](https://github.com/PCRE2Project/pcre2/releases) and automatically bumped
+        this package to benefit from the latest changes.
+        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+    input_mapping:
+      source-repo: backup-and-restore-sdk-release-write-only
 
 - name: bump-mysql-8
   old_name: bump-mysql
@@ -1717,100 +2013,6 @@ jobs:
     input_mapping:
       source-repo: backup-and-restore-sdk-release-write-only
 
-
-- name: bump-ncurses
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-main
-    - get: cryogenics-concourse-tasks
-    - get: image-cryogenics-essentials
-    - get: daily-trigger
-      trigger: true
-
-  - task: bump-ncurses
-    file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
-    image: image-cryogenics-essentials
-    input_mapping:
-      task-repo: cryogenics-concourse-tasks
-      bump-repo: backup-and-restore-sdk-release-main
-    vars:
-      bump-script: scripts/autobump-ncurses.sh
-    params:
-      PR_BASE: main
-      PR_LABELS: ci
-
-      GH_TOKEN: *git_token
-      <<: *AWS_ACCESS
-
-- name: bump-postgresql
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-main
-    - get: cryogenics-concourse-tasks
-    - get: image-backup-restore
-    - get: daily-trigger
-      trigger: true
-
-  - task: bump-postgresql
-    file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
-    image: image-backup-restore
-    input_mapping:
-      task-repo: cryogenics-concourse-tasks
-      bump-repo: backup-and-restore-sdk-release-main
-    vars:
-      bump-script: scripts/autobump-postgresql.sh
-    params:
-      PR_BASE: main
-      PR_LABELS: ci
-
-      GH_TOKEN: *git_token
-      <<: *AWS_ACCESS
-
-- name: bump-boost
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-main
-    - get: cryogenics-concourse-tasks
-    - get: image-backup-restore
-    - get: daily-trigger
-      trigger: true
-
-  - task: bump-boost
-    image: image-backup-restore
-    file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
-    input_mapping:
-      task-repo: cryogenics-concourse-tasks
-      bump-repo: backup-and-restore-sdk-release-main
-    vars:
-      bump-script: scripts/autobump-boost.sh
-    params:
-      PR_BASE: main
-      PR_LABELS: ci
-      GH_TOKEN: *git_token
-      <<: *AWS_ACCESS
-
-- name: bump-libpcre2
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-main
-    - get: cryogenics-concourse-tasks
-    - get: image-cryogenics-essentials
-    - get: daily-trigger
-      trigger: true
-
-  - task: bump-libpcre2
-    file: cryogenics-concourse-tasks/deps-automation/bump-package/task.yml
-    image: image-cryogenics-essentials
-    input_mapping:
-      task-repo: cryogenics-concourse-tasks
-      bump-repo: backup-and-restore-sdk-release-main
-    vars:
-      bump-script: scripts/autobump-libpcre2.sh
-    params:
-      PR_BASE: main
-      PR_LABELS: ci
-      GH_TOKEN: *git_token
-      <<: *AWS_ACCESS
 
 - name: bump-ci-tasks
   plan:
