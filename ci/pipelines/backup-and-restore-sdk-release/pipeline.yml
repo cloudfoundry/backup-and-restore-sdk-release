@@ -1517,6 +1517,7 @@ jobs:
  
 # Dependency bumps
 - name: bump-golang
+  serial: true
   plan:
   - in_parallel:
     - get: cryogenics-concourse-tasks
@@ -1604,6 +1605,7 @@ jobs:
       source-repo: backup-and-restore-sdk-release-write-only
 
 - name: bump-ruby
+  serial: true
   plan:
   - get: backup-and-restore-sdk-release-main
   - get: cryogenics-concourse-tasks
@@ -1643,6 +1645,7 @@ jobs:
         If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
 
 - name: bump-mariadb
+  serial: true
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
@@ -1666,7 +1669,7 @@ jobs:
       <<: *AWS_ACCESS
 
 - name: bump-mysql-8
-  old_name: bump-mysql
+  serial: true
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
@@ -1719,6 +1722,7 @@ jobs:
 
 
 - name: bump-ncurses
+  serial: true
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
@@ -1743,6 +1747,7 @@ jobs:
       <<: *AWS_ACCESS
 
 - name: bump-postgresql
+  serial: true
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
@@ -1767,6 +1772,7 @@ jobs:
       <<: *AWS_ACCESS
 
 - name: bump-boost
+  serial: true
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
@@ -1790,6 +1796,7 @@ jobs:
       <<: *AWS_ACCESS
 
 - name: bump-libpcre2
+  serial: true
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
@@ -1813,6 +1820,7 @@ jobs:
       <<: *AWS_ACCESS
 
 - name: bump-ci-tasks
+  serial: true
   plan:
     - in_parallel:
       - get: image-cryogenics-essentials
