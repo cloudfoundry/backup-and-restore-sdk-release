@@ -1541,6 +1541,7 @@ jobs:
  
 # Dependency bumps
 - name: bump-golang
+  serial: true
   plan:
   - in_parallel:
     - get: cryogenics-concourse-tasks
@@ -1628,6 +1629,7 @@ jobs:
       source-repo: backup-and-restore-sdk-release-write-only
 
 - name: bump-ruby
+  serial: true
   plan:
   - get: backup-and-restore-sdk-release-main
   - get: cryogenics-concourse-tasks
@@ -1667,6 +1669,7 @@ jobs:
         If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
 
 - name: bump-mariadb
+  serial: true
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
@@ -1706,11 +1709,11 @@ jobs:
       TITLE: Bump mariadb-server to version ((.:mariadb-10-6-version))
       MESSAGE: |
         This is an automatically generated Pull Request from the Cryogenics CI Bot.
-
         I have detected a new version of [mariadb-10-6](https://mirror.mariadb.org/) and automatically bumped
         this package to benefit from the latest changes.
 
 - name: bump-ncurses
+  serial: true
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
@@ -1761,6 +1764,7 @@ jobs:
       source-repo: backup-and-restore-sdk-release-write-only
 
 - name: bump-postgres-11
+  serial: true
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
@@ -1811,6 +1815,7 @@ jobs:
       source-repo: backup-and-restore-sdk-release-write-only
 
 - name: bump-postgres-13
+  serial: true
   old_name: bump-postgres-13
   plan:
   - in_parallel:
@@ -1913,6 +1918,7 @@ jobs:
       source-repo: backup-and-restore-sdk-release-write-only
 
 - name: bump-libpcre2
+  serial: true
   old_name: bump-libpcre2
   plan:
   - in_parallel:
@@ -1962,6 +1968,7 @@ jobs:
       source-repo: backup-and-restore-sdk-release-write-only
 
 - name: bump-mysql-8
+  erial: true
   old_name: bump-mysql
   plan:
   - in_parallel:
@@ -2015,6 +2022,7 @@ jobs:
 
 
 - name: bump-ci-tasks
+  serial: true
   plan:
     - in_parallel:
       - get: image-cryogenics-essentials
