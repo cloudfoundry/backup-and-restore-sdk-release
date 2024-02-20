@@ -238,9 +238,21 @@ func (c SDKContainer) ListBlobs() ([]BlobId, error) {
 	client := c.service.NewContainerURL(c.name)
 
 	for marker := (azblob.Marker{}); marker.NotDone(); {
-		page, err := client.ListBlobsFlatSegment(context.Background(), marker, azblob.ListBlobsSegmentOptions{})
+		var err error
+		var page *azblob.ListBlobsFlatSegmentResponse
+		var errors []error
+		for i := 0; i < 3; i++ {
+			page, err = client.ListBlobsFlatSegment(context.Background(), marker, azblob.ListBlobsSegmentOptions{})
+			if err != nil {
+				errors = append(errors, err)
+				time.Sleep(time.Second * 2)
+			} else {
+				break
+			}
+		}
+
 		if err != nil {
-			return nil, fmt.Errorf("failed listing blobs in container '%s': %s", c.name, err)
+			return nil, fmt.Errorf("failed listing blobs in container '%s': %s", c.name, errors)
 		}
 
 		marker = page.NextMarker
