@@ -25,10 +25,18 @@ type Container interface {
 	CopyBlobsFromDifferentStorageAccount(storageAccount StorageAccount, containerName string, blobIds []BlobId) error
 }
 
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
+//counterfeiter:generate -o fakes/fake_blob_lister.go . BlobLister
+type BlobLister interface {
+	ListBlobsFlatSegment(ctx context.Context, marker azblob.Marker, o azblob.ListBlobsSegmentOptions) (*azblob.ListBlobsFlatSegmentResponse, error)
+}
+
 type SDKContainer struct {
-	name        string
-	service     azblob.ServiceURL
-	environment Environment
+	name            string
+	service         azblob.ServiceURL
+	environment     Environment
+	blobLister      BlobLister
+	backoffInterval time.Duration
 }
 
 func NewSDKContainer(name string, storageAccount StorageAccount, environment Environment) (container SDKContainer, err error) {
@@ -48,10 +56,17 @@ func NewSDKContainer(name string, storageAccount StorageAccount, environment Env
 	}
 
 	service := azblob.NewServiceURL(*azureURL, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
+	blobLister := service.NewContainerURL(name)
+	backoffInterval, err := time.ParseDuration("2s")
+	if err != nil {
+		return SDKContainer{}, err
+	}
 	return SDKContainer{
-		name:        name,
-		service:     service,
-		environment: environment,
+		name:            name,
+		service:         service,
+		environment:     environment,
+		blobLister:      blobLister,
+		backoffInterval: backoffInterval,
 	}, nil
 }
 
@@ -235,17 +250,16 @@ func (c SDKContainer) SoftDeleteEnabled() (bool, error) {
 
 func (c SDKContainer) ListBlobs() ([]BlobId, error) {
 	var blobs []BlobId
-	client := c.service.NewContainerURL(c.name)
 
 	for marker := (azblob.Marker{}); marker.NotDone(); {
 		var err error
 		var page *azblob.ListBlobsFlatSegmentResponse
 		var errors []error
 		for i := 0; i < 3; i++ {
-			page, err = client.ListBlobsFlatSegment(context.Background(), marker, azblob.ListBlobsSegmentOptions{})
+			page, err = c.blobLister.ListBlobsFlatSegment(context.Background(), marker, azblob.ListBlobsSegmentOptions{})
 			if err != nil {
 				errors = append(errors, err)
-				time.Sleep(time.Second * 2)
+				time.Sleep(time.Duration(c.backoffInterval))
 			} else {
 				break
 			}
