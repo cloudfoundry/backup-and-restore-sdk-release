@@ -1709,8 +1709,12 @@ jobs:
       TITLE: Bump mariadb-server to version ((.:mariadb-10-6-version))
       MESSAGE: |
         This is an automatically generated Pull Request from the Cryogenics CI Bot.
+
         I have detected a new version of [mariadb-10-6](https://mirror.mariadb.org/) and automatically bumped
+
         this package to benefit from the latest changes.
+    input_mapping:
+      source-repo: backup-and-restore-sdk-release-write-only
 
 - name: bump-ncurses
   serial: true
