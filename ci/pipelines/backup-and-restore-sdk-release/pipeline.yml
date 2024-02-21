@@ -1968,7 +1968,7 @@ jobs:
       source-repo: backup-and-restore-sdk-release-write-only
 
 - name: bump-mysql-8
-  erial: true
+  serial: true
   old_name: bump-mysql
   plan:
   - in_parallel:
