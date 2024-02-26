@@ -30,7 +30,6 @@ type FakeBlobLister struct {
 }
 
 func (fake *FakeBlobLister) ListBlobsFlatSegment(arg1 context.Context, arg2 azblob.Marker, arg3 azblob.ListBlobsSegmentOptions) (*azblob.ListBlobsFlatSegmentResponse, error) {
-	
 	fake.listBlobsFlatSegmentMutex.Lock()
 	ret, specificReturn := fake.listBlobsFlatSegmentReturnsOnCall[len(fake.listBlobsFlatSegmentArgsForCall)]
 	fake.listBlobsFlatSegmentArgsForCall = append(fake.listBlobsFlatSegmentArgsForCall, struct {

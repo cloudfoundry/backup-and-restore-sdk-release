@@ -1,24 +1,28 @@
 package azure
 
 import (
+	"context"
+	"encoding/base64"
 	"fmt"
 	"net/url"
-
-	"context"
-
-	"encoding/base64"
+	"strings"
 
 	"time"
 
-	"strings"
+	oldblob "github.com/Azure/azure-storage-blob-go/azblob"
 
-	"github.com/Azure/azure-storage-blob-go/azblob"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blob"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/container"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/sas"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/service"
 )
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
 //counterfeiter:generate -o fakes/fake_container.go . Container
 type Container interface {
 	Name() string
+	URL() string
 	SoftDeleteEnabled() (bool, error)
 	ListBlobs() ([]BlobId, error)
 	CopyBlobsFromSameStorageAccount(containerName string, blobIds []BlobId) error
@@ -28,19 +32,19 @@ type Container interface {
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
 //counterfeiter:generate -o fakes/fake_blob_lister.go . BlobLister
 type BlobLister interface {
-	ListBlobsFlatSegment(ctx context.Context, marker azblob.Marker, o azblob.ListBlobsSegmentOptions) (*azblob.ListBlobsFlatSegmentResponse, error)
+	ListBlobsFlatSegment(ctx context.Context, marker oldblob.Marker, o oldblob.ListBlobsSegmentOptions) (*oldblob.ListBlobsFlatSegmentResponse, error)
 }
 
 type SDKContainer struct {
 	name            string
-	service         azblob.ServiceURL
+	containerClient *container.Client
+	serviceClient   *service.Client
 	environment     Environment
-	blobLister      BlobLister
-	backoffInterval time.Duration
 }
 
-func NewSDKContainer(name string, storageAccount StorageAccount, environment Environment) (container SDKContainer, err error) {
-	credential, err := buildCredential(storageAccount)
+func NewSDKContainer(name string, storageAccount StorageAccount, environment Environment) (SDKContainer, error) {
+
+	creds, err := buildCredential(storageAccount)
 	if err != nil {
 		return SDKContainer{}, err
 	}
@@ -49,24 +53,31 @@ func NewSDKContainer(name string, storageAccount StorageAccount, environment Env
 	if err != nil {
 		return SDKContainer{}, err
 	}
-
-	azureURL, err := url.Parse(fmt.Sprintf("https://%s.blob.%s", storageAccount.Name, suffix))
+	containerURL, err := url.Parse(fmt.Sprintf("https://%s.blob.%s/%s", storageAccount.Name, suffix, name))
 	if err != nil {
 		return SDKContainer{}, fmt.Errorf("invalid account name: '%s'", storageAccount.Name)
 	}
 
-	service := azblob.NewServiceURL(*azureURL, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
-	blobLister := service.NewContainerURL(name)
-	backoffInterval, err := time.ParseDuration("2s")
+	serviceURL, err := url.Parse(fmt.Sprintf("https://%s.blob.%s", storageAccount.Name, suffix))
+	if err != nil {
+		return SDKContainer{}, fmt.Errorf("invalid account name: '%s'", storageAccount.Name)
+	}
+
+	containerClient, err := container.NewClientWithSharedKeyCredential(containerURL.String(), creds, nil)
 	if err != nil {
 		return SDKContainer{}, err
 	}
+
+	serviceClient, err := service.NewClientWithSharedKeyCredential(serviceURL.String(), creds, nil)
+	if err != nil {
+		return SDKContainer{}, err
+	}
+
 	return SDKContainer{
 		name:            name,
-		service:         service,
+		containerClient: containerClient,
+		serviceClient:   serviceClient,
 		environment:     environment,
-		blobLister:      blobLister,
-		backoffInterval: backoffInterval,
 	}, nil
 }
 
@@ -74,35 +85,63 @@ func (c SDKContainer) Name() string {
 	return c.name
 }
 
-func (c SDKContainer) CopyBlobsFromSameStorageAccount(sourceContainerName string, blobIds []BlobId) error {
-	sourceContainerURL := c.service.NewContainerURL(sourceContainerName)
+func (c SDKContainer) URL() string {
+	return c.containerClient.URL()
+}
 
-	return c.copyBlobs(sourceContainerName, sourceContainerURL, blobIds)
+func (c SDKContainer) CopyBlobsFromSameStorageAccount(sourceContainerName string, blobIds []BlobId) error {
+	sourceContainerClient := c.serviceClient.NewContainerClient(sourceContainerName)
+
+	return c.copyBlobs(sourceContainerClient, blobIds)
 }
 
 func (c SDKContainer) CopyBlobsFromDifferentStorageAccount(sourceStorageAccount StorageAccount, sourceContainerName string, blobIds []BlobId) error {
+
+	creds, err := buildCredential(sourceStorageAccount)
+	if err != nil {
+		return err
+	}
+
 	suffix, err := c.environment.Suffix()
 	if err != nil {
 		return err
 	}
 
-	sasQueryString, err := c.buildSASQueryString(sourceContainerName, sourceStorageAccount)
-	if err != nil {
-		return err
-	}
-
-	sourceContainerURL, err := url.Parse(fmt.Sprintf("https://%s.blob.%s/%s?%s", sourceStorageAccount.Name, suffix, sourceContainerName, sasQueryString))
+	serviceURL, err := url.Parse(fmt.Sprintf("https://%s.blob.%s", sourceStorageAccount.Name, suffix))
 	if err != nil {
 		return fmt.Errorf("invalid account name: '%s'", sourceStorageAccount.Name)
 	}
 
-	sourceContainerURLWithSAS := azblob.NewContainerURL(*sourceContainerURL, azblob.NewPipeline(azblob.NewAnonymousCredential(), azblob.PipelineOptions{}))
+	sourceServiceClient, err := service.NewClientWithSharedKeyCredential(serviceURL.String(), creds, nil)
+	if err != nil {
+		return err
+	}
+	sourceContainerClient := sourceServiceClient.NewContainerClient(sourceContainerName)
 
-	return c.copyBlobs(sourceContainerName, sourceContainerURLWithSAS, blobIds)
+	containerPermissions := sas.ContainerPermissions{
+		List:  true,
+		Read:  true,
+		Write: true,
+	}
+
+	sourceContainerWithSAS, err := sourceContainerClient.GetSASURL(
+		containerPermissions,
+		time.Now().Add(1*time.Hour),
+		nil)
+	if err != nil {
+		return err
+	}
+
+	sourceContainerClientWithSAS, err := container.NewClientWithNoCredential(sourceContainerWithSAS, nil)
+	if err != nil {
+		return err
+	}
+
+	return c.copyBlobs(sourceContainerClientWithSAS, blobIds)
 }
 
-func (c SDKContainer) copyBlobs(sourceContainerName string, sourceContainerURL azblob.ContainerURL, blobIds []BlobId) error {
-	blobs, err := c.fetchBlobs(sourceContainerURL)
+func (c SDKContainer) copyBlobs(sourceContainerClient *container.Client, blobIds []BlobId) error {
+	blobs, err := c.fetchBlobs(sourceContainerClient)
 	if err != nil {
 		return err
 	}
@@ -111,11 +150,15 @@ func (c SDKContainer) copyBlobs(sourceContainerName string, sourceContainerURL a
 	for _, blobId := range blobIds {
 		sourceBlob, ok := blobs[blobId]
 		if !ok {
-			return fmt.Errorf("no \"%s\" blob with \"%s\" ETag found in container \"%s\"", blobId.Name, blobId.ETag, sourceContainerName)
+			return fmt.Errorf("no \"%s\" blob with \"%s\" ETag found in container \"%s\"", blobId.Name, blobId.ETag, sourceContainerClient.URL())
 		}
 
-		go func(blob azblob.BlobItemInternal) {
-			errs <- c.copyBlob(sourceContainerName, sourceContainerURL, sourceBlob)
+		if sourceBlob == nil {
+			return fmt.Errorf("nil sourceBlob")
+		}
+
+		go func(blob *container.BlobItem) {
+			errs <- c.copyBlob(sourceContainerClient, blob)
 		}(sourceBlob)
 	}
 
@@ -129,7 +172,7 @@ func (c SDKContainer) copyBlobs(sourceContainerName string, sourceContainerURL a
 
 	if len(errors) != 0 {
 		return formatErrors(
-			fmt.Sprintf("failed to copy blob from container \"%s\" to \"%s\"", sourceContainerName, c.name),
+			fmt.Sprintf("failed to copy blob from container \"%s\" to \"%s\"", sourceContainerClient.URL(), c.name),
 			errors,
 		)
 	}
@@ -137,98 +180,71 @@ func (c SDKContainer) copyBlobs(sourceContainerName string, sourceContainerURL a
 	return nil
 }
 
-func (c SDKContainer) copyBlob(sourceContainerName string, sourceContainerURL azblob.ContainerURL, blob azblob.BlobItemInternal) error {
+func (c SDKContainer) copyBlob(sourceContainerClient *container.Client, blobItem *container.BlobItem) error {
+
 	ctx := context.Background()
 
-	sourceBlobURL := sourceContainerURL.NewBlobURL(blob.Name)
-	destinationContainerURL := c.service.NewContainerURL(c.name)
-	destinationBlobURL := destinationContainerURL.NewBlobURL(blob.Name)
+	destinationBlobClient := c.containerClient.NewBlobClient(*blobItem.Name)
+	sourceBlobClient := sourceContainerClient.NewBlobClient(*blobItem.Name)
 
-	_, err := sourceBlobURL.Undelete(ctx)
+	_, err := sourceBlobClient.Undelete(ctx, nil) // UndeleteOptions
 	if err != nil {
 		return err
 	}
 
-	response, err := destinationBlobURL.StartCopyFromURL(
-		ctx,
-		sourceBlobURL.WithSnapshot(blob.Snapshot).URL(),
-		azblob.Metadata{},
-		azblob.ModifiedAccessConditions{},
-		azblob.BlobAccessConditions{},
-		azblob.AccessTierNone,
-		azblob.BlobTagsMap{},
-	)
-	if err != nil {
-		return err
-	}
+	sourceURL := sourceBlobClient.URL()
 
-	copyStatus := response.CopyStatus()
-
-	for copyStatus == azblob.CopyStatusPending {
-		time.Sleep(time.Second * 2)
-		getMetadata, err := destinationBlobURL.GetProperties(ctx, azblob.BlobAccessConditions{}, azblob.ClientProvidedKeyOptions{})
+	if blobItem.Snapshot != nil {
+		sourceBlobClientWithSnapshot, err := sourceBlobClient.WithSnapshot(*blobItem.Snapshot)
 		if err != nil {
 			return err
 		}
 
-		copyStatus = getMetadata.CopyStatus()
+		sourceURL = sourceBlobClientWithSnapshot.URL()
 	}
 
-	if copyStatus != azblob.CopyStatusSuccess {
-		return fmt.Errorf("copy of blob '%s' from container '%s' to container '%s' failed with status '%s'", blob.Name, sourceContainerName, c.Name(), copyStatus)
+	resp, err := destinationBlobClient.StartCopyFromURL(ctx, sourceURL, nil)
+	if err != nil {
+		return err
+	}
+
+	copyStatus := *resp.CopyStatus
+
+	for copyStatus == blob.CopyStatusTypePending {
+		time.Sleep(time.Second * 2)
+		getMetadata, err := destinationBlobClient.GetProperties(ctx, nil)
+		if err != nil {
+			return err
+		}
+
+		copyStatus = *getMetadata.CopyStatus
+	}
+
+	if copyStatus != blob.CopyStatusTypeSuccess {
+		return fmt.Errorf("copy of blob '%s' from container '%s' to container '%s' failed with status '%s'", blobItem.Name, sourceContainerClient.URL(), c.Name(), copyStatus)
 	}
 
 	return nil
 }
 
-func (c SDKContainer) buildSASQueryString(containerName string, storageAccount StorageAccount) (string, error) {
-	sasSignatureValues := azblob.BlobSASSignatureValues{
-		Protocol:   azblob.SASProtocolHTTPS,
-		ExpiryTime: time.Now().Add(1 * time.Hour),
-		Permissions: azblob.ContainerSASPermissions{
-			List:  true,
-			Read:  true,
-			Write: true,
-		}.String(),
-		ContainerName: containerName,
-	}
+func (c SDKContainer) fetchBlobs(sourceContainerClient *container.Client) (map[BlobId]*container.BlobItem, error) {
 
-	sourceCredential, err := buildCredential(storageAccount)
-	if err != nil {
-		return "", err
-	}
+	blobs := make(map[BlobId]*container.BlobItem)
+	pager := sourceContainerClient.NewListBlobsFlatPager(&container.ListBlobsFlatOptions{
+		Include: container.ListBlobsInclude{
+			Deleted:   true,
+			Snapshots: true,
+		},
+	})
 
-	sasQueryParameters, err := sasSignatureValues.NewSASQueryParameters(sourceCredential)
-	if err != nil {
-		return "", err
-	}
-
-	return sasQueryParameters.Encode(), nil
-}
-
-func (c SDKContainer) fetchBlobs(sourceContainerURL azblob.ContainerURL) (map[BlobId]azblob.BlobItemInternal, error) {
-	var blobs = map[BlobId]azblob.BlobItemInternal{}
-
-	for marker := (azblob.Marker{}); marker.NotDone(); {
-		page, err := sourceContainerURL.ListBlobsFlatSegment(
-			context.Background(),
-			marker,
-			azblob.ListBlobsSegmentOptions{
-				Details: azblob.BlobListingDetails{
-					Snapshots: true,
-					Deleted:   true,
-				},
-			},
-		)
+	for pager.More() {
+		page, err := pager.NextPage(context.Background())
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed listing blobs in container '%s': %s", c.name, err)
 		}
 
-		marker = page.NextMarker
-
-		for _, blob := range page.Segment.BlobItems {
-			blobId := BlobId{Name: blob.Name, ETag: string(blob.Properties.Etag)}
-			blobs[blobId] = blob
+		for _, blobItem := range page.ListBlobsFlatSegmentResponse.Segment.BlobItems {
+			blobs[BlobId{Name: *blobItem.Name, ETag: string(*blobItem.Properties.ETag)}] = blobItem
 		}
 	}
 
@@ -236,7 +252,7 @@ func (c SDKContainer) fetchBlobs(sourceContainerURL azblob.ContainerURL) (map[Bl
 }
 
 func (c SDKContainer) SoftDeleteEnabled() (bool, error) {
-	properties, err := c.service.GetProperties(context.Background())
+	properties, err := c.serviceClient.GetProperties(context.Background(), nil)
 	if err != nil {
 		return false, fmt.Errorf("failed fetching properties for storage account: '%s'", err)
 	}
@@ -245,34 +261,22 @@ func (c SDKContainer) SoftDeleteEnabled() (bool, error) {
 		return true, nil
 	}
 
-	return properties.DeleteRetentionPolicy.Enabled, nil
+	return *properties.DeleteRetentionPolicy.Enabled, nil
 }
 
 func (c SDKContainer) ListBlobs() ([]BlobId, error) {
 	var blobs []BlobId
 
-	for marker := (azblob.Marker{}); marker.NotDone(); {
-		var err error
-		var page *azblob.ListBlobsFlatSegmentResponse
-		var errors []error
-		for i := 0; i < 3; i++ {
-			page, err = c.blobLister.ListBlobsFlatSegment(context.Background(), marker, azblob.ListBlobsSegmentOptions{})
-			if err != nil {
-				errors = append(errors, err)
-				time.Sleep(time.Duration(c.backoffInterval))
-			} else {
-				break
-			}
-		}
+	pager := c.containerClient.NewListBlobsFlatPager(nil)
 
+	for pager.More() {
+		page, err := pager.NextPage(context.Background())
 		if err != nil {
-			return nil, fmt.Errorf("failed listing blobs in container '%s': %s", c.name, errors)
+			return nil, fmt.Errorf("failed listing blobs in container '%s': %s", c.name, err)
 		}
 
-		marker = page.NextMarker
-
-		for _, blobInfo := range page.Segment.BlobItems {
-			blobs = append(blobs, BlobId{Name: blobInfo.Name, ETag: string(blobInfo.Properties.Etag)})
+		for _, blobInfo := range page.ListBlobsFlatSegmentResponse.Segment.BlobItems {
+			blobs = append(blobs, BlobId{Name: *blobInfo.Name, ETag: string(*blobInfo.Properties.ETag)})
 		}
 	}
 
