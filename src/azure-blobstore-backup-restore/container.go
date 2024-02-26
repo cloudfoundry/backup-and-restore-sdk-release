@@ -42,36 +42,38 @@ type SDKContainer struct {
 	environment     Environment
 }
 
-func NewSDKContainer(name string, storageAccount StorageAccount, environment Environment) (SDKContainer, error) {
-
+func buildServiceClient(storageAccount StorageAccount, environment Environment) (*service.Client, error) {
 	creds, err := buildCredential(storageAccount)
 	if err != nil {
-		return SDKContainer{}, err
+		return nil, err
 	}
 
 	suffix, err := environment.Suffix()
 	if err != nil {
-		return SDKContainer{}, err
-	}
-	containerURL, err := url.Parse(fmt.Sprintf("https://%s.blob.%s/%s", storageAccount.Name, suffix, name))
-	if err != nil {
-		return SDKContainer{}, fmt.Errorf("invalid account name: '%s'", storageAccount.Name)
+		return nil, err
 	}
 
 	serviceURL, err := url.Parse(fmt.Sprintf("https://%s.blob.%s", storageAccount.Name, suffix))
 	if err != nil {
-		return SDKContainer{}, fmt.Errorf("invalid account name: '%s'", storageAccount.Name)
-	}
-
-	containerClient, err := container.NewClientWithSharedKeyCredential(containerURL.String(), creds, nil)
-	if err != nil {
-		return SDKContainer{}, err
+		return nil, fmt.Errorf("invalid account name: '%s'", storageAccount.Name)
 	}
 
 	serviceClient, err := service.NewClientWithSharedKeyCredential(serviceURL.String(), creds, nil)
 	if err != nil {
+		return nil, err
+	}
+
+	return serviceClient, nil
+}
+
+func NewSDKContainer(name string, storageAccount StorageAccount, environment Environment) (SDKContainer, error) {
+
+	serviceClient, err := buildServiceClient(storageAccount, environment)
+	if err != nil {
 		return SDKContainer{}, err
 	}
+
+	containerClient := serviceClient.NewContainerClient(name)
 
 	return SDKContainer{
 		name:            name,
@@ -97,25 +99,11 @@ func (c SDKContainer) CopyBlobsFromSameStorageAccount(sourceContainerName string
 
 func (c SDKContainer) CopyBlobsFromDifferentStorageAccount(sourceStorageAccount StorageAccount, sourceContainerName string, blobIds []BlobId) error {
 
-	creds, err := buildCredential(sourceStorageAccount)
+	sourceServiceClient, err := buildServiceClient(sourceStorageAccount, c.environment)
 	if err != nil {
 		return err
 	}
 
-	suffix, err := c.environment.Suffix()
-	if err != nil {
-		return err
-	}
-
-	serviceURL, err := url.Parse(fmt.Sprintf("https://%s.blob.%s", sourceStorageAccount.Name, suffix))
-	if err != nil {
-		return fmt.Errorf("invalid account name: '%s'", sourceStorageAccount.Name)
-	}
-
-	sourceServiceClient, err := service.NewClientWithSharedKeyCredential(serviceURL.String(), creds, nil)
-	if err != nil {
-		return err
-	}
 	sourceContainerClient := sourceServiceClient.NewContainerClient(sourceContainerName)
 
 	containerPermissions := sas.ContainerPermissions{
