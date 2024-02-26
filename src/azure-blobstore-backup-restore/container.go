@@ -9,8 +9,6 @@ import (
 
 	"time"
 
-	oldblob "github.com/Azure/azure-storage-blob-go/azblob"
-
 	"azure-blobstore-backup-restore/containerURL"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blob"
@@ -28,12 +26,6 @@ type Container interface {
 	ListBlobs() ([]BlobId, error)
 	CopyBlobsFromSameStorageAccount(containerName string, blobIds []BlobId) error
 	CopyBlobsFromDifferentStorageAccount(storageAccount StorageAccount, containerName string, blobIds []BlobId) error
-}
-
-//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
-//counterfeiter:generate -o fakes/fake_blob_lister.go . BlobLister
-type BlobLister interface {
-	ListBlobsFlatSegment(ctx context.Context, marker oldblob.Marker, o oldblob.ListBlobsSegmentOptions) (*oldblob.ListBlobsFlatSegmentResponse, error)
 }
 
 type SDKContainer struct {
@@ -210,7 +202,7 @@ func (c SDKContainer) copyBlob(sourceContainerClient *container.Client, blobItem
 	}
 
 	if copyStatus != blob.CopyStatusTypeSuccess {
-		return fmt.Errorf("copy of blob '%s' from container '%s' to container '%s' failed with status '%s'", blobItem.Name, containerURL.Sanitise(sourceContainerClient.URL()), containerURL.Sanitise(c.URL()), copyStatus)
+		return fmt.Errorf("copy of blob '%s' from container '%s' to container '%s' failed with status '%s'", *blobItem.Name, containerURL.Sanitise(sourceContainerClient.URL()), containerURL.Sanitise(c.URL()), copyStatus)
 	}
 
 	return nil
