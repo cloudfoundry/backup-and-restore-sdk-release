@@ -210,7 +210,7 @@ func (c SDKContainer) copyBlob(sourceContainerClient *container.Client, blobItem
 	}
 
 	if copyStatus != blob.CopyStatusTypeSuccess {
-		return fmt.Errorf("copy of blob '%s' from container '%s' to container '%s' failed with status '%s'", blobItem.Name, containerURL.Sanitise(sourceContainerClient.URL()), c.Name(), copyStatus)
+		return fmt.Errorf("copy of blob '%s' from container '%s' to container '%s' failed with status '%s'", blobItem.Name, containerURL.Sanitise(sourceContainerClient.URL()), containerURL.Sanitise(c.URL()), copyStatus)
 	}
 
 	return nil
