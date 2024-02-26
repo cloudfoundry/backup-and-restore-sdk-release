@@ -3,7 +3,7 @@ module s3-blobstore-backup-restore
 go 1.22.0
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.25.1
+	github.com/aws/aws-sdk-go-v2 v1.25.2
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.28.0
