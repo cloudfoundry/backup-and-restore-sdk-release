@@ -98,7 +98,6 @@ func (c SDKContainer) CopyBlobsFromSameStorageAccount(sourceContainerName string
 }
 
 func (c SDKContainer) CopyBlobsFromDifferentStorageAccount(sourceStorageAccount StorageAccount, sourceContainerName string, blobIds []BlobId) error {
-
 	sourceServiceClient, err := buildServiceClient(sourceStorageAccount, c.environment)
 	if err != nil {
 		return err
@@ -112,10 +111,11 @@ func (c SDKContainer) CopyBlobsFromDifferentStorageAccount(sourceStorageAccount 
 		Write: true,
 	}
 
-	sourceContainerSASURL, err := sourceContainerClient.GetSASURL(
-		containerPermissions,
-		time.Now().Add(1*time.Hour),
-		nil)
+	urlExpiryTime := time.Now().Add(1 * time.Hour)
+	// On 2024-02-26 we used sourceContainerClient.GetSASURL to create a
+	// "Shared Access Signature" URL. This URL gives the holder permission
+	// to access the container in question for a given length of time.
+	sourceContainerSASURL, err := sourceContainerClient.GetSASURL(containerPermissions, urlExpiryTime, nil)
 	if err != nil {
 		return err
 	}
