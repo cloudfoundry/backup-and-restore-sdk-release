@@ -11,6 +11,7 @@ import (
 
 	oldblob "github.com/Azure/azure-storage-blob-go/azblob"
 
+	"azure-blobstore-backup-restore/containerURL"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blob"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/container"
@@ -138,7 +139,7 @@ func (c SDKContainer) copyBlobs(sourceContainerClient *container.Client, blobIds
 	for _, blobId := range blobIds {
 		sourceBlob, ok := blobs[blobId]
 		if !ok {
-			return fmt.Errorf("no \"%s\" blob with \"%s\" ETag found in container \"%s\"", blobId.Name, blobId.ETag, sourceContainerClient.URL())
+			return fmt.Errorf("no \"%s\" blob with \"%s\" ETag found in container \"%s\"", blobId.Name, blobId.ETag, containerURL.Sanitise(sourceContainerClient.URL()))
 		}
 
 		if sourceBlob == nil {
@@ -160,7 +161,7 @@ func (c SDKContainer) copyBlobs(sourceContainerClient *container.Client, blobIds
 
 	if len(errors) != 0 {
 		return formatErrors(
-			fmt.Sprintf("failed to copy blob from container \"%s\" to \"%s\"", sourceContainerClient.URL(), c.name),
+			fmt.Sprintf("failed to copy blob from container \"%s\" to \"%s\"", containerURL.Sanitise(sourceContainerClient.URL()), c.name),
 			errors,
 		)
 	}
@@ -209,7 +210,7 @@ func (c SDKContainer) copyBlob(sourceContainerClient *container.Client, blobItem
 	}
 
 	if copyStatus != blob.CopyStatusTypeSuccess {
-		return fmt.Errorf("copy of blob '%s' from container '%s' to container '%s' failed with status '%s'", blobItem.Name, sourceContainerClient.URL(), c.Name(), copyStatus)
+		return fmt.Errorf("copy of blob '%s' from container '%s' to container '%s' failed with status '%s'", blobItem.Name, containerURL.Sanitise(sourceContainerClient.URL()), c.Name(), copyStatus)
 	}
 
 	return nil
