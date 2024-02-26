@@ -112,7 +112,7 @@ func (c SDKContainer) CopyBlobsFromDifferentStorageAccount(sourceStorageAccount 
 		Write: true,
 	}
 
-	sourceContainerWithSAS, err := sourceContainerClient.GetSASURL(
+	sourceContainerSASURL, err := sourceContainerClient.GetSASURL(
 		containerPermissions,
 		time.Now().Add(1*time.Hour),
 		nil)
@@ -120,7 +120,7 @@ func (c SDKContainer) CopyBlobsFromDifferentStorageAccount(sourceStorageAccount 
 		return err
 	}
 
-	sourceContainerClientWithSAS, err := container.NewClientWithNoCredential(sourceContainerWithSAS, nil)
+	sourceContainerClientWithSAS, err := container.NewClientWithNoCredential(sourceContainerSASURL, nil)
 	if err != nil {
 		return err
 	}
