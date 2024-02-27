@@ -404,7 +404,7 @@ resources:
   type: file-url
   icon: web-box
   source:
-    url: https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem
+    url: https://truststore.pki.rds.amazonaws.com/eu-west-1/eu-west-1-bundle.pem
     filename: rds-combined-ca-bundle.pem
 
 - name: terraform
