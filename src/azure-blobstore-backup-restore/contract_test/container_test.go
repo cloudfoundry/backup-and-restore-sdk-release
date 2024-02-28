@@ -255,7 +255,7 @@ var _ = Describe("Container", func() {
 			It("returns an error", func() {
 				err := container.CopyBlobsFromSameStorageAccount(container.Name(), []azure.BlobId{{Name: fileName1, ETag: "wrong_eTag"}})
 
-				Expect(err).To(MatchError(fmt.Sprintf("no \"%s\" blob with \"%s\" ETag found in container \"%s\"", fileName1, "wrong_eTag", container.Name())))
+				Expect(err).To(MatchError(fmt.Sprintf("no \"%s\" blob with \"%s\" ETag found in container \"%s\"", fileName1, "wrong_eTag", container.URL())))
 			})
 		})
 

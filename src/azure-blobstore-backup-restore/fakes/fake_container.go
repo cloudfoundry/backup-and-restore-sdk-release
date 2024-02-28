@@ -66,6 +66,16 @@ type FakeContainer struct {
 		result1 bool
 		result2 error
 	}
+	URLStub        func() string
+	uRLMutex       sync.RWMutex
+	uRLArgsForCall []struct {
+	}
+	uRLReturns struct {
+		result1 string
+	}
+	uRLReturnsOnCall map[int]struct {
+		result1 string
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -370,6 +380,59 @@ func (fake *FakeContainer) SoftDeleteEnabledReturnsOnCall(i int, result1 bool, r
 	}{result1, result2}
 }
 
+func (fake *FakeContainer) URL() string {
+	fake.uRLMutex.Lock()
+	ret, specificReturn := fake.uRLReturnsOnCall[len(fake.uRLArgsForCall)]
+	fake.uRLArgsForCall = append(fake.uRLArgsForCall, struct {
+	}{})
+	stub := fake.URLStub
+	fakeReturns := fake.uRLReturns
+	fake.recordInvocation("URL", []interface{}{})
+	fake.uRLMutex.Unlock()
+	if stub != nil {
+		return stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *FakeContainer) URLCallCount() int {
+	fake.uRLMutex.RLock()
+	defer fake.uRLMutex.RUnlock()
+	return len(fake.uRLArgsForCall)
+}
+
+func (fake *FakeContainer) URLCalls(stub func() string) {
+	fake.uRLMutex.Lock()
+	defer fake.uRLMutex.Unlock()
+	fake.URLStub = stub
+}
+
+func (fake *FakeContainer) URLReturns(result1 string) {
+	fake.uRLMutex.Lock()
+	defer fake.uRLMutex.Unlock()
+	fake.URLStub = nil
+	fake.uRLReturns = struct {
+		result1 string
+	}{result1}
+}
+
+func (fake *FakeContainer) URLReturnsOnCall(i int, result1 string) {
+	fake.uRLMutex.Lock()
+	defer fake.uRLMutex.Unlock()
+	fake.URLStub = nil
+	if fake.uRLReturnsOnCall == nil {
+		fake.uRLReturnsOnCall = make(map[int]struct {
+			result1 string
+		})
+	}
+	fake.uRLReturnsOnCall[i] = struct {
+		result1 string
+	}{result1}
+}
+
 func (fake *FakeContainer) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -383,6 +446,8 @@ func (fake *FakeContainer) Invocations() map[string][][]interface{} {
 	defer fake.nameMutex.RUnlock()
 	fake.softDeleteEnabledMutex.RLock()
 	defer fake.softDeleteEnabledMutex.RUnlock()
+	fake.uRLMutex.RLock()
+	defer fake.uRLMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
