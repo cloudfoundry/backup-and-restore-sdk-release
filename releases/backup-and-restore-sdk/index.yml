@@ -245,6 +245,8 @@ builds:
     version: 1.18.34
   cd5acff5-b95f-48c6-706c-d6ee037f2e94:
     version: 1.18.3
+  d0cbedb9-a21f-4096-6465-40a72273f70f:
+    version: 1.19.4
   d2e5fbaf-f349-4078-49b5-263bc9c22b97:
     version: 1.18.61
   d3ba8fa8-ffd5-4887-618b-7550ba6640ad:
