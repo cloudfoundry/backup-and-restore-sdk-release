@@ -9,9 +9,9 @@ inputs:
 run:
   path: bash
   args:
+    - -e
     - -c
-    - set -e
-
+    - |
       pushd "backup-and-restore-sdk-release"
         rbenv install --skip-existing # Install .ruby-version if not present
         bundle install
