@@ -10,5 +10,10 @@ run:
   path: bash
   args:
     - -c
-    - "set -e\n\npushd \"backup-and-restore-sdk-release\"\n  bundle update --bundler\n\
-      \  bundle\n  bundle exec rspec\npopd\n"
+    - set -e
+
+      pushd "backup-and-restore-sdk-release"
+        rbenv install --skip-existing # Install .ruby-version if not present
+        bundle install
+        bundle exec rspec
+      popd
