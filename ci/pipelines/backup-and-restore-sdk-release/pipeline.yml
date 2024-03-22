@@ -188,7 +188,6 @@ groups:
   - bump-mysql-8
   - bump-ncurses
   - bump-libpcre2
-  - bump-ci-tasks
   - bump-postgres-11
   - bump-postgres-13
   - bump-postgres-15
@@ -334,16 +333,6 @@ resources:
   type: bosh-io-release
   source:
     repository: cloudfoundry/bpm-release
-
-- name:  backup-and-restore-sdk-release-bump-ci-tasks
-  type: git
-  icon: github
-  source:
-    private_key: *git_ssh_key
-    uri: git@github.com:cloudfoundry/backup-and-restore-sdk-release
-    commit_filter:
-      exclude:
-      - ;resource comment; This resource is used exclusively for pushing new changes
 
 - name: bosh-release-v271.7
   type: bosh-io-release
@@ -2024,48 +2013,6 @@ jobs:
     input_mapping:
       source-repo: backup-and-restore-sdk-release-write-only
 
-
-- name: bump-ci-tasks
-  serial: true
-  plan:
-    - in_parallel:
-      - get: image-cryogenics-essentials
-        trigger: true
-      - get: cryogenics-concourse-tasks
-      - get: backup-and-restore-sdk-release-main
-    - in_parallel:
-      - load_var: cryogenics-essentials-version
-        file: image-cryogenics-essentials/tag
-      - task: bump-tasks
-        image: image-cryogenics-essentials
-        file: cryogenics-concourse-tasks/deps-automation/bump-concourse-tasks/task.yml
-        params:
-          TASKS_FOLDER: ci/tasks/
-        input_mapping:
-          repo: backup-and-restore-sdk-release-main
-          image: image-cryogenics-essentials
-        output_mapping:
-          repo: backup-and-restore-sdk-release-main
-    - put: backup-and-restore-sdk-release-bump-ci-tasks
-      params:
-        repository: backup-and-restore-sdk-release-main
-        branch: &bump-ci-task-branch bump-cryogenics-essentials-to-v((.:cryogenics-essentials-version))
-        force: true
-    - task: create-pull-request
-      image: image-cryogenics-essentials
-      file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
-      params:
-        BASE: main
-        BRANCH: *bump-ci-task-branch
-        LABELS: dependencies
-        TITLE: Bump cryogenics/essentials to v((.:cryogenics-essentials-version))
-        MESSAGE: |
-          This is an automatically generated Pull Request from the Cryogenics CI Bot.
-          I have detected a new version of [cryogenics/essentials](https://hub.docker.com/r/cryogenics/essentials/tags) and automatically bumped
-          this package to benefit from the latest changes.
-          If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
-      input_mapping:
-        source-repo:  backup-and-restore-sdk-release-bump-ci-tasks
 
 - name: manual-bump-bbr-sdk-patch
   serial_groups:
