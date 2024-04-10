@@ -154,6 +154,10 @@ docker-system-postgres-aux:
 	export POSTGRES_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
 	docker-compose --log-level ERROR up --build --exit-code-from system-db-postgres system-db-postgres          ;\
 	exit_code=$$?                                                              ;\
+	if [ $${exit_code} -ne 0 ]; then                                            \
+		docker-compose logs system-db-postgres-backing-db                  ;\
+		docker-compose logs bosh-in-docker                                 ;\
+	fi                                                                         ;\
 	docker-compose --log-level ERROR rm --stop --force -v system-db-postgres-backing-db  ;\
 	if [ $${exit_code} -ne 0 ]; then exit 1; fi                                ;\
 
