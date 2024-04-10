@@ -23,8 +23,6 @@ var _ = Describe("postgres with mutual tls", func() {
 
 		postgresClientCertPath string
 		postgresClientKeyPath  string
-
-		brJob JobInstance
 	)
 
 	BeforeEach(func() {
