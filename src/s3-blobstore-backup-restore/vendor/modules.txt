@@ -97,8 +97,8 @@ github.com/aws/smithy-go/time
 github.com/aws/smithy-go/transport/http
 github.com/aws/smithy-go/transport/http/internal/io
 github.com/aws/smithy-go/waiter
-# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.62
-## explicit; go 1.22.1
+# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.63
+## explicit; go 1.22.2
 github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor
 # github.com/go-logr/logr v1.4.1
 ## explicit; go 1.18
@@ -114,7 +114,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20240227163752-401108e1b7e7
+# github.com/google/pprof v0.0.0-20240327155427-868f304927ed
 ## explicit; go 1.19
 github.com/google/pprof/profile
 # github.com/kr/text v0.2.0
