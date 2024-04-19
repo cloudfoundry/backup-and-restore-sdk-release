@@ -10,7 +10,7 @@ require (
 	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.63
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.8.1
 	github.com/onsi/ginkgo/v2 v2.17.1
-	github.com/onsi/gomega v1.32.0
+	github.com/onsi/gomega v1.33.0
 )
 
 require (
@@ -30,7 +30,7 @@ require (
 	github.com/google/pprof v0.0.0-20240327155427-868f304927ed // indirect
 	github.com/kr/text v0.2.0 // indirect
 	golang.org/x/mod v0.16.0 // indirect
-	golang.org/x/net v0.22.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.19.0 // indirect
