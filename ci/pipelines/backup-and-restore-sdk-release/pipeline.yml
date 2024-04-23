@@ -140,6 +140,8 @@ secrets:
   BOSH_GW_HOST: ((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))
   BOSH_GW_PRIVATE_KEY: ((.:pooled-env.INSTANCE_JUMPBOX_PRIVATE))
 
+- &gcp_key ((usage-service/gcp_key.json))
+
 groups:
 - name: test
   jobs:
@@ -258,6 +260,14 @@ resource_types:
     tag: latest
 
 resources:
+- name: ruby-version
+  type: semver
+  source:
+    bucket: usage-service-versions
+    driver: gcs
+    key: ruby-version
+    json_key: *gcp_key
+
 - name: mariadb-10-6-blob
   type: ftp
   source:
@@ -452,13 +462,6 @@ resources:
     private_key: *git_ssh_key
     branch: main
     disable_ci_skip: true
-
-- name: git-ruby-bosh-release
-  type: git
-  check_every: 24h
-  source:
-    uri: https://github.com/bosh-packages/ruby-release.git
-    tag_filter: v*
 
 - name: every-week
   type: time
@@ -1633,13 +1636,8 @@ jobs:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
     - get: image-cryogenics-essentials
-    - get: git-ruby-bosh-release
+    - get: ruby-version
       trigger: true
-  - task: detect-ruby-version
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/deps-automation/detect-version-from-ruby-bosh-release/task.yml
-    input_mapping:
-      ruby-release: git-ruby-bosh-release
   - load_var: new-ruby-version
     file: ruby-version/version
   - task: bump-ruby
