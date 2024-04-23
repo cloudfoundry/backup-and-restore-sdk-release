@@ -73,8 +73,8 @@ secrets:
 - &github_email ((github.email))
 - &github_user ((github.user))
 
-#! slack_webhook was needed on 2023-06-30 to notify the team when we automatically cut a new release. Copied from Shared-Cryogenics/infrastructure-root/slack-webhooks in lastpass, originally generated (we think) by HelpNow+ ticket.
-- &slack_webhook ((slack.webhook))
+#! as of 23/04/2024 gchat webhook is used to send us ci status messages. It was created in gchat space settings after logging in with personal creds
+- &gchat_webhook ((gchat-webhook.url))
 
 #! The following external DB creds were needed on 2023-07-03 for testing the BBR SDK with some external databases.
 - &external_db_passwords
@@ -243,13 +243,13 @@ resource_types:
     username: _json_key
     password: *gcr_viewer_key
 
-- name: slack-notification
+- name: google-chat-notify-resource
   type: registry-image
   source:
-    repository: us-west2-docker.pkg.dev/mapbu-cryogenics/dockerhub-proxy-cache/cfcommunity/slack-notification-resource
-    tag: latest
+    repository:  us-west2-docker.pkg.dev/mapbu-cryogenics/dockerhub-proxy-cache/springio/google-chat-notify-resource
     username: _json_key
     password: *gcr_viewer_key
+    tag: 0.0.1-SNAPSHOT
 
 - name: pull-request
   type: registry-image
@@ -429,11 +429,10 @@ resources:
     region_name: *aws-region
     <<: *aws_credentials_s3
 
-- name: slack-cryo-notification
-  type: slack-notification
-  icon: bell-ring
+- name: gchat-cryo-notification
+  type: google-chat-notify-resource
   source:
-    url: *slack_webhook
+    url: *gchat_webhook
 
 - name: cryogenics-concourse-tasks
   type: git
@@ -1533,11 +1532,11 @@ jobs:
     file: version/number
   - load_var: github-release-url
     file: github-release/url
-  - put: slack-cryo-notification
+  - put: gchat-cryo-notification
     params:
       text: |
         *BBR SDK*: version `((.:version-number))` has been published 🎉
-        Next steps (cc <!subteam^S028XABEHAP>):
+        Next steps <users/all>:
           1. Review the release notes and undraft the release <((.:github-release-url))|here>.
  
 # Dependency bumps
@@ -1625,7 +1624,7 @@ jobs:
         I have detected a new version of [golang-release](https://github.com/bosh-packages/golang-release) and automatically bumped
         this package to benefit from the latest changes.
 
-        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+        If this does not look right, please reach out to the mapbu-cryogenics team.
     input_mapping:
       source-repo: backup-and-restore-sdk-release-write-only
 
@@ -1667,7 +1666,7 @@ jobs:
       MESSAGE: |
         This is an automatically generated Pull Request from the Cryogenics CI Bot.
         I have detected a new version of Ruby and automatically bumped this package to benefit from the latest changes.
-        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+        If this does not look right, please reach out to the mapbu-cryogenics team.
 
 - name: bump-mariadb
   serial: true
@@ -1764,7 +1763,7 @@ jobs:
         I have detected a new version of [ncurses](https://ftp.gnu.org/pub/gnu/ncurses/) and automatically bumped
         this package to benefit from the latest changes.
 
-        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+        If this does not look right, please reach out to the mapbu-cryogenics team.
     input_mapping:
       source-repo: backup-and-restore-sdk-release-write-only
 
@@ -1815,7 +1814,7 @@ jobs:
         I have detected a new version of [postgres-11](https://ftp.postgresql.org/pub/source/) and automatically bumped
         this package to benefit from the latest changes.
 
-        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+        If this does not look right, please reach out to the mapbu-cryogenics team.
     input_mapping:
       source-repo: backup-and-restore-sdk-release-write-only
 
@@ -1867,7 +1866,7 @@ jobs:
         I have detected a new version of [postgres-13](https://ftp.postgresql.org/pub/source/) and automatically bumped
         this package to benefit from the latest changes.
 
-        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+        If this does not look right, please reach out to the mapbu-cryogenics team.
     input_mapping:
       source-repo: backup-and-restore-sdk-release-write-only
 
@@ -1918,7 +1917,7 @@ jobs:
         I have detected a new version of [postgres-15](https://ftp.postgresql.org/pub/source/) and automatically bumped
         this package to benefit from the latest changes.
 
-        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+        If this does not look right, please reach out to the mapbu-cryogenics team.
     input_mapping:
       source-repo: backup-and-restore-sdk-release-write-only
 
@@ -1968,7 +1967,7 @@ jobs:
         This is an automatically generated Pull Request from the Cryogenics CI Bot.
         I have detected a new version of [libpcre2](https://github.com/PCRE2Project/pcre2/releases) and automatically bumped
         this package to benefit from the latest changes.
-        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+        If this does not look right, please reach out to the mapbu-cryogenics team.
     input_mapping:
       source-repo: backup-and-restore-sdk-release-write-only
 
@@ -2021,7 +2020,7 @@ jobs:
         I have detected a new version of [mysql-8](https://dev.mysql.com/downloads/mysql/8.0.html) and automatically bumped
         this package to benefit from the latest changes.
 
-        If this does not look right, please reach out to the [#mapbu-cryogenics](https://vmware.slack.com/archives/C01DXEYRKRU) team.
+        If this does not look right, please reach out to the mapbu-cryogenics team.
     input_mapping:
       source-repo: backup-and-restore-sdk-release-write-only
 
