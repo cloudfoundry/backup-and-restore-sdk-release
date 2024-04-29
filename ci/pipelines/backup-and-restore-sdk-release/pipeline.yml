@@ -1744,7 +1744,7 @@ jobs:
       BLOB_NAME: ncurses
       BLOB_EXTENSION: .tar.gz
       BLOB_DIRECTORY: ncurses/
-      UPDATE_REFERENCES: yes
+      UPDATE_REFERENCES: only-variable-name:NCURSES_VERSION
   - put: backup-and-restore-sdk-release-write-only
     params:
       repository: bosh-release-updated
