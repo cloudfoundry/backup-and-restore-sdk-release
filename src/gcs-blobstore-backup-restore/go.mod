@@ -9,7 +9,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.17.2
 	github.com/onsi/gomega v1.33.1
 	golang.org/x/net v0.24.0
-	golang.org/x/oauth2 v0.19.0
+	golang.org/x/oauth2 v0.20.0
 	google.golang.org/api v0.177.0
 )
 
