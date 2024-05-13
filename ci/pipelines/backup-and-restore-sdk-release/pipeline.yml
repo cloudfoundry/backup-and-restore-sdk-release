@@ -1535,7 +1535,7 @@ jobs:
   - put: gchat-cryo-notification
     params:
       text: |
-        *BBR SDK*: version `((.:version-number))` has been published 🎉
+        *BBR SDK*: version `((.:version-number))` has been published!
         Next steps <users/all>:
           1. Review the release notes and undraft the release <((.:github-release-url))|here>.
  
