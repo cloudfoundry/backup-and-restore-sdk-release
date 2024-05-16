@@ -1,3 +1,11 @@
+# v1.54.1 (2024-05-15)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.54.0 (2024-05-14)
+
+* **Feature**: Updated a few x-id in the http uri traits
+
 # v1.53.2 (2024-05-08)
 
 * **Bug Fix**: GoDoc improvement
