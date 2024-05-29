@@ -33,7 +33,7 @@ cp -r /var/vcap/packages/libpcre2/bin/* /usr/local/bin/
 cp -r /var/vcap/packages/libpcre2/include/* /usr/local/include
 
 
-tar xzf mariadb/mariadb-${MARIADB_VERSION}.tar.gz
+tar xzf mariadb/mariadb-${MARIADB_VERSION}*.tar.gz
 (
   set -e
   cd mariadb-${MARIADB_VERSION}
