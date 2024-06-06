@@ -1659,6 +1659,7 @@ jobs:
     input_mapping:
       source-repo: backup-and-restore-sdk-release-write-only
     params:
+      GH_TOKEN: *git_token
       BASE: main
       BRANCH: *ruby-bump-branch
       LABELS: dependencies
@@ -1703,6 +1704,7 @@ jobs:
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
     params:
+      GH_TOKEN: *git_token
       BASE: main
       BRANCH: *bump-mariadb-10-6-branch
       LABELS: ci,bump-mariadb
@@ -1753,6 +1755,7 @@ jobs:
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
     params:
+      GH_TOKEN: *git_token
       BASE: main
       BRANCH: *bump-ncurses-branch
       LABELS: ci,bump-ncurses
@@ -1804,6 +1807,7 @@ jobs:
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
     params:
+      GH_TOKEN: *git_token
       BASE: main
       BRANCH: *bump-postgres-11-branch
       LABELS: ci,bump-postgres
@@ -1856,6 +1860,7 @@ jobs:
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
     params:
+      GH_TOKEN: *git_token
       BASE: main
       BRANCH: *bump-postgres-13-branch
       LABELS: ci,bump-postgres
@@ -1907,6 +1912,7 @@ jobs:
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
     params:
+      GH_TOKEN: *git_token
       BASE: main
       BRANCH: *bump-postgres-15-branch
       LABELS: ci,bump-postgres
@@ -1959,6 +1965,7 @@ jobs:
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
     params:
+      GH_TOKEN: *git_token
       BASE: main
       BRANCH: *bump-libpcre2-branch
       LABELS: ci,bump-libpcre2
@@ -2010,6 +2017,7 @@ jobs:
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
     params:
+      GH_TOKEN: *git_token
       BASE: main
       BRANCH: *bump-mysql-server-8-branch
       LABELS: ci,bump-mysql
