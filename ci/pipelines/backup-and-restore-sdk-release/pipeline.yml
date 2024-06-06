@@ -1691,9 +1691,9 @@ jobs:
       GIT_EMAIL: *github_email
       GIT_BRANCH: &bump-mariadb-10-6-branch bump-mariadb-10-6-to-((.:mariadb-10-6-version))
       BLOB_NAME: mariadb
-      BLOB_EXTENSION: linux-systemd-x86_64.tar.gz
+      BLOB_EXTENSION: .tar.gz
       BLOB_DIRECTORY: mariadb/
-      UPDATE_REFERENCES: only-variable-name:MARIADB_VERSION
+      UPDATE_REFERENCES: yes
   - put: backup-and-restore-sdk-release-write-only
     params:
       repository: bosh-release-updated
