@@ -271,8 +271,8 @@ resources:
 - name: mariadb-10-6-blob
   type: ftp
   source:
-    url: https://mirror.mariadb.org/mariadb-10.6.*/bintar-linux-systemd-x86_64/
-    version_regex: "mariadb-(?P<version>10.6.[0-9]*)-linux-systemd-x86_64.tar.gz$" 
+    url: https://archive.mariadb.org/mariadb-10.6.*/source/
+    version_regex: "mariadb-(?P<version>10.6.[0-9]*).tar.gz$" 
 - name: ncurses-blob
   type: ftp
   source:
