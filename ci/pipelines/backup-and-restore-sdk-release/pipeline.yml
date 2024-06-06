@@ -1693,7 +1693,7 @@ jobs:
       BLOB_NAME: mariadb
       BLOB_EXTENSION: .tar.gz
       BLOB_DIRECTORY: mariadb/
-      UPDATE_REFERENCES: yes
+      UPDATE_REFERENCES: only-variable-name:MARIADB_VERSION
   - put: backup-and-restore-sdk-release-write-only
     params:
       repository: bosh-release-updated
