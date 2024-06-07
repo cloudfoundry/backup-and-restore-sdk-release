@@ -1614,6 +1614,7 @@ jobs:
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
     params:
+      GH_TOKEN: *git_token
       BASE: main
       BRANCH: *golang-vendor-branch
       LABELS: ci,bump-golang
