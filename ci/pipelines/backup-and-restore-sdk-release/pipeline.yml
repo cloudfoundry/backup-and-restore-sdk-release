@@ -1614,6 +1614,7 @@ jobs:
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
     params:
+      GH_TOKEN: *git_token
       BASE: main
       BRANCH: *golang-vendor-branch
       LABELS: ci,bump-golang
@@ -1940,7 +1941,6 @@ jobs:
   - load_var: libpcre2-version
     file: libpcre2-blob/version
     format: raw
-
   - task: bump-libpcre2-blob
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
@@ -1955,7 +1955,7 @@ jobs:
       BLOB_NAME: pcre2
       BLOB_EXTENSION: .tar.gz
       BLOB_DIRECTORY: libpcre2/
-      UPDATE_REFERENCES: yes
+      UPDATE_REFERENCES: only-variable-name:LIBPCRE2_VERSION
   - put: backup-and-restore-sdk-release-write-only
     params:
       repository: bosh-release-updated
