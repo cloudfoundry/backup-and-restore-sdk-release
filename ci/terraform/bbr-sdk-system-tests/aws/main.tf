@@ -76,7 +76,7 @@ resource "aws_db_instance" "backup_and_restore_mariadb_10_6" {
   storage_type         = "gp2"
   engine               = "mariadb"
   engine_version       = "10.6"
-  instance_class       = "db.t2.micro"
+  instance_class       = "db.t3.micro"
   username             = "root"
   password             = var.mariadb_10_password
   publicly_accessible  = true
