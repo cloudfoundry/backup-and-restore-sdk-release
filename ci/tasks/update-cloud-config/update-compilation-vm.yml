@@ -1,0 +1,3 @@
+- path: /compilation/vm_type
+  type: replace
+  value: e2-highcpu-8
