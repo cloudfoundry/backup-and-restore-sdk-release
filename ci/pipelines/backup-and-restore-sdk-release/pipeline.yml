@@ -1988,10 +1988,10 @@ jobs:
       GIT_EMAIL: *github_email
       GIT_BRANCH: &bump-mysql-server-8-branch bump-mysql-server-8-to-((.:mysql-server-8-version))
       BLOB_NAME: mysql
+      KEEP_BLOBS_FILTER: mysql-5
       BLOB_EXTENSION: linux-glibc2.17-x86_64-minimal.tar.xz
       BLOB_DIRECTORY: mysql/
-      UPDATE_REFERENCES: yes
-      REMOVE_MULTIPLE_BLOBS: only-variable-name:MYSQL80_VERSION
+      UPDATE_REFERENCES: only-variable-name:MYSQL80_VERSION
   - put: backup-and-restore-sdk-release-write-only
     params:
       repository: bosh-release-updated
