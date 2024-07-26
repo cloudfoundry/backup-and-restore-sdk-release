@@ -785,11 +785,11 @@ jobs:
         duration: 24h
         resource: cf-deployment-env-airgapped
         timeout: 6h
-    - task: update-cloud-config
-      image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/update-cloud-config/task.yml
-      input_mapping:
-        cf-deployment-env: cf-deployment-env-non-airgapped
+  - task: update-cloud-config
+    image: image-cryogenics-essentials
+    file: backup-and-restore-sdk-release/ci/tasks/update-cloud-config/task.yml
+    input_mapping:
+      cf-deployment-env: cf-deployment-env-non-airgapped
 - name: deploy-postgres
   serial: true
   plan:
@@ -1047,11 +1047,11 @@ jobs:
         duration: 24h
         resource: cf-deployment-env-non-airgapped
         timeout: 6h
-    - task: update-cloud-config
-      image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/update-cloud-config/task.yml
-      input_mapping:
-        cf-deployment-env: cf-deployment-env-non-airgapped
+  - task: update-cloud-config
+    image: image-cryogenics-essentials
+    file: backup-and-restore-sdk-release/ci/tasks/update-cloud-config/task.yml
+    input_mapping:
+      cf-deployment-env: cf-deployment-env-non-airgapped
 
 - name: deploy-database-sdk
   serial: true
