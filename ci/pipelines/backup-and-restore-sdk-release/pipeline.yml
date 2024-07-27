@@ -789,7 +789,7 @@ jobs:
     image: image-cryogenics-essentials
     file: backup-and-restore-sdk-release/ci/tasks/update-cloud-config/task.yml
     input_mapping:
-      cf-deployment-env: cf-deployment-env-non-airgapped
+      cf-deployment-env: cf-deployment-env-airgapped
 - name: deploy-postgres
   serial: true
   plan:
