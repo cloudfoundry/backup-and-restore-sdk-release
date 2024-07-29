@@ -10,7 +10,7 @@ require (
 	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.66
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.8.1
 	github.com/onsi/ginkgo/v2 v2.19.0
-	github.com/onsi/gomega v1.33.1
+	github.com/onsi/gomega v1.34.0
 )
 
 require (
