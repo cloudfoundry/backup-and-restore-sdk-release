@@ -2,7 +2,7 @@
 
 set -o errexit
 
-MYSQL80_VERSION=8.0.36
+MYSQL80_VERSION=8.0.39
 NCURSES_VERSION=6.5
 
 tar \
