@@ -459,7 +459,6 @@ resources:
   source:
     user: cloudfoundry
     repository: backup-and-restore-sdk-release
-    drafts: true
     access_token: *git_token
 
 - name: golang-release
@@ -785,11 +784,11 @@ jobs:
         duration: 24h
         resource: cf-deployment-env-airgapped
         timeout: 6h
-    - task: update-cloud-config
-      image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/update-cloud-config/task.yml
-      input_mapping:
-        cf-deployment-env: cf-deployment-env-non-airgapped
+  - task: update-cloud-config
+    image: image-cryogenics-essentials
+    file: backup-and-restore-sdk-release/ci/tasks/update-cloud-config/task.yml
+    input_mapping:
+      cf-deployment-env: cf-deployment-env-airgapped
 - name: deploy-postgres
   serial: true
   plan:
@@ -1047,11 +1046,11 @@ jobs:
         duration: 24h
         resource: cf-deployment-env-non-airgapped
         timeout: 6h
-    - task: update-cloud-config
-      image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/update-cloud-config/task.yml
-      input_mapping:
-        cf-deployment-env: cf-deployment-env-non-airgapped
+  - task: update-cloud-config
+    image: image-cryogenics-essentials
+    file: backup-and-restore-sdk-release/ci/tasks/update-cloud-config/task.yml
+    input_mapping:
+      cf-deployment-env: cf-deployment-env-non-airgapped
 
 - name: deploy-database-sdk
   serial: true
@@ -1532,8 +1531,7 @@ jobs:
     params:
       text: |
         *BBR SDK*: version `((.:version-number))` has been published!
-        Next steps <users/all>:
-          1. Review the release notes and undraft the release <((.:github-release-url))|here>.
+        Next steps: Review the release notes <((.:github-release-url))|here>.
  
 # Dependency bumps
 - name: bump-golang
