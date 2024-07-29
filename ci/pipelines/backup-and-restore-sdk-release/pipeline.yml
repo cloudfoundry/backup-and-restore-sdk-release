@@ -1531,7 +1531,7 @@ jobs:
     params:
       text: |
         *BBR SDK*: version `((.:version-number))` has been published!
-        Next steps <users/all>: Review the release notes <((.:github-release-url))|here>.
+        Next steps: Review the release notes <((.:github-release-url))|here>.
  
 # Dependency bumps
 - name: bump-golang
