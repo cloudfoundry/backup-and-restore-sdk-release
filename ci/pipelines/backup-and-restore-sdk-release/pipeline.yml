@@ -72,7 +72,7 @@ secrets:
 - &github_user "Bosh Ecosystem"
 
 #! gchat webhook is used to send us ci status messages. It was created in gchat space settings after logging in with personal creds
-- &gchat_webhook ((gchat-webhook-dap-bosh-ecosystem-dev-GChatVersion-TaylorsVersion))
+- &gchat_webhook ((gchat-webhook-dap-bosh-ecosystem-dev))
 
 #! The following external DB creds were needed on 2023-07-03 for testing the BBR SDK with some external databases.
 - &external_db_passwords
@@ -459,7 +459,6 @@ resources:
   source:
     user: cloudfoundry
     repository: backup-and-restore-sdk-release
-    drafts: true
     access_token: *git_token
 
 - name: golang-release
@@ -1532,8 +1531,7 @@ jobs:
     params:
       text: |
         *BBR SDK*: version `((.:version-number))` has been published!
-        Next steps <users/all>:
-          1. Review the release notes and undraft the release <((.:github-release-url))|here>.
+        Next steps: Review the release notes <((.:github-release-url))|here>.
  
 # Dependency bumps
 - name: bump-golang
