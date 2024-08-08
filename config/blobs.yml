@@ -6,10 +6,10 @@ libpcre2/pcre2-10.44.tar.gz:
   size: 2552792
   object_id: 437af3f5-bb15-4e7a-7bce-84ae55c85425
   sha: sha256:86b9cb0aa3bcb7994faa88018292bc704cdbb708e785f7c74352ff6ea7d3175b
-mariadb/mariadb-10.6.17.tar.gz:
-  size: 99067793
-  object_id: c299f9bf-d7f2-4a13-56dc-75beb35461a3
-  sha: sha256:fb41b0702059c046832d60138733acb73e4c0e5a1a0681061709d25591e4b086
+mariadb/mariadb-10.6.18.tar.gz:
+  size: 99344652
+  object_id: 0159db39-51db-4775-57c4-854e863f591d
+  sha: sha256:6898a1111f47130709e28ba2c7bd1a57e4bb57101f6e109e597d51e6d385cf18
 mysql/mysql-5.7.44.tar.gz:
   size: 56570597
   object_id: 92e82aaa-6a33-40b7-5940-2366d90ad636
