@@ -36,7 +36,7 @@ cloud.google.com/go/storage
 cloud.google.com/go/storage/internal
 cloud.google.com/go/storage/internal/apiv2
 cloud.google.com/go/storage/internal/apiv2/storagepb
-# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.67
+# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.68
 ## explicit; go 1.22
 github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor
 # github.com/felixge/httpsnoop v1.0.4
