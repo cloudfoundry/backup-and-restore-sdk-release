@@ -4,7 +4,7 @@ go 1.22.6
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.30.4
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.29
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.30
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.60.1
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.5
 	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.68
