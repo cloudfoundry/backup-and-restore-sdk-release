@@ -247,10 +247,16 @@ resource_types:
     username: ((docker.username))
     password: ((docker.password))
 resources:
+- name: bosh-ecosystem-docker-image
+  type: registry-image
+  source:
+    repository: bosh/bosh-ecosystem-concourse
+    username: ((docker.username))
+    password: ((docker.password))
 - name: ruby-image
   type: registry-image
   source:
-    repository: ruby:latest
+    repository: ruby
     username: ((docker.username))
     password: ((docker.password))
 
@@ -1628,7 +1634,9 @@ jobs:
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
+    - get: bosh-ecosystem-docker-image
     - get: ruby-image
+      trigger: true
   - task: bump-ruby
     image: ruby-image
     file: backup-and-restore-sdk-release-main/ci/tasks/bump-ruby/task.yml
@@ -1645,10 +1653,10 @@ jobs:
       force: true
       repository: bumped-repo
   - task: create-pull-request
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
+    image: bosh-ecosystem-docker-image
+    file: backup-and-restore-sdk-release-main/ci/tasks/create-pr/task.yml
     input_mapping:
-      source-repo: backup-and-restore-sdk-release-write-only
+      backup-and-restore-sdk-release: backup-and-restore-sdk-release-write-only
     params:
       GH_TOKEN: *git_token
       BASE: main
