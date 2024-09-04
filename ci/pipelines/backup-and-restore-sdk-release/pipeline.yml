@@ -247,12 +247,18 @@ resource_types:
     username: ((docker.username))
     password: ((docker.password))
 resources:
-- name: ruby-version
-  type: http
+- name: bosh-ecosystem-docker-image
+  type: registry-image
   source:
-    index: https://raw.githubusercontent.com/postmodern/ruby-versions/master/ruby/stable.txt
-    regex: "(?P<version>3.3.*)"
-    uri: https://raw.githubusercontent.com/postmodern/ruby-versions/master/ruby/stable.txt
+    repository: bosh/bosh-ecosystem-concourse
+    username: ((docker.username))
+    password: ((docker.password))
+- name: ruby-image
+  type: registry-image
+  source:
+    repository: ruby
+    username: ((docker.username))
+    password: ((docker.password))
 
 - name: mariadb-10-6-blob
   type: ftp
@@ -1628,31 +1634,29 @@ jobs:
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
-    - get: cryogenics-concourse-tasks
-    - get: image-cryogenics-essentials
-    - get: ruby-version
+    - get: bosh-ecosystem-docker-image
+    - get: ruby-image
       trigger: true
-  - load_var: new-ruby-version
-    file: ruby-version/version
   - task: bump-ruby
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/deps-automation/bump-ruby/task.yml
+    image: ruby-image
+    file: backup-and-restore-sdk-release-main/ci/tasks/bump-ruby/task.yml
     input_mapping:
-      repo-to-bump: backup-and-restore-sdk-release-main
+      backup-and-restore-sdk-release: backup-and-restore-sdk-release-main
     params:
       GIT_USERNAME: *github_user
       GIT_EMAIL: *github_email
-      NEW_RUBY_VERSION: ((.:new-ruby-version))
+  - load_var: new-ruby-version
+    file: backup-and-restore-sdk-release-main/.ruby-version
   - put: backup-and-restore-sdk-release-write-only
     params:
       branch: &ruby-bump-branch bump-ruby-to-((.:new-ruby-version))
       force: true
       repository: bumped-repo
   - task: create-pull-request
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
+    image: bosh-ecosystem-docker-image
+    file: backup-and-restore-sdk-release-main/ci/tasks/create-pr/task.yml
     input_mapping:
-      source-repo: backup-and-restore-sdk-release-write-only
+      backup-and-restore-sdk-release: backup-and-restore-sdk-release-write-only
     params:
       GH_TOKEN: *git_token
       BASE: main
