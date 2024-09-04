@@ -1,0 +1,16 @@
+---
+platform: linux
+
+inputs:
+  - name: backup-and-restore-sdk-release
+
+params:
+  GIT_USERNAME:
+  GIT_EMAIL:
+
+outputs:
+  - name: bumped-repo
+    path: backup-and-restore-sdk-release
+
+run:
+  path: backup-and-restore-sdk-release/ci/tasks/bump-ruby/task.sh
