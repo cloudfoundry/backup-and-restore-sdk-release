@@ -173,7 +173,7 @@ golang.org/x/tools/internal/versions
 ## explicit
 gopkg.in/yaml.v3
 # system-tests v0.0.0 => ../system-tests
-## explicit; go 1.22.6
+## explicit; go 1.23.0
 system-tests/azure
 # system-tests => ../system-tests
 # s3-blobstore-backup-restore => ../s3-blobstore-backup-restore
