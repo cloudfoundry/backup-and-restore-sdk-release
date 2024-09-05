@@ -595,9 +595,10 @@ jobs:
       passed: ["lint-pipeline"]
     - get: cryogenics-concourse-tasks
     - get: image-cryogenics-essentials
+    - get: bosh-ecosystem-docker-image
   - in_parallel:
     - task: sdk-template-unit-tests
-      image: image-cryogenics-essentials
+      image: bosh-ecosystem-docker-image
       file: backup-and-restore-sdk-release/ci/tasks/sdk-template-unit-tests/task.yml
     - task: databases-unit-tests
       image: image-cryogenics-essentials

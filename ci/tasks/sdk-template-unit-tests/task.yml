@@ -2,8 +2,9 @@ platform: linux
 image_resource:
   type: registry-image
   source:
-    repository: harbor-repo.vmware.com/cryogenics/essentials
-    tag: 0.1.108
+    repository: bosh/bosh-ecosystem-concourse
+    username: ((docker.username))
+    password: ((docker.password))
 inputs:
   - name: backup-and-restore-sdk-release
 run:
@@ -12,8 +13,12 @@ run:
     - -e
     - -c
     - |
-      pushd "backup-and-restore-sdk-release"
-        rbenv install --skip-existing # Install .ruby-version if not present
-        bundle install
-        bundle exec rspec
-      popd
+      cd backup-and-restore-sdk-release
+      set -u -o pipefail
+      echo 'gem: --no-document' > /etc/gemrc
+      NUM_CPUS=$(grep -c ^processor /proc/cpuinfo)
+      RUBY_VERSION="$(cat .ruby-version)"
+      ruby-install --jobs="${NUM_CPUS}" --cleanup --system ruby "${RUBY_VERSION}"
+
+      bundle install
+      bundle exec rspec
