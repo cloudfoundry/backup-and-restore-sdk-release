@@ -29,6 +29,7 @@ run:
         RUBY_VERSION="$(cat .ruby-version)"
         ruby-install --jobs="${NUM_CPUS}" --cleanup --system ruby "${RUBY_VERSION}" -- --disable-install-rdoc --disable-install-doc
 
+        bundle update --bundler
         bundle install
         bundle exec rspec
       popd
