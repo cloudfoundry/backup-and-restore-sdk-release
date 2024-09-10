@@ -569,6 +569,13 @@ resources:
     repository: tas-cve
     user: pivotal
 
+- name: ruby-install
+  type: github-release
+  source:
+    access_token: *git_token
+    owner: postmodern
+    repository: ruby-install
+    tag_filter: \d+\.\d+\.\d+
 jobs:
 - name: lint-pipeline
   serial: true
@@ -596,6 +603,7 @@ jobs:
     - get: cryogenics-concourse-tasks
     - get: image-cryogenics-essentials
     - get: bosh-ecosystem-docker-image
+    - get: ruby-install
   - in_parallel:
     - task: sdk-template-unit-tests
       image: bosh-ecosystem-docker-image
