@@ -16,14 +16,18 @@ run:
     - |
       set -u -o pipefail
       pushd ruby-install
-        make install
+        VERSION=$(cat version)
+        tar -xzvf ruby-install-${VERSION}.tar.gz
+        pushd ruby-install-${VERSION}
+          make install
+        popd
       popd
       pushd backup-and-restore-sdk-release
 
         echo 'gem: --no-document' > /etc/gemrc
         NUM_CPUS=$(grep -c ^processor /proc/cpuinfo)
         RUBY_VERSION="$(cat .ruby-version)"
-        ruby-install --jobs="${NUM_CPUS}" --cleanup --system ruby "${RUBY_VERSION}"
+        ruby-install --jobs="${NUM_CPUS}" --cleanup --system ruby "${RUBY_VERSION}" -- --disable-install-rdoc --disable-install-doc
 
         bundle install
         bundle exec rspec
