@@ -61,7 +61,7 @@ docker-clean: ## remove containers created to run the tests
 	if ! echo "$@" | grep -q "${FOCUS}" ; then                                  \
 		echo "\033[92mSkipping $@ \033[0m"                                 ;\
 	else                                                                        \
-		docker-compose --log-level ERROR down --rmi local --volumes --remove-orphans ;\
+		docker --log-level ERROR compose down --rmi local --volumes --remove-orphans ;\
 	fi
 
 docker-clean-prune: $(supported-stemcells) ## remove containers AND IMAGES created to run the tests
@@ -72,19 +72,19 @@ docker-system-postgres: $(supported-postgres) ## run system tests for all suppor
 docker-system: docker-system-postgres docker-system-mariadb docker-system-mysql ## run all system tests for all supported Stemcells and database versions
 
 docker-unit-blobstore-azure: ## run azure blobstore unit tests in Docker
-	docker-compose up --build --exit-code-from unit-blobstore-azure unit-blobstore-azure
+	docker compose up --build --exit-code-from unit-blobstore-azure unit-blobstore-azure
 
 docker-unit-blobstore-gcs: ## run GCS blobstore unit tests in Docker
-	docker-compose up --build --exit-code-from unit-blobstore-gcs unit-blobstore-gcs
+	docker compose up --build --exit-code-from unit-blobstore-gcs unit-blobstore-gcs
 
 docker-unit-blobstore-s3: ## run S3 blobstore unit tests in Docker
-	docker-compose up --build --exit-code-from unit-blobstore-s3 unit-blobstore-s3
+	docker compose up --build --exit-code-from unit-blobstore-s3 unit-blobstore-s3
 
 docker-unit-database: ## run database unit tests in Docker
-	docker-compose up --build --exit-code-from unit-database unit-database
+	docker compose up --build --exit-code-from unit-database unit-database
 
 docker-unit-template-specs: ## run templating unit tests in Docker
-	docker-compose up --build --exit-code-from unit-sdk-template unit-sdk-template
+	docker compose up --build --exit-code-from unit-sdk-template unit-sdk-template
 
 docker-unit: docker-unit-blobstore-azure docker-unit-blobstore-gcs docker-unit-blobstore-s3 docker-unit-database docker-unit-template-specs ## run all unit tests in Docker
 
@@ -116,7 +116,7 @@ $(supported-stemcells):
 		if [ "$(MAKECMDGOALS)" = "docker-clean-prune" ]; then               \
 			echo "\033[92mCleaning $@ \033[0m"                         ;\
 			export STEMCELL_NAME=$@                                    ;\
-			docker-compose --log-level ERROR down --rmi all --volumes --remove-orphans   ;\
+			docker --log-level ERROR compose down --rmi all --volumes --remove-orphans   ;\
 		fi                                                                  \
 	fi
 
@@ -128,9 +128,9 @@ $(supported-mariadb):
 		export MARIADB_VERSION=$(word 2,$(subst ~, ,$@))                   ;\
 		export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))                     ;\
 		export MARIADB_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
-		docker-compose --log-level ERROR up --build --exit-code-from system-db-mariadb system-db-mariadb         ;\
+		docker --log-level ERROR compose up --build --exit-code-from system-db-mariadb system-db-mariadb         ;\
 		exit_code=$$?                                                      ;\
-		docker-compose --log-level ERROR rm --stop --force -v system-db-mariadb-backing-db ;\
+		docker --log-level ERROR compose rm --stop --force -v system-db-mariadb-backing-db ;\
 		if [ $${exit_code} -ne 0 ]; then exit 1; fi                        ;\
 	fi
 
@@ -142,9 +142,9 @@ $(supported-mysql):
 		export MYSQL_VERSION=$(word 2,$(subst ~, ,$@))                     ;\
 		export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))                     ;\
 		export MYSQL_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"    ;\
-		docker-compose --log-level ERROR up --build --exit-code-from system-db-mysql system-db-mysql          ;\
+		docker --log-level ERROR compose up --build --exit-code-from system-db-mysql system-db-mysql          ;\
 		exit_code=$$?                                                      ;\
-		docker-compose --log-level ERROR rm --stop --force -v system-db-mysql-backing-db ;\
+		docker --log-level ERROR compose rm --stop --force -v system-db-mysql-backing-db ;\
 		if [ $${exit_code} -ne 0 ]; then exit 1; fi                        ;\
 	fi
 
@@ -152,9 +152,9 @@ docker-system-postgres-aux:
 	export POSTGRES_VERSION=$(word 2,$(subst ~, ,$(MATRIX_TUPLE)))             ;\
 	export STEMCELL_NAME=$(word 1,$(subst ~, ,$(MATRIX_TUPLE)))                ;\
 	export POSTGRES_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
-	docker-compose --log-level ERROR up --build --exit-code-from system-db-postgres system-db-postgres          ;\
+	docker --log-level ERROR compose up --build --exit-code-from system-db-postgres system-db-postgres          ;\
 	exit_code=$$?                                                              ;\
-	docker-compose --log-level ERROR rm --stop --force -v system-db-postgres-backing-db  ;\
+	docker --log-level ERROR compose rm --stop --force -v system-db-postgres-backing-db  ;\
 	if [ $${exit_code} -ne 0 ]; then exit 1; fi                                ;\
 
 $(supported-postgres):
