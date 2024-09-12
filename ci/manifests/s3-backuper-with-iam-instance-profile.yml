@@ -29,10 +29,10 @@ stemcells:
 instance_groups:
 - name: backuper
   instances: 1
-  vm_type: small
+  vm_type: default
   vm_extensions:
   - s3-backup-iam-instance-profile
-  persistent_disk_type: 1GB
+  persistent_disk_type: default
   stemcell: jammy
   update:
     serial: true

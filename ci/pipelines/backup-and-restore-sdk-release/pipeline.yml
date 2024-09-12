@@ -535,6 +535,13 @@ resources:
   source:
     deployment: s3-backuper
     skip_check: true
+    target: ((iaas_directors_aws-director_bosh_environment))
+    client: ((iaas_directors_aws-director_bosh_client.username))
+    client_secret: ((iaas_directors_aws-director_bosh_client.password))
+    ca_cert: ((iaas_directors_aws-director_bosh_ca_cert.ca))
+    jumpbox_ssh_key: ((iaas_directors_aws-director_bosh_jumpbox_ssh.private_key))
+    jumpbox_username: ((iaas_directors_aws-director_bosh_jumpbox_username))
+    jumpbox_url: ((iaas_directors_aws-director_bosh_jumpbox_ip)):22
 
 - name: database-backup-restorer-deployment
   type: bosh-deployment
@@ -738,7 +745,6 @@ jobs:
         deployment-name: s3-backuper
         s3-bucket-name: iam-instance-role-test
         s3-region: *aws-region
-      source_file: director-with-iam-profile/sdk-config.yml
 
 - name: system-tests-blobstore-backuper-with-iam-instance-profile
   serial: true
@@ -780,7 +786,6 @@ jobs:
         deployment-name: s3-backuper
         s3-bucket-name: iam-instance-role-test
         s3-region: *aws-region
-      source_file: director-with-iam-profile/sdk-config.yml
 - name: claim-cf-deployment-airgapped
   plan:
   - in_parallel:
