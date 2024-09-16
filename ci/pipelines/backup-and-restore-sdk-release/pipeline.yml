@@ -63,8 +63,6 @@ secrets:
 - &git_token ((github_read_write_token))
 
 #! github_deploy_keys are generated in credhub and the public keys added to the individual repos
-- &github_deploy_key_concourse-cve-scan ((github_deploy_key_concourse-cve-scan.private_key))
-- &github_deploy_key_cryogenics-concourse-tasks ((github_deploy_key_cryogenics-concourse-tasks.private_key))
 - &github_deploy_key_backup-and-restore-sdk-release ((github_deploy_key_backup-and-restore-sdk-release.private_key))
 
 #! github email and user used for creating commits
@@ -141,6 +139,9 @@ secrets:
 - &docker_username ((docker.username))
 - &docker_password ((docker.password))
 
+#! Access token for our service account user in Github Enterprise
+- &ghe_svc_account_personal_access_token ((svc-bosh-ecosystem-ghe-personal-access-token))
+
 groups:
 - name: test
   jobs:
@@ -194,7 +195,7 @@ resource_types:
     repository: us-west2-docker.pkg.dev/mapbu-cryogenics/concourse-resources/concourse-ftp-resource
     username: _json_key
     password: *gcr_viewer_key
-    
+
 - name: shepherd
   source:
     tag: v1
@@ -264,7 +265,7 @@ resources:
   type: ftp
   source:
     url: https://archive.mariadb.org/mariadb-10.6.*/source/
-    version_regex: "mariadb-(?P<version>10.6.[0-9]*).tar.gz$" 
+    version_regex: "mariadb-(?P<version>10.6.[0-9]*).tar.gz$"
 - name: ncurses-blob
   type: ftp
   source:
@@ -429,10 +430,12 @@ resources:
 - name: cryogenics-concourse-tasks
   type: git
   icon: github
+  tags: [ broadcom ]
   source:
-    uri: git@github.com:pivotal/cryogenics-concourse-tasks.git
-    private_key: *github_deploy_key_cryogenics-concourse-tasks
+    uri: https://github.gwd.broadcom.net/TNZ/cryogenics-concourse-tasks.git
     branch: main
+    username: svc.bosh-ecosystem@broadcom.net
+    password: *ghe_svc_account_personal_access_token
 
 - name: backup-and-restore-sdk-release-write-only
   type: git
@@ -456,7 +459,7 @@ resources:
 
 - name: every-week
   type: time
-  source: 
+  source:
     interval: 168h # 24h*7days
 
 - name: github-release
@@ -565,16 +568,23 @@ resources:
 
 - name: git-concourse-cve-scan
   type: git
+  tags: [ broadcom ]
   source:
-    uri: git@github.com:pivotal/concourse-cve-scan.git
+    uri: https://github.gwd.broadcom.net/TNZ/concourse-cve-scan.git
     branch: main
-    private_key: *github_deploy_key_concourse-cve-scan
+    username: svc.bosh-ecosystem@broadcom.net
+    password: *ghe_svc_account_personal_access_token
+
 - name: github-release-tas-cve
   type: github-release
+  tags: [ broadcom ]
   source:
-    access_token: *git_token
+    access_token: *ghe_svc_account_personal_access_token
+    owner: TNZ
     repository: tas-cve
-    user: pivotal
+    github_api_url: https://github.gwd.broadcom.net/api/v3
+    github_v4_api_url: https://github.gwd.broadcom.net/api/graphql
+    github_uploads_url: https://github.gwd.broadcom.net/api/uploads/
 
 - name: ruby-install
   type: github-release
@@ -591,6 +601,7 @@ jobs:
     - get: backup-and-restore-sdk-release
       trigger: true
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: image-cryogenics-essentials
   - task: check-pipeline-for-stray-secrets
     image: image-cryogenics-essentials
@@ -608,6 +619,7 @@ jobs:
       trigger: true
       passed: ["lint-pipeline"]
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: image-cryogenics-essentials
     - get: bosh-ecosystem-docker-image
     - get: ruby-install
@@ -644,7 +656,9 @@ jobs:
   plan:
     - in_parallel:
         - get: git-concourse-cve-scan
+          tags: [ broadcom ]
         - get: github-release-tas-cve
+          tags: [ broadcom ]
         - get: backup-and-restore-sdk-release
           trigger: true
     - task: run-scan
@@ -755,6 +769,7 @@ jobs:
       passed:
       - deploy-s3-blobstore-sdk-with-iam-instance-profile
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: director-with-iam-profile
     - get: image-cryogenics-essentials
   - in_parallel:
@@ -792,6 +807,7 @@ jobs:
     - get: backup-and-restore-sdk-release
       passed: [build-rc]
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: release
       trigger: true
       passed: [build-rc]
@@ -851,7 +867,7 @@ jobs:
           <<: *pg_deployment_common
           availability_zone: z1
           vm_extensions: ["cf-tcp-router-network-properties"]
-        ops_files: 
+        ops_files:
         - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
         source_file: source-file/source-file.yml
         releases:
@@ -868,7 +884,7 @@ jobs:
           <<: *pg_deployment_common
           availability_zone: z1
           vm_extensions: ["cf-tcp-router-network-properties"]
-        ops_files: 
+        ops_files:
         - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
         source_file: source-file/source-file.yml
         releases:
@@ -918,7 +934,7 @@ jobs:
           availability_zone: z1
           <<: *mysql_certs_common
           vm_extensions: ["cf-tcp-router-network-properties"]
-        ops_files: 
+        ops_files:
         - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
         source_file: source-file/source-file.yml
         releases:
@@ -938,7 +954,7 @@ jobs:
           availability_zone: z1
           <<: *mysql_certs_common
           vm_extensions: ["cf-tcp-router-network-properties"]
-        ops_files: 
+        ops_files:
         - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
         source_file: source-file/source-file.yml
         releases:
@@ -979,7 +995,7 @@ jobs:
         deployment-name: database-backup-restorer
         availability_zone: z1
         vm_extensions: ["cf-tcp-router-network-properties"]
-      ops_files: 
+      ops_files:
       - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
       source_file: source-file/source-file.yml
 
@@ -1002,6 +1018,7 @@ jobs:
       - deploy-postgres
       - deploy-mysql
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
   - task: alias-env
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
@@ -1106,7 +1123,7 @@ jobs:
         deployment-name: database-backup-restorer
         availability_zone: z1
         vm_extensions: ["cf-tcp-router-network-properties"]
-      ops_files: 
+      ops_files:
       - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
       source_file: source-file/source-file.yml
 
@@ -1167,7 +1184,7 @@ jobs:
         s3-unversioned-clone-bucket-region: us-east-1
         <<: *aws-access
         vm_extensions: ["cf-tcp-router-network-properties"]
-      ops_files: 
+      ops_files:
       - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
       source_file: source-file/source-file.yml
 
@@ -1256,6 +1273,7 @@ jobs:
       passed:
       - deploy-database-sdk
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: cert-store
       resource: rds-ca-bundle
     - get: cf-deployment-env-non-airgapped
@@ -1380,6 +1398,7 @@ jobs:
       - deploy-azure-blobstore-sdk
       - deploy-gcs-blobstore-sdk
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: image-cryogenics-essentials
   - task: alias-env
     image: image-cryogenics-essentials
@@ -1497,6 +1516,7 @@ jobs:
       passed: [check-for-changes]
       params: {bump: final}
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: image-cryogenics-essentials
   - task: create-final-release
     image: image-cryogenics-essentials
@@ -1507,8 +1527,8 @@ jobs:
       updated-release-repo: backup-and-restore-sdk-final-release
       updated-release-tarball: backup-and-restore-sdk-final-release-tarball
     params:
-      GIT_USERNAME: Backup & Restore Concourse
-      GIT_EMAIL: cf-lazarus@pivotal.io
+      GIT_USERNAME: *github_user
+      GIT_EMAIL: *github_email
       FINAL: true
       RELEASE_NAME: backup-and-restore-sdk
       <<: *AWS_ACCESS
@@ -1552,13 +1572,14 @@ jobs:
       text: |
         *BBR SDK*: version `((.:version-number))` has been published!
         Next steps: Review the release notes <((.:github-release-url))|here>.
- 
+
 # Dependency bumps
 - name: bump-golang
   serial: true
   plan:
   - in_parallel:
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: image-cryogenics-essentials
     - get: golang-release
       trigger: true
@@ -1688,6 +1709,7 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: image-cryogenics-essentials
     - get: mariadb-10-6-blob
       trigger: true
@@ -1737,6 +1759,7 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: image-cryogenics-essentials
     - get: ncurses-blob
       trigger: true
@@ -1789,6 +1812,7 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: image-cryogenics-essentials
     - get: postgres-11-blob
       trigger: true
@@ -1842,6 +1866,7 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: image-cryogenics-essentials
     - get: postgres-13-blob
       trigger: true
@@ -1894,6 +1919,7 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: image-cryogenics-essentials
     - get: postgres-15-blob
       trigger: true
@@ -1947,6 +1973,7 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: image-cryogenics-essentials
     - get: libpcre2-blob
       trigger: true
@@ -1997,6 +2024,7 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: image-cryogenics-essentials
     - get: mysql-server-8-blob
       trigger: true
