@@ -4,9 +4,9 @@ go 1.23.0
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.30.5
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.31
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.61.1
-	github.com/aws/aws-sdk-go-v2/service/sts v1.30.6
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.33
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.61.3
+	github.com/aws/aws-sdk-go-v2/service/sts v1.30.8
 	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.68
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.8.1
 	github.com/onsi/ginkgo/v2 v2.20.2
