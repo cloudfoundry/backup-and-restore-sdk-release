@@ -1,6 +1,6 @@
 module system-tests
 
-go 1.23.0
+go 1.23.2
 
 require (
 	github.com/onsi/ginkgo/v2 v2.20.2
