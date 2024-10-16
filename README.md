@@ -18,7 +18,7 @@ Backup and Restore SDK Release status [![Build SDK Release Badge](https://ci.cry
 | Name     | Versions                 |
 |:---------|:-------------------------|
 | MariaDB  | 10.2.x            |
-| MySQL    | 5.7.x, 8.0.x      |
+| MySQL    | 8.0.x             |
 | Postgres | 9.6.x, 10.x, 11.x |
 
 The SDK can use used against Postgres 9.4, but is not supported upstream by the Postgres community.

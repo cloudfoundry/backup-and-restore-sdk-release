@@ -115,9 +115,6 @@ func (f InteractorFactory) getUtilitiesForMySQL(mysqlVersion version.DatabaseSer
 	case implementation == "mariadb" && semVer.MajorVersionMatches(version.SemVer("10", "x", "x")):
 		return f.utilitiesConfig.Mariadb.Dump, f.utilitiesConfig.Mariadb.Restore, nil
 	case implementation == "mysql":
-		if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "7", "0")) {
-			return f.utilitiesConfig.Mysql57.Dump, f.utilitiesConfig.Mysql57.Restore, nil
-		}
 		if mysqlVersion.SemanticVersion.MajorVersionMatches(version.SemVer("8", "0", "0")) {
 			return f.utilitiesConfig.Mysql80.Dump, f.utilitiesConfig.Mysql80.Restore, nil
 		}

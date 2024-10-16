@@ -35,9 +35,6 @@ supported-mariadb=\
   ubuntu-xenial~~~10.2-bionic \
 
 supported-mysql=\
-  ubuntu-bionic~~~5.7-debian  \
-  ubuntu-jammy~~~~5.7-debian  \
-  ubuntu-xenial~~~5.7-debian  \
   ubuntu-bionic~~~8.0-debian  \
   ubuntu-jammy~~~~8.0-debian  \
   ubuntu-xenial~~~8.0-debian  \

@@ -10,10 +10,6 @@ mariadb/mariadb-10.6.19.tar.gz:
   size: 99979223
   object_id: 8a70379f-e4a6-4f53-51f6-162c30912908
   sha: sha256:bcecb0ff7b79a41344736fa994710787c15516d51eb7715f278c3f0fcb7e8703
-mysql/mysql-5.7.44.tar.gz:
-  size: 56570597
-  object_id: 92e82aaa-6a33-40b7-5940-2366d90ad636
-  sha: sha256:d03d8ff688862c40da3488451072a4b2178a86b53b4a7546ee5f864bb15cd919
 mysql/mysql-8.0.39-linux-glibc2.17-x86_64-minimal.tar.xz:
   size: 60892392
   object_id: a26e652c-d6ec-4963-6886-f671489e4944
