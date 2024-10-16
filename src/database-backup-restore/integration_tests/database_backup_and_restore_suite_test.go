@@ -35,10 +35,8 @@ func TestDatabaseBackupAndRestore(t *testing.T) {
 var compiledSDKPath string
 var envVars map[string]string
 
-var fakePgDump11 *binmock.Mock
 var fakePgDump13 *binmock.Mock
 var fakePgDump15 *binmock.Mock
-var fakePgRestore11 *binmock.Mock
 var fakePgRestore13 *binmock.Mock
 var fakePgRestore15 *binmock.Mock
 var fakePgClient *binmock.Mock
@@ -58,10 +56,8 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	fakePgClient = binmock.NewBinMock(Fail)
-	fakePgDump11 = binmock.NewBinMock(Fail)
 	fakePgDump13 = binmock.NewBinMock(Fail)
 	fakePgDump15 = binmock.NewBinMock(Fail)
-	fakePgRestore11 = binmock.NewBinMock(Fail)
 	fakePgRestore13 = binmock.NewBinMock(Fail)
 	fakePgRestore15 = binmock.NewBinMock(Fail)
 	fakeMysqlDump57 = binmock.NewBinMock(Fail)
@@ -75,10 +71,8 @@ var _ = BeforeSuite(func() {
 var _ = BeforeEach(func() {
 	envVars = map[string]string{
 		"PG_CLIENT_PATH":        "non-existent",
-		"PG_DUMP_11_PATH":       "non-existent",
 		"PG_DUMP_13_PATH":       "non-existent",
 		"PG_DUMP_15_PATH":       "non-existent",
-		"PG_RESTORE_11_PATH":    "non-existent",
 		"PG_RESTORE_13_PATH":    "non-existent",
 		"PG_RESTORE_15_PATH":    "non-existent",
 		"MARIADB_CLIENT_PATH":   "non-existent",
