@@ -46,6 +46,15 @@ secrets:
   aws_secret_key: *aws_secret_key
   aws_assumed_role_arn: *aws_role_arn
 
+- release_private_yaml: &release_private_yaml |
+    ---
+    blobstore:
+      provider: s3
+      options:
+        access_key_id: ((bbr_aws_access_key.username))
+        secret_access_key: ((bbr_aws_access_key.password))
+        assume_role_arn: ((bbr_aws_access_key.role_arn))
+
 #! Azure credentials for 3 separate storage accounts. Currently in the CF-bosh-toronto-king subscription
 - &azure_credentials_storage_account_1 ((bbr_azure_credentials.storage_account))
 - &azure_credentials_storage_key_1 ((bbr_azure_credentials.storage_account_key))
@@ -166,19 +175,10 @@ groups:
   - deploy-database-sdk-on-airgapped-env
   - system-tests-internal-dbs
   - unclaim-cf-deployment-airgapped
-  - merge-pr
+  - release-fan-in
 
-- name: bump
-  jobs:
-  - bump-golang
-  - bump-ruby
-  - bump-mariadb
-  - bump-mysql-8
-  - bump-ncurses
-  - bump-libpcre2
-  - bump-postgres-11
-  - bump-postgres-13
-  - bump-postgres-15
+  - bump-golang-deps
+  - bump-packages
 
 - name: release
   jobs:
@@ -233,13 +233,6 @@ resource_types:
     username: *docker_username
     password: *docker_password
     tag: 0.0.1-SNAPSHOT
-
-- name: pull-request
-  type: registry-image
-  source:
-    repository: us-west2-docker.pkg.dev/mapbu-cryogenics/concourse-resources/pr-queue-resource
-    username: _json_key
-    password: *gcr_viewer_key
 
 - name: http
   type: registry-image
@@ -392,18 +385,6 @@ resources:
       prefix: bbr-sdk-pr-tests
       credentials: *service_accounts_bucket_owner_json_key
 
-- name: backup-and-restore-sdk-release
-  type: pull-request
-  check_every: 1m
-  icon: source-pull
-  source:
-    repository: cloudfoundry/backup-and-restore-sdk-release
-    base_branch: main
-    disable_forks: true
-    access_token: *git_token
-    autosync_pr: true
-    assign_to: "@me"
-
 - name: version
   type: semver
   icon: tag
@@ -448,14 +429,13 @@ resources:
       exclude:
       - ;resource comment; This resource is used exclusively for pushing new changes
 
-- name: backup-and-restore-sdk-release-main
+- name: backup-and-restore-sdk-release
   type: git
   icon: github
   source:
     uri: git@github.com:cloudfoundry/backup-and-restore-sdk-release.git
     private_key: *github_deploy_key_backup-and-restore-sdk-release
     branch: main
-    disable_ci_skip: true
 
 - name: every-week
   type: time
@@ -474,7 +454,7 @@ resources:
   type: git
   icon: tag
   source:
-    uri: https://github.com/bosh-packages/golang-release.git
+    uri: https://github.com/cloudfoundry/bosh-package-golang-release.git
     tag_filter: v*
 
 - name: jammy-stemcell-aws
@@ -1475,7 +1455,7 @@ jobs:
       action: release
       resource: cf-deployment-env-non-airgapped
 
-- name: merge-pr
+- name: release-fan-in
   serial: true
   plan:
   - get: backup-and-restore-sdk-release
@@ -1485,10 +1465,6 @@ jobs:
     - system-tests-external-dbs-rds
     - system-tests-blobstore-backuper
     - system-tests-blobstore-backuper-with-iam-instance-profile
-  - put: backup-and-restore-sdk-release
-    params:
-      merge: true
-      repository: backup-and-restore-sdk-release
 
 # Release
 - name: check-for-changes
@@ -1496,7 +1472,9 @@ jobs:
   - in_parallel:
     - get: every-week
       trigger: true
-    - get: backup-and-restore-sdk-release-main
+    - get: backup-and-restore-sdk-release
+      passed:
+      - release-fan-in
     - get: version
 
 - name: create-final-patch
@@ -1509,7 +1487,7 @@ jobs:
         bump: patch
   plan:
   - in_parallel:
-    - get: backup-and-restore-sdk-release-main
+    - get: backup-and-restore-sdk-release
       passed: [check-for-changes]
       trigger: true
     - get: version
@@ -1522,7 +1500,7 @@ jobs:
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/bosh-tasks/create-release/task.yml
     input_mapping:
-      release-repo: backup-and-restore-sdk-release-main
+      release-repo: backup-and-restore-sdk-release
     output_mapping:
       updated-release-repo: backup-and-restore-sdk-final-release
       updated-release-tarball: backup-and-restore-sdk-final-release-tarball
@@ -1536,7 +1514,7 @@ jobs:
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/release-automation/release-notes/task.yml
     input_mapping:
-      git-repo: backup-and-restore-sdk-release-main
+      git-repo: backup-and-restore-sdk-release
     params:
       USE_LATEST_PUBLISHED_TAG: true
   - task: format-release-notes
@@ -1546,7 +1524,7 @@ jobs:
       template-folder: cryogenics-concourse-tasks
     params:
       TEMPLATE_PATH: release-automation/release-notes-templates/release-notes-auto.md.erb
-  - put: backup-and-restore-sdk-release-main
+  - put: backup-and-restore-sdk-release
     params:
       repository: backup-and-restore-sdk-final-release
       merge: true
@@ -1574,503 +1552,305 @@ jobs:
         Next steps: Review the release notes <((.:github-release-url))|here>.
 
 # Dependency bumps
-- name: bump-golang
+- name: bump-golang-deps
   serial: true
   plan:
   - in_parallel:
+    - get: every-week
+      trigger: true
     - get: cryogenics-concourse-tasks
       tags: [ broadcom ]
     - get: image-cryogenics-essentials
     - get: golang-release
       trigger: true
-    - get: backup-and-restore-sdk-release-main
+    - get: backup-and-restore-sdk-release
       params:
         branch: main
-  - task: bump-golang
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/deps-automation/bump-golang/task.yml
-    input_mapping:
-      release: backup-and-restore-sdk-release-main
-      vendored-package-release: golang-release
-    output_mapping:
-      release-with-updated-vendored-package: backup-and-restore-sdk-release-updated
+    - get: ruby-install
+  # Bump each package src directory
+  - task: bump-deps-azure-blobstore-backup-restore
+    file: golang-release/ci/tasks/shared/bump-deps.yml
     params:
-      VENDORED_PACKAGE_NAME: golang-1-linux
-      VENDOR_UPDATES_BRANCH: golang-vendor-updates
-      <<: *AWS_ACCESS
-  - task: update-go-directive-in-system-tests
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/tasks/bosh/update-go-directive/task.yml
-    params:
-      PATH_TO_GO_MODULE: src/system-tests
+      GIT_USER_NAME: *github_user
+      GIT_USER_EMAIL: *github_email
+      GO_PACKAGE: golang-1-linux
+      SOURCE_PATH: src/azure-blobstore-backup-restore
+      DESIRED_GO_MAJOR_MINOR: '1.23'
     input_mapping:
-      bosh-release-repo-with-vendored-golang: golang-release
-      golang-project-repo: backup-and-restore-sdk-release-updated
+      input_repo: backup-and-restore-sdk-release
     output_mapping:
-      golang-project-repo: backup-and-restore-sdk-release-updated
-  - task: update-go-directive-in-s3-blobstore-backup-restore
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/tasks/bosh/update-go-directive/task.yml
+      output_repo: backup-and-restore-sdk-release
+  - task: bump-deps-database-backup-restore
+    file: golang-release/ci/tasks/shared/bump-deps.yml
     params:
-      PATH_TO_GO_MODULE: src/s3-blobstore-backup-restore
+      GIT_USER_NAME: *github_user
+      GIT_USER_EMAIL: *github_email
+      GO_PACKAGE: golang-1-linux
+      SOURCE_PATH: src/database-backup-restore
+      DESIRED_GO_MAJOR_MINOR: '1.23'
     input_mapping:
-      bosh-release-repo-with-vendored-golang: golang-release
-      golang-project-repo: backup-and-restore-sdk-release-updated
+      input_repo: backup-and-restore-sdk-release
     output_mapping:
-      golang-project-repo: backup-and-restore-sdk-release-updated
-  - task: update-go-directive-in-database-backup-restore
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/tasks/bosh/update-go-directive/task.yml
+      output_repo: backup-and-restore-sdk-release
+  - task: bump-deps-gcs-blobstore-backup-restore
+    file: golang-release/ci/tasks/shared/bump-deps.yml
     params:
-      PATH_TO_GO_MODULE: src/database-backup-restore
+      GIT_USER_NAME: *github_user
+      GIT_USER_EMAIL: *github_email
+      GO_PACKAGE: golang-1-linux
+      SOURCE_PATH: src/gcs-blobstore-backup-restore
+      DESIRED_GO_MAJOR_MINOR: '1.23'
     input_mapping:
-      bosh-release-repo-with-vendored-golang: golang-release
-      golang-project-repo: backup-and-restore-sdk-release-updated
+      input_repo: backup-and-restore-sdk-release
     output_mapping:
-      golang-project-repo: backup-and-restore-sdk-release-updated
-  - task: update-go-directive-in-azure-blobstore-backup-restore
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/tasks/bosh/update-go-directive/task.yml
+      output_repo: backup-and-restore-sdk-release
+  - task: bump-deps-s3-blobstore-backup-restore
+    file: golang-release/ci/tasks/shared/bump-deps.yml
     params:
-      PATH_TO_GO_MODULE: src/azure-blobstore-backup-restore
+      GIT_USER_NAME: *github_user
+      GIT_USER_EMAIL: *github_email
+      GO_PACKAGE: golang-1-linux
+      SOURCE_PATH: src/s3-blobstore-backup-restore
+      DESIRED_GO_MAJOR_MINOR: '1.23'
     input_mapping:
-      bosh-release-repo-with-vendored-golang: golang-release
-      golang-project-repo: backup-and-restore-sdk-release-updated
+      input_repo: backup-and-restore-sdk-release
     output_mapping:
-      golang-project-repo: backup-and-restore-sdk-release-updated
-  - load_var: golang-release-version
-    file: golang-release/.git/describe_ref
+      output_repo: backup-and-restore-sdk-release
+  - task: bump-deps-system-tests
+    file: golang-release/ci/tasks/shared/bump-deps.yml
+    params:
+      GIT_USER_NAME: *github_user
+      GIT_USER_EMAIL: *github_email
+      GO_PACKAGE: golang-1-linux
+      SOURCE_PATH: src/system-tests
+      DESIRED_GO_MAJOR_MINOR: '1.23'
+    input_mapping:
+      input_repo: backup-and-restore-sdk-release
+    output_mapping:
+      output_repo: backup-and-restore-sdk-release
+  # Run unit tests
+  - in_parallel:
+    - task: databases-unit-tests
+      image: image-cryogenics-essentials
+      file: backup-and-restore-sdk-release/ci/tasks/database-unit-tests/task.yml
+      params:
+        GITHUB_SDK_KEY: *github_deploy_key_backup-and-restore-sdk-release
+      privileged: true
+    - task: s3-blobstore-unit-tests
+      image: image-cryogenics-essentials
+      file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
+      params:
+        PACKAGE_NAME: s3-blobstore-backup-restore
+        GINKGO_EXTRA_FLAGS: -p --skip-package s3bucket
+    - task: azure-blobstore-unit-tests
+      image: image-cryogenics-essentials
+      file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
+      params:
+        PACKAGE_NAME: azure-blobstore-backup-restore
+        GINKGO_EXTRA_FLAGS: -p --skip-package contract_test
+    - task: gcs-blobstore-unit-tests
+      image: image-cryogenics-essentials
+      file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
+      params:
+        PACKAGE_NAME: gcs-blobstore-backup-restore
+        GINKGO_EXTRA_FLAGS: -p --skip-package contract_test
+  # Push changes
   - put: backup-and-restore-sdk-release-write-only
     params:
-      repository: backup-and-restore-sdk-release-updated
-      branch: &golang-vendor-branch bump-golang-vendor-((.:golang-release-version))
-      force: true
-  - task: create-golang-vendor-pull-request
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
-    params:
-      GH_TOKEN: *git_token
-      BASE: main
-      BRANCH: *golang-vendor-branch
-      LABELS: ci,bump-golang
-      TITLE: Bump golang-1-linux to version ((.:golang-release-version))
-      MESSAGE: |
-        This is an automatically generated Pull Request from the Cryogenics CI Bot.
+      repository: backup-and-restore-sdk-release
+      rebase: true
+      branch: main
 
-        I have detected a new version of [golang-release](https://github.com/bosh-packages/golang-release) and automatically bumped
-        this package to benefit from the latest changes.
-
-        If this does not look right, please reach out to the mapbu-cryogenics team.
-    input_mapping:
-      source-repo: backup-and-restore-sdk-release-write-only
-
-- name: bump-ruby
+- name: bump-packages
   serial: true
   plan:
   - in_parallel:
-    - get: backup-and-restore-sdk-release-main
+    - get: backup-and-restore-sdk-release
     - get: bosh-ecosystem-docker-image
-    - get: ruby-image
-      trigger: true
-  - task: bump-ruby
-    image: ruby-image
-    file: backup-and-restore-sdk-release-main/ci/tasks/bump-ruby/task.yml
-    input_mapping:
-      backup-and-restore-sdk-release: backup-and-restore-sdk-release-main
-    params:
-      GIT_USERNAME: *github_user
-      GIT_EMAIL: *github_email
-  - load_var: new-ruby-version
-    file: backup-and-restore-sdk-release-main/.ruby-version
-  - put: backup-and-restore-sdk-release-write-only
-    params:
-      branch: &ruby-bump-branch bump-ruby-to-((.:new-ruby-version))
-      force: true
-      repository: bumped-repo
-  - task: create-pull-request
-    image: bosh-ecosystem-docker-image
-    file: backup-and-restore-sdk-release-main/ci/tasks/create-pr/task.yml
-    input_mapping:
-      backup-and-restore-sdk-release: backup-and-restore-sdk-release-write-only
-    params:
-      GH_TOKEN: *git_token
-      BASE: main
-      BRANCH: *ruby-bump-branch
-      LABELS: dependencies
-      TITLE: Bump Ruby to ((.:new-ruby-version))
-      MESSAGE: |
-        This is an automatically generated Pull Request from the Cryogenics CI Bot.
-        I have detected a new version of Ruby and automatically bumped this package to benefit from the latest changes.
-        If this does not look right, please reach out to the mapbu-cryogenics team.
-
-- name: bump-mariadb
-  serial: true
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-main
     - get: cryogenics-concourse-tasks
       tags: [ broadcom ]
     - get: image-cryogenics-essentials
+    - get: ruby-install
+    - get: ruby-image
+      trigger: true
     - get: mariadb-10-6-blob
       trigger: true
-  - load_var: mariadb-10-6-version
-    file: mariadb-10-6-blob/version
+    - get: ncurses-blob
+      trigger: true
+    - get: postgres-11-blob
+      trigger: true
+    - get: postgres-13-blob
+      trigger: true
+    - get: postgres-15-blob
+      trigger: true
+    - get: libpcre2-blob
+      trigger: true
+    - get: mysql-server-8-blob
+      trigger: true
+    - get: golang-release
+      trigger: true
+  # Go
+  - task: bump-golang-package
+    file: golang-release/ci/tasks/shared/bump-golang-package.yml
+    input_mapping:
+      input_repo: backup-and-restore-sdk-release
+    output_mapping:
+      output_repo: backup-and-restore-sdk-release
+    params:
+      GIT_USER_NAME: *github_user
+      GIT_USER_EMAIL: *github_email
+      PACKAGES: [ golang-1-linux ]
+      PRIVATE_YML: *release_private_yaml
+  # Ruby
+  - task: bump-ruby
+    image: ruby-image
+    file: backup-and-restore-sdk-release/ci/tasks/bump-ruby/task.yml
+    input_mapping:
+      backup-and-restore-sdk-release: backup-and-restore-sdk-release
+    output_mapping:
+      bumped-repo: backup-and-restore-sdk-release
+    params:
+      GIT_USERNAME: *github_user
+      GIT_EMAIL: *github_email
+  - task: sdk-template-unit-tests
+    image: bosh-ecosystem-docker-image
+    file: backup-and-restore-sdk-release/ci/tasks/sdk-template-unit-tests/task.yml
+  # MariaDB 10.6
   - task: bump-mariadb-10-6-blob
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
     input_mapping:
       distributed-package: mariadb-10-6-blob
-      bosh-release: backup-and-restore-sdk-release-main
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
     params:
       <<: *AWS_ACCESS
       GIT_USERNAME: *github_user
       GIT_EMAIL: *github_email
-      GIT_BRANCH: &bump-mariadb-10-6-branch bump-mariadb-10-6-to-((.:mariadb-10-6-version))
+      GIT_BRANCH: main
       BLOB_NAME: mariadb
       BLOB_EXTENSION: .tar.gz
       BLOB_DIRECTORY: mariadb/
       UPDATE_REFERENCES: only-variable-name:MARIADB_VERSION
-  - put: backup-and-restore-sdk-release-write-only
-    params:
-      repository: bosh-release-updated
-      force: true
-      branch: *bump-mariadb-10-6-branch
-  - task: create-pull-request
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
-    params:
-      GH_TOKEN: *git_token
-      BASE: main
-      BRANCH: *bump-mariadb-10-6-branch
-      LABELS: ci,bump-mariadb
-      TITLE: Bump mariadb-server to version ((.:mariadb-10-6-version))
-      MESSAGE: |
-        This is an automatically generated Pull Request from the Cryogenics CI Bot.
-
-        I have detected a new version of [mariadb-10-6](https://mirror.mariadb.org/) and automatically bumped
-
-        this package to benefit from the latest changes.
-    input_mapping:
-      source-repo: backup-and-restore-sdk-release-write-only
-
-- name: bump-ncurses
-  serial: true
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-main
-    - get: cryogenics-concourse-tasks
-      tags: [ broadcom ]
-    - get: image-cryogenics-essentials
-    - get: ncurses-blob
-      trigger: true
-  - load_var: ncurses-version
-    file: ncurses-blob/version
-    format: raw
-
+  # ncurses
   - task: bump-ncurses-blob
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
     input_mapping:
       distributed-package: ncurses-blob
-      bosh-release: backup-and-restore-sdk-release-main
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
     params:
       <<: *AWS_ACCESS
       GIT_USERNAME: *github_user
       GIT_EMAIL: *github_email
-      GIT_BRANCH: &bump-ncurses-branch bump-ncurses-to-((.:ncurses-version))
+      GIT_BRANCH: main
       BLOB_NAME: ncurses
       BLOB_EXTENSION: .tar.gz
       BLOB_DIRECTORY: ncurses/
       UPDATE_REFERENCES: only-variable-name:NCURSES_VERSION
-  - put: backup-and-restore-sdk-release-write-only
-    params:
-      repository: bosh-release-updated
-      force: true
-      branch: *bump-ncurses-branch
-  - task: create-pull-request
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
-    params:
-      GH_TOKEN: *git_token
-      BASE: main
-      BRANCH: *bump-ncurses-branch
-      LABELS: ci,bump-ncurses
-      TITLE: Bump ncurses-server to version ((.:ncurses-version))
-      MESSAGE: |
-        This is an automatically generated Pull Request from the Cryogenics CI Bot.
-
-        I have detected a new version of [ncurses](https://ftp.gnu.org/pub/gnu/ncurses/) and automatically bumped
-        this package to benefit from the latest changes.
-
-        If this does not look right, please reach out to the mapbu-cryogenics team.
-    input_mapping:
-      source-repo: backup-and-restore-sdk-release-write-only
-
-- name: bump-postgres-11
-  serial: true
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-main
-    - get: cryogenics-concourse-tasks
-      tags: [ broadcom ]
-    - get: image-cryogenics-essentials
-    - get: postgres-11-blob
-      trigger: true
-  - load_var: postgres-11-version
-    file: postgres-11-blob/version
-    format: raw
+  # Postgres 11
   - task: bump-postgres-11-blob
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
     input_mapping:
       distributed-package: postgres-11-blob
-      bosh-release: backup-and-restore-sdk-release-main
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
     params:
       <<: *AWS_ACCESS
       GIT_USERNAME: *github_user
       GIT_EMAIL: *github_email
-      GIT_BRANCH: &bump-postgres-11-branch bump-postgres-11-to-((.:postgres-11-version))
+      GIT_BRANCH: main
       BLOB_NAME: postgresql
       BLOB_EXTENSION: .tar.gz
       KEEP_BLOBS_FILTER: postgresql-13,postgresql-15
       BLOB_DIRECTORY: postgres/
       UPDATE_REFERENCES: only-variable-name:POSTGRES_VERSION
-  - put: backup-and-restore-sdk-release-write-only
-    params:
-      repository: bosh-release-updated
-      force: true
-      branch: *bump-postgres-11-branch
-  - task: create-pull-request
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
-    params:
-      GH_TOKEN: *git_token
-      BASE: main
-      BRANCH: *bump-postgres-11-branch
-      LABELS: ci,bump-postgres
-      TITLE: Bump postgres-11-server to version ((.:postgres-11-version))
-      MESSAGE: |
-        This is an automatically generated Pull Request from the Cryogenics CI Bot.
-
-        I have detected a new version of [postgres-11](https://ftp.postgresql.org/pub/source/) and automatically bumped
-        this package to benefit from the latest changes.
-
-        If this does not look right, please reach out to the mapbu-cryogenics team.
-    input_mapping:
-      source-repo: backup-and-restore-sdk-release-write-only
-
-- name: bump-postgres-13
-  serial: true
-  old_name: bump-postgres-13
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-main
-    - get: cryogenics-concourse-tasks
-      tags: [ broadcom ]
-    - get: image-cryogenics-essentials
-    - get: postgres-13-blob
-      trigger: true
-  - load_var: postgres-13-version
-    file: postgres-13-blob/version
-    format: raw
+  # Postgres 13
   - task: bump-postgres-13-blob
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
     input_mapping:
       distributed-package: postgres-13-blob
-      bosh-release: backup-and-restore-sdk-release-main
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
     params:
       <<: *AWS_ACCESS
       GIT_USERNAME: *github_user
       GIT_EMAIL: *github_email
-      GIT_BRANCH: &bump-postgres-13-branch bump-postgres-13-to-((.:postgres-13-version))
+      GIT_BRANCH: main
       BLOB_NAME: postgresql
       BLOB_EXTENSION: .tar.gz
       KEEP_BLOBS_FILTER: postgresql-11,postgresql-15
       BLOB_DIRECTORY: postgres/
       UPDATE_REFERENCES: only-variable-name:POSTGRES13_VERSION
-  - put: backup-and-restore-sdk-release-write-only
-    params:
-      repository: bosh-release-updated
-      force: true
-      branch: *bump-postgres-13-branch
-  - task: create-pull-request
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
-    params:
-      GH_TOKEN: *git_token
-      BASE: main
-      BRANCH: *bump-postgres-13-branch
-      LABELS: ci,bump-postgres
-      TITLE: Bump postgres-13-server to version ((.:postgres-13-version))
-      MESSAGE: |
-        This is an automatically generated Pull Request from the Cryogenics CI Bot.
-
-        I have detected a new version of [postgres-13](https://ftp.postgresql.org/pub/source/) and automatically bumped
-        this package to benefit from the latest changes.
-
-        If this does not look right, please reach out to the mapbu-cryogenics team.
-    input_mapping:
-      source-repo: backup-and-restore-sdk-release-write-only
-
-- name: bump-postgres-15
-  old_name: bump-postgres-15
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-main
-    - get: cryogenics-concourse-tasks
-      tags: [ broadcom ]
-    - get: image-cryogenics-essentials
-    - get: postgres-15-blob
-      trigger: true
-  - load_var: postgres-15-version
-    file: postgres-15-blob/version
-    format: raw
+  # Postgres 15
   - task: bump-postgres-15-blob
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
     input_mapping:
       distributed-package: postgres-15-blob
-      bosh-release: backup-and-restore-sdk-release-main
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
     params:
       <<: *AWS_ACCESS
       GIT_USERNAME: *github_user
       GIT_EMAIL: *github_email
-      GIT_BRANCH: &bump-postgres-15-branch bump-postgres-15-to-((.:postgres-15-version))
+      GIT_BRANCH: main
       BLOB_NAME: postgresql
       BLOB_EXTENSION: .tar.gz
       KEEP_BLOBS_FILTER: postgresql-11,postgresql-13
       BLOB_DIRECTORY: postgres/
       UPDATE_REFERENCES: only-variable-name:POSTGRES15_VERSION
-  - put: backup-and-restore-sdk-release-write-only
-    params:
-      repository: bosh-release-updated
-      force: true
-      branch: *bump-postgres-15-branch
-  - task: create-pull-request
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
-    params:
-      GH_TOKEN: *git_token
-      BASE: main
-      BRANCH: *bump-postgres-15-branch
-      LABELS: ci,bump-postgres
-      TITLE: Bump postgres-15-server to version ((.:postgres-15-version))
-      MESSAGE: |
-        This is an automatically generated Pull Request from the Cryogenics CI Bot.
-
-        I have detected a new version of [postgres-15](https://ftp.postgresql.org/pub/source/) and automatically bumped
-        this package to benefit from the latest changes.
-
-        If this does not look right, please reach out to the mapbu-cryogenics team.
-    input_mapping:
-      source-repo: backup-and-restore-sdk-release-write-only
-
-- name: bump-libpcre2
-  serial: true
-  old_name: bump-libpcre2
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-main
-    - get: cryogenics-concourse-tasks
-      tags: [ broadcom ]
-    - get: image-cryogenics-essentials
-    - get: libpcre2-blob
-      trigger: true
-  - load_var: libpcre2-version
-    file: libpcre2-blob/version
-    format: raw
+  # PCRE2
   - task: bump-libpcre2-blob
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
     input_mapping:
       distributed-package: libpcre2-blob
-      bosh-release: backup-and-restore-sdk-release-main
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
     params:
       <<: *AWS_ACCESS
       GIT_USERNAME: *github_user
       GIT_EMAIL: *github_email
-      GIT_BRANCH: &bump-libpcre2-branch bump-libpcre2-to-((.:libpcre2-version))
+      GIT_BRANCH: main
       BLOB_NAME: pcre2
       BLOB_EXTENSION: .tar.gz
       BLOB_DIRECTORY: libpcre2/
       UPDATE_REFERENCES: only-variable-name:LIBPCRE2_VERSION
-  - put: backup-and-restore-sdk-release-write-only
-    params:
-      repository: bosh-release-updated
-      force: true
-      branch: *bump-libpcre2-branch
-  - task: create-pull-request
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
-    params:
-      GH_TOKEN: *git_token
-      BASE: main
-      BRANCH: *bump-libpcre2-branch
-      LABELS: ci,bump-libpcre2
-      TITLE: Bump libpcre2-server to version ((.:libpcre2-version))
-      MESSAGE: |
-        This is an automatically generated Pull Request from the Cryogenics CI Bot.
-        I have detected a new version of [libpcre2](https://github.com/PCRE2Project/pcre2/releases) and automatically bumped
-        this package to benefit from the latest changes.
-        If this does not look right, please reach out to the mapbu-cryogenics team.
-    input_mapping:
-      source-repo: backup-and-restore-sdk-release-write-only
-
-- name: bump-mysql-8
-  serial: true
-  old_name: bump-mysql
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-main
-    - get: cryogenics-concourse-tasks
-      tags: [ broadcom ]
-    - get: image-cryogenics-essentials
-    - get: mysql-server-8-blob
-      trigger: true
-  - load_var: mysql-server-8-version
-    file: mysql-server-8-blob/version
-    format: raw
-
+  # MySQL 8
   - task: bump-mysql-8-blob
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
     input_mapping:
       distributed-package: mysql-server-8-blob
-      bosh-release: backup-and-restore-sdk-release-main
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
     params:
       <<: *AWS_ACCESS
       GIT_USERNAME: *github_user
       GIT_EMAIL: *github_email
-      GIT_BRANCH: &bump-mysql-server-8-branch bump-mysql-server-8-to-((.:mysql-server-8-version))
+      GIT_BRANCH: main
       BLOB_NAME: mysql
       KEEP_BLOBS_FILTER: mysql-5
       BLOB_EXTENSION: linux-glibc2.17-x86_64-minimal.tar.xz
       BLOB_DIRECTORY: mysql/
       UPDATE_REFERENCES: only-variable-name:MYSQL80_VERSION
+  # Push changes
   - put: backup-and-restore-sdk-release-write-only
     params:
-      repository: bosh-release-updated
-      force: true
-      branch: *bump-mysql-server-8-branch
-  - task: create-pull-request
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/github-automation/create-pr/task.yml
-    params:
-      GH_TOKEN: *git_token
-      BASE: main
-      BRANCH: *bump-mysql-server-8-branch
-      LABELS: ci,bump-mysql
-      TITLE: Bump mysql-server to version ((.:mysql-server-8-version))
-      MESSAGE: |
-        This is an automatically generated Pull Request from the Cryogenics CI Bot.
-
-        I have detected a new version of [mysql-8](https://dev.mysql.com/downloads/mysql/8.0.html) and automatically bumped
-        this package to benefit from the latest changes.
-
-        If this does not look right, please reach out to the mapbu-cryogenics team.
-    input_mapping:
-      source-repo: backup-and-restore-sdk-release-write-only
+      repository: backup-and-restore-sdk-release
+      rebase: true
+      branch: main
 
 
 - name: manual-bump-bbr-sdk-patch
