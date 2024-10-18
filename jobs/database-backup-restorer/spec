@@ -23,7 +23,6 @@ templates:
 
 packages:
 - database-backup-restorer
-- database-backup-restorer-postgres-11
 - database-backup-restorer-postgres-13
 - database-backup-restorer-postgres-15
 - database-backup-restorer-mariadb

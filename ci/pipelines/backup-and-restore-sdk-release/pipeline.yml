@@ -83,7 +83,6 @@ secrets:
 
 #! The following external DB creds were needed on 2023-07-03 for testing the BBR SDK with some external databases.
 - &external_db_passwords
-  postgres_11_password: &postgres_11_password ((rds_postgres_11_password))
   postgres_13_password: &postgres_13_password ((rds_postgres_13_password))
   postgres_15_password: &postgres_15_password ((rds_postgres_15_password))
   mariadb_10_password: &mariadb_10_password ((rds_mariadb_10_password))
@@ -122,16 +121,9 @@ secrets:
 - &minio_access_key ((minio_user.username))
 - &minio_secret_key ((minio_user.password))
 
-- &postgres_common
-  POSTGRES_PORT: 5432
-  POSTGRES_USERNAME: &postgres-username test_user
-  POSTGRES_PASSWORD: &postgres-password postgres_password
 - &pg_deployment_common
   db_username: *postgres-username
   db_password: *postgres-password
-
-- &postgres-11-deployment-name postgres-11-dev
-- &postgres-11-host 10.0.255.13
 
 - &postgres-13-deployment-name postgres-13-dev
 - &postgres-13-host 10.0.255.14
@@ -264,11 +256,6 @@ resources:
   source:
     url: ftp://ftp.gnu.org/pub/gnu/ncurses/
     version_regex: "ncurses-(?P<version>[0-9]*.[0-9]*).tar.gz$"
-- name: postgres-11-blob
-  type: ftp
-  source:
-    url: https://ftp.postgresql.org/pub/source/v11.*/
-    version_regex: postgresql-(?P<version>[0-9]*.[0-9]*).tar.gz$
 - name: postgres-13-blob
   type: ftp
   source:
@@ -479,12 +466,6 @@ resources:
   type: bosh-deployment
   source:
     deployment: *mysql-5-7-deployment-name
-    skip_check: true
-
-- name: postgres-11-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *postgres-11-deployment-name
     skip_check: true
 
 - name: postgres-13-dev-deployment
@@ -836,23 +817,6 @@ jobs:
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
   - in_parallel:
-    - put: postgres-11-dev-deployment
-      params:
-        manifest: backup-and-restore-sdk-release/ci/manifests/postgres-11.yml
-        stemcells:
-        - jammy-stemcell/*.tgz
-        vars:
-          deployment-name: *postgres-11-deployment-name
-          db_host: *postgres-11-host
-          <<: *pg_deployment_common
-          availability_zone: z1
-          vm_extensions: ["cf-tcp-router-network-properties"]
-        ops_files:
-        - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
-        source_file: source-file/source-file.yml
-        releases:
-        - postgres-release-v37/*.tgz
-        - bpm-release/*.tgz
     - put: postgres-13-dev-deployment
       params:
         manifest: backup-and-restore-sdk-release/ci/manifests/postgres-13.yml
@@ -1008,14 +972,6 @@ jobs:
   - load_var: pooled-env
     file: bosh-env/metadata.yml
   - in_parallel:
-    - task: postgres-system-tests-11
-      image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
-      params:
-        POSTGRES_HOSTNAME: *postgres-11-host
-        TEST_SUITE_NAME: postgresql
-        <<: *bosh-smiths-creds
-        <<: *postgres_common
     - task: mysql-8-0-system-tests
       image: image-cryogenics-essentials
       file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
@@ -1294,31 +1250,6 @@ jobs:
         POSTGRES_PASSWORD: *postgres_15_password
         TEST_SSL_USER_REQUIRES_SSL: false
         TEST_SUITE_NAME: postgresql_tls
-    - do:
-      - task: postgres-system-tests-11
-        image: image-cryogenics-essentials
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
-        input_mapping:
-          terraform-state: terraform
-        params:
-          <<: *bosh-smiths-creds
-          DB_PREFIX: postgres_11
-          DB_TYPE: postgres
-          POSTGRES_PASSWORD: *postgres_11_password
-          TEST_SUITE_NAME: postgresql
-      - task: postgres-tls-system-tests-11
-        image: image-cryogenics-essentials
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
-        input_mapping:
-          terraform-state: terraform
-        params:
-          <<: *bosh-smiths-creds
-          DB_PREFIX: postgres_11
-          DB_TYPE: postgres
-          POSTGRES_CA_CERT_PATH: rds-combined-ca-bundle.pem
-          POSTGRES_PASSWORD: *postgres_11_password
-          TEST_SSL_USER_REQUIRES_SSL: false
-          TEST_SUITE_NAME: postgresql_tls
     - do:
       - task: postgres-system-tests-13
         image: image-cryogenics-essentials
@@ -1677,8 +1608,6 @@ jobs:
       trigger: true
     - get: ncurses-blob
       trigger: true
-    - get: postgres-11-blob
-      trigger: true
     - get: postgres-13-blob
       trigger: true
     - get: postgres-15-blob
@@ -1751,25 +1680,6 @@ jobs:
       BLOB_EXTENSION: .tar.gz
       BLOB_DIRECTORY: ncurses/
       UPDATE_REFERENCES: only-variable-name:NCURSES_VERSION
-  # Postgres 11
-  - task: bump-postgres-11-blob
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
-    input_mapping:
-      distributed-package: postgres-11-blob
-      bosh-release: backup-and-restore-sdk-release
-    output_mapping:
-      bosh-release-updated: backup-and-restore-sdk-release
-    params:
-      <<: *AWS_ACCESS
-      GIT_USERNAME: *github_user
-      GIT_EMAIL: *github_email
-      GIT_BRANCH: main
-      BLOB_NAME: postgresql
-      BLOB_EXTENSION: .tar.gz
-      KEEP_BLOBS_FILTER: postgresql-13,postgresql-15
-      BLOB_DIRECTORY: postgres/
-      UPDATE_REFERENCES: only-variable-name:POSTGRES_VERSION
   # Postgres 13
   - task: bump-postgres-13-blob
     image: image-cryogenics-essentials
@@ -1786,7 +1696,7 @@ jobs:
       GIT_BRANCH: main
       BLOB_NAME: postgresql
       BLOB_EXTENSION: .tar.gz
-      KEEP_BLOBS_FILTER: postgresql-11,postgresql-15
+      KEEP_BLOBS_FILTER: postgresql-15
       BLOB_DIRECTORY: postgres/
       UPDATE_REFERENCES: only-variable-name:POSTGRES13_VERSION
   # Postgres 15
@@ -1805,7 +1715,7 @@ jobs:
       GIT_BRANCH: main
       BLOB_NAME: postgresql
       BLOB_EXTENSION: .tar.gz
-      KEEP_BLOBS_FILTER: postgresql-11,postgresql-13
+      KEEP_BLOBS_FILTER: postgresql-13
       BLOB_DIRECTORY: postgres/
       UPDATE_REFERENCES: only-variable-name:POSTGRES15_VERSION
   # PCRE2

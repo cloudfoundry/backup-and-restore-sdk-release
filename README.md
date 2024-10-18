@@ -19,9 +19,7 @@ Backup and Restore SDK Release status [![Build SDK Release Badge](https://ci.cry
 |:---------|:-------------------------|
 | MariaDB  | 10.2.x            |
 | MySQL    | 5.7.x, 8.0.x      |
-| Postgres | 9.6.x, 10.x, 11.x |
-
-The SDK can use used against Postgres 9.4, but is not supported upstream by the Postgres community.
+| Postgres | 13.x, 15.x        |
 
 CI Status:
 * GCP: [![GCP Test Badge](https://ci.cryo.cf-app.com/api/v1/teams/bosh-backup-restore/pipelines/backup-and-restore-sdk-release/jobs/system-tests-external-dbs-gcp/badge)](https://ci.cryo.cf-app.com/teams/bosh-backup-restore/pipelines/backup-and-restore-sdk-release/jobs/system-tests-external-dbs-gcp/)
