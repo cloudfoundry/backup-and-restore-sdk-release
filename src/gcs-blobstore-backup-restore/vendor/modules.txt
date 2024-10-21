@@ -141,7 +141,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20241017200806-017d972448fc
+# github.com/google/pprof v0.0.0-20241021161924-4cf4322d492d
 ## explicit; go 1.22
 github.com/google/pprof/profile
 # github.com/google/s2a-go v0.1.8
@@ -571,7 +571,7 @@ google.golang.org/grpc/xds/internal/xdsclient/xdslbregistry
 google.golang.org/grpc/xds/internal/xdsclient/xdslbregistry/converter
 google.golang.org/grpc/xds/internal/xdsclient/xdsresource
 google.golang.org/grpc/xds/internal/xdsclient/xdsresource/version
-# google.golang.org/grpc/stats/opentelemetry v0.0.0-20241018153737-98959d9a4904
+# google.golang.org/grpc/stats/opentelemetry v0.0.0-20241021183144-14e2a206ca0a
 ## explicit; go 1.22.7
 google.golang.org/grpc/stats/opentelemetry
 google.golang.org/grpc/stats/opentelemetry/internal
