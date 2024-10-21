@@ -15,6 +15,11 @@ echo "$NEW_RUBY_VERSION" > .ruby-version
 bundle update --ruby
 bundle update --bundler
 
+if [ -z "$(git status .ruby-version Gemfile.lock --short)" ]; then
+  echo "Nothing to update"
+  exit 0
+fi
+
 git config user.name "${GIT_USERNAME}"
 git config user.email "${GIT_EMAIL}"
 
