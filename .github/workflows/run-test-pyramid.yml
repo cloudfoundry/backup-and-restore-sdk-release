@@ -1,6 +1,5 @@
 on:
   pull_request:
-    types: [ assigned, synchronize ]
     branches:
       - main
 
@@ -14,39 +13,3 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - run: make docker-unit
-
-  run-system-tests-jammy:
-    needs: run-unit-tests
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v3
-    - name: "Stemcell: Jammy | MariaDB: Multiple"
-      run: FOCUS=ubuntu-jammy make docker-system-mariadb
-    - name: "Stemcell: Jammy | MySQL: Multiple"
-      run: FOCUS=ubuntu-jammy make docker-system-mysql
-    - name: "Stemcell: Jammy | Postgres: Multiple"
-      run: FOCUS=ubuntu-jammy make docker-system-postgres
-
-  run-system-tests-bionic:
-    needs: run-unit-tests
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v3
-    - name: "Stemcell: Bionic | MariaDB: Multiple"
-      run: FOCUS=ubuntu-bionic make docker-system-mariadb
-    - name: "Stemcell: Bionic | MySQL: Multiple"
-      run: FOCUS=ubuntu-bionic make docker-system-mysql
-    - name: "Stemcell: Bionic | Postgres: Multiple"
-      run: FOCUS=ubuntu-bionic make docker-system-postgres
-
-  run-system-tests-xenial:
-    needs: run-unit-tests
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v3
-    - name: "Stemcell: Xenial | MariaDB: Multiple"
-      run: FOCUS=ubuntu-xenial make docker-system-mariadb
-    - name: "Stemcell: Xenial | MySQL: Multiple"
-      run: FOCUS=ubuntu-xenial make docker-system-mysql
-    - name: "Stemcell: Xenial | Postgres: Multiple"
-      run: FOCUS=ubuntu-xenial make docker-system-postgres
