@@ -1,7 +1,3 @@
-variable "postgres_11_password" {
-    type = string
-}
-
 variable "postgres_13_password" {
     type = string
 }
@@ -29,19 +25,6 @@ variable "aws_assumed_role_arn" {
 
 variable "aws_region" {
     type = string
-}
-
-resource "aws_db_instance" "backup_and_restore_postgres_11" {
-  identifier           = "postgres-11-system-tests"
-  allocated_storage    = 20
-  storage_type         = "gp2"
-  engine               = "postgres"
-  engine_version       = "11"
-  instance_class       = "db.t3.micro"
-  username             = "root"
-  password             = var.postgres_11_password
-  publicly_accessible  = true
-  skip_final_snapshot  = true
 }
 
 resource "aws_db_instance" "backup_and_restore_postgres_13" {
@@ -83,9 +66,6 @@ resource "aws_db_instance" "backup_and_restore_mariadb_10_6" {
   skip_final_snapshot  = true
 }
 
-output "postgres_11_address" {
-  value = aws_db_instance.backup_and_restore_postgres_11.address
-}
 output "postgres_13_address" {
   value = aws_db_instance.backup_and_restore_postgres_13.address
 }
