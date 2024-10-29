@@ -117,8 +117,8 @@ secrets:
 - &minio_secret_key ((minio_user.password))
 
 - &pg_deployment_common
-  db_username: *postgres-username
-  db_password: *postgres-password
+  db_username: test_user
+  db_password: postgres_password
 
 - &postgres-13-deployment-name postgres-13-dev
 - &postgres-13-host 10.0.255.14
