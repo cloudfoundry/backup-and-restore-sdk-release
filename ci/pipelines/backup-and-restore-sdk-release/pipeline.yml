@@ -1,9 +1,4 @@
 ---
-#! This pipeline is set manually
-#!
-#!  To set the pipeline, run:
-#!    fly -t bosh-ecosystem set-pipeline -p backup-and-restore-sdk-release -c ci/pipelines/backup-and-restore-sdk-release/pipeline.yml
-
 #! ************************************
 #! Secrets we need to run this pipeline
 #! ************************************
