@@ -715,6 +715,12 @@ jobs:
         deployment-name: s3-backuper
         s3-bucket-name: iam-instance-role-test
         s3-region: *aws-region
+    on_failure:
+      put: s3-backuper-with-iam-instance-profile-deployment
+      params:
+        delete:
+          enabled: true
+          force: true
 
 - name: system-tests-blobstore-backuper-with-iam-instance-profile
   serial: true
