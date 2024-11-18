@@ -62,7 +62,7 @@ github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1
 # github.com/cespare/xxhash/v2 v2.3.0
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
-# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.71
+# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.72
 ## explicit; go 1.22.0
 github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor
 # github.com/cncf/xds/go v0.0.0-20240905190251-b4127c9b8d78
@@ -212,7 +212,7 @@ github.com/onsi/ginkgo/v2/internal/parallel_support
 github.com/onsi/ginkgo/v2/internal/testingtproxy
 github.com/onsi/ginkgo/v2/reporters
 github.com/onsi/ginkgo/v2/types
-# github.com/onsi/gomega v1.34.2
+# github.com/onsi/gomega v1.35.1
 ## explicit; go 1.22
 github.com/onsi/gomega
 github.com/onsi/gomega/format

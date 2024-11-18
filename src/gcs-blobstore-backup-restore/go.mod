@@ -4,10 +4,10 @@ go 1.23.0
 
 require (
 	cloud.google.com/go/storage v1.47.0
-	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.71
+	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.72
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.10.0
 	github.com/onsi/ginkgo/v2 v2.21.0
-	github.com/onsi/gomega v1.34.2
+	github.com/onsi/gomega v1.35.1
 	golang.org/x/net v0.31.0
 	golang.org/x/oauth2 v0.24.0
 	google.golang.org/api v0.206.0
