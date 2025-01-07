@@ -70,8 +70,8 @@ secrets:
 - &github_deploy_key_backup-and-restore-sdk-release ((github_deploy_key_backup-and-restore-sdk-release.private_key))
 
 #! github email and user used for creating commits
-- &github_email tas-bosh-ecosystem.pdl@broadcom.com
-- &github_user "Bosh Ecosystem"
+- &github_email bots@cloudfoundry.org
+- &github_user CI Bot
 
 #! gchat webhook is used to send us ci status messages. It was created in gchat space settings after logging in with personal creds
 - &gchat_webhook ((gchat-webhook-dap-bosh-ecosystem-dev))
@@ -138,43 +138,6 @@ secrets:
 #! Access token for our service account user in Github Enterprise
 - &ghe_svc_account_personal_access_token ((svc-bosh-ecosystem-ghe-personal-access-token))
 
-groups:
-- name: test
-  jobs:
-  - lint-pipeline
-  - unit-tests
-  - check-for-cves
-  - contract-tests
-  - build-rc
-  - deploy-s3-blobstore-sdk-with-iam-instance-profile
-  - system-tests-blobstore-backuper-with-iam-instance-profile
-  - claim-cf-deployment
-  - deploy-s3-blobstore-sdk
-  - deploy-database-sdk
-  - deploy-mysql
-  - deploy-postgres
-  - deploy-gcs-blobstore-sdk
-  - deploy-azure-blobstore-sdk
-  - system-tests-external-dbs-rds
-  - system-tests-blobstore-backuper
-  - unclaim-cf-deployment
-  - claim-cf-deployment-airgapped
-  - deploy-database-sdk-on-airgapped-env
-  - system-tests-internal-dbs
-  - unclaim-cf-deployment-airgapped
-  - release-fan-in
-
-  - bump-golang-deps
-  - bump-packages
-
-- name: release
-  jobs:
-  - check-for-changes
-  - create-final-patch
-  - manual-bump-bbr-sdk-major
-  - manual-bump-bbr-sdk-patch
-  - manual-bump-bbr-sdk-minor
-
 resource_types:
 - name: ftp
   type: registry-image
@@ -221,12 +184,6 @@ resource_types:
     password: *docker_password
     tag: 0.0.1-SNAPSHOT
 
-- name: http
-  type: registry-image
-  source:
-    repository: aequitas/http-resource
-    username: ((docker.username))
-    password: ((docker.password))
 resources:
 - name: bosh-ecosystem-docker-image
   type: registry-image
@@ -238,6 +195,18 @@ resources:
   type: registry-image
   source:
     repository: ruby
+    username: ((docker.username))
+    password: ((docker.password))
+- name: bosh-security-scanner-registry-image
+  type: registry-image
+  source:
+    repository: bosh/security-scanner
+    username: ((docker.username))
+    password: ((docker.password))
+- name: bosh-cli-registry-image
+  type: registry-image
+  source:
+    repository: bosh/cli
     username: ((docker.username))
     password: ((docker.password))
 
@@ -376,12 +345,20 @@ resources:
     key: current-dev-version
     <<: *aws_credentials_s3
 
-- name: release
+- name: dev-release
   type: s3
   icon: database
   source:
     bucket: backup-and-restore-sdk-releases
-    regexp: backup-and-restore-sdk-(.*).tgz
+    versioned_file: dev-release.tgz
+    region_name: *aws-region
+    <<: *aws_credentials_s3
+
+- name: release-notes
+  type: s3
+  source:
+    bucket: backup-and-restore-sdk-release-blobs
+    versioned_file: release-notes.md
     region_name: *aws-region
     <<: *aws_credentials_s3
 
@@ -418,6 +395,12 @@ resources:
     uri: git@github.com:cloudfoundry/backup-and-restore-sdk-release.git
     private_key: *github_deploy_key_backup-and-restore-sdk-release
     branch: main
+
+- name: bosh-shared-ci
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/bosh-shared-ci.git
+    private_key: ((github_deploy_key_bosh-shared-ci.private_key))
 
 - name: every-week
   type: time
@@ -678,17 +661,16 @@ jobs:
     - get: backup-and-restore-sdk-release
       passed: [contract-tests]
       trigger: true
-    - get: image-cryogenics-essentials
-    - get: version
-      params: {pre: rc}
+    - get: bosh-shared-ci
+    - get: bosh-cli-registry-image
   - task: create-dev-release
-    image: image-cryogenics-essentials
-    file: backup-and-restore-sdk-release/ci/tasks/create-dev-release/task.yml
-  - put: release
+    image: bosh-cli-registry-image
+    file: bosh-shared-ci/tasks/release/create-dev-release.yml
+    input_mapping:
+      release_repo: backup-and-restore-sdk-release
+  - put: dev-release
     params:
-      file: backup-and-restore-sdk-release-build/backup-and-restore-sdk-*.tgz
-  - put: version
-    params: {file: version/number}
+      file: release_tarball/release.tgz
 
 - name: deploy-s3-blobstore-sdk-with-iam-instance-profile
   serial: true
@@ -699,7 +681,7 @@ jobs:
       passed: [build-rc]
     - get: release-tarball
       trigger: true
-      resource: release
+      resource: dev-release
       passed: [build-rc]
     - get: jammy-stemcell-aws
     - get: director-with-iam-profile
@@ -710,7 +692,7 @@ jobs:
       stemcells:
       - jammy-stemcell-aws/*.tgz
       releases:
-      - release-tarball/backup-and-restore-sdk-*.tgz
+      - release-tarball/*.tgz
       vars:
         deployment-name: s3-backuper
         s3-bucket-name: iam-instance-role-test
@@ -770,7 +752,7 @@ jobs:
       passed: [build-rc]
     - get: cryogenics-concourse-tasks
       tags: [ broadcom ]
-    - get: release
+    - get: dev-release
       trigger: true
       passed: [build-rc]
     - get: image-cryogenics-essentials
@@ -803,7 +785,7 @@ jobs:
       passed:
       - claim-cf-deployment-airgapped
     - get: release-tarball
-      resource: release
+      resource: dev-release
       trigger: true
       passed:
       - claim-cf-deployment-airgapped
@@ -848,7 +830,7 @@ jobs:
       - claim-cf-deployment-airgapped
     - get: release-tarball
       trigger: true
-      resource: release
+      resource: dev-release
       passed:
       - claim-cf-deployment-airgapped
     - get: jammy-stemcell
@@ -915,7 +897,7 @@ jobs:
         - claim-cf-deployment-airgapped
     - get: release-tarball
       trigger: true
-      resource: release
+      resource: dev-release
       passed:
         - claim-cf-deployment-airgapped
     - get: jammy-stemcell
@@ -1008,7 +990,7 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release
       passed: [build-rc]
-    - get: release
+    - get: dev-release
       trigger: true
       passed: [build-rc]
     - get: image-cryogenics-essentials
@@ -1035,7 +1017,7 @@ jobs:
       - claim-cf-deployment
     - get: release-tarball
       trigger: true
-      resource: release
+      resource: dev-release
       passed:
       - claim-cf-deployment
     - get: jammy-stemcell
@@ -1055,7 +1037,7 @@ jobs:
       stemcells:
       - jammy-stemcell/*.tgz
       releases:
-      - release-tarball/backup-and-restore-sdk-*.tgz
+      - release-tarball/*.tgz
       vars:
         deployment-name: database-backup-restorer
         availability_zone: z1
@@ -1073,7 +1055,7 @@ jobs:
       - claim-cf-deployment
     - get: release-tarball
       trigger: true
-      resource: release
+      resource: dev-release
       passed:
       - claim-cf-deployment
     - get: jammy-stemcell
@@ -1093,7 +1075,7 @@ jobs:
       stemcells:
       - jammy-stemcell/*.tgz
       releases:
-      - release-tarball/backup-and-restore-sdk-*.tgz
+      - release-tarball/*.tgz
       vars:
         deployment-name: s3-backuper
         availability_zone: z1
@@ -1134,7 +1116,7 @@ jobs:
       - claim-cf-deployment
     - get: release-tarball
       trigger: true
-      resource: release
+      resource: dev-release
       passed:
       - claim-cf-deployment
     - get: jammy-stemcell
@@ -1154,7 +1136,7 @@ jobs:
       stemcells:
       - jammy-stemcell/*.tgz
       releases:
-      - release-tarball/backup-and-restore-sdk-*.tgz
+      - release-tarball/*.tgz
       vars:
         deployment-name: azure-backuper
         azure-container-name: bbr-system-test-azure-container
@@ -1174,7 +1156,7 @@ jobs:
       - claim-cf-deployment
     - get: release-tarball
       trigger: true
-      resource: release
+      resource: dev-release
       passed:
       - claim-cf-deployment
     - get: jammy-stemcell
@@ -1194,7 +1176,7 @@ jobs:
       stemcells:
       - jammy-stemcell/*.tgz
       releases:
-      - release-tarball/backup-and-restore-sdk-*.tgz
+      - release-tarball/*.tgz
       vars:
         deployment-name: gcs-backuper
         gcp-service-account-key: *service_accounts_gcp_cf_backup_and_restore_owner_role_json_key
@@ -1399,80 +1381,153 @@ jobs:
     - system-tests-blobstore-backuper-with-iam-instance-profile
 
 # Release
-- name: check-for-changes
+- name: release-new-patch
+  serial_groups:
+    - version
   plan:
-  - in_parallel:
-    - get: every-week
-      trigger: true
-    - get: backup-and-restore-sdk-release
-      passed:
-      - release-fan-in
-    - get: version
-
-- name: create-final-patch
-  serial: true
-  serial_groups: [version]
-  ensure:
-    do:
     - put: version
       params:
         bump: patch
+
+- name: release-new-minor
+  serial_groups:
+    - version
+  plan:
+    - put: version
+      params:
+        bump: minor
+
+- name: release-new-major
+  serial_groups:
+    - version
+  plan:
+    - put: version
+      params:
+        bump: major
+
+- name: automatically-release-new-patch
+  serial_groups: [version]
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release
-      passed: [check-for-changes]
+      passed:
+      - release-fan-in
       trigger: true
+    - get: current-version
+      resource: version
+    - get: patched-version
+      resource: version
+      params:
+        bump: patch
+    - get: bosh-shared-ci
+    - get: bosh-security-scanner-registry-image
+  - try:
+      task: check-for-patched-cves
+      file: bosh-shared-ci/tasks/release/check-for-patched-cves.yml
+      image: bosh-security-scanner-registry-image
+      input_mapping:
+        input_repo: backup-and-restore-sdk-release
+        version: current-version
+      params:
+        SEVERITY: CRITICAL,HIGH
+      on_success:
+        do:
+          - put: release-notes
+            params:
+              file: release-notes/release-notes.md
+          - put: version
+            params:
+              file: patched-version/version
+  - task: ensure-cve-checker-succeeded
+    file: bosh-shared-ci/tasks/release/ensure-task-succeeded.yml
+    image: bosh-security-scanner-registry-image
+    input_mapping:
+      task-output-folder: patched_cves
+  - try:
+      task: check-for-updated-vendored-packages
+      file: bosh-shared-ci/tasks/release/check-for-updated-vendored-packages.yml
+      image: bosh-security-scanner-registry-image
+      input_mapping:
+        input_repo: backup-and-restore-sdk-release
+        version: current-version
+      params:
+        PACKAGES: [ golang-1-linux ]
+      on_success:
+        do:
+          - put: release-notes
+            params:
+              file: release-notes/release-notes.md
+          - put: version
+            params:
+              file: patched-version/version
+  - task: ensure-update-package-check-succeeded
+    file: bosh-shared-ci/tasks/release/ensure-task-succeeded.yml
+    image: bosh-security-scanner-registry-image
+    input_mapping:
+      task-output-folder: package-updates
+  - try:
+      task: check-for-updated-blobs
+      file: bosh-shared-ci/tasks/release/check-for-updated-blobs.yml
+      image: bosh-security-scanner-registry-image
+      input_mapping:
+        input_repo: backup-and-restore-sdk-release
+        version: current-version
+      params:
+        BLOBS:
+          - mariadb
+          - mysql-5
+          - mysql-8
+          - postgresql-13
+          - postgresql-15
+          - ncurses
+          - pcre2
+      on_success:
+        do:
+          - put: release-notes
+            params:
+              file: release-notes/release-notes.md
+          - put: version
+            params:
+              file: patched-version/version
+  - task: ensure-blob-update-checker-succeeded
+    file: bosh-shared-ci/tasks/release/ensure-task-succeeded.yml
+    image: bosh-security-scanner-registry-image
+    input_mapping:
+      task-output-folder: blob-updates
+
+- name: create-final-release
+  disable_manual_trigger: true
+  serial_groups: [version]
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release
+      passed: [release-fan-in]
     - get: version
-      passed: [check-for-changes]
-      params: {bump: final}
-    - get: cryogenics-concourse-tasks
-      tags: [ broadcom ]
-    - get: image-cryogenics-essentials
+      trigger: true
+    - get: release-notes
+    - get: bosh-shared-ci
+    - get: bosh-cli-registry-image
   - task: create-final-release
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/bosh-tasks/create-release/task.yml
+    image: bosh-cli-registry-image
+    file: bosh-shared-ci/tasks/release/create-final-release.yml
     input_mapping:
-      release-repo: backup-and-restore-sdk-release
-    output_mapping:
-      updated-release-repo: backup-and-restore-sdk-final-release
-      updated-release-tarball: backup-and-restore-sdk-final-release-tarball
+      release_repo: backup-and-restore-sdk-release
     params:
-      GIT_USERNAME: *github_user
-      GIT_EMAIL: *github_email
-      FINAL: true
-      RELEASE_NAME: backup-and-restore-sdk
-      <<: *AWS_ACCESS
-  - task: create-release-notes
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/release-automation/release-notes/task.yml
-    input_mapping:
-      git-repo: backup-and-restore-sdk-release
-    params:
-      USE_LATEST_PUBLISHED_TAG: true
-  - task: format-release-notes
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/release-automation/format-release-notes/task.yml
-    input_mapping:
-      template-folder: cryogenics-concourse-tasks
-    params:
-      TEMPLATE_PATH: release-automation/release-notes-templates/release-notes-auto.md.erb
+      GIT_USER_NAME: *github_user
+      GIT_USER_EMAIL: *github_email
+      PRIVATE_YML: *release_private_yaml
   - put: backup-and-restore-sdk-release
     params:
-      repository: backup-and-restore-sdk-final-release
-      merge: true
-      tag: version/number
-      tag_prefix: v
+      repository: release_repo
+      rebase: true
+      tag: release_metadata/tag-name
   - put: github-release
     params:
-      name: version/number
-      tag: version/number
+      name: release_metadata/version
+      tag: release_metadata/tag-name
       body: release-notes/release-notes.md
-      tag_prefix: v
-      globs:
-      - backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
-  - put: release
-    params:
-      file: backup-and-restore-sdk-final-release-tarball/backup-and-restore-sdk-*.tgz
+      commitish: backup-and-restore-sdk-release/.git/ref
+      generate_release_notes: true
   - load_var: version-number
     file: version/number
   - load_var: github-release-url
@@ -1762,40 +1817,3 @@ jobs:
       repository: backup-and-restore-sdk-release
       rebase: true
       branch: main
-
-
-- name: manual-bump-bbr-sdk-patch
-  serial_groups:
-  - bbr-sdk-version
-  plan:
-  - get: version
-    resource: version
-    params:
-      bump: final
-  - put: version
-    params:
-      bump: patch
-
-- name: manual-bump-bbr-sdk-minor
-  serial_groups:
-  - bbr-sdk-version
-  plan:
-  - get: version
-    resource: version
-    params:
-      bump: final
-  - put: version
-    params:
-      bump: minor
-
-- name: manual-bump-bbr-sdk-major
-  serial_groups:
-  - bbr-sdk-version
-  plan:
-  - get: version
-    resource: version
-    params:
-      bump: final
-  - put: version
-    params:
-      bump: major
