@@ -1532,6 +1532,9 @@ jobs:
     file: version/number
   - load_var: github-release-url
     file: github-release/url
+  - put: release-notes
+    params:
+      file: release_metadata/empty-file
   - put: gchat-cryo-notification
     params:
       text: |
