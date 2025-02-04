@@ -19,7 +19,7 @@
 # abort script on any command that exits with a non zero value
 set -e
 
-MARIADB_VERSION=10.6.20
+MARIADB_VERSION=10.6.21
 MY_DIR=$(pwd)
 
 
