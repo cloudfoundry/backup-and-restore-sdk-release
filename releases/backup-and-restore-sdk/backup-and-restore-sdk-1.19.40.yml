@@ -1,0 +1,111 @@
+name: backup-and-restore-sdk
+version: 1.19.40
+commit_hash: 15d24b1f
+uncommitted_changes: false
+jobs:
+- name: azure-blobstore-backup-restorer
+  version: f88fccebfb6347564f17c7b5f59d89681b3dbb18e172562de88f112577d0aebc
+  fingerprint: f88fccebfb6347564f17c7b5f59d89681b3dbb18e172562de88f112577d0aebc
+  sha1: sha256:8cbb25b5a9290963c61270ab65968c0e1ba1b748bd4282e1b4cf375e95442337
+  packages:
+  - azure-blobstore-backup-restorer
+- name: database-backup-restorer
+  version: a65a93c3d27296db9b4b29271c58cc044a3859f30180a54529c1ce6a4d4ced89
+  fingerprint: a65a93c3d27296db9b4b29271c58cc044a3859f30180a54529c1ce6a4d4ced89
+  sha1: sha256:62a724b7ddc0df38868588ac1c5f6d1ac4bacfd8e89d128f84d69482cf445d4d
+  packages:
+  - database-backup-restorer
+  - database-backup-restorer-postgres-13
+  - database-backup-restorer-postgres-15
+  - database-backup-restorer-mariadb
+  - database-backup-restorer-mysql-8.0
+  - database-backup-restorer-mysql-5.7
+- name: gcs-blobstore-backup-restorer
+  version: e1dbf2608c7c2eebb5cc2a2f6b4a3499ed423f24f28337a125dce15df42e5bef
+  fingerprint: e1dbf2608c7c2eebb5cc2a2f6b4a3499ed423f24f28337a125dce15df42e5bef
+  sha1: sha256:4f5630350240e0402917ff0afc5bef2c0a19b76cd20b24efce44629f20bfae2c
+  packages:
+  - gcs-blobstore-backup-restorer
+- name: s3-unversioned-blobstore-backup-restorer
+  version: 93bbadecdc56cb2cf8d577159dca3e9c813956936d0c80211b98c99ab9aaa59c
+  fingerprint: 93bbadecdc56cb2cf8d577159dca3e9c813956936d0c80211b98c99ab9aaa59c
+  sha1: sha256:56725d4007a22dd4da1048cdbefe9fd4a02b77f49af1d711d70fad6320f0c676
+  packages:
+  - s3-blobstore-backup-restorer
+- name: s3-versioned-blobstore-backup-restorer
+  version: ac5b9c179835f9d0a0d064dbde502d2ef891dd77bdeb89f16fe78b6394b1ee51
+  fingerprint: ac5b9c179835f9d0a0d064dbde502d2ef891dd77bdeb89f16fe78b6394b1ee51
+  sha1: sha256:f4c98bdf199721552568ce7b2fecead128d6b42ab7e39ab56903dfc707eea827
+  packages:
+  - s3-blobstore-backup-restorer
+packages:
+- name: azure-blobstore-backup-restorer
+  version: 5eb10e564f9f0bab558dd94c559134fb1e56621df3ed9563a69b68b20d4f24cc
+  fingerprint: 5eb10e564f9f0bab558dd94c559134fb1e56621df3ed9563a69b68b20d4f24cc
+  sha1: sha256:bd70259100e64b6a678c4ba90fc3e97b783e4fe999e46a803ae0e37f88f6a25c
+  dependencies:
+  - golang-1-linux
+- name: database-backup-restorer
+  version: c123c0cedd93d8002839e759601b6a7d0f9e88fb50f5f6a9928e93a88f4b32c9
+  fingerprint: c123c0cedd93d8002839e759601b6a7d0f9e88fb50f5f6a9928e93a88f4b32c9
+  sha1: sha256:a07312dca5528964e526f1723a18bedee599c0f7c54f0a281a4312a020a62efd
+  dependencies:
+  - golang-1-linux
+- name: database-backup-restorer-boost
+  version: 05f72399bdd8d91643f42ac411ba65befb78ac0334484dbc3ca95c5286ab7680
+  fingerprint: 05f72399bdd8d91643f42ac411ba65befb78ac0334484dbc3ca95c5286ab7680
+  sha1: sha256:b228c7a30024fafd1d9769695ef1c8e1f417d273293da15a5cc306d25ef89fc5
+  dependencies: []
+- name: database-backup-restorer-mariadb
+  version: 1b7aca90f23717326fab62830a7668d7a3aef768ae828631ba77f8df62e9b8ff
+  fingerprint: 1b7aca90f23717326fab62830a7668d7a3aef768ae828631ba77f8df62e9b8ff
+  sha1: sha256:909c1cdb4478e0f95d8b282be0b352a5417ae6de65d2f2f49a655cecba7f5a8e
+  dependencies:
+  - libpcre2
+- name: database-backup-restorer-mysql-5.7
+  version: 58c0d2d885422d79f127870a96323180678b7bd1f7febab89cee23b1c0b637b9
+  fingerprint: 58c0d2d885422d79f127870a96323180678b7bd1f7febab89cee23b1c0b637b9
+  sha1: sha256:b0a7a7dd0a2970f9fc6b14a5519a2d7a463c832d1b47280ea1855751c3a0722b
+  dependencies:
+  - database-backup-restorer-boost
+- name: database-backup-restorer-mysql-8.0
+  version: 6fcedd370d30f4228c3627fa66af0ca6a4f71c337c0c898ddc4c5e8e2ad182ea
+  fingerprint: 6fcedd370d30f4228c3627fa66af0ca6a4f71c337c0c898ddc4c5e8e2ad182ea
+  sha1: sha256:30eae1b748e37596a815639d18c52f642140eaf0ec26abf6b122b513024ab941
+  dependencies: []
+- name: database-backup-restorer-postgres-13
+  version: cffd51b5d6b9f2457b77822e42c0c0a010542adb447a9a56aa3b0bbfad268dde
+  fingerprint: cffd51b5d6b9f2457b77822e42c0c0a010542adb447a9a56aa3b0bbfad268dde
+  sha1: sha256:6b2599a6c0ead4ee8adfca0aaad7226dbc44430a8f41c5487a30d7fd0fe9a2b9
+  dependencies: []
+- name: database-backup-restorer-postgres-15
+  version: 3c9b445ffd0db7887aae2be2c59f0f7a4eb0c393398eaa156b0e6a2610614501
+  fingerprint: 3c9b445ffd0db7887aae2be2c59f0f7a4eb0c393398eaa156b0e6a2610614501
+  sha1: sha256:84a1a0a86ff545f25a0a8025bb17d7cff5bf7a20ec7db5a6e6bd78a5f837fd84
+  dependencies: []
+- name: gcs-blobstore-backup-restorer
+  version: 45ab8767e5bec58b3744612ff5389b1ed7a94c33f304c18d834d48d960951ec1
+  fingerprint: 45ab8767e5bec58b3744612ff5389b1ed7a94c33f304c18d834d48d960951ec1
+  sha1: sha256:e41419f12abd07678706b7b341c03920cbcfadc1eb689ed6f4dd36d0dfc00b3d
+  dependencies:
+  - golang-1-linux
+- name: golang-1-linux
+  version: 28d469386dd272ae9b14aae21f084fe40f07f84a8e04024d18c13e47e5e620a9
+  fingerprint: 28d469386dd272ae9b14aae21f084fe40f07f84a8e04024d18c13e47e5e620a9
+  sha1: sha256:c153dd00439fcc88057a5172ef0a4838d65899c3e23fae7a0ade4280896dc3f3
+  dependencies: []
+- name: libpcre2
+  version: cd74031361e5a15dd6b0e33153c3049720343941907f4aa25a69aecfc2216c8d
+  fingerprint: cd74031361e5a15dd6b0e33153c3049720343941907f4aa25a69aecfc2216c8d
+  sha1: sha256:1677fe7a6f5d4edb375ca9313fa1c0db768d6ac5cb8ef073b127f28b33c92dbb
+  dependencies: []
+- name: s3-blobstore-backup-restorer
+  version: 9fbf02d88b866285e3a40768b29866ce37a76fe65c95d415472d432a52213dbb
+  fingerprint: 9fbf02d88b866285e3a40768b29866ce37a76fe65c95d415472d432a52213dbb
+  sha1: sha256:540e1c34f3a7697c1d1c0bf919c7b2a7935bd2d7d1dec9be7865080a3ffdc617
+  dependencies:
+  - golang-1-linux
+license:
+  version: de99d82e62206a72c9e0b838fa79b9b67a7b1cef5b82eaf5037fba3bc6117c21
+  fingerprint: de99d82e62206a72c9e0b838fa79b9b67a7b1cef5b82eaf5037fba3bc6117c21
+  sha1: sha256:66daaae31d1a514da5aee35f036f063a5c76f4719d0e7c4bd0f0531bb7112100
