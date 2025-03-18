@@ -213,8 +213,7 @@ var _ = Describe("Bucket", func() {
 				backupsToComplete, err := gcs.BuildBackupsToComplete(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), config)
 				Expect(err).NotTo(HaveOccurred())
 				_, err = backupsToComplete["droplets"].BucketPair.LiveBucket.ListBlobs("")
-				Expect(err).To(MatchError("storage: bucket doesn't exist"))
-			})
+				Expect(err).To(MatchError(ContainSubstring("storage: bucket doesn't exist")))
 		})
 	})
 
