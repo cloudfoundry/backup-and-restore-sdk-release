@@ -214,6 +214,7 @@ var _ = Describe("Bucket", func() {
 				Expect(err).NotTo(HaveOccurred())
 				_, err = backupsToComplete["droplets"].BucketPair.LiveBucket.ListBlobs("")
 				Expect(err).To(MatchError(ContainSubstring("storage: bucket doesn't exist")))
+			})
 		})
 	})
 
