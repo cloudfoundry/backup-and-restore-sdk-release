@@ -6,9 +6,6 @@ secrets:
 #! Created using `shepherd create service-account` after logging in with WS1.
 - &shepherd_account_key ((bosh-ecosystem-shepherd-service-account))
 
-#! gcr_viewer_key is used for getting concourse container images from the Cryogenics GCR instance. Currently bosh-ecosystem-concourse@cf-bosh-concourse.iam.gserviceaccount.com is granted access to the images.
-- &gcr_viewer_key ((gcp_credentials_json))
-
 - &aws-region eu-west-1
 - &aws-backup-region eu-central-1
 - &number_of_test_retries 3
@@ -59,15 +56,12 @@ secrets:
 - &azure_storage_key_no_soft_delete ((bbr_azure_credentials.storage_account_no_soft_delete_key))
 
   #! service_accounts_bucket_owner_json_key was needed on 2023-07-03 for deploying database infra for testing. Generated using personal creds in the mapbu-cryogenics GCP account.
-- &service_accounts_bucket_owner_json_key ((gcp_credentials_json))
+- &service_accounts_bucket_owner_json_key ((broadcom_gcp_credentials_json))
 #! service_accounts_gcp_cf_backup_and_restore_owner_role_json_key was needed on 2023-07-03 for actually running the GCP tests. Presumably it has lower privileges than the other two GCP keys?. Generated using personal creds in the mapbu-cryogenics GCP account.
-- &service_accounts_gcp_cf_backup_and_restore_owner_role_json_key ((gcp_credentials_json))
+- &service_accounts_gcp_cf_backup_and_restore_owner_role_json_key ((broadcom_gcp_credentials_json))
 
 #! github_access_token is required to create PRs against repos used in this pipeline and access github releases.
 - &git_token ((github_read_write_token))
-
-#! github_deploy_keys are generated in credhub and the public keys added to the individual repos
-- &github_deploy_key_backup-and-restore-sdk-release ((github_deploy_key_backup-and-restore-sdk-release.private_key))
 
 #! github email and user used for creating commits
 - &github_email bots@cloudfoundry.org
@@ -138,20 +132,23 @@ secrets:
 #! Access token for our service account user in Github Enterprise
 - &ghe_svc_account_personal_access_token ((svc-bosh-ecosystem-ghe-personal-access-token))
 
+#! Artifactory token
+- &artifactory_token ((broadcom_artifactory_api_key))
+
 resource_types:
 - name: ftp
   type: registry-image
   source:
-    repository: us-west2-docker.pkg.dev/mapbu-cryogenics/concourse-resources/concourse-ftp-resource
-    username: _json_key
-    password: *gcr_viewer_key
+    repository: tas-bosh-docker-dev-local.usw1.packages.broadcom.com/cryogenics/concourse-ftp-resource
+    username: svc.bosh-ecosystem
+    password: *artifactory_token
 
 - name: shepherd
   source:
     tag: v1
-    repository: us-west2-docker.pkg.dev/shepherd-268822/shepherd2/concourse-resource
-    username: _json_key
-    password: *gcr_viewer_key
+    repository: tas-bosh-docker-dev-local.usw1.packages.broadcom.com/cryogenics/shepherd2-concourse-resource
+    username: svc.bosh-ecosystem
+    password: *artifactory_token
   type: registry-image
 
 - name: file-url
@@ -218,7 +215,7 @@ resources:
 - name: ncurses-blob
   type: ftp
   source:
-    url: ftp://ftp.gnu.org/pub/gnu/ncurses/
+    url: https://ftp.gnu.org/pub/gnu/ncurses/
     version_regex: "ncurses-(?P<version>[0-9]*.[0-9]*).tar.gz$"
 - name: postgres-13-blob
   type: ftp
@@ -250,9 +247,9 @@ resources:
 - name: image-cryogenics-essentials
   type: registry-image
   source:
-    repository: us-west2-docker.pkg.dev/mapbu-cryogenics/essentials/cryo-essentials
-    username: _json_key
-    password: *gcr_viewer_key
+    repository: tas-bosh-docker-dev-local.usw1.packages.broadcom.com/cryogenics/cryo-essentials
+    username: svc.bosh-ecosystem
+    password: *artifactory_token
 
 - name: pxc-release
   type: bosh-io-release
@@ -381,8 +378,9 @@ resources:
   type: git
   icon: github
   source:
-    uri: git@github.com:cloudfoundry/backup-and-restore-sdk-release.git
-    private_key: *github_deploy_key_backup-and-restore-sdk-release
+    uri: https://github.com/cloudfoundry/backup-and-restore-sdk-release.git
+    username: bosh-admin-bot
+    password: *git_token
     disable_ci_skip: true
     commit_filter:
       exclude:
@@ -392,15 +390,15 @@ resources:
   type: git
   icon: github
   source:
-    uri: git@github.com:cloudfoundry/backup-and-restore-sdk-release.git
-    private_key: *github_deploy_key_backup-and-restore-sdk-release
+    uri: https://github.com/cloudfoundry/backup-and-restore-sdk-release.git
+    username: bosh-admin-bot
+    password: *git_token
     branch: main
 
 - name: bosh-shared-ci
   type: git
   source:
-    uri: git@github.com:cloudfoundry/bosh-shared-ci.git
-    private_key: ((github_deploy_key_bosh-shared-ci.private_key))
+    uri: https://github.com/cloudfoundry/bosh-shared-ci.git
 
 - name: every-week
   type: time
@@ -569,8 +567,6 @@ jobs:
     - task: databases-unit-tests
       image: image-cryogenics-essentials
       file: backup-and-restore-sdk-release/ci/tasks/database-unit-tests/task.yml
-      params:
-        GITHUB_SDK_KEY: *github_deploy_key_backup-and-restore-sdk-release
       privileged: true
     - task: s3-blobstore-unit-tests
       image: image-cryogenics-essentials
@@ -1623,8 +1619,6 @@ jobs:
     - task: databases-unit-tests
       image: image-cryogenics-essentials
       file: backup-and-restore-sdk-release/ci/tasks/database-unit-tests/task.yml
-      params:
-        GITHUB_SDK_KEY: *github_deploy_key_backup-and-restore-sdk-release
       privileged: true
     - task: s3-blobstore-unit-tests
       image: image-cryogenics-essentials

@@ -16,13 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -euE
-mkdir -p github-sdk-key
-echo -e "${GITHUB_SDK_KEY}" > github-sdk-key/key
-trap 'rm github-sdk-key/key' EXIT
-eval "$(ssh-agent)"
-chmod 400 github-sdk-key/key
-ssh-add github-sdk-key/key
+set -eu
 
 pushd backup-and-restore-sdk-release/src/database-backup-restore
   go run github.com/onsi/ginkgo/v2/ginkgo -r -v --skip-package system_tests
