@@ -22,10 +22,10 @@ ncurses/ncurses-6.5.tar.gz:
   size: 3688489
   object_id: 44145765-7530-4a4b-45fd-932d16aa3aa4
   sha: sha256:136d91bc269a9a5785e5f9e980bc76ab57428f604ce3e5a5a90cebc767971cc6
-postgres/postgresql-13.20.tar.gz:
-  size: 28407120
-  object_id: 7c9320cb-ef66-4ec9-4177-b5072347b3b6
-  sha: sha256:a1b111db53812543af54e3022304d429724c5c90dc33e5df8686150b6801cec5
+postgres/postgresql-13.21.tar.gz:
+  size: 28431754
+  object_id: 859c53c6-9752-40d6-6a77-d0669340aed4
+  sha: sha256:37d3e26304ef379934f9c15111bb982f5242ea18a4c783a87caa1389af6b1f4d
 postgres/postgresql-15.12.tar.gz:
   size: 30477320
   object_id: d9acf8aa-66e8-4f31-42ab-a69714f17675
