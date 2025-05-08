@@ -56,9 +56,9 @@ secrets:
 - &azure_storage_key_no_soft_delete ((bbr_azure_credentials.storage_account_no_soft_delete_key))
 
   #! service_accounts_bucket_owner_json_key was needed on 2023-07-03 for deploying database infra for testing. Generated using personal creds in the mapbu-cryogenics GCP account.
-- &service_accounts_bucket_owner_json_key ((broadcom_gcp_credentials_json))
+- &service_accounts_bucket_owner_json_key ((broadcom_labs_gcp_credentials_json))
 #! service_accounts_gcp_cf_backup_and_restore_owner_role_json_key was needed on 2023-07-03 for actually running the GCP tests. Presumably it has lower privileges than the other two GCP keys?. Generated using personal creds in the mapbu-cryogenics GCP account.
-- &service_accounts_gcp_cf_backup_and_restore_owner_role_json_key ((broadcom_gcp_credentials_json))
+- &service_accounts_gcp_cf_backup_and_restore_owner_role_json_key ((broadcom_labs_gcp_credentials_json))
 
 #! github_access_token is required to create PRs against repos used in this pipeline and access github releases.
 - &git_token ((github_read_write_token))
@@ -142,6 +142,7 @@ resource_types:
     repository: tas-bosh-docker-dev-local.usw1.packages.broadcom.com/cryogenics/concourse-ftp-resource
     username: svc.bosh-ecosystem
     password: *artifactory_token
+  tags: [ broadcom ]
 
 - name: shepherd
   source:
@@ -150,6 +151,7 @@ resource_types:
     username: svc.bosh-ecosystem
     password: *artifactory_token
   type: registry-image
+  tags: [ broadcom ]
 
 - name: file-url
   type: registry-image
@@ -250,6 +252,7 @@ resources:
     repository: tas-bosh-docker-dev-local.usw1.packages.broadcom.com/cryogenics/cryo-essentials
     username: svc.bosh-ecosystem
     password: *artifactory_token
+  tags: [ broadcom ]
 
 - name: pxc-release
   type: bosh-io-release
