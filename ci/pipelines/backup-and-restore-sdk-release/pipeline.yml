@@ -367,6 +367,7 @@ resources:
 - name: cryogenics-concourse-tasks
   type: git
   icon: github
+  tags: [ broadcom ]
   source:
     uri: https://github.gwd.broadcom.net/TNZ/cryogenics-concourse-tasks.git
     branch: main
@@ -504,6 +505,7 @@ resources:
 
 - name: git-concourse-cve-scan
   type: git
+  tags: [ broadcom ]
   source:
     uri: https://github.gwd.broadcom.net/TNZ/concourse-cve-scan.git
     branch: main
@@ -512,6 +514,7 @@ resources:
 
 - name: github-release-tas-cve
   type: github-release
+  tags: [ broadcom ]
   source:
     access_token: *ghe_svc_account_personal_access_token
     owner: TNZ
@@ -535,6 +538,7 @@ jobs:
     - get: backup-and-restore-sdk-release
       trigger: true
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: image-cryogenics-essentials
   - task: check-pipeline-for-stray-secrets
     image: image-cryogenics-essentials
@@ -552,6 +556,7 @@ jobs:
       trigger: true
       passed: ["lint-pipeline"]
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: image-cryogenics-essentials
     - get: bosh-ecosystem-docker-image
     - get: ruby-install
@@ -586,7 +591,9 @@ jobs:
   plan:
     - in_parallel:
         - get: git-concourse-cve-scan
+          tags: [ broadcom ]
         - get: github-release-tas-cve
+          tags: [ broadcom ]
         - get: backup-and-restore-sdk-release
           trigger: true
     - task: run-scan
@@ -702,6 +709,7 @@ jobs:
       passed:
       - deploy-s3-blobstore-sdk-with-iam-instance-profile
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: director-with-iam-profile
     - get: image-cryogenics-essentials
   - in_parallel:
@@ -739,6 +747,7 @@ jobs:
     - get: backup-and-restore-sdk-release
       passed: [build-rc]
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: dev-release
       trigger: true
       passed: [build-rc]
@@ -932,6 +941,7 @@ jobs:
       - deploy-postgres
       - deploy-mysql
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
   - task: alias-env
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
@@ -1178,6 +1188,7 @@ jobs:
       passed:
       - deploy-database-sdk
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: cert-store
       resource: rds-ca-bundle
     - get: cf-deployment-env-non-airgapped
@@ -1277,6 +1288,7 @@ jobs:
       - deploy-azure-blobstore-sdk
       - deploy-gcs-blobstore-sdk
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: image-cryogenics-essentials
   - task: alias-env
     image: image-cryogenics-essentials
@@ -1533,6 +1545,7 @@ jobs:
     - get: every-week
       trigger: true
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: image-cryogenics-essentials
     - get: golang-release
       trigger: true
@@ -1639,6 +1652,7 @@ jobs:
     - get: backup-and-restore-sdk-release
     - get: bosh-ecosystem-docker-image
     - get: cryogenics-concourse-tasks
+      tags: [ broadcom ]
     - get: image-cryogenics-essentials
     - get: ruby-install
     - get: ruby-image
