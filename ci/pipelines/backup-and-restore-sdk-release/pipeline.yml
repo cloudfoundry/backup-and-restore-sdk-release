@@ -638,7 +638,7 @@ jobs:
       params:
         PACKAGE_NAME: gcs-blobstore-backup-restore/contract_test
         GCP_SERVICE_ACCOUNT_KEY: *service_accounts_gcp_cf_backup_and_restore_owner_role_json_key
-        GCP_PROJECT_NAME: cf-bosh-concourse
+        GCP_PROJECT_NAME: ltnz001-tas-opsmanager
     - task: azure-blobstore-contract-tests
       image: image-cryogenics-essentials
       file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
@@ -1351,7 +1351,7 @@ jobs:
         <<: *bosh-smiths-creds
         TEST_SUITE_NAME: gcs
         GCP_SERVICE_ACCOUNT_KEY: *service_accounts_gcp_cf_backup_and_restore_owner_role_json_key
-        GCP_PROJECT_NAME: cf-bosh-concourse
+        GCP_PROJECT_NAME: ltnz001-tas-opsmanager
         GCS_BUCKET_NAME: bbr-system-test-bucket
         GCS_BACKUP_BUCKET_NAME: bbr-system-test-backup-bucket
         BOSH_DEPLOYMENT: gcs-backuper
