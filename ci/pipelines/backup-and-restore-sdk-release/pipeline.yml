@@ -543,6 +543,7 @@ jobs:
     - get: cryogenics-concourse-tasks
       tags: [ broadcom ]
     - get: image-cryogenics-essentials
+      tags: [ broadcom ]
   - task: check-pipeline-for-stray-secrets
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/pipeline-linting/check-pipeline-for-stray-secrets/task.yml
@@ -561,6 +562,7 @@ jobs:
     - get: cryogenics-concourse-tasks
       tags: [ broadcom ]
     - get: image-cryogenics-essentials
+      tags: [ broadcom ]
     - get: bosh-ecosystem-docker-image
     - get: ruby-install
   - in_parallel:
@@ -620,6 +622,7 @@ jobs:
       passed:
       - unit-tests
     - get: image-cryogenics-essentials
+      tags: [ broadcom ]
   - in_parallel:
     - task: aws-s3-blobstore-contract-tests
       image: image-cryogenics-essentials
@@ -715,6 +718,7 @@ jobs:
       tags: [ broadcom ]
     - get: director-with-iam-profile
     - get: image-cryogenics-essentials
+      tags: [ broadcom ]
   - in_parallel:
     - task: s3-with-iam-instance-profile
       image: image-cryogenics-essentials
@@ -755,6 +759,7 @@ jobs:
       trigger: true
       passed: [build-rc]
     - get: image-cryogenics-essentials
+      tags: [ broadcom ]
     - put: cf-deployment-env-airgapped
       attempts: *number_of_claim_retries
       timeout: 6h
@@ -773,6 +778,7 @@ jobs:
   plan:
   - in_parallel:
     - get: image-cryogenics-essentials
+      tags: [ broadcom ]
     - get: bpm-release
     - get: bosh-release-v260.3
     - get: bosh-release-v271.7
@@ -822,6 +828,7 @@ jobs:
   plan:
   - in_parallel:
     - get: image-cryogenics-essentials
+      tags: [ broadcom ]
     - get: bpm-release
     - get: pxc-release
     - get: backup-and-restore-sdk-release
@@ -901,6 +908,7 @@ jobs:
         - claim-cf-deployment-airgapped
     - get: jammy-stemcell
     - get: image-cryogenics-essentials
+      tags: [ broadcom ]
     - get: cf-deployment-env-airgapped
       trigger: true
       passed:
@@ -930,6 +938,7 @@ jobs:
   plan:
   - in_parallel:
     - get: image-cryogenics-essentials
+      tags: [ broadcom ]
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-database-sdk-on-airgapped-env
@@ -993,6 +1002,7 @@ jobs:
       trigger: true
       passed: [build-rc]
     - get: image-cryogenics-essentials
+      tags: [ broadcom ]
     - put: cf-deployment-env-non-airgapped
       attempts: *number_of_claim_retries
       timeout: 6h
@@ -1021,6 +1031,7 @@ jobs:
       - claim-cf-deployment
     - get: jammy-stemcell
     - get: image-cryogenics-essentials
+      tags: [ broadcom ]
     - get: cf-deployment-env-non-airgapped
       trigger: true
       passed:
@@ -1063,6 +1074,7 @@ jobs:
       passed:
       - claim-cf-deployment
     - get: image-cryogenics-essentials
+      tags: [ broadcom ]
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
     file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
@@ -1120,6 +1132,7 @@ jobs:
       - claim-cf-deployment
     - get: jammy-stemcell
     - get: image-cryogenics-essentials
+      tags: [ broadcom ]
     - get: cf-deployment-env-non-airgapped
       trigger: true
       passed:
@@ -1164,6 +1177,7 @@ jobs:
       passed:
       - claim-cf-deployment
     - get: image-cryogenics-essentials
+      tags: [ broadcom ]
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
     file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
@@ -1199,6 +1213,7 @@ jobs:
       passed:
       - deploy-database-sdk
     - get: image-cryogenics-essentials
+      tags: [ broadcom ]
   - put: terraform
     params:
       terraform_source: backup-and-restore-sdk-release/ci/terraform/bbr-sdk-system-tests/aws/
@@ -1293,6 +1308,7 @@ jobs:
     - get: cryogenics-concourse-tasks
       tags: [ broadcom ]
     - get: image-cryogenics-essentials
+      tags: [ broadcom ]
   - task: alias-env
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
@@ -1550,6 +1566,7 @@ jobs:
     - get: cryogenics-concourse-tasks
       tags: [ broadcom ]
     - get: image-cryogenics-essentials
+      tags: [ broadcom ]
     - get: golang-release
       trigger: true
     - get: backup-and-restore-sdk-release
@@ -1657,6 +1674,7 @@ jobs:
     - get: cryogenics-concourse-tasks
       tags: [ broadcom ]
     - get: image-cryogenics-essentials
+      tags: [ broadcom ]
     - get: ruby-install
     - get: ruby-image
       trigger: true
