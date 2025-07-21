@@ -29,8 +29,8 @@ github.com/google/pprof/profile
 github.com/lib/pq
 github.com/lib/pq/oid
 github.com/lib/pq/scram
-# github.com/maxbrunsfeld/counterfeiter/v6 v6.11.2
-## explicit; go 1.23
+# github.com/maxbrunsfeld/counterfeiter/v6 v6.11.3
+## explicit; go 1.23.0
 github.com/maxbrunsfeld/counterfeiter/v6
 github.com/maxbrunsfeld/counterfeiter/v6/arguments
 github.com/maxbrunsfeld/counterfeiter/v6/command
