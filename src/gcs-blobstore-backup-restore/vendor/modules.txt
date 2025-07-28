@@ -39,7 +39,7 @@ cloud.google.com/go/iam/apiv1/iampb
 cloud.google.com/go/monitoring/apiv3/v2
 cloud.google.com/go/monitoring/apiv3/v2/monitoringpb
 cloud.google.com/go/monitoring/internal
-# cloud.google.com/go/storage v1.55.0
+# cloud.google.com/go/storage v1.56.0
 ## explicit; go 1.23.0
 cloud.google.com/go/storage
 cloud.google.com/go/storage/experimental
@@ -433,13 +433,13 @@ google.golang.org/api/storage/v1
 google.golang.org/api/transport
 google.golang.org/api/transport/grpc
 google.golang.org/api/transport/http
-# google.golang.org/genproto v0.0.0-20250721164621-a45f3dfb1074
+# google.golang.org/genproto v0.0.0-20250728155136-f173205681a0
 ## explicit; go 1.23.0
 google.golang.org/genproto/googleapis/type/calendarperiod
 google.golang.org/genproto/googleapis/type/date
 google.golang.org/genproto/googleapis/type/expr
 google.golang.org/genproto/googleapis/type/timeofday
-# google.golang.org/genproto/googleapis/api v0.0.0-20250721164621-a45f3dfb1074
+# google.golang.org/genproto/googleapis/api v0.0.0-20250728155136-f173205681a0
 ## explicit; go 1.23.0
 google.golang.org/genproto/googleapis/api
 google.golang.org/genproto/googleapis/api/annotations
@@ -448,7 +448,7 @@ google.golang.org/genproto/googleapis/api/expr/v1alpha1
 google.golang.org/genproto/googleapis/api/label
 google.golang.org/genproto/googleapis/api/metric
 google.golang.org/genproto/googleapis/api/monitoredres
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20250721164621-a45f3dfb1074
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20250728155136-f173205681a0
 ## explicit; go 1.23.0
 google.golang.org/genproto/googleapis/rpc/code
 google.golang.org/genproto/googleapis/rpc/errdetails
