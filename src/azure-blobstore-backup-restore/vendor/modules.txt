@@ -1,4 +1,4 @@
-# github.com/Azure/azure-sdk-for-go/sdk/azcore v1.18.1
+# github.com/Azure/azure-sdk-for-go/sdk/azcore v1.18.2
 ## explicit; go 1.23.0
 github.com/Azure/azure-sdk-for-go/sdk/azcore
 github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud
