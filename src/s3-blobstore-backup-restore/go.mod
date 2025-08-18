@@ -9,11 +9,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.37.0
 	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.74
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.11.3
-	github.com/onsi/ginkgo/v2 v2.23.4
+	github.com/onsi/ginkgo/v2 v2.24.0
 	github.com/onsi/gomega v1.37.0
 )
 
 require (
+	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.0 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.3 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.3 // indirect
@@ -24,7 +25,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.3 // indirect
 	github.com/aws/smithy-go v1.22.5 // indirect
-	github.com/go-logr/logr v1.4.2 // indirect
+	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/pprof v0.0.0-20250630185457-6e76a2b096b5 // indirect
