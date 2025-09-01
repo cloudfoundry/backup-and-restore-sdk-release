@@ -4,8 +4,8 @@ require (
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/lib/pq v1.10.9
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.11.3
-	github.com/onsi/ginkgo/v2 v2.25.1
-	github.com/onsi/gomega v1.38.0
+	github.com/onsi/ginkgo/v2 v2.25.2
+	github.com/onsi/gomega v1.38.2
 	github.com/pivotal-cf-experimental/go-binmock v0.0.0-20171027112700-f797157c64e9
 )
 
@@ -20,13 +20,13 @@ require (
 	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/pivotal-cf/go-binmock v0.0.0-20171027112700-f797157c64e9 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/mod v0.27.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
 	golang.org/x/tools v0.36.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 go 1.23.0
