@@ -13,4 +13,4 @@ outputs:
     path: backup-and-restore-sdk-release
 
 run:
-  path: backup-and-restore-sdk-release/ci/tasks/bump-ruby/task.sh
+  path: backup-and-restore-sdk-release-ci/ci/tasks/bump-ruby/task.sh

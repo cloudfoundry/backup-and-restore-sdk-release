@@ -7,7 +7,7 @@ image_resource:
 inputs:
   - name: backup-and-restore-sdk-release
 run:
-  path: backup-and-restore-sdk-release/ci/tasks/create-ssl-user/task.sh
+  path: backup-and-restore-sdk-release-ci/ci/tasks/create-ssl-user/task.sh
 params:
   BOSH_ENVIRONMENT:
   BOSH_DEPLOYMENT:

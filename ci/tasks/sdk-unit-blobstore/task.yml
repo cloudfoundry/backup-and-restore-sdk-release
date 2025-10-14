@@ -24,4 +24,4 @@ params:
   S3_SECRET_ACCESS_KEY:
   S3_BIG_FILE_BUCKET:
 run:
-  path: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.sh
+  path: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.sh

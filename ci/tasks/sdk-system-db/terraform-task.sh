@@ -61,4 +61,4 @@ else
   exit 1
 fi
 
-backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.sh
+backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.sh

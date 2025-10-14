@@ -7,7 +7,7 @@ image_resource:
 inputs:
   - name: backup-and-restore-sdk-release
 run:
-  path: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.sh
+  path: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.sh
 params:
   BOSH_ENVIRONMENT:
   BOSH_CLIENT:

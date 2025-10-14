@@ -9,7 +9,7 @@ inputs:
   - name: director-with-iam-profile
     optional: true
 run:
-  path: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.sh
+  path: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.sh
 params:
   TEST_SUITE_NAME:
   FOCUS_SPEC:
