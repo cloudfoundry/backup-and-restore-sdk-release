@@ -6,6 +6,7 @@ image_resource:
     tag: 0.1.108
 inputs:
   - name: backup-and-restore-sdk-release
+  - name: backup-and-restore-sdk-release-ci
 params:
   PACKAGE_NAME:
   GINKGO_EXTRA_FLAGS:

@@ -1,6 +1,6 @@
 platform: linux
 inputs:
   - name: cf-deployment-env
-  - name: backup-and-restore-sdk-release
+  - name: backup-and-restore-sdk-release-ci
 run:
   path: backup-and-restore-sdk-release-ci/ci/tasks/update-cloud-config/task.sh

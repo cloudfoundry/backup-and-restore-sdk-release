@@ -6,7 +6,7 @@ image_resource:
     tag: 0.1.108
 inputs:
   - name: cf-deployment-env
-  - name: backup-and-restore-sdk-release
+  - name: backup-and-restore-sdk-release-ci
 outputs:
   - name: source-file
 run:
