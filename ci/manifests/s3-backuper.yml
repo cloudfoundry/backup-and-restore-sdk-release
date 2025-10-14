@@ -158,7 +158,7 @@ instance_groups:
       enabled: true
       buckets:
         bucket_identifier:
-          endpoint: https://10.0.255.7:9000
+          endpoint: https://10.244.0.7:9000
           name: systest-bucket
           region: us-east-1
           aws_access_key_id: "((minio-access-key))"
