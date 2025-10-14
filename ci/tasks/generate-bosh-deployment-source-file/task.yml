@@ -10,4 +10,4 @@ inputs:
 outputs:
   - name: source-file
 run:
-  path: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.sh
+  path: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.sh

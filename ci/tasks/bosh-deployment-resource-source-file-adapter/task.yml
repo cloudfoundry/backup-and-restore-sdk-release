@@ -17,4 +17,4 @@ params:
 
 
 run:
-  path: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.sh
+  path: backup-and-restore-sdk-release-ci/ci/tasks/bosh-deployment-resource-source-file-adapter/task.sh

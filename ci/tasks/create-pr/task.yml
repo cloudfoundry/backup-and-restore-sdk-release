@@ -17,4 +17,4 @@ params:
   DRAFT: false # must be true or false (default is false)
 
 run:
-  path: backup-and-restore-sdk-release/ci/tasks/create-pr/task.sh
+  path: backup-and-restore-sdk-release-ci/ci/tasks/create-pr/task.sh

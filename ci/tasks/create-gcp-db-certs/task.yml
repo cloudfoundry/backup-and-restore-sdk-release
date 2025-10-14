@@ -14,4 +14,4 @@ params:
   GCP_SERVICE_ACCOUNT_KEY:
   ZIP_PASSWORD: ((bbr/db-cert-zip-password.pass))
 run:
-  path: backup-and-restore-sdk-release/ci/tasks/create-gcp-db-certs/task.sh
+  path: backup-and-restore-sdk-release-ci/ci/tasks/create-gcp-db-certs/task.sh
