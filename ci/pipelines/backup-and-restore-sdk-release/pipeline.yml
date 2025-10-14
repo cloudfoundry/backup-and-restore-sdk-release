@@ -87,7 +87,7 @@ secrets:
 
 
 - &mysql-5-7-deployment-name mysql-5-7-dev
-- &mysql-5-7-host 10.0.255.9
+- &mysql-5-7-host 10.244.0.9
 
 - &mysql_params_5_7
   MYSQL_HOSTNAME: *mysql-5-7-host
@@ -98,7 +98,7 @@ secrets:
 
 
 - &mysql-8-0-deployment-name mysql-8-0-dev
-- &mysql-8-0-host 10.0.255.10
+- &mysql-8-0-host 10.244.0.10
 
 - &mysql_params_8
   MYSQL_HOSTNAME: *mysql-8-0-host
@@ -115,7 +115,7 @@ secrets:
   db_password: postgres_password
 
 - &postgres-13-deployment-name postgres-13-dev
-- &postgres-13-host 10.0.255.14
+- &postgres-13-host 10.244.0.14
 
 - &bosh-smiths-creds
   BOSH_ENVIRONMENT: ((.:pooled-env.BOSH_ENVIRONMENT))
@@ -217,7 +217,8 @@ resources:
 - name: ncurses-blob
   type: ftp
   source:
-    url: https://ftp.gnu.org/pub/gnu/ncurses/
+    #! this mirror in Japan seems to be reachable from our network
+    url: http://www.ring.gr.jp/pub/GNU/ncurses/
     version_regex: "ncurses-(?P<version>[0-9]*.[0-9]*).tar.gz$"
 - name: postgres-13-blob
   type: ftp
@@ -828,29 +829,31 @@ jobs:
     - get: jammy-stemcell
     - get: cf-deployment-env-airgapped
       trigger: true
+      tags: [ broadcom ]
       passed:
       - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    tags: [ broadcom ]
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
-  - in_parallel:
-    - put: postgres-13-dev-deployment
-      params:
-        manifest: backup-and-restore-sdk-release-ci/ci/manifests/postgres-13.yml
-        stemcells:
-        - jammy-stemcell/*.tgz
-        vars:
-          deployment-name: *postgres-13-deployment-name
-          db_host: *postgres-13-host
-          <<: *pg_deployment_common
-          availability_zone: z1
-          vm_extensions: ["cf-tcp-router-network-properties"]
-        ops_files:
-        - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
-        source_file: source-file/source-file.yml
-        releases:
+  - put: postgres-13-dev-deployment
+    tags: [ broadcom ]
+    params:
+      manifest: backup-and-restore-sdk-release-ci/ci/manifests/postgres-13.yml
+      stemcells:
+      - jammy-stemcell/*.tgz
+      vars:
+        deployment-name: *postgres-13-deployment-name
+        db_host: *postgres-13-host
+        <<: *pg_deployment_common
+        availability_zone: z1
+        vm_extensions: ["cf-tcp-router-network-properties"]
+      ops_files:
+      - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
+      source_file: source-file/source-file.yml
+      releases:
         - bpm-release/*.tgz
         - bosh-release-v271.7/*.tgz
 
@@ -874,11 +877,13 @@ jobs:
     - get: jammy-stemcell
     - get: cf-deployment-env-airgapped
       trigger: true
+      tags: [ broadcom ]
       passed:
       - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    tags: [ broadcom ]
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
   - do:
@@ -887,6 +892,7 @@ jobs:
     #! refuses to grant some locks.
     - put: mysql-8-0-deployment
       timeout: 2h
+      tags: [ broadcom ]
       params:
         manifest: backup-and-restore-sdk-release-ci/ci/manifests/mysql.yml
         stemcells:
@@ -907,6 +913,7 @@ jobs:
         - pxc-release/*.tgz
     - put: mysql-5-7-deployment
       timeout: 2h
+      tags: [ broadcom ]
       params:
         manifest: backup-and-restore-sdk-release-ci/ci/manifests/mysql.yml
         stemcells:
@@ -950,9 +957,11 @@ jobs:
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    tags: [ broadcom ]
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
   - put: database-backup-restorer-deployment
+    tags: [ broadcom ]
     params:
       manifest: backup-and-restore-sdk-release-ci/ci/manifests/database-backup-restorer.yml
       stemcells:
@@ -1455,7 +1464,8 @@ jobs:
     trigger: true
     passed:
     - system-tests-internal-dbs
-    - system-tests-external-dbs-rds
+    #! TODO reenable this when these dbs are reachable from cfd and the concourse worker; see TNZ-64137
+    #! - system-tests-external-dbs-rds
     - system-tests-blobstore-backuper
     - system-tests-blobstore-backuper-with-iam-instance-profile
 
@@ -1774,8 +1784,6 @@ jobs:
   - task: bump-ruby
     image: ruby-image
     file: backup-and-restore-sdk-release-ci/ci/tasks/bump-ruby/task.yml
-    input_mapping:
-      backup-and-restore-sdk-release: backup-and-restore-sdk-release
     output_mapping:
       bumped-repo: backup-and-restore-sdk-release
     params:
