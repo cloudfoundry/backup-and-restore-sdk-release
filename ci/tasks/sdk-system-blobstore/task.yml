@@ -5,7 +5,7 @@ image_resource:
     repository: harbor-repo.vmware.com/cryogenics/essentials
     tag: 0.1.108
 inputs:
-  - name: backup-and-restore-sdk-release
+  - name: backup-and-restore-sdk-release-ci
   - name: director-with-iam-profile
     optional: true
 run:
