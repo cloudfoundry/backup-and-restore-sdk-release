@@ -314,7 +314,7 @@ resources:
           root_disk_gb: 32
           disk_pool_gb: 200
           cfd_version: ""
-          cfd_additional_opsfiles_b64: ""
+          cfd_additional_opsfiles_b64: "LS0tCi0gdHlwZTogcmVwbGFjZQogIHBhdGg6IC9hZGRvbnMvbmFtZT1ib3NoLWRucy1hbGlhc2VzL2pvYnMvbmFtZT1ib3NoLWRucy1hbGlhc2VzL3Byb3BlcnRpZXMvYWxpYXNlcy8tCiAgdmFsdWU6CiAgICBkb21haW46IF8uKChzeXN0ZW1fZG9tYWluKSkKICAgIHRhcmdldHM6CiAgICAgIC0gZGVwbG95bWVudDogY2YKICAgICAgICBkb21haW46IGJvc2gKICAgICAgICBpbnN0YW5jZV9ncm91cDogcm91dGVyCiAgICAgICAgbmV0d29yazogZGVmYXVsdAogICAgICAgIHF1ZXJ5OiAiKiI="
           bosh_additional_opsfiles_b64: ""
 
 - name: cf-deployment-env-airgapped
@@ -336,7 +336,7 @@ resources:
           root_disk_gb: 32
           disk_pool_gb: 200
           cfd_version: ""
-          cfd_additional_opsfiles_b64: ""
+          cfd_additional_opsfiles_b64: "LS0tCi0gdHlwZTogcmVwbGFjZQogIHBhdGg6IC9hZGRvbnMvbmFtZT1ib3NoLWRucy1hbGlhc2VzL2pvYnMvbmFtZT1ib3NoLWRucy1hbGlhc2VzL3Byb3BlcnRpZXMvYWxpYXNlcy8tCiAgdmFsdWU6CiAgICBkb21haW46IF8uKChzeXN0ZW1fZG9tYWluKSkKICAgIHRhcmdldHM6CiAgICAgIC0gZGVwbG95bWVudDogY2YKICAgICAgICBkb21haW46IGJvc2gKICAgICAgICBpbnN0YW5jZV9ncm91cDogcm91dGVyCiAgICAgICAgbmV0d29yazogZGVmYXVsdAogICAgICAgIHF1ZXJ5OiAiKiI="
           bosh_additional_opsfiles_b64: ""
 
 - name: rds-ca-bundle
@@ -992,6 +992,7 @@ jobs:
       resource: gcp-db-certs-zip
     - get: cf-deployment-env-airgapped
       trigger: true
+      tags: [ broadcom ]
       passed:
       - deploy-database-sdk-on-airgapped-env
       - deploy-postgres
@@ -1001,6 +1002,7 @@ jobs:
   - task: alias-env
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
+    tags: [ broadcom ]
     input_mapping:
       cryogenics-tasks: cryogenics-concourse-tasks
       toolsmiths-env: cf-deployment-env-airgapped
@@ -1010,6 +1012,7 @@ jobs:
     - task: mysql-8-0-system-tests
       image: image-cryogenics-essentials
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
+      tags: [ broadcom ]
       params:
         TEST_SUITE_NAME: mysql
         TEST_TLS_VERIFY_IDENTITY: false
@@ -1019,6 +1022,7 @@ jobs:
     - task: mysql-5-7-system-tests
       image: image-cryogenics-essentials
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
+      tags: [ broadcom ]
       params:
         TEST_SUITE_NAME: mysql
         TEST_TLS_VERIFY_IDENTITY: false
