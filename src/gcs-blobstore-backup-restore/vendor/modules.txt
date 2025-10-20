@@ -39,7 +39,7 @@ cloud.google.com/go/iam/apiv1/iampb
 cloud.google.com/go/monitoring/apiv3/v2
 cloud.google.com/go/monitoring/apiv3/v2/monitoringpb
 cloud.google.com/go/monitoring/internal
-# cloud.google.com/go/storage v1.56.2
+# cloud.google.com/go/storage v1.56.3
 ## explicit; go 1.23.0
 cloud.google.com/go/storage
 cloud.google.com/go/storage/experimental
@@ -61,8 +61,8 @@ github.com/Masterminds/semver/v3
 # github.com/cespare/xxhash/v2 v2.3.0
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
-# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.74
-## explicit; go 1.22.0
+# github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.75
+## explicit; go 1.23.0
 github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor
 # github.com/cncf/xds/go v0.0.0-20250501225837-2ac532fd4443
 ## explicit; go 1.19
