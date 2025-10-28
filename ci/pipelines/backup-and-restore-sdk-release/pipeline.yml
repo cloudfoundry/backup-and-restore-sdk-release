@@ -805,7 +805,7 @@ jobs:
         resource: cf-deployment-env-airgapped
         timeout: 6h
 - name: deploy-postgres
-  serial: true
+  serial_groups: [system-test-internal-dbs]
   plan:
   - in_parallel:
     - get: image-cryogenics-essentials
@@ -858,7 +858,7 @@ jobs:
         - bosh-release-v271.7/*.tgz
 
 - name: deploy-mysql
-  serial: true
+  serial_groups: [system-test-internal-dbs]
   plan:
   - in_parallel:
     - get: image-cryogenics-essentials
