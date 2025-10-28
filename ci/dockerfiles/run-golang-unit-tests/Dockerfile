@@ -1,3 +1,4 @@
-FROM golang:1
+ARG GO_VERSION
+FROM golang:$GO_VERSION
 
 COPY ./ /backup-and-restore-sdk-release

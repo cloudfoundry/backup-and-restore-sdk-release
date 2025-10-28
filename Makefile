@@ -56,6 +56,7 @@ supported-postgres=\
   ubuntu-jammy~~~~11-bullseye  \
   ubuntu-xenial~~~11-bullseye  \
 
+ruby-version=$$(cat .ruby-version)
 
 docker-clean: ## remove containers created to run the tests
 	if ! echo "$@" | grep -q "${FOCUS}" ; then                                  \
@@ -84,7 +85,7 @@ docker-unit-database: ## run database unit tests in Docker
 	docker compose up --build --exit-code-from unit-database unit-database
 
 docker-unit-template-specs: ## run templating unit tests in Docker
-	docker compose up --build --exit-code-from unit-sdk-template unit-sdk-template
+	RUBY_VERSION=$(ruby-version) docker compose up --build --exit-code-from unit-sdk-template unit-sdk-template
 
 docker-unit: docker-unit-blobstore-azure docker-unit-blobstore-gcs docker-unit-blobstore-s3 docker-unit-database docker-unit-template-specs ## run all unit tests in Docker
 
