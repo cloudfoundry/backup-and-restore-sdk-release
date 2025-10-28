@@ -426,7 +426,7 @@ resources:
     uri: https://github.com/cloudfoundry/backup-and-restore-sdk-release.git
     username: bosh-admin-bot
     password: *git_token
-    branch: topic/nmckjh/fix-ci
+    branch: main
     paths: [ "ci" ]
 
 - name: bosh-shared-ci
