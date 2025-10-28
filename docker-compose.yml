@@ -12,23 +12,38 @@ services:
       retries: 20
 
   unit-blobstore-azure:
-    build: { context: ., dockerfile: ci/dockerfiles/run-golang-unit-tests/Dockerfile }
+    build:
+      context: .
+      dockerfile: ci/dockerfiles/run-golang-unit-tests/Dockerfile
+      args: {GO_VERSION: 1}
     entrypoint: /backup-and-restore-sdk-release/src/azure-blobstore-backup-restore/scripts/run-unit-tests.bash
 
   unit-blobstore-gcs:
-    build: { context: ., dockerfile: ci/dockerfiles/run-golang-unit-tests/Dockerfile }
+    build:
+      context: .
+      dockerfile: ci/dockerfiles/run-golang-unit-tests/Dockerfile
+      args: {GO_VERSION: 1}
     entrypoint: /backup-and-restore-sdk-release/src/gcs-blobstore-backup-restore/scripts/run-unit-tests.bash
 
   unit-blobstore-s3:
-    build: { context: ., dockerfile: ci/dockerfiles/run-golang-unit-tests/Dockerfile }
+    build:
+      context: .
+      dockerfile: ci/dockerfiles/run-golang-unit-tests/Dockerfile
+      args: {GO_VERSION: 1}
     entrypoint: /backup-and-restore-sdk-release/src/s3-blobstore-backup-restore/scripts/run-unit-tests.bash
 
   unit-database:
-    build: { context: ., dockerfile: ci/dockerfiles/run-golang-unit-tests/Dockerfile }
+    build:
+      context: .
+      dockerfile: ci/dockerfiles/run-golang-unit-tests/Dockerfile
+      args: {GO_VERSION: 1}
     entrypoint: /backup-and-restore-sdk-release/src/database-backup-restore/scripts/run-unit-tests.bash
 
   unit-sdk-template:
-    build: { context: ., dockerfile: ci/dockerfiles/sdk-template-unit-tests/Dockerfile }
+    build:
+      context: .
+      dockerfile: ci/dockerfiles/sdk-template-unit-tests/Dockerfile
+      args: [RUBY_VERSION]
 
   system-db-mariadb:
     depends_on:
