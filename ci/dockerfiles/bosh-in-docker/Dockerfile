@@ -14,4 +14,4 @@ FROM dind-ubuntu
 COPY --from=third-party-deps bosh /usr/local/bin/bosh
 COPY --from=third-party-deps bosh-deployment/ /bosh-deployment
 COPY ./ /backup-and-restore-sdk-release
-ENTRYPOINT /backup-and-restore-sdk-release/ci/dockerfiles/bosh-in-docker/create-env.sh
+ENTRYPOINT /backup-and-restore-sdk-release-ci/ci/dockerfiles/bosh-in-docker/create-env.sh

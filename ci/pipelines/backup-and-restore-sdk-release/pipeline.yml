@@ -4,7 +4,7 @@
 #! ************************************
 secrets:
 #! Created using `shepherd create service-account` after logging in with WS1.
-- &shepherd_account_key ((bosh-ecosystem-shepherd-service-account))
+- &shepherd_account_key ((bosh-ecosystem-shepherd-service-account-lvn))
 
 - &aws-region eu-west-1
 - &aws-backup-region eu-central-1
@@ -87,7 +87,7 @@ secrets:
 
 
 - &mysql-5-7-deployment-name mysql-5-7-dev
-- &mysql-5-7-host 10.0.255.9
+- &mysql-5-7-host 10.244.0.9
 
 - &mysql_params_5_7
   MYSQL_HOSTNAME: *mysql-5-7-host
@@ -98,7 +98,7 @@ secrets:
 
 
 - &mysql-8-0-deployment-name mysql-8-0-dev
-- &mysql-8-0-host 10.0.255.10
+- &mysql-8-0-host 10.244.0.10
 
 - &mysql_params_8
   MYSQL_HOSTNAME: *mysql-8-0-host
@@ -115,7 +115,7 @@ secrets:
   db_password: postgres_password
 
 - &postgres-13-deployment-name postgres-13-dev
-- &postgres-13-host 10.0.255.14
+- &postgres-13-host 10.244.0.14
 
 - &bosh-smiths-creds
   BOSH_ENVIRONMENT: ((.:pooled-env.BOSH_ENVIRONMENT))
@@ -217,7 +217,8 @@ resources:
 - name: ncurses-blob
   type: ftp
   source:
-    url: https://ftp.gnu.org/pub/gnu/ncurses/
+    #! this mirror in Japan seems to be reachable from our network
+    url: http://www.ring.gr.jp/pub/GNU/ncurses/
     version_regex: "ncurses-(?P<version>[0-9]*.[0-9]*).tar.gz$"
 - name: postgres-13-blob
   type: ftp
@@ -297,27 +298,46 @@ resources:
 - name: cf-deployment-env-non-airgapped
   icon: pool
   type: shepherd
+  tags: [ broadcom ]
   source:
-    url: https://v2.shepherd.run
+    url: https://v2-shepherd.lvn.broadcom.net
     service-account-key: *shepherd_account_key
-    compatibility-mode: environments-app
     lease:
-      namespace: cryogenics
-      pool:
+      namespace: bosh-ecosystem
+      template:
+        name: cfd-bosh-lite
         namespace: official
-        name: cfd
+        revision: "3.0"
+        arguments:
+          gcp_region: us-west1
+          vm_type: n2d-standard-8
+          root_disk_gb: 32
+          disk_pool_gb: 200
+          cfd_version: ""
+          cfd_additional_opsfiles_b64: "LS0tCi0gdHlwZTogcmVwbGFjZQogIHBhdGg6IC9hZGRvbnMvbmFtZT1ib3NoLWRucy1hbGlhc2VzL2pvYnMvbmFtZT1ib3NoLWRucy1hbGlhc2VzL3Byb3BlcnRpZXMvYWxpYXNlcy8tCiAgdmFsdWU6CiAgICBkb21haW46IF8uKChzeXN0ZW1fZG9tYWluKSkKICAgIHRhcmdldHM6CiAgICAgIC0gZGVwbG95bWVudDogY2YKICAgICAgICBkb21haW46IGJvc2gKICAgICAgICBpbnN0YW5jZV9ncm91cDogcm91dGVyCiAgICAgICAgbmV0d29yazogZGVmYXVsdAogICAgICAgIHF1ZXJ5OiAiKiI="
+          bosh_additional_opsfiles_b64: ""
 
 - name: cf-deployment-env-airgapped
+  icon: pool
   type: shepherd
+  tags: [ broadcom ]
   source:
-    url: https://v2.shepherd.run
+    url: https://v2-shepherd.lvn.broadcom.net
     service-account-key: *shepherd_account_key
     lease:
-      namespace: cryogenics
+      namespace: bosh-ecosystem
       template:
-        namespace: binj
-        name: gcp-cfd-airgap-template
-        revision: "1.2"
+        name: cfd-bosh-lite
+        namespace: official
+        revision: "3.0"
+        arguments:
+          gcp_region: us-west1
+          vm_type: n2d-standard-8
+          root_disk_gb: 32
+          disk_pool_gb: 200
+          cfd_version: ""
+          cfd_additional_opsfiles_b64: "LS0tCi0gdHlwZTogcmVwbGFjZQogIHBhdGg6IC9hZGRvbnMvbmFtZT1ib3NoLWRucy1hbGlhc2VzL2pvYnMvbmFtZT1ib3NoLWRucy1hbGlhc2VzL3Byb3BlcnRpZXMvYWxpYXNlcy8tCiAgdmFsdWU6CiAgICBkb21haW46IF8uKChzeXN0ZW1fZG9tYWluKSkKICAgIHRhcmdldHM6CiAgICAgIC0gZGVwbG95bWVudDogY2YKICAgICAgICBkb21haW46IGJvc2gKICAgICAgICBpbnN0YW5jZV9ncm91cDogcm91dGVyCiAgICAgICAgbmV0d29yazogZGVmYXVsdAogICAgICAgIHF1ZXJ5OiAiKiI="
+          bosh_additional_opsfiles_b64: ""
 
 - name: rds-ca-bundle
   type: file-url
@@ -397,6 +417,17 @@ resources:
     username: bosh-admin-bot
     password: *git_token
     branch: main
+    ignore_paths: [ "ci" ]
+
+- name: backup-and-restore-sdk-release-ci
+  type: git
+  icon: github
+  source:
+    uri: https://github.com/cloudfoundry/backup-and-restore-sdk-release.git
+    username: bosh-admin-bot
+    password: *git_token
+    branch: topic/nmckjh/fix-ci
+    paths: [ "ci" ]
 
 - name: bosh-shared-ci
   type: git
@@ -429,11 +460,11 @@ resources:
     name: bosh-aws-xen-hvm-ubuntu-jammy-go_agent
 
 - name: jammy-stemcell
+  type: bosh-io-stemcell
   icon: seed-outline
   source:
-    name: bosh-google-kvm-ubuntu-jammy-go_agent
+    name: bosh-warden-boshlite-ubuntu-jammy-go_agent
     version_family: latest
-  type: bosh-io-stemcell
 
 - name: mysql-8-0-deployment
   type: bosh-deployment
@@ -556,6 +587,7 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       trigger: true
       passed: ["lint-pipeline"]
@@ -568,26 +600,26 @@ jobs:
   - in_parallel:
     - task: sdk-template-unit-tests
       image: bosh-ecosystem-docker-image
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-template-unit-tests/task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-template-unit-tests/task.yml
     - task: databases-unit-tests
       image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/database-unit-tests/task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/database-unit-tests/task.yml
       privileged: true
     - task: s3-blobstore-unit-tests
       image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: s3-blobstore-backup-restore
         GINKGO_EXTRA_FLAGS: -p --skip-package s3bucket
     - task: azure-blobstore-unit-tests
       image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: azure-blobstore-backup-restore
         GINKGO_EXTRA_FLAGS: -p --skip-package contract_test
     - task: gcs-blobstore-unit-tests
       image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: gcs-blobstore-backup-restore
         GINKGO_EXTRA_FLAGS: -p --skip-package contract_test
@@ -617,6 +649,7 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       trigger: true
       passed:
@@ -627,7 +660,7 @@ jobs:
     - task: aws-s3-blobstore-contract-tests
       image: image-cryogenics-essentials
       attempts: *number_of_test_retries
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: s3-blobstore-backup-restore/s3bucket
         S3_LIVE_REGION: *aws-region
@@ -637,14 +670,14 @@ jobs:
         <<: *S3_AWS
     - task: gcs-blobstore-contract-tests
       image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: gcs-blobstore-backup-restore/contract_test
         GCP_SERVICE_ACCOUNT_KEY: *service_accounts_gcp_cf_backup_and_restore_owner_role_json_key
         GCP_PROJECT_NAME: ltnz001-tas-opsmanager
     - task: azure-blobstore-contract-tests
       image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: azure-blobstore-backup-restore/contract_test
         AZURE_STORAGE_ACCOUNT: *azure_credentials_storage_account_1
@@ -678,6 +711,7 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       resource: backup-and-restore-sdk-release
       passed: [build-rc]
@@ -690,7 +724,7 @@ jobs:
       trigger: true
   - put: s3-backuper-with-iam-instance-profile-deployment
     params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/s3-backuper-with-iam-instance-profile.yml
+      manifest: backup-and-restore-sdk-release-ci/ci/manifests/s3-backuper-with-iam-instance-profile.yml
       stemcells:
       - jammy-stemcell-aws/*.tgz
       releases:
@@ -710,6 +744,7 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       trigger: true
       passed:
@@ -722,7 +757,7 @@ jobs:
   - in_parallel:
     - task: s3-with-iam-instance-profile
       image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.yml
       params:
         TEST_SUITE_NAME: s3
         FOCUS_SPEC: backs up and restores in-place # focus on one it to avoid redundant testing
@@ -741,7 +776,7 @@ jobs:
       cleanup: true
       delete:
         enabled: true
-      manifest: backup-and-restore-sdk-release/ci/manifests/s3-backuper-with-iam-instance-profile.yml
+      manifest: backup-and-restore-sdk-release-ci/ci/manifests/s3-backuper-with-iam-instance-profile.yml
       stemcells:
       - jammy-stemcell-aws/*.tgz
       vars:
@@ -761,6 +796,7 @@ jobs:
     - get: image-cryogenics-essentials
       tags: [ broadcom ]
     - put: cf-deployment-env-airgapped
+      tags: [ broadcom ]
       attempts: *number_of_claim_retries
       timeout: 6h
       params:
@@ -768,13 +804,8 @@ jobs:
         duration: 24h
         resource: cf-deployment-env-airgapped
         timeout: 6h
-  - task: update-cloud-config
-    image: image-cryogenics-essentials
-    file: backup-and-restore-sdk-release/ci/tasks/update-cloud-config/task.yml
-    input_mapping:
-      cf-deployment-env: cf-deployment-env-airgapped
 - name: deploy-postgres
-  serial: true
+  serial_groups: [system-test-internal-dbs]
   plan:
   - in_parallel:
     - get: image-cryogenics-essentials
@@ -785,6 +816,7 @@ jobs:
     - get: bosh-release-v268.6
     - get: postgres-release-v30
     - get: postgres-release-v37
+    - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       resource: backup-and-restore-sdk-release
       passed:
@@ -797,40 +829,43 @@ jobs:
     - get: jammy-stemcell
     - get: cf-deployment-env-airgapped
       trigger: true
+      tags: [ broadcom ]
       passed:
       - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
-    file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    tags: [ broadcom ]
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
-  - in_parallel:
-    - put: postgres-13-dev-deployment
-      params:
-        manifest: backup-and-restore-sdk-release/ci/manifests/postgres-13.yml
-        stemcells:
-        - jammy-stemcell/*.tgz
-        vars:
-          deployment-name: *postgres-13-deployment-name
-          db_host: *postgres-13-host
-          <<: *pg_deployment_common
-          availability_zone: z1
-          vm_extensions: ["cf-tcp-router-network-properties"]
-        ops_files:
-        - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
-        source_file: source-file/source-file.yml
-        releases:
+  - put: postgres-13-dev-deployment
+    tags: [ broadcom ]
+    params:
+      manifest: backup-and-restore-sdk-release-ci/ci/manifests/postgres-13.yml
+      stemcells:
+      - jammy-stemcell/*.tgz
+      vars:
+        deployment-name: *postgres-13-deployment-name
+        db_host: *postgres-13-host
+        <<: *pg_deployment_common
+        availability_zone: z1
+        vm_extensions: ["cf-tcp-router-network-properties"]
+      ops_files:
+      - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
+      source_file: source-file/source-file.yml
+      releases:
         - bpm-release/*.tgz
         - bosh-release-v271.7/*.tgz
 
 - name: deploy-mysql
-  serial: true
+  serial_groups: [system-test-internal-dbs]
   plan:
   - in_parallel:
     - get: image-cryogenics-essentials
       tags: [ broadcom ]
     - get: bpm-release
     - get: pxc-release
+    - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       passed:
       - claim-cf-deployment-airgapped
@@ -842,11 +877,13 @@ jobs:
     - get: jammy-stemcell
     - get: cf-deployment-env-airgapped
       trigger: true
+      tags: [ broadcom ]
       passed:
       - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
-    file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    tags: [ broadcom ]
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
   - do:
@@ -855,8 +892,9 @@ jobs:
     #! refuses to grant some locks.
     - put: mysql-8-0-deployment
       timeout: 2h
+      tags: [ broadcom ]
       params:
-        manifest: backup-and-restore-sdk-release/ci/manifests/mysql.yml
+        manifest: backup-and-restore-sdk-release-ci/ci/manifests/mysql.yml
         stemcells:
         - jammy-stemcell/*.tgz
         vars:
@@ -868,15 +906,16 @@ jobs:
           <<: *mysql_certs_common
           vm_extensions: ["cf-tcp-router-network-properties"]
         ops_files:
-        - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
+        - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
         source_file: source-file/source-file.yml
         releases:
         - bpm-release/*.tgz
         - pxc-release/*.tgz
     - put: mysql-5-7-deployment
       timeout: 2h
+      tags: [ broadcom ]
       params:
-        manifest: backup-and-restore-sdk-release/ci/manifests/mysql.yml
+        manifest: backup-and-restore-sdk-release-ci/ci/manifests/mysql.yml
         stemcells:
         - jammy-stemcell/*.tgz
         vars:
@@ -888,7 +927,7 @@ jobs:
           <<: *mysql_certs_common
           vm_extensions: ["cf-tcp-router-network-properties"]
         ops_files:
-        - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
+        - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
         source_file: source-file/source-file.yml
         releases:
         - bpm-release/*.tgz
@@ -898,6 +937,7 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       passed:
         - claim-cf-deployment-airgapped
@@ -911,16 +951,19 @@ jobs:
       tags: [ broadcom ]
     - get: cf-deployment-env-airgapped
       trigger: true
+      tags: [ broadcom ]
       passed:
         - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
-    file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    tags: [ broadcom ]
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
   - put: database-backup-restorer-deployment
+    tags: [ broadcom ]
     params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/database-backup-restorer.yml
+      manifest: backup-and-restore-sdk-release-ci/ci/manifests/database-backup-restorer.yml
       stemcells:
       - jammy-stemcell/*.tgz
       releases:
@@ -930,7 +973,7 @@ jobs:
         availability_zone: z1
         vm_extensions: ["cf-tcp-router-network-properties"]
       ops_files:
-      - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
+      - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
       source_file: source-file/source-file.yml
 
 - name: system-tests-internal-dbs
@@ -939,6 +982,7 @@ jobs:
   - in_parallel:
     - get: image-cryogenics-essentials
       tags: [ broadcom ]
+    - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-database-sdk-on-airgapped-env
@@ -948,6 +992,7 @@ jobs:
       resource: gcp-db-certs-zip
     - get: cf-deployment-env-airgapped
       trigger: true
+      tags: [ broadcom ]
       passed:
       - deploy-database-sdk-on-airgapped-env
       - deploy-postgres
@@ -957,6 +1002,7 @@ jobs:
   - task: alias-env
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
+    tags: [ broadcom ]
     input_mapping:
       cryogenics-tasks: cryogenics-concourse-tasks
       toolsmiths-env: cf-deployment-env-airgapped
@@ -965,7 +1011,8 @@ jobs:
   - in_parallel:
     - task: mysql-8-0-system-tests
       image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
+      tags: [ broadcom ]
       params:
         TEST_SUITE_NAME: mysql
         TEST_TLS_VERIFY_IDENTITY: false
@@ -974,7 +1021,8 @@ jobs:
         <<: *mysql_params_8
     - task: mysql-5-7-system-tests
       image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
+      tags: [ broadcom ]
       params:
         TEST_SUITE_NAME: mysql
         TEST_TLS_VERIFY_IDENTITY: false
@@ -986,9 +1034,11 @@ jobs:
   plan:
   - get: cf-deployment-env-airgapped
     trigger: true
+    tags: [ broadcom ]
     passed:
     - system-tests-internal-dbs
   - put: cf-deployment-env-airgapped
+    tags: [ broadcom ]
     params:
       action: release
       resource: cf-deployment-env-airgapped
@@ -1004,6 +1054,7 @@ jobs:
     - get: image-cryogenics-essentials
       tags: [ broadcom ]
     - put: cf-deployment-env-non-airgapped
+      tags: [ broadcom ]
       attempts: *number_of_claim_retries
       timeout: 6h
       params:
@@ -1011,16 +1062,12 @@ jobs:
         duration: 24h
         resource: cf-deployment-env-non-airgapped
         timeout: 6h
-  - task: update-cloud-config
-    image: image-cryogenics-essentials
-    file: backup-and-restore-sdk-release/ci/tasks/update-cloud-config/task.yml
-    input_mapping:
-      cf-deployment-env: cf-deployment-env-non-airgapped
 
 - name: deploy-database-sdk
   serial: true
   plan:
   - in_parallel:
+    - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       passed:
       - claim-cf-deployment
@@ -1034,16 +1081,19 @@ jobs:
       tags: [ broadcom ]
     - get: cf-deployment-env-non-airgapped
       trigger: true
+      tags: [ broadcom ]
       passed:
       - claim-cf-deployment
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
-    file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    tags: [ broadcom ]
     input_mapping:
       cf-deployment-env: cf-deployment-env-non-airgapped
   - put: database-backup-restorer-deployment
+    tags: [ broadcom ]
     params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/database-backup-restorer.yml
+      manifest: backup-and-restore-sdk-release-ci/ci/manifests/database-backup-restorer.yml
       stemcells:
       - jammy-stemcell/*.tgz
       releases:
@@ -1053,13 +1103,14 @@ jobs:
         availability_zone: z1
         vm_extensions: ["cf-tcp-router-network-properties"]
       ops_files:
-      - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
+      - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
       source_file: source-file/source-file.yml
 
 - name: deploy-s3-blobstore-sdk
   serial: true
   plan:
   - in_parallel:
+    - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       passed:
       - claim-cf-deployment
@@ -1071,18 +1122,21 @@ jobs:
     - get: jammy-stemcell
     - get: cf-deployment-env-non-airgapped
       trigger: true
+      tags: [ broadcom ]
       passed:
       - claim-cf-deployment
     - get: image-cryogenics-essentials
       tags: [ broadcom ]
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
-    file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    tags: [ broadcom ]
     input_mapping:
       cf-deployment-env: cf-deployment-env-non-airgapped
   - put: aws-blobstore-sdk-deployment
+    tags: [ broadcom ]
     params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/s3-backuper.yml
+      manifest: backup-and-restore-sdk-release-ci/ci/manifests/s3-backuper.yml
       stemcells:
       - jammy-stemcell/*.tgz
       releases:
@@ -1115,13 +1169,14 @@ jobs:
         <<: *aws-access
         vm_extensions: ["cf-tcp-router-network-properties"]
       ops_files:
-      - backup-and-restore-sdk-release/ci/manifests/ops-files/apply_vm_extension.yml
+      - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
       source_file: source-file/source-file.yml
 
 - name: deploy-azure-blobstore-sdk
   serial: true
   plan:
   - in_parallel:
+    - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       passed:
       - claim-cf-deployment
@@ -1135,16 +1190,19 @@ jobs:
       tags: [ broadcom ]
     - get: cf-deployment-env-non-airgapped
       trigger: true
+      tags: [ broadcom ]
       passed:
       - claim-cf-deployment
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
-    file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    tags: [ broadcom ]
     input_mapping:
       cf-deployment-env: cf-deployment-env-non-airgapped
   - put: azure-blobstore-sdk-deployment
+    tags: [ broadcom ]
     params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/azure-backuper.yml
+      manifest: backup-and-restore-sdk-release-ci/ci/manifests/azure-backuper.yml
       stemcells:
       - jammy-stemcell/*.tgz
       releases:
@@ -1163,6 +1221,7 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       passed:
       - claim-cf-deployment
@@ -1174,18 +1233,21 @@ jobs:
     - get: jammy-stemcell
     - get: cf-deployment-env-non-airgapped
       trigger: true
+      tags: [ broadcom ]
       passed:
       - claim-cf-deployment
     - get: image-cryogenics-essentials
       tags: [ broadcom ]
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
-    file: backup-and-restore-sdk-release/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
+    tags: [ broadcom ]
     input_mapping:
       cf-deployment-env: cf-deployment-env-non-airgapped
   - put: gcs-blobstore-sdk-deployment
+    tags: [ broadcom ]
     params:
-      manifest: backup-and-restore-sdk-release/ci/manifests/gcs-backuper.yml
+      manifest: backup-and-restore-sdk-release-ci/ci/manifests/gcs-backuper.yml
       stemcells:
       - jammy-stemcell/*.tgz
       releases:
@@ -1201,6 +1263,7 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-database-sdk
@@ -1210,13 +1273,14 @@ jobs:
       resource: rds-ca-bundle
     - get: cf-deployment-env-non-airgapped
       trigger: true
+      tags: [ broadcom ]
       passed:
       - deploy-database-sdk
     - get: image-cryogenics-essentials
       tags: [ broadcom ]
   - put: terraform
     params:
-      terraform_source: backup-and-restore-sdk-release/ci/terraform/bbr-sdk-system-tests/aws/
+      terraform_source: backup-and-restore-sdk-release-ci/ci/terraform/bbr-sdk-system-tests/aws/
       env_name: bbr-sdk-external-rds-dbs
       delete_on_failure: true
       vars:
@@ -1228,6 +1292,7 @@ jobs:
   - task: alias-env
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
+    tags: [ broadcom ]
     input_mapping:
       cryogenics-tasks: cryogenics-concourse-tasks
       toolsmiths-env: cf-deployment-env-non-airgapped
@@ -1236,7 +1301,8 @@ jobs:
   - in_parallel:
     - task: postgres-tls-system-tests-15
       image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.yml
+#      tags: [ broadcom ]
       input_mapping:
         terraform-state: terraform
       params:
@@ -1250,7 +1316,8 @@ jobs:
     - do:
       - task: postgres-system-tests-13
         image: image-cryogenics-essentials
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+        file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.yml
+#        tags: [ broadcom ]
         input_mapping:
           terraform-state: terraform
         params:
@@ -1261,7 +1328,8 @@ jobs:
           TEST_SUITE_NAME: postgresql
       - task: postgres-tls-system-tests-13
         image: image-cryogenics-essentials
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+        file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.yml
+#        tags: [ broadcom ]
         input_mapping:
           terraform-state: terraform
         params:
@@ -1275,7 +1343,8 @@ jobs:
     - do:
       - task: maria-system-tests-10-6
         image: image-cryogenics-essentials
-        file: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.yml
+        file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.yml
+#        tags: [ broadcom ]
         input_mapping:
           terraform-state: terraform
         params:
@@ -1292,6 +1361,7 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-database-sdk
@@ -1300,6 +1370,7 @@ jobs:
       - deploy-gcs-blobstore-sdk
     - get: cf-deployment-env-non-airgapped
       trigger: true
+      tags: [ broadcom ]
       passed:
       - deploy-database-sdk
       - deploy-s3-blobstore-sdk
@@ -1312,6 +1383,7 @@ jobs:
   - task: alias-env
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
+    tags: [ broadcom ]
     input_mapping:
       cryogenics-tasks: cryogenics-concourse-tasks
       toolsmiths-env: cf-deployment-env-non-airgapped
@@ -1320,7 +1392,8 @@ jobs:
   - in_parallel:
     - task: s3
       image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.yml
+      tags: [ broadcom ]
       params:
         <<: *bosh-smiths-creds
         TEST_SUITE_NAME: s3
@@ -1348,7 +1421,8 @@ jobs:
         <<: *AWS_ACCESS
     - task: azure-system-tests
       image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.yml
+      tags: [ broadcom ]
       params:
         <<: *bosh-smiths-creds
         TEST_SUITE_NAME: azure
@@ -1361,7 +1435,8 @@ jobs:
         AZURE_DIFFERENT_CONTAINER_NAME: bbr-system-test-azure-different-container
     - task: gcs-blobstore-backuper-system-tests
       image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-system-blobstore/task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.yml
+      tags: [ broadcom ]
       attempts: *number_of_test_retries
       params:
         <<: *bosh-smiths-creds
@@ -1376,10 +1451,12 @@ jobs:
   plan:
   - get: cf-deployment-env-non-airgapped
     trigger: true
+    tags: [ broadcom ]
     passed:
     - system-tests-external-dbs-rds
     - system-tests-blobstore-backuper
   - put: cf-deployment-env-non-airgapped
+    tags: [ broadcom ]
     params:
       action: release
       resource: cf-deployment-env-non-airgapped
@@ -1391,7 +1468,8 @@ jobs:
     trigger: true
     passed:
     - system-tests-internal-dbs
-    - system-tests-external-dbs-rds
+    #! TODO reenable this when these dbs are reachable from cfd and the concourse worker; see TNZ-64137
+    #! - system-tests-external-dbs-rds
     - system-tests-blobstore-backuper
     - system-tests-blobstore-backuper-with-iam-instance-profile
 
@@ -1569,6 +1647,7 @@ jobs:
       tags: [ broadcom ]
     - get: golang-release
       trigger: true
+    - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       params:
         branch: main
@@ -1638,23 +1717,23 @@ jobs:
   - in_parallel:
     - task: databases-unit-tests
       image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/database-unit-tests/task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/database-unit-tests/task.yml
       privileged: true
     - task: s3-blobstore-unit-tests
       image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: s3-blobstore-backup-restore
         GINKGO_EXTRA_FLAGS: -p --skip-package s3bucket
     - task: azure-blobstore-unit-tests
       image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: azure-blobstore-backup-restore
         GINKGO_EXTRA_FLAGS: -p --skip-package contract_test
     - task: gcs-blobstore-unit-tests
       image: image-cryogenics-essentials
-      file: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.yml
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: gcs-blobstore-backup-restore
         GINKGO_EXTRA_FLAGS: -p --skip-package contract_test
@@ -1669,6 +1748,7 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
     - get: bosh-ecosystem-docker-image
     - get: cryogenics-concourse-tasks
@@ -1707,9 +1787,7 @@ jobs:
   # Ruby
   - task: bump-ruby
     image: ruby-image
-    file: backup-and-restore-sdk-release/ci/tasks/bump-ruby/task.yml
-    input_mapping:
-      backup-and-restore-sdk-release: backup-and-restore-sdk-release
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-ruby/task.yml
     output_mapping:
       bumped-repo: backup-and-restore-sdk-release
     params:
@@ -1717,7 +1795,7 @@ jobs:
       GIT_EMAIL: *github_email
   - task: sdk-template-unit-tests
     image: bosh-ecosystem-docker-image
-    file: backup-and-restore-sdk-release/ci/tasks/sdk-template-unit-tests/task.yml
+    file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-template-unit-tests/task.yml
   # MariaDB 10.6
   - task: bump-mariadb-10-6-blob
     image: image-cryogenics-essentials

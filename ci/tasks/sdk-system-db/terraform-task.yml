@@ -6,10 +6,11 @@ image_resource:
     tag: 0.1.108
 inputs:
   - name: backup-and-restore-sdk-release
+  - name: backup-and-restore-sdk-release-ci
   - name: terraform-state
   - name: cert-store
 run:
-  path: backup-and-restore-sdk-release/ci/tasks/sdk-system-db/terraform-task.sh
+  path: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.sh
 params:
   BOSH_ENVIRONMENT:
   BOSH_CLIENT:

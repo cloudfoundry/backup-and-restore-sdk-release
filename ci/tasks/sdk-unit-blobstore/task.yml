@@ -6,6 +6,7 @@ image_resource:
     tag: 0.1.108
 inputs:
   - name: backup-and-restore-sdk-release
+  - name: backup-and-restore-sdk-release-ci
 params:
   PACKAGE_NAME:
   GINKGO_EXTRA_FLAGS:
@@ -24,4 +25,4 @@ params:
   S3_SECRET_ACCESS_KEY:
   S3_BIG_FILE_BUCKET:
 run:
-  path: backup-and-restore-sdk-release/ci/tasks/sdk-unit-blobstore/task.sh
+  path: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.sh

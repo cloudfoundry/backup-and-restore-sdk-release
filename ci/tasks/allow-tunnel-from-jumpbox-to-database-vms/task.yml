@@ -9,6 +9,6 @@ params:
   DEBUG:
 inputs:
   - name: env
-  - name: backup-and-restore-sdk-release
+  - name: backup-and-restore-sdk-release-ci
 run:
-  path: backup-and-restore-sdk-release/ci/tasks/allow-tunnel-from-jumpbox-to-database-vms/task.sh
+  path: backup-and-restore-sdk-release-ci/ci/tasks/allow-tunnel-from-jumpbox-to-database-vms/task.sh

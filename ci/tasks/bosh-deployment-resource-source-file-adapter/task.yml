@@ -7,7 +7,7 @@ image_resource:
 
 inputs:
 - name: bbl-state-bosh-lite
-- name: backup-and-restore-sdk-release
+- name: backup-and-restore-sdk-release-ci
 
 outputs:
 - name: source-file
@@ -17,4 +17,4 @@ params:
 
 
 run:
-  path: backup-and-restore-sdk-release/ci/tasks/bosh-deployment-resource-source-file-adapter/task.sh
+  path: backup-and-restore-sdk-release-ci/ci/tasks/bosh-deployment-resource-source-file-adapter/task.sh
