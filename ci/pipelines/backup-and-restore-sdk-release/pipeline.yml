@@ -453,6 +453,12 @@ resources:
   source:
     uri: https://github.com/cloudfoundry/bosh-package-golang-release.git
     tag_filter: v*
+- name: golang-release-image
+  type: registry-image
+  source:
+    repository: bosh/golang-release
+    username: ((docker.username))
+    password: ((docker.password))
 
 - name: jammy-stemcell-aws
   type: bosh-io-stemcell
@@ -1639,6 +1645,7 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: golang-release-image
     - get: every-week
       trigger: true
     - get: cryogenics-concourse-tasks
@@ -1655,60 +1662,75 @@ jobs:
   # Bump each package src directory
   - task: bump-deps-azure-blobstore-backup-restore
     file: golang-release/ci/tasks/shared/bump-deps.yml
+    image: golang-release-image
+    tags: [ broadcom ]
     params:
       GIT_USER_NAME: *github_user
       GIT_USER_EMAIL: *github_email
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/azure-blobstore-backup-restore
       DESIRED_GO_MAJOR_MINOR: '1.23'
+      GOPROXY: https://((broadcom_artifactory_mirrors.username)):((broadcom_artifactory_mirrors.password))@((broadcom_artifactory_mirrors.golang)),off
     input_mapping:
       input_repo: backup-and-restore-sdk-release
     output_mapping:
       output_repo: backup-and-restore-sdk-release
   - task: bump-deps-database-backup-restore
     file: golang-release/ci/tasks/shared/bump-deps.yml
+    image: golang-release-image
+    tags: [ broadcom ]
     params:
       GIT_USER_NAME: *github_user
       GIT_USER_EMAIL: *github_email
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/database-backup-restore
       DESIRED_GO_MAJOR_MINOR: '1.23'
+      GOPROXY: https://((broadcom_artifactory_mirrors.username)):((broadcom_artifactory_mirrors.password))@((broadcom_artifactory_mirrors.golang)),off
     input_mapping:
       input_repo: backup-and-restore-sdk-release
     output_mapping:
       output_repo: backup-and-restore-sdk-release
   - task: bump-deps-gcs-blobstore-backup-restore
     file: golang-release/ci/tasks/shared/bump-deps.yml
+    image: golang-release-image
+    tags: [ broadcom ]
     params:
       GIT_USER_NAME: *github_user
       GIT_USER_EMAIL: *github_email
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/gcs-blobstore-backup-restore
       DESIRED_GO_MAJOR_MINOR: '1.23'
+      GOPROXY: https://((broadcom_artifactory_mirrors.username)):((broadcom_artifactory_mirrors.password))@((broadcom_artifactory_mirrors.golang)),off
     input_mapping:
       input_repo: backup-and-restore-sdk-release
     output_mapping:
       output_repo: backup-and-restore-sdk-release
   - task: bump-deps-s3-blobstore-backup-restore
     file: golang-release/ci/tasks/shared/bump-deps.yml
+    image: golang-release-image
+    tags: [ broadcom ]
     params:
       GIT_USER_NAME: *github_user
       GIT_USER_EMAIL: *github_email
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/s3-blobstore-backup-restore
       DESIRED_GO_MAJOR_MINOR: '1.23'
+      GOPROXY: https://((broadcom_artifactory_mirrors.username)):((broadcom_artifactory_mirrors.password))@((broadcom_artifactory_mirrors.golang)),off
     input_mapping:
       input_repo: backup-and-restore-sdk-release
     output_mapping:
       output_repo: backup-and-restore-sdk-release
   - task: bump-deps-system-tests
     file: golang-release/ci/tasks/shared/bump-deps.yml
+    image: golang-release-image
+    tags: [ broadcom ]
     params:
       GIT_USER_NAME: *github_user
       GIT_USER_EMAIL: *github_email
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/system-tests
       DESIRED_GO_MAJOR_MINOR: '1.23'
+      GOPROXY: https://((broadcom_artifactory_mirrors.username)):((broadcom_artifactory_mirrors.password))@((broadcom_artifactory_mirrors.golang)),off
     input_mapping:
       input_repo: backup-and-restore-sdk-release
     output_mapping:
