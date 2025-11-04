@@ -1670,7 +1670,8 @@ jobs:
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/azure-blobstore-backup-restore
       DESIRED_GO_MAJOR_MINOR: '1.23'
-      GOPROXY: https://((broadcom_artifactory_mirrors.username)):((broadcom_artifactory_mirrors.password))@((broadcom_artifactory_mirrors.golang)),off
+      GOPROXY: https://((broadcom_artifactory_mirrors.username)):((broadcom_artifactory_mirrors.password))@((broadcom_artifactory_mirrors.goproxy)),off
+      GOSUMDB: https://(broadcom_artifactory_mirrors.gosumdb))
     input_mapping:
       input_repo: backup-and-restore-sdk-release
     output_mapping:
@@ -1685,7 +1686,8 @@ jobs:
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/database-backup-restore
       DESIRED_GO_MAJOR_MINOR: '1.23'
-      GOPROXY: https://((broadcom_artifactory_mirrors.username)):((broadcom_artifactory_mirrors.password))@((broadcom_artifactory_mirrors.golang)),off
+      GOPROXY: https://((broadcom_artifactory_mirrors.username)):((broadcom_artifactory_mirrors.password))@((broadcom_artifactory_mirrors.goproxy)),off
+      GOSUMDB: https://(broadcom_artifactory_mirrors.gosumdb))
     input_mapping:
       input_repo: backup-and-restore-sdk-release
     output_mapping:
@@ -1700,7 +1702,8 @@ jobs:
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/gcs-blobstore-backup-restore
       DESIRED_GO_MAJOR_MINOR: '1.23'
-      GOPROXY: https://((broadcom_artifactory_mirrors.username)):((broadcom_artifactory_mirrors.password))@((broadcom_artifactory_mirrors.golang)),off
+      GOPROXY: https://((broadcom_artifactory_mirrors.username)):((broadcom_artifactory_mirrors.password))@((broadcom_artifactory_mirrors.goproxy)),off
+      GOSUMDB: https://(broadcom_artifactory_mirrors.gosumdb))
     input_mapping:
       input_repo: backup-and-restore-sdk-release
     output_mapping:
@@ -1715,7 +1718,8 @@ jobs:
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/s3-blobstore-backup-restore
       DESIRED_GO_MAJOR_MINOR: '1.23'
-      GOPROXY: https://((broadcom_artifactory_mirrors.username)):((broadcom_artifactory_mirrors.password))@((broadcom_artifactory_mirrors.golang)),off
+      GOPROXY: https://((broadcom_artifactory_mirrors.username)):((broadcom_artifactory_mirrors.password))@((broadcom_artifactory_mirrors.goproxy)),off
+      GOSUMDB: https://(broadcom_artifactory_mirrors.gosumdb))
     input_mapping:
       input_repo: backup-and-restore-sdk-release
     output_mapping:
@@ -1730,7 +1734,8 @@ jobs:
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/system-tests
       DESIRED_GO_MAJOR_MINOR: '1.23'
-      GOPROXY: https://((broadcom_artifactory_mirrors.username)):((broadcom_artifactory_mirrors.password))@((broadcom_artifactory_mirrors.golang)),off
+      GOPROXY: https://((broadcom_artifactory_mirrors.username)):((broadcom_artifactory_mirrors.password))@((broadcom_artifactory_mirrors.goproxy)),off
+      GOSUMDB: https://(broadcom_artifactory_mirrors.gosumdb))
     input_mapping:
       input_repo: backup-and-restore-sdk-release
     output_mapping:
