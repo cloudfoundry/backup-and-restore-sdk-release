@@ -456,9 +456,7 @@ resources:
 - name: golang-release-image
   type: registry-image
   source:
-    repository: bosh/golang-release
-    username: ((docker.username))
-    password: ((docker.password))
+    repository: ghcr.io/cloudfoundry/bosh/golang-release
 
 - name: jammy-stemcell-aws
   type: bosh-io-stemcell
