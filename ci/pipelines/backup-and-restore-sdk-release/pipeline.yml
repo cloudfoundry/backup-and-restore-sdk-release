@@ -217,8 +217,7 @@ resources:
 - name: ncurses-blob
   type: ftp
   source:
-    #! this mirror in Japan seems to be reachable from our network
-    url: http://www.ring.gr.jp/pub/GNU/ncurses/
+    url: https://mirrors.kernel.org/gnu/ncurses/
     version_regex: "ncurses-(?P<version>[0-9]*.[0-9]*).tar.gz$"
 - name: postgres-13-blob
   type: ftp
