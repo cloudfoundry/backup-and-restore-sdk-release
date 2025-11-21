@@ -133,14 +133,15 @@ secrets:
 - &ghe_svc_account_personal_access_token ((svc-bosh-ecosystem-ghe-personal-access-token))
 
 #! Artifactory token
-- &artifactory_token ((broadcom_artifactory_api_key))
+- &artifactory_username ((broadcom_artifactory.username))
+- &artifactory_token ((broadcom_artifactory.password))
 
 resource_types:
 - name: ftp
   type: registry-image
   source:
     repository: tas-bosh-docker-dev-local.usw1.packages.broadcom.com/cryogenics/concourse-ftp-resource
-    username: svc.bosh-ecosystem
+    username: *artifactory_username
     password: *artifactory_token
   tags: [ broadcom ]
 
@@ -148,7 +149,7 @@ resource_types:
   source:
     tag: v1
     repository: tas-bosh-docker-dev-local.usw1.packages.broadcom.com/cryogenics/shepherd2-concourse-resource
-    username: svc.bosh-ecosystem
+    username: *artifactory_username
     password: *artifactory_token
   type: registry-image
   tags: [ broadcom ]
@@ -250,7 +251,7 @@ resources:
   type: registry-image
   source:
     repository: tas-bosh-docker-dev-local.usw1.packages.broadcom.com/cryogenics/cryo-essentials
-    username: svc.bosh-ecosystem
+    username: *artifactory_username
     password: *artifactory_token
   tags: [ broadcom ]
 
