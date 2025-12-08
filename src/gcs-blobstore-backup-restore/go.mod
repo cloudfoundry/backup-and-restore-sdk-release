@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/storage v1.56.3
 	github.com/cloudfoundry-incubator/bosh-backup-and-restore v1.9.75
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.11.3
-	github.com/onsi/ginkgo/v2 v2.27.2
+	github.com/onsi/ginkgo/v2 v2.27.3
 	github.com/onsi/gomega v1.38.2
 	golang.org/x/net v0.43.0
 	golang.org/x/oauth2 v0.30.0
@@ -28,7 +28,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20250501225837-2ac532fd4443 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.36.0 // indirect
-	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
+	github.com/envoyproxy/protoc-gen-validate v1.3.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.2 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
