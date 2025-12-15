@@ -232,7 +232,7 @@ github.com/onsi/gomega/matchers/support/goraph/edge
 github.com/onsi/gomega/matchers/support/goraph/node
 github.com/onsi/gomega/matchers/support/goraph/util
 github.com/onsi/gomega/types
-# github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
+# github.com/planetscale/vtprotobuf v0.6.1-0.20240409071808-615f978279ca
 ## explicit; go 1.20
 github.com/planetscale/vtprotobuf/protohelpers
 github.com/planetscale/vtprotobuf/types/known/anypb
@@ -608,7 +608,7 @@ google.golang.org/grpc/xds/internal/xdsclient/xdslbregistry
 google.golang.org/grpc/xds/internal/xdsclient/xdslbregistry/converter
 google.golang.org/grpc/xds/internal/xdsclient/xdsresource
 google.golang.org/grpc/xds/internal/xdsclient/xdsresource/version
-# google.golang.org/protobuf v1.36.10
+# google.golang.org/protobuf v1.36.11
 ## explicit; go 1.23
 google.golang.org/protobuf/encoding/protojson
 google.golang.org/protobuf/encoding/prototext
