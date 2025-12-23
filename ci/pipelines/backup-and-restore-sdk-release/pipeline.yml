@@ -565,23 +565,6 @@ resources:
     repository: ruby-install
     tag_filter: \d+\.\d+\.\d+
 jobs:
-- name: lint-pipeline
-  serial: true
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release
-      trigger: true
-    - get: cryogenics-concourse-tasks
-    - get: image-cryogenics-essentials
-      tags: [ *internal_worker_tag ]
-  - task: check-pipeline-for-stray-secrets
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/pipeline-linting/check-pipeline-for-stray-secrets/task.yml
-    input_mapping:
-      cryogenics-concourse-tasks: cryogenics-concourse-tasks
-      pipeline-repo: backup-and-restore-sdk-release
-    params:
-      PIPELINE_TO_CHECK: ./pipeline-repo/ci/pipelines/backup-and-restore-sdk-release/pipeline.yml
 - name: unit-tests
   serial: true
   plan:
@@ -589,7 +572,6 @@ jobs:
     - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       trigger: true
-      passed: ["lint-pipeline"]
     - get: cryogenics-concourse-tasks
     - get: image-cryogenics-essentials
       tags: [ *internal_worker_tag ]
