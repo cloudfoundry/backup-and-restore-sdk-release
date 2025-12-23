@@ -55,7 +55,7 @@ secrets:
 - &azure_storage_account_no_soft_delete ((bbr_azure_credentials.storage_account_no_soft_delete))
 - &azure_storage_key_no_soft_delete ((bbr_azure_credentials.storage_account_no_soft_delete_key))
 
-  #! service_accounts_bucket_owner_json_key was needed on 2023-07-03 for deploying database infra for testing. Generated using personal creds in the mapbu-cryogenics GCP account.
+#! service_accounts_bucket_owner_json_key was needed on 2023-07-03 for deploying database infra for testing. Generated using personal creds in the mapbu-cryogenics GCP account.
 - &service_accounts_bucket_owner_json_key ((broadcom_labs_gcp_credentials_json))
 #! service_accounts_gcp_cf_backup_and_restore_owner_role_json_key was needed on 2023-07-03 for actually running the GCP tests. Presumably it has lower privileges than the other two GCP keys?. Generated using personal creds in the mapbu-cryogenics GCP account.
 - &service_accounts_gcp_cf_backup_and_restore_owner_role_json_key ((broadcom_labs_gcp_credentials_json))
@@ -84,7 +84,6 @@ secrets:
   databases.ca: &mysql_ca_cert ((mysql_tls.ca))
   databases.certificate: &mysql_cert ((mysql_tls.certificate))
   databases.private_key: &mysql_private_key ((mysql_tls.private_key))
-
 
 - &mysql-5-7-deployment-name mysql-5-7-dev
 - &mysql-5-7-host 10.244.0.9
@@ -136,6 +135,8 @@ secrets:
 - &artifactory_username ((broadcom_artifactory.username))
 - &artifactory_token ((broadcom_artifactory.password))
 
+- &internal_worker_tag broadcom
+
 resource_types:
 - name: ftp
   type: registry-image
@@ -143,7 +144,7 @@ resource_types:
     repository: tas-bosh-docker-dev-local.usw1.packages.broadcom.com/cryogenics/concourse-ftp-resource
     username: *artifactory_username
     password: *artifactory_token
-  tags: [ broadcom ]
+  tags: [ *internal_worker_tag ]
 
 - name: shepherd
   source:
@@ -152,7 +153,7 @@ resource_types:
     username: *artifactory_username
     password: *artifactory_token
   type: registry-image
-  tags: [ broadcom ]
+  tags: [ *internal_worker_tag ]
 
 - name: file-url
   type: registry-image
@@ -253,7 +254,7 @@ resources:
     repository: tas-bosh-docker-dev-local.usw1.packages.broadcom.com/cryogenics/cryo-essentials
     username: *artifactory_username
     password: *artifactory_token
-  tags: [ broadcom ]
+  tags: [ *internal_worker_tag ]
 
 - name: pxc-release
   type: bosh-io-release
@@ -298,7 +299,6 @@ resources:
 - name: cf-deployment-env-non-airgapped
   icon: pool
   type: shepherd
-  tags: [ broadcom ]
   source:
     url: https://v2-shepherd.lvn.broadcom.net
     service-account-key: *shepherd_account_key
@@ -320,7 +320,6 @@ resources:
 - name: cf-deployment-env-airgapped
   icon: pool
   type: shepherd
-  tags: [ broadcom ]
   source:
     url: https://v2-shepherd.lvn.broadcom.net
     service-account-key: *shepherd_account_key
@@ -390,7 +389,6 @@ resources:
 - name: cryogenics-concourse-tasks
   type: git
   icon: github
-  tags: [ broadcom ]
   source:
     uri: https://github.gwd.broadcom.net/TNZ/cryogenics-concourse-tasks.git
     branch: main
@@ -543,7 +541,6 @@ resources:
 
 - name: git-concourse-cve-scan
   type: git
-  tags: [ broadcom ]
   source:
     uri: https://github.gwd.broadcom.net/TNZ/concourse-cve-scan.git
     branch: main
@@ -552,7 +549,6 @@ resources:
 
 - name: github-release-tas-cve
   type: github-release
-  tags: [ broadcom ]
   source:
     access_token: *ghe_svc_account_personal_access_token
     owner: TNZ
@@ -576,9 +572,8 @@ jobs:
     - get: backup-and-restore-sdk-release
       trigger: true
     - get: cryogenics-concourse-tasks
-      tags: [ broadcom ]
     - get: image-cryogenics-essentials
-      tags: [ broadcom ]
+      tags: [ *internal_worker_tag ]
   - task: check-pipeline-for-stray-secrets
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/pipeline-linting/check-pipeline-for-stray-secrets/task.yml
@@ -596,9 +591,8 @@ jobs:
       trigger: true
       passed: ["lint-pipeline"]
     - get: cryogenics-concourse-tasks
-      tags: [ broadcom ]
     - get: image-cryogenics-essentials
-      tags: [ broadcom ]
+      tags: [ *internal_worker_tag ]
     - get: bosh-ecosystem-docker-image
     - get: ruby-install
   - in_parallel:
@@ -632,9 +626,7 @@ jobs:
   plan:
     - in_parallel:
         - get: git-concourse-cve-scan
-          tags: [ broadcom ]
         - get: github-release-tas-cve
-          tags: [ broadcom ]
         - get: backup-and-restore-sdk-release
           trigger: true
     - task: run-scan
@@ -659,7 +651,7 @@ jobs:
       passed:
       - unit-tests
     - get: image-cryogenics-essentials
-      tags: [ broadcom ]
+      tags: [ *internal_worker_tag ]
   - in_parallel:
     - task: aws-s3-blobstore-contract-tests
       image: image-cryogenics-essentials
@@ -754,10 +746,9 @@ jobs:
       passed:
       - deploy-s3-blobstore-sdk-with-iam-instance-profile
     - get: cryogenics-concourse-tasks
-      tags: [ broadcom ]
     - get: director-with-iam-profile
     - get: image-cryogenics-essentials
-      tags: [ broadcom ]
+      tags: [ *internal_worker_tag ]
   - in_parallel:
     - task: s3-with-iam-instance-profile
       image: image-cryogenics-essentials
@@ -793,14 +784,12 @@ jobs:
     - get: backup-and-restore-sdk-release
       passed: [build-rc]
     - get: cryogenics-concourse-tasks
-      tags: [ broadcom ]
     - get: dev-release
       trigger: true
       passed: [build-rc]
     - get: image-cryogenics-essentials
-      tags: [ broadcom ]
+      tags: [ *internal_worker_tag ]
     - put: cf-deployment-env-airgapped
-      tags: [ broadcom ]
       attempts: *number_of_claim_retries
       timeout: 6h
       params:
@@ -813,7 +802,7 @@ jobs:
   plan:
   - in_parallel:
     - get: image-cryogenics-essentials
-      tags: [ broadcom ]
+      tags: [ *internal_worker_tag ]
     - get: bpm-release
     - get: bosh-release-v260.3
     - get: bosh-release-v271.7
@@ -833,17 +822,14 @@ jobs:
     - get: jammy-stemcell
     - get: cf-deployment-env-airgapped
       trigger: true
-      tags: [ broadcom ]
       passed:
       - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    tags: [ broadcom ]
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
   - put: postgres-13-dev-deployment
-    tags: [ broadcom ]
     params:
       manifest: backup-and-restore-sdk-release-ci/ci/manifests/postgres-13.yml
       stemcells:
@@ -866,7 +852,7 @@ jobs:
   plan:
   - in_parallel:
     - get: image-cryogenics-essentials
-      tags: [ broadcom ]
+      tags: [ *internal_worker_tag ]
     - get: bpm-release
     - get: pxc-release
     - get: backup-and-restore-sdk-release-ci
@@ -881,13 +867,11 @@ jobs:
     - get: jammy-stemcell
     - get: cf-deployment-env-airgapped
       trigger: true
-      tags: [ broadcom ]
       passed:
       - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    tags: [ broadcom ]
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
   - do:
@@ -896,7 +880,6 @@ jobs:
     #! refuses to grant some locks.
     - put: mysql-8-0-deployment
       timeout: 2h
-      tags: [ broadcom ]
       params:
         manifest: backup-and-restore-sdk-release-ci/ci/manifests/mysql.yml
         stemcells:
@@ -917,7 +900,6 @@ jobs:
         - pxc-release/*.tgz
     - put: mysql-5-7-deployment
       timeout: 2h
-      tags: [ broadcom ]
       params:
         manifest: backup-and-restore-sdk-release-ci/ci/manifests/mysql.yml
         stemcells:
@@ -952,20 +934,17 @@ jobs:
         - claim-cf-deployment-airgapped
     - get: jammy-stemcell
     - get: image-cryogenics-essentials
-      tags: [ broadcom ]
+      tags: [ *internal_worker_tag ]
     - get: cf-deployment-env-airgapped
       trigger: true
-      tags: [ broadcom ]
       passed:
         - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    tags: [ broadcom ]
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
   - put: database-backup-restorer-deployment
-    tags: [ broadcom ]
     params:
       manifest: backup-and-restore-sdk-release-ci/ci/manifests/database-backup-restorer.yml
       stemcells:
@@ -985,7 +964,7 @@ jobs:
   plan:
   - in_parallel:
     - get: image-cryogenics-essentials
-      tags: [ broadcom ]
+      tags: [ *internal_worker_tag ]
     - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       passed:
@@ -996,17 +975,14 @@ jobs:
       resource: gcp-db-certs-zip
     - get: cf-deployment-env-airgapped
       trigger: true
-      tags: [ broadcom ]
       passed:
       - deploy-database-sdk-on-airgapped-env
       - deploy-postgres
       - deploy-mysql
     - get: cryogenics-concourse-tasks
-      tags: [ broadcom ]
   - task: alias-env
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
-    tags: [ broadcom ]
     input_mapping:
       cryogenics-tasks: cryogenics-concourse-tasks
       toolsmiths-env: cf-deployment-env-airgapped
@@ -1016,7 +992,6 @@ jobs:
     - task: mysql-8-0-system-tests
       image: image-cryogenics-essentials
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
-      tags: [ broadcom ]
       params:
         TEST_SUITE_NAME: mysql
         TEST_TLS_VERIFY_IDENTITY: false
@@ -1026,7 +1001,6 @@ jobs:
     - task: mysql-5-7-system-tests
       image: image-cryogenics-essentials
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
-      tags: [ broadcom ]
       params:
         TEST_SUITE_NAME: mysql
         TEST_TLS_VERIFY_IDENTITY: false
@@ -1038,11 +1012,9 @@ jobs:
   plan:
   - get: cf-deployment-env-airgapped
     trigger: true
-    tags: [ broadcom ]
     passed:
     - system-tests-internal-dbs
   - put: cf-deployment-env-airgapped
-    tags: [ broadcom ]
     params:
       action: release
       resource: cf-deployment-env-airgapped
@@ -1056,9 +1028,8 @@ jobs:
       trigger: true
       passed: [build-rc]
     - get: image-cryogenics-essentials
-      tags: [ broadcom ]
+      tags: [ *internal_worker_tag ]
     - put: cf-deployment-env-non-airgapped
-      tags: [ broadcom ]
       attempts: *number_of_claim_retries
       timeout: 6h
       params:
@@ -1082,20 +1053,17 @@ jobs:
       - claim-cf-deployment
     - get: jammy-stemcell
     - get: image-cryogenics-essentials
-      tags: [ broadcom ]
+      tags: [ *internal_worker_tag ]
     - get: cf-deployment-env-non-airgapped
       trigger: true
-      tags: [ broadcom ]
       passed:
       - claim-cf-deployment
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    tags: [ broadcom ]
     input_mapping:
       cf-deployment-env: cf-deployment-env-non-airgapped
   - put: database-backup-restorer-deployment
-    tags: [ broadcom ]
     params:
       manifest: backup-and-restore-sdk-release-ci/ci/manifests/database-backup-restorer.yml
       stemcells:
@@ -1126,19 +1094,16 @@ jobs:
     - get: jammy-stemcell
     - get: cf-deployment-env-non-airgapped
       trigger: true
-      tags: [ broadcom ]
       passed:
       - claim-cf-deployment
     - get: image-cryogenics-essentials
-      tags: [ broadcom ]
+      tags: [ *internal_worker_tag ]
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    tags: [ broadcom ]
     input_mapping:
       cf-deployment-env: cf-deployment-env-non-airgapped
   - put: aws-blobstore-sdk-deployment
-    tags: [ broadcom ]
     params:
       manifest: backup-and-restore-sdk-release-ci/ci/manifests/s3-backuper.yml
       stemcells:
@@ -1191,20 +1156,17 @@ jobs:
       - claim-cf-deployment
     - get: jammy-stemcell
     - get: image-cryogenics-essentials
-      tags: [ broadcom ]
+      tags: [ *internal_worker_tag ]
     - get: cf-deployment-env-non-airgapped
       trigger: true
-      tags: [ broadcom ]
       passed:
       - claim-cf-deployment
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    tags: [ broadcom ]
     input_mapping:
       cf-deployment-env: cf-deployment-env-non-airgapped
   - put: azure-blobstore-sdk-deployment
-    tags: [ broadcom ]
     params:
       manifest: backup-and-restore-sdk-release-ci/ci/manifests/azure-backuper.yml
       stemcells:
@@ -1237,19 +1199,16 @@ jobs:
     - get: jammy-stemcell
     - get: cf-deployment-env-non-airgapped
       trigger: true
-      tags: [ broadcom ]
       passed:
       - claim-cf-deployment
     - get: image-cryogenics-essentials
-      tags: [ broadcom ]
+      tags: [ *internal_worker_tag ]
   - task: generate-bosh-deployment-source-file
     image: image-cryogenics-essentials
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    tags: [ broadcom ]
     input_mapping:
       cf-deployment-env: cf-deployment-env-non-airgapped
   - put: gcs-blobstore-sdk-deployment
-    tags: [ broadcom ]
     params:
       manifest: backup-and-restore-sdk-release-ci/ci/manifests/gcs-backuper.yml
       stemcells:
@@ -1272,16 +1231,14 @@ jobs:
       passed:
       - deploy-database-sdk
     - get: cryogenics-concourse-tasks
-      tags: [ broadcom ]
     - get: cert-store
       resource: rds-ca-bundle
     - get: cf-deployment-env-non-airgapped
       trigger: true
-      tags: [ broadcom ]
       passed:
       - deploy-database-sdk
     - get: image-cryogenics-essentials
-      tags: [ broadcom ]
+      tags: [ *internal_worker_tag ]
   - put: terraform
     params:
       terraform_source: backup-and-restore-sdk-release-ci/ci/terraform/bbr-sdk-system-tests/aws/
@@ -1296,7 +1253,6 @@ jobs:
   - task: alias-env
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
-    tags: [ broadcom ]
     input_mapping:
       cryogenics-tasks: cryogenics-concourse-tasks
       toolsmiths-env: cf-deployment-env-non-airgapped
@@ -1306,7 +1262,6 @@ jobs:
     - task: postgres-tls-system-tests-15
       image: image-cryogenics-essentials
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.yml
-#      tags: [ broadcom ]
       input_mapping:
         terraform-state: terraform
       params:
@@ -1321,7 +1276,6 @@ jobs:
       - task: postgres-system-tests-13
         image: image-cryogenics-essentials
         file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.yml
-#        tags: [ broadcom ]
         input_mapping:
           terraform-state: terraform
         params:
@@ -1333,7 +1287,6 @@ jobs:
       - task: postgres-tls-system-tests-13
         image: image-cryogenics-essentials
         file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.yml
-#        tags: [ broadcom ]
         input_mapping:
           terraform-state: terraform
         params:
@@ -1348,7 +1301,6 @@ jobs:
       - task: maria-system-tests-10-6
         image: image-cryogenics-essentials
         file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.yml
-#        tags: [ broadcom ]
         input_mapping:
           terraform-state: terraform
         params:
@@ -1374,20 +1326,17 @@ jobs:
       - deploy-gcs-blobstore-sdk
     - get: cf-deployment-env-non-airgapped
       trigger: true
-      tags: [ broadcom ]
       passed:
       - deploy-database-sdk
       - deploy-s3-blobstore-sdk
       - deploy-azure-blobstore-sdk
       - deploy-gcs-blobstore-sdk
     - get: cryogenics-concourse-tasks
-      tags: [ broadcom ]
     - get: image-cryogenics-essentials
-      tags: [ broadcom ]
+      tags: [ *internal_worker_tag ]
   - task: alias-env
     image: image-cryogenics-essentials
     file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
-    tags: [ broadcom ]
     input_mapping:
       cryogenics-tasks: cryogenics-concourse-tasks
       toolsmiths-env: cf-deployment-env-non-airgapped
@@ -1397,7 +1346,6 @@ jobs:
     - task: s3
       image: image-cryogenics-essentials
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.yml
-      tags: [ broadcom ]
       params:
         <<: *bosh-smiths-creds
         TEST_SUITE_NAME: s3
@@ -1426,7 +1374,6 @@ jobs:
     - task: azure-system-tests
       image: image-cryogenics-essentials
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.yml
-      tags: [ broadcom ]
       params:
         <<: *bosh-smiths-creds
         TEST_SUITE_NAME: azure
@@ -1440,7 +1387,6 @@ jobs:
     - task: gcs-blobstore-backuper-system-tests
       image: image-cryogenics-essentials
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.yml
-      tags: [ broadcom ]
       attempts: *number_of_test_retries
       params:
         <<: *bosh-smiths-creds
@@ -1455,12 +1401,10 @@ jobs:
   plan:
   - get: cf-deployment-env-non-airgapped
     trigger: true
-    tags: [ broadcom ]
     passed:
     - system-tests-external-dbs-rds
     - system-tests-blobstore-backuper
   - put: cf-deployment-env-non-airgapped
-    tags: [ broadcom ]
     params:
       action: release
       resource: cf-deployment-env-non-airgapped
@@ -1647,9 +1591,8 @@ jobs:
     - get: every-week
       trigger: true
     - get: cryogenics-concourse-tasks
-      tags: [ broadcom ]
     - get: image-cryogenics-essentials
-      tags: [ broadcom ]
+      tags: [ *internal_worker_tag ]
     - get: golang-release
       trigger: true
     - get: backup-and-restore-sdk-release-ci
@@ -1661,7 +1604,6 @@ jobs:
   - task: bump-deps-azure-blobstore-backup-restore
     file: golang-release/ci/tasks/shared/bump-deps.yml
     image: golang-release-image
-    tags: [ broadcom ]
     params:
       GIT_USER_NAME: *github_user
       GIT_USER_EMAIL: *github_email
@@ -1677,7 +1619,6 @@ jobs:
   - task: bump-deps-database-backup-restore
     file: golang-release/ci/tasks/shared/bump-deps.yml
     image: golang-release-image
-    tags: [ broadcom ]
     params:
       GIT_USER_NAME: *github_user
       GIT_USER_EMAIL: *github_email
@@ -1693,7 +1634,6 @@ jobs:
   - task: bump-deps-gcs-blobstore-backup-restore
     file: golang-release/ci/tasks/shared/bump-deps.yml
     image: golang-release-image
-    tags: [ broadcom ]
     params:
       GIT_USER_NAME: *github_user
       GIT_USER_EMAIL: *github_email
@@ -1709,7 +1649,6 @@ jobs:
   - task: bump-deps-s3-blobstore-backup-restore
     file: golang-release/ci/tasks/shared/bump-deps.yml
     image: golang-release-image
-    tags: [ broadcom ]
     params:
       GIT_USER_NAME: *github_user
       GIT_USER_EMAIL: *github_email
@@ -1725,7 +1664,6 @@ jobs:
   - task: bump-deps-system-tests
     file: golang-release/ci/tasks/shared/bump-deps.yml
     image: golang-release-image
-    tags: [ broadcom ]
     params:
       GIT_USER_NAME: *github_user
       GIT_USER_EMAIL: *github_email
@@ -1777,9 +1715,8 @@ jobs:
     - get: backup-and-restore-sdk-release
     - get: bosh-ecosystem-docker-image
     - get: cryogenics-concourse-tasks
-      tags: [ broadcom ]
     - get: image-cryogenics-essentials
-      tags: [ broadcom ]
+      tags: [ *internal_worker_tag ]
     - get: ruby-install
     - get: ruby-image
       trigger: true
