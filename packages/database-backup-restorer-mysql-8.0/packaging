@@ -3,7 +3,7 @@
 set -o errexit
 
 MYSQL80_VERSION=8.0.44
-NCURSES_VERSION=6.5
+NCURSES_VERSION=6.6
 
 tar \
   --directory="${BOSH_INSTALL_TARGET}" \
