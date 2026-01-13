@@ -139,17 +139,25 @@ secrets:
 - &internal_worker_tag broadcom
 
 resource_types:
+- name: http
+  type: docker-image
+  source:
+    repository: aequitas/http-resource
+    username: *docker_username
+    password: *docker_password
+
 - name: ftp
   type: registry-image
   source:
     repository: tas-bosh-docker-dev-local.usw1.packages.broadcom.com/cryogenics/concourse-ftp-resource
+    tag: latest
     username: *artifactory_username
     password: *artifactory_token
 
 - name: shepherd
   source:
-    tag: v1
     repository: tas-bosh-docker-dev-local.usw1.packages.broadcom.com/cryogenics/shepherd2-concourse-resource
+    tag: v1
     username: *artifactory_username
     password: *artifactory_token
   type: registry-image
@@ -212,33 +220,11 @@ resources:
     password: ((docker.password))
 
 - name: mariadb-10-6-blob
-  type: ftp
+  type: http
   source:
-    url: https://archive.mariadb.org/mariadb-10.6.*/source/
-    version_regex: "mariadb-(?P<version>10.6.[0-9]*).tar.gz$"
-- name: ncurses-blob
-  type: ftp
-  source:
-    url: https://mirrors.kernel.org/gnu/ncurses/
-    version_regex: "ncurses-(?P<version>[0-9]*.[0-9]*).tar.gz$"
-- name: postgres-13-blob
-  type: ftp
-  source:
-    url: https://ftp.postgresql.org/pub/source/v13.*/
-    version_regex: postgresql-(?P<version>[0-9]*.[0-9]*).tar.gz$
-- name: postgres-15-blob
-  type: ftp
-  source:
-    url: https://ftp.postgresql.org/pub/source/v15.*/
-    version_regex: postgresql-(?P<version>[0-9]*.[0-9]*).tar.gz$
-- name: libpcre2-blob
-  type: github-release
-  source:
-    owner: PCRE2Project
-    repository: pcre2
-    access_token: *git_token
-    tag_filter: pcre2-([0-9]*.[0-9]*)
-    order_by: time
+    index: https://archive.mariadb.org/
+    uri: "https://archive.mariadb.org/mariadb-{version}/source/mariadb-{version}.tar.gz"
+    regex: href="mariadb-(?P<version>10.6.[0-9]*)/"
 
 - name: mysql-server-8-blob
   type: ftp
@@ -247,6 +233,35 @@ resources:
     static_download_url_path: "https://dev.mysql.com/get/Downloads/MySQL-8.0/"
     version_regex: "mysql-(?P<version>[0-9]*.[0-9]*.[0-9]*)-linux-glibc.*-x86_64-minimal.tar.xz"
     filename_mode: true
+
+- name: ncurses-blob
+  type: http
+  source:
+    index: https://mirrors.kernel.org/gnu/ncurses/
+    uri: https://mirrors.kernel.org/gnu/ncurses/ncurses-{version}.tar.gz
+    regex: href="ncurses-(?P<version>[0-9]*.[0-9]*).tar.gz"
+
+- name: postgres-13-blob
+  type: http
+  source:
+    index: https://ftp.postgresql.org/pub/source/
+    uri: https://ftp.postgresql.org/pub/source/v{version}/postgresql-{version}.tar.gz
+    regex: href="v(?P<version>13.[0-9]*.[0-9]*)/"
+- name: postgres-15-blob
+  type: http
+  source:
+    index: https://ftp.postgresql.org/pub/source/
+    uri: https://ftp.postgresql.org/pub/source/v{version}/postgresql-{version}.tar.gz
+    regex: href="v(?P<version>15.[0-9]*.[0-9]*)/"
+
+- name: libpcre2-blob
+  type: github-release
+  source:
+    owner: PCRE2Project
+    repository: pcre2
+    access_token: *git_token
+    tag_filter: pcre2-([0-9]*.[0-9]*)
+    order_by: time
 
 - name: bosh-integration-image
   type: docker-image
