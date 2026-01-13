@@ -1,0 +1,36 @@
+---
+platform: linux
+
+inputs:
+  - name: distributed-package
+  - name: bosh-release
+  - name: backup-and-restore-sdk-release-ci
+
+outputs:
+  - name: bosh-release-updated
+
+params:
+  PRIVATE_YML:
+  GCP_KEY:
+  AWS_ACCESS_KEY_ID:
+  AWS_SECRET_ACCESS_KEY:
+  AWS_ROLE_ARN:
+  GIT_USERNAME:
+  GIT_EMAIL:
+  GIT_BRANCH:
+  BLOB_NAME:
+  BLOB_EXTENSION: tar.xz
+  BLOB_DIRECTORY: ""
+  UPDATE_REFERENCES:
+  # If any value is set, the task will update the relevant BOSH files to use the new_version instead of the current_version
+  # If the value is set to `only-variable-name:<name of the variable here>`, then the version will only be updated in all
+  # shell script variables with a given name.
+  KEEP_BLOBS_FILTER:
+  # CSV. Example "blob-a-1.2.3.tgz,blob-b-1.2.34.tgz". If any value is set, bosh remove-blob is NOT run on particular blobs matching these values.
+  # some releases keep two versions of a particular blob to ensure xenial compatibility.
+  REMOVE_MULTIPLE_BLOBS: false
+  # failsafe to make deletion of multiple blobs be acknowledged...2
+  VERSION_FILE: distributed-package/version
+
+run:
+  path: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.sh

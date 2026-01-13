@@ -1,13 +1,15 @@
 platform: linux
-image_resource:
-  type: registry-image
-  source:
-    repository: harbor-repo.vmware.com/cryogenics/essentials
-    tag: 0.1.108
+
 inputs:
   - name: cf-deployment-env
   - name: backup-and-restore-sdk-release-ci
+
 outputs:
   - name: source-file
+
 run:
   path: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.sh
+
+params:
+  BBL_VERSION:
+  GITHUB_TOKEN:

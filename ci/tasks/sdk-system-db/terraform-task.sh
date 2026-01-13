@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+set -euo pipefail
+
+[ -z "${DEBUG:-}" ] || set -x
 
 # Copyright (C) 2019-Present Pivotal Software, Inc. All rights reserved.
 #
@@ -15,8 +18,6 @@
 #
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-set -eu
 
 terraform_output() {
   terraform output -state=terraform-state/terraform.tfstate "$1" | jq -r .

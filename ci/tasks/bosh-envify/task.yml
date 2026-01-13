@@ -1,0 +1,12 @@
+---
+platform: linux
+
+inputs:
+  - name: toolsmiths-env
+  - name: backup-and-restore-sdk-release-ci
+
+run:
+  path: backup-and-restore-sdk-release-ci/ci/tasks/bosh-envify/task.sh
+
+outputs:
+  - name: bosh-env

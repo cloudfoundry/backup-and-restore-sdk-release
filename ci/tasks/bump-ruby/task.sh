@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-
-[ -z "$DEBUG" ] || set -x
-
 set -euo pipefail
+
+[ -z "${DEBUG:-}" ] || set -x
 
 [ -d backup-and-restore-sdk-release ]
 

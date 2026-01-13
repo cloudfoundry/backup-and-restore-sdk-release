@@ -3,6 +3,7 @@
 #! Secrets we need to run this pipeline
 #! ************************************
 secrets:
+- &backup_and_restore_sdk_branch main
 #! Created using `shepherd create service-account` after logging in with WS1.
 - &shepherd_account_key ((bosh-ecosystem-shepherd-service-account-lvn))
 
@@ -47,7 +48,7 @@ secrets:
         secret_access_key: ((bbr_aws_access_key.password))
         assume_role_arn: ((bbr_aws_access_key.role_arn))
 
-#! Azure credentials for 3 separate storage accounts. Currently in the CF-bosh-toronto-king subscription
+#! Azure credentials for 3 separate storage accounts. Currently, in the CF-bosh-toronto-king subscription
 - &azure_credentials_storage_account_1 ((bbr_azure_credentials.storage_account))
 - &azure_credentials_storage_key_1 ((bbr_azure_credentials.storage_account_key))
 - &azure_credentials_storage_account_2 ((bbr_azure_credentials.storage_account2))
@@ -60,10 +61,10 @@ secrets:
 #! service_accounts_gcp_cf_backup_and_restore_owner_role_json_key was needed on 2023-07-03 for actually running the GCP tests. Presumably it has lower privileges than the other two GCP keys?. Generated using personal creds in the mapbu-cryogenics GCP account.
 - &service_accounts_gcp_cf_backup_and_restore_owner_role_json_key ((broadcom_labs_gcp_credentials_json))
 
-#! github_access_token is required to create PRs against repos used in this pipeline and access github releases.
+#! github_access_token is required to create PRs against repos used in this pipeline and access github-releases.
 - &git_token ((github_read_write_token))
 
-#! github email and user used for creating commits
+#! github_email and user used for creating commits
 - &github_email bots@cloudfoundry.org
 - &github_user CI Bot
 
@@ -128,7 +129,7 @@ secrets:
 - &docker_username ((docker.username))
 - &docker_password ((docker.password))
 
-#! Access token for our service account user in Github Enterprise
+#! Access token for our service account user in GitHub Enterprise
 - &ghe_svc_account_personal_access_token ((svc-bosh-ecosystem-ghe-personal-access-token))
 
 #! Artifactory token
@@ -144,7 +145,6 @@ resource_types:
     repository: tas-bosh-docker-dev-local.usw1.packages.broadcom.com/cryogenics/concourse-ftp-resource
     username: *artifactory_username
     password: *artifactory_token
-  tags: [ *internal_worker_tag ]
 
 - name: shepherd
   source:
@@ -248,13 +248,13 @@ resources:
     version_regex: "mysql-(?P<version>[0-9]*.[0-9]*.[0-9]*)-linux-glibc.*-x86_64-minimal.tar.xz"
     filename_mode: true
 
-- name: image-cryogenics-essentials
-  type: registry-image
+- name: bosh-integration-image
+  type: docker-image
   source:
-    repository: tas-bosh-docker-dev-local.usw1.packages.broadcom.com/cryogenics/cryo-essentials
-    username: *artifactory_username
-    password: *artifactory_token
-  tags: [ *internal_worker_tag ]
+    repository: ghcr.io/cloudfoundry/bosh/integration
+    tag: main
+    username: ((github_read_write_packages.username))
+    password: ((github_read_write_packages.password))
 
 - name: pxc-release
   type: bosh-io-release
@@ -386,15 +386,6 @@ resources:
   source:
     url: *gchat_webhook
 
-- name: cryogenics-concourse-tasks
-  type: git
-  icon: github
-  source:
-    uri: https://github.gwd.broadcom.net/TNZ/cryogenics-concourse-tasks.git
-    branch: main
-    username: svc.bosh-ecosystem@broadcom.net
-    password: *ghe_svc_account_personal_access_token
-
 - name: backup-and-restore-sdk-release-write-only
   type: git
   icon: github
@@ -414,7 +405,7 @@ resources:
     uri: https://github.com/cloudfoundry/backup-and-restore-sdk-release.git
     username: bosh-admin-bot
     password: *git_token
-    branch: main
+    branch: *backup_and_restore_sdk_branch
     ignore_paths: [ "ci" ]
 
 - name: backup-and-restore-sdk-release-ci
@@ -424,7 +415,7 @@ resources:
     uri: https://github.com/cloudfoundry/backup-and-restore-sdk-release.git
     username: bosh-admin-bot
     password: *git_token
-    branch: main
+    branch: *backup_and_restore_sdk_branch
     paths: [ "ci" ]
 
 - name: bosh-shared-ci
@@ -572,9 +563,7 @@ jobs:
     - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       trigger: true
-    - get: cryogenics-concourse-tasks
-    - get: image-cryogenics-essentials
-      tags: [ *internal_worker_tag ]
+    - get: bosh-integration-image
     - get: bosh-ecosystem-docker-image
     - get: ruby-install
   - in_parallel:
@@ -582,23 +571,23 @@ jobs:
       image: bosh-ecosystem-docker-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-template-unit-tests/task.yml
     - task: databases-unit-tests
-      image: image-cryogenics-essentials
+      image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/database-unit-tests/task.yml
       privileged: true
     - task: s3-blobstore-unit-tests
-      image: image-cryogenics-essentials
+      image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: s3-blobstore-backup-restore
         GINKGO_EXTRA_FLAGS: -p --skip-package s3bucket
     - task: azure-blobstore-unit-tests
-      image: image-cryogenics-essentials
+      image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: azure-blobstore-backup-restore
         GINKGO_EXTRA_FLAGS: -p --skip-package contract_test
     - task: gcs-blobstore-unit-tests
-      image: image-cryogenics-essentials
+      image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: gcs-blobstore-backup-restore
@@ -632,11 +621,10 @@ jobs:
       trigger: true
       passed:
       - unit-tests
-    - get: image-cryogenics-essentials
-      tags: [ *internal_worker_tag ]
+    - get: bosh-integration-image
   - in_parallel:
     - task: aws-s3-blobstore-contract-tests
-      image: image-cryogenics-essentials
+      image: bosh-integration-image
       attempts: *number_of_test_retries
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
@@ -647,14 +635,14 @@ jobs:
         S3_BIG_FILE_BUCKET: "large-blob-test-bucket-unversioned"
         <<: *S3_AWS
     - task: gcs-blobstore-contract-tests
-      image: image-cryogenics-essentials
+      image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: gcs-blobstore-backup-restore/contract_test
         GCP_SERVICE_ACCOUNT_KEY: *service_accounts_gcp_cf_backup_and_restore_owner_role_json_key
         GCP_PROJECT_NAME: ltnz001-tas-opsmanager
     - task: azure-blobstore-contract-tests
-      image: image-cryogenics-essentials
+      image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: azure-blobstore-backup-restore/contract_test
@@ -727,13 +715,11 @@ jobs:
       trigger: true
       passed:
       - deploy-s3-blobstore-sdk-with-iam-instance-profile
-    - get: cryogenics-concourse-tasks
     - get: director-with-iam-profile
-    - get: image-cryogenics-essentials
-      tags: [ *internal_worker_tag ]
+    - get: bosh-integration-image
   - in_parallel:
     - task: s3-with-iam-instance-profile
-      image: image-cryogenics-essentials
+      image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.yml
       params:
         TEST_SUITE_NAME: s3
@@ -765,12 +751,10 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release
       passed: [build-rc]
-    - get: cryogenics-concourse-tasks
     - get: dev-release
       trigger: true
       passed: [build-rc]
-    - get: image-cryogenics-essentials
-      tags: [ *internal_worker_tag ]
+    - get: bosh-integration-image
     - put: cf-deployment-env-airgapped
       attempts: *number_of_claim_retries
       timeout: 6h
@@ -783,8 +767,7 @@ jobs:
   serial_groups: [system-test-internal-dbs]
   plan:
   - in_parallel:
-    - get: image-cryogenics-essentials
-      tags: [ *internal_worker_tag ]
+    - get: bosh-integration-image
     - get: bpm-release
     - get: bosh-release-v260.3
     - get: bosh-release-v271.7
@@ -807,10 +790,13 @@ jobs:
       passed:
       - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
-    image: image-cryogenics-essentials
+    image: bosh-integration-image
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
+    params:
+      BBL_VERSION: v9.0.41
+      GITHUB_TOKEN: *git_token
   - put: postgres-13-dev-deployment
     params:
       manifest: backup-and-restore-sdk-release-ci/ci/manifests/postgres-13.yml
@@ -833,8 +819,7 @@ jobs:
   serial_groups: [system-test-internal-dbs]
   plan:
   - in_parallel:
-    - get: image-cryogenics-essentials
-      tags: [ *internal_worker_tag ]
+    - get: bosh-integration-image
     - get: bpm-release
     - get: pxc-release
     - get: backup-and-restore-sdk-release-ci
@@ -852,7 +837,7 @@ jobs:
       passed:
       - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
-    image: image-cryogenics-essentials
+    image: bosh-integration-image
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
@@ -915,14 +900,13 @@ jobs:
       passed:
         - claim-cf-deployment-airgapped
     - get: jammy-stemcell
-    - get: image-cryogenics-essentials
-      tags: [ *internal_worker_tag ]
+    - get: bosh-integration-image
     - get: cf-deployment-env-airgapped
       trigger: true
       passed:
         - claim-cf-deployment-airgapped
   - task: generate-bosh-deployment-source-file
-    image: image-cryogenics-essentials
+    image: bosh-integration-image
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
@@ -945,8 +929,7 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: image-cryogenics-essentials
-      tags: [ *internal_worker_tag ]
+    - get: bosh-integration-image
     - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
       passed:
@@ -961,18 +944,16 @@ jobs:
       - deploy-database-sdk-on-airgapped-env
       - deploy-postgres
       - deploy-mysql
-    - get: cryogenics-concourse-tasks
   - task: alias-env
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
+    image: bosh-integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bosh-envify/task.yml
     input_mapping:
-      cryogenics-tasks: cryogenics-concourse-tasks
       toolsmiths-env: cf-deployment-env-airgapped
   - load_var: pooled-env
     file: bosh-env/metadata.yml
   - in_parallel:
     - task: mysql-8-0-system-tests
-      image: image-cryogenics-essentials
+      image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
       params:
         TEST_SUITE_NAME: mysql
@@ -981,7 +962,7 @@ jobs:
         <<: *bosh-smiths-creds
         <<: *mysql_params_8
     - task: mysql-5-7-system-tests
-      image: image-cryogenics-essentials
+      image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
       params:
         TEST_SUITE_NAME: mysql
@@ -1009,8 +990,7 @@ jobs:
     - get: dev-release
       trigger: true
       passed: [build-rc]
-    - get: image-cryogenics-essentials
-      tags: [ *internal_worker_tag ]
+    - get: bosh-integration-image
     - put: cf-deployment-env-non-airgapped
       attempts: *number_of_claim_retries
       timeout: 6h
@@ -1034,14 +1014,13 @@ jobs:
       passed:
       - claim-cf-deployment
     - get: jammy-stemcell
-    - get: image-cryogenics-essentials
-      tags: [ *internal_worker_tag ]
+    - get: bosh-integration-image
     - get: cf-deployment-env-non-airgapped
       trigger: true
       passed:
       - claim-cf-deployment
   - task: generate-bosh-deployment-source-file
-    image: image-cryogenics-essentials
+    image: bosh-integration-image
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
     input_mapping:
       cf-deployment-env: cf-deployment-env-non-airgapped
@@ -1078,10 +1057,9 @@ jobs:
       trigger: true
       passed:
       - claim-cf-deployment
-    - get: image-cryogenics-essentials
-      tags: [ *internal_worker_tag ]
+    - get: bosh-integration-image
   - task: generate-bosh-deployment-source-file
-    image: image-cryogenics-essentials
+    image: bosh-integration-image
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
     input_mapping:
       cf-deployment-env: cf-deployment-env-non-airgapped
@@ -1137,14 +1115,13 @@ jobs:
       passed:
       - claim-cf-deployment
     - get: jammy-stemcell
-    - get: image-cryogenics-essentials
-      tags: [ *internal_worker_tag ]
+    - get: bosh-integration-image
     - get: cf-deployment-env-non-airgapped
       trigger: true
       passed:
       - claim-cf-deployment
   - task: generate-bosh-deployment-source-file
-    image: image-cryogenics-essentials
+    image: bosh-integration-image
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
     input_mapping:
       cf-deployment-env: cf-deployment-env-non-airgapped
@@ -1183,10 +1160,9 @@ jobs:
       trigger: true
       passed:
       - claim-cf-deployment
-    - get: image-cryogenics-essentials
-      tags: [ *internal_worker_tag ]
+    - get: bosh-integration-image
   - task: generate-bosh-deployment-source-file
-    image: image-cryogenics-essentials
+    image: bosh-integration-image
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
     input_mapping:
       cf-deployment-env: cf-deployment-env-non-airgapped
@@ -1212,15 +1188,13 @@ jobs:
     - get: backup-and-restore-sdk-release
       passed:
       - deploy-database-sdk
-    - get: cryogenics-concourse-tasks
     - get: cert-store
       resource: rds-ca-bundle
     - get: cf-deployment-env-non-airgapped
       trigger: true
       passed:
       - deploy-database-sdk
-    - get: image-cryogenics-essentials
-      tags: [ *internal_worker_tag ]
+    - get: bosh-integration-image
   - put: terraform
     params:
       terraform_source: backup-and-restore-sdk-release-ci/ci/terraform/bbr-sdk-system-tests/aws/
@@ -1233,16 +1207,15 @@ jobs:
     get_params:
       output_statefile: true
   - task: alias-env
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
+    image: bosh-integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bosh-envify/task.yml
     input_mapping:
-      cryogenics-tasks: cryogenics-concourse-tasks
       toolsmiths-env: cf-deployment-env-non-airgapped
   - load_var: pooled-env
     file: bosh-env/metadata.yml
   - in_parallel:
     - task: postgres-tls-system-tests-15
-      image: image-cryogenics-essentials
+      image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.yml
       input_mapping:
         terraform-state: terraform
@@ -1256,7 +1229,7 @@ jobs:
         TEST_SUITE_NAME: postgresql_tls
     - do:
       - task: postgres-system-tests-13
-        image: image-cryogenics-essentials
+        image: bosh-integration-image
         file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.yml
         input_mapping:
           terraform-state: terraform
@@ -1267,7 +1240,7 @@ jobs:
           POSTGRES_PASSWORD: *postgres_13_password
           TEST_SUITE_NAME: postgresql
       - task: postgres-tls-system-tests-13
-        image: image-cryogenics-essentials
+        image: bosh-integration-image
         file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.yml
         input_mapping:
           terraform-state: terraform
@@ -1281,7 +1254,7 @@ jobs:
           TEST_SUITE_NAME: postgresql_tls
     - do:
       - task: maria-system-tests-10-6
-        image: image-cryogenics-essentials
+        image: bosh-integration-image
         file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.yml
         input_mapping:
           terraform-state: terraform
@@ -1313,20 +1286,17 @@ jobs:
       - deploy-s3-blobstore-sdk
       - deploy-azure-blobstore-sdk
       - deploy-gcs-blobstore-sdk
-    - get: cryogenics-concourse-tasks
-    - get: image-cryogenics-essentials
-      tags: [ *internal_worker_tag ]
+    - get: bosh-integration-image
   - task: alias-env
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/tasks/toolsmiths/bosh-envify/task.yml
+    image: bosh-integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bosh-envify/task.yml
     input_mapping:
-      cryogenics-tasks: cryogenics-concourse-tasks
       toolsmiths-env: cf-deployment-env-non-airgapped
   - load_var: pooled-env
     file: bosh-env/metadata.yml
   - in_parallel:
     - task: s3
-      image: image-cryogenics-essentials
+      image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.yml
       params:
         <<: *bosh-smiths-creds
@@ -1354,7 +1324,7 @@ jobs:
         S3_UNVERSIONED_CLONE_BUCKET_REGION: us-east-1
         <<: *AWS_ACCESS
     - task: azure-system-tests
-      image: image-cryogenics-essentials
+      image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.yml
       params:
         <<: *bosh-smiths-creds
@@ -1367,7 +1337,7 @@ jobs:
         AZURE_DIFFERENT_STORAGE_KEY: *azure_credentials_storage_key_2
         AZURE_DIFFERENT_CONTAINER_NAME: bbr-system-test-azure-different-container
     - task: gcs-blobstore-backuper-system-tests
-      image: image-cryogenics-essentials
+      image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.yml
       attempts: *number_of_test_retries
       params:
@@ -1572,9 +1542,7 @@ jobs:
     - get: golang-release-image
     - get: every-week
       trigger: true
-    - get: cryogenics-concourse-tasks
-    - get: image-cryogenics-essentials
-      tags: [ *internal_worker_tag ]
+    - get: bosh-integration-image
     - get: golang-release
       trigger: true
     - get: backup-and-restore-sdk-release-ci
@@ -1661,23 +1629,23 @@ jobs:
   # Run unit tests
   - in_parallel:
     - task: databases-unit-tests
-      image: image-cryogenics-essentials
+      image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/database-unit-tests/task.yml
       privileged: true
     - task: s3-blobstore-unit-tests
-      image: image-cryogenics-essentials
+      image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: s3-blobstore-backup-restore
         GINKGO_EXTRA_FLAGS: -p --skip-package s3bucket
     - task: azure-blobstore-unit-tests
-      image: image-cryogenics-essentials
+      image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: azure-blobstore-backup-restore
         GINKGO_EXTRA_FLAGS: -p --skip-package contract_test
     - task: gcs-blobstore-unit-tests
-      image: image-cryogenics-essentials
+      image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: gcs-blobstore-backup-restore
@@ -1696,9 +1664,7 @@ jobs:
     - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
     - get: bosh-ecosystem-docker-image
-    - get: cryogenics-concourse-tasks
-    - get: image-cryogenics-essentials
-      tags: [ *internal_worker_tag ]
+    - get: bosh-integration-image
     - get: ruby-install
     - get: ruby-image
       trigger: true
@@ -1742,8 +1708,8 @@ jobs:
     file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-template-unit-tests/task.yml
   # MariaDB 10.6
   - task: bump-mariadb-10-6-blob
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
+    image: bosh-integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
     input_mapping:
       distributed-package: mariadb-10-6-blob
       bosh-release: backup-and-restore-sdk-release
@@ -1760,8 +1726,8 @@ jobs:
       UPDATE_REFERENCES: only-variable-name:MARIADB_VERSION
   # ncurses
   - task: bump-ncurses-blob
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
+    image: bosh-integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
     input_mapping:
       distributed-package: ncurses-blob
       bosh-release: backup-and-restore-sdk-release
@@ -1778,8 +1744,8 @@ jobs:
       UPDATE_REFERENCES: only-variable-name:NCURSES_VERSION
   # Postgres 13
   - task: bump-postgres-13-blob
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
+    image: bosh-integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
     input_mapping:
       distributed-package: postgres-13-blob
       bosh-release: backup-and-restore-sdk-release
@@ -1797,8 +1763,8 @@ jobs:
       UPDATE_REFERENCES: only-variable-name:POSTGRES13_VERSION
   # Postgres 15
   - task: bump-postgres-15-blob
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
+    image: bosh-integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
     input_mapping:
       distributed-package: postgres-15-blob
       bosh-release: backup-and-restore-sdk-release
@@ -1816,8 +1782,8 @@ jobs:
       UPDATE_REFERENCES: only-variable-name:POSTGRES15_VERSION
   # PCRE2
   - task: bump-libpcre2-blob
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
+    image: bosh-integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
     input_mapping:
       distributed-package: libpcre2-blob
       bosh-release: backup-and-restore-sdk-release
@@ -1834,8 +1800,8 @@ jobs:
       UPDATE_REFERENCES: only-variable-name:LIBPCRE2_VERSION
   # MySQL 8
   - task: bump-mysql-8-blob
-    image: image-cryogenics-essentials
-    file: cryogenics-concourse-tasks/deps-automation/bump-blob/task.yml
+    image: bosh-integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
     input_mapping:
       distributed-package: mysql-server-8-blob
       bosh-release: backup-and-restore-sdk-release

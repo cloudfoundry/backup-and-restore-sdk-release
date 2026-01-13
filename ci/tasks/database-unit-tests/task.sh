@@ -1,4 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+[ -z "${DEBUG:-}" ] || set -x
 
 # Copyright (C) 2017-Present Pivotal Software, Inc. All rights reserved.
 #
@@ -15,8 +18,6 @@
 #
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-set -eu
 
 pushd backup-and-restore-sdk-release/src/database-backup-restore
   go run github.com/onsi/ginkgo/v2/ginkgo -r -v --skip-package system_tests

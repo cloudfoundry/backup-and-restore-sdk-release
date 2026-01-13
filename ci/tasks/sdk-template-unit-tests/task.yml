@@ -1,36 +1,9 @@
 platform: linux
-image_resource:
-  type: registry-image
-  source:
-    repository: bosh/bosh-ecosystem-concourse
-    username: ((docker.username))
-    password: ((docker.password))
+
 inputs:
   - name: backup-and-restore-sdk-release
+  - name: backup-and-restore-sdk-release-ci
   - name: ruby-install
+
 run:
-  path: bash
-  args:
-    - -e
-    - -c
-    - |
-      set -u -o pipefail
-      pushd ruby-install
-        VERSION=$(cat version)
-        tar -xzvf ruby-install-${VERSION}.tar.gz
-        pushd ruby-install-${VERSION}
-          make install
-        popd
-      popd
-      pushd backup-and-restore-sdk-release
-
-        echo 'gem: --no-document' > /etc/gemrc
-        NUM_CPUS=$(grep -c ^processor /proc/cpuinfo)
-        RUBY_VERSION="$(cat .ruby-version)"
-        BUNDLER_VERSION="$(grep 'BUNDLED WITH' -A1 Gemfile.lock | tail -n1 | tr -d '[:blank:]')"
-        ruby-install --jobs="${NUM_CPUS}" --cleanup --system ruby "${RUBY_VERSION}" -- --disable-install-rdoc --disable-install-doc
-
-        gem install bundler -v "${BUNDLER_VERSION}"
-        bundle install
-        bundle exec rspec
-      popd
+  path: backup-and-restore-sdk-release-ci/ci/tasks/sdk-template-unit-tests/task.sh

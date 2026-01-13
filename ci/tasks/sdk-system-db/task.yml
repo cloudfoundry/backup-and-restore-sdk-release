@@ -1,14 +1,12 @@
 platform: linux
-image_resource:
-  type: registry-image
-  source:
-    repository: harbor-repo.vmware.com/cryogenics/essentials
-    tag: 0.1.108
+
 inputs:
   - name: backup-and-restore-sdk-release
   - name: backup-and-restore-sdk-release-ci
+
 run:
   path: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.sh
+
 params:
   BOSH_ENVIRONMENT:
   BOSH_CLIENT:

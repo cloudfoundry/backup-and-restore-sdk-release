@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-set -eu
+set -euo pipefail
+
+[ -z "${DEBUG:-}" ] || set -x
 
 if ls director-with-iam-profile/*.yml; then
   export BOSH_GW_PRIVATE_KEY=$( yq .jumpbox_ssh_key director-with-iam-profile/*.yml -r )

@@ -1,16 +1,11 @@
 platform: linux
-image_resource:
-  type: registry-image
-  source:
-    repository: harbor-repo.vmware.com/cryogenics/essentials
-    tag: 0.1.108
+
 inputs:
   - name: backup-and-restore-sdk-release
   - name: backup-and-restore-sdk-release-ci
   - name: terraform-state
   - name: cert-store
-run:
-  path: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.sh
+
 params:
   BOSH_ENVIRONMENT:
   BOSH_CLIENT:
@@ -41,3 +36,7 @@ params:
   TEST_SSL_USER_REQUIRES_SSL: true
   TEST_SUITE_NAME:
   ZIP_PASSWORD:
+
+run:
+  path: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.sh
+
