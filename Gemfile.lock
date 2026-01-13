@@ -4,6 +4,7 @@ GEM
     bosh-template (2.4.0)
       semi_semantic (~> 1.2.0)
     diff-lcs (1.5.1)
+    ostruct (0.6.3)
     rspec (3.13.0)
       rspec-core (~> 3.13.0)
       rspec-expectations (~> 3.13.0)
@@ -24,7 +25,8 @@ PLATFORMS
 
 DEPENDENCIES
   bosh-template
+  ostruct
   rspec
 
 BUNDLED WITH
-  4.0.2
+  4.0.3
