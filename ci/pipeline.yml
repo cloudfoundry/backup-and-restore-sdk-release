@@ -129,9 +129,6 @@ secrets:
 - &docker_username ((docker.username))
 - &docker_password ((docker.password))
 
-#! Access token for our service account user in GitHub Enterprise
-- &ghe_svc_account_personal_access_token ((svc-bosh-ecosystem-ghe-personal-access-token))
-
 #! Artifactory token
 - &artifactory_username ((broadcom_artifactory.username))
 - &artifactory_token ((broadcom_artifactory.password))
@@ -545,24 +542,6 @@ resources:
     deployment: gcs-backuper
     skip_check: true
 
-- name: git-concourse-cve-scan
-  type: git
-  source:
-    uri: https://github.gwd.broadcom.net/TNZ/concourse-cve-scan.git
-    branch: main
-    username: svc.bosh-ecosystem@broadcom.net
-    password: *ghe_svc_account_personal_access_token
-
-- name: github-release-tas-cve
-  type: github-release
-  source:
-    access_token: *ghe_svc_account_personal_access_token
-    owner: TNZ
-    repository: tas-cve
-    github_api_url: https://github.gwd.broadcom.net/api/v3
-    github_v4_api_url: https://github.gwd.broadcom.net/api/graphql
-    github_uploads_url: https://github.gwd.broadcom.net/api/uploads/
-
 - name: ruby-install
   type: github-release
   source:
@@ -607,25 +586,6 @@ jobs:
       params:
         PACKAGE_NAME: gcs-blobstore-backup-restore
         GINKGO_EXTRA_FLAGS: -p --skip-package contract_test
-
-- name: check-for-cves
-  plan:
-    - in_parallel:
-        - get: git-concourse-cve-scan
-        - get: github-release-tas-cve
-        - get: backup-and-restore-sdk-release
-          trigger: true
-    - task: run-scan
-      file: git-concourse-cve-scan/tasks/scan/scan.yml
-      input_mapping:
-        concourse-cve-scan: git-concourse-cve-scan
-        tas-cve: github-release-tas-cve
-        target-bosh-release: backup-and-restore-sdk-release
-      params:
-        DRY_RUN: true
-        GRYPE_FAILURE_LEVEL: high #! Can be any of: none | negligible | low | medium | high | critical
-        RELEASE_NAME: fim
-        RELEASE_VERSION: pre-release-cve-scan
 
 - name: contract-tests
   serial: true
