@@ -807,9 +807,6 @@ jobs:
   - task: generate-bosh-deployment-source-file
     image: bosh-integration-image
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    params:
-      BBL_VERSION: 9.0.41
-      GITHUB_TOKEN: *git_token
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
   - put: postgres-13-dev-deployment
@@ -854,9 +851,6 @@ jobs:
   - task: generate-bosh-deployment-source-file
     image: bosh-integration-image
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    params:
-      BBL_VERSION: 9.0.41
-      GITHUB_TOKEN: *git_token
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
   - do:
@@ -926,9 +920,6 @@ jobs:
   - task: generate-bosh-deployment-source-file
     image: bosh-integration-image
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    params:
-      BBL_VERSION: 9.0.41
-      GITHUB_TOKEN: *git_token
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
   - put: database-backup-restorer-deployment
@@ -1043,9 +1034,6 @@ jobs:
   - task: generate-bosh-deployment-source-file
     image: bosh-integration-image
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    params:
-      BBL_VERSION: 9.0.41
-      GITHUB_TOKEN: *git_token
     input_mapping:
       cf-deployment-env: cf-deployment-env-non-airgapped
   - put: database-backup-restorer-deployment
@@ -1085,9 +1073,6 @@ jobs:
   - task: generate-bosh-deployment-source-file
     image: bosh-integration-image
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    params:
-      BBL_VERSION: 9.0.41
-      GITHUB_TOKEN: *git_token
     input_mapping:
       cf-deployment-env: cf-deployment-env-non-airgapped
   - put: aws-blobstore-sdk-deployment
@@ -1150,9 +1135,6 @@ jobs:
   - task: generate-bosh-deployment-source-file
     image: bosh-integration-image
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    params:
-      BBL_VERSION: 9.0.41
-      GITHUB_TOKEN: *git_token
     input_mapping:
       cf-deployment-env: cf-deployment-env-non-airgapped
   - put: azure-blobstore-sdk-deployment
@@ -1194,9 +1176,6 @@ jobs:
   - task: generate-bosh-deployment-source-file
     image: bosh-integration-image
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    params:
-      BBL_VERSION: 9.0.41
-      GITHUB_TOKEN: *git_token
     input_mapping:
       cf-deployment-env: cf-deployment-env-non-airgapped
   - put: gcs-blobstore-sdk-deployment

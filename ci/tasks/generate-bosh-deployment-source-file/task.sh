@@ -3,27 +3,31 @@ set -euo pipefail
 
 [ -z "${DEBUG:-}" ] || set -x
 
-download_url="$(wget --header="Authorization: Bearer ${GITHUB_TOKEN}" -q -O - https://api.github.com/repos/cloudfoundry/bosh-bootloader/releases/tags/v${BBL_VERSION} | jq -r '.assets[] | select(.name | endswith("linux_amd64")) | .browser_download_url')"
-wget --header="Authorization: Bearer ${GITHUB_TOKEN}" -q -O /usr/local/bin/bbl "$download_url"
-chmod +x /usr/local/bin/bbl
-bbl -v
+environment_metadata_json="cf-deployment-env/metadata"
 
-eval "$(bbl print-env --metadata-file cf-deployment-env/metadata)"
+bosh_all_proxy=$(jq -r '.bosh.bosh_all_proxy' ${environment_metadata_json})
+bosh_ca_cert=$(jq -r '.bosh.bosh_ca_cert' ${environment_metadata_json})
+bosh_client=$(jq -r '.bosh.bosh_client' ${environment_metadata_json})
+bosh_client_secret=$(jq -r '.bosh.bosh_client_secret' ${environment_metadata_json})
+bosh_environment=$(jq -r '.bosh.bosh_environment' ${environment_metadata_json})
+jumpbox_private_key=$(jq -r '.bosh.jumpbox_private_key' ${environment_metadata_json})
 
 function get_ip_port() {
     grep -o '[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}:[0-9]\{1,\}' <<< "$1"
 }
 
+jumpbox_url=$( get_ip_port "${bosh_all_proxy}" )
+
 # shellcheck disable=SC2001
 cat <<EOF > source-file/source-file.yml
 ---
 jumpbox_username: jumpbox
-jumpbox_url: $( get_ip_port "${BOSH_ALL_PROXY}" )
+jumpbox_url: ${jumpbox_url}
 jumpbox_ssh_key: |-
-$(cat "${JUMPBOX_PRIVATE_KEY}" | sed 's/^/  /')
-target: ${BOSH_ENVIRONMENT}
-client: ${BOSH_CLIENT}
-client_secret: ${BOSH_CLIENT_SECRET}
+$(echo "${jumpbox_private_key}" | sed 's/^/  /')
+target: ${bosh_environment}
+client: ${bosh_client}
+client_secret: ${bosh_client_secret}
 ca_cert: |-
-$(echo "${BOSH_CA_CERT}" | sed 's/^/  /')
+$(echo "${bosh_ca_cert}" | sed 's/^/  /')
 EOF
