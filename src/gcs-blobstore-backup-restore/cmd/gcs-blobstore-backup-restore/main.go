@@ -59,6 +59,6 @@ func main() {
 
 func exitOnError(err error) {
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatalf("%v", err)
 	}
 }

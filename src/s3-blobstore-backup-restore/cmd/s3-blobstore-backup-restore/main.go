@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -111,7 +110,7 @@ func main() {
 }
 
 func exitWithError(context string, err error) {
-	log.Fatal(fmt.Sprintf("%s: %s", context, err))
+	log.Fatalf("%s: %s", context, err)
 }
 
 func parseFlags() (CommandFlags, error) {
