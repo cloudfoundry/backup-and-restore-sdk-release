@@ -818,7 +818,7 @@ jobs:
     #! compile the same release against the same stemcell and therefore BOSH
     #! refuses to grant some locks.
     - put: mysql-8-0-deployment
-      timeout: 2h
+      timeout: 3h
       params:
         manifest: backup-and-restore-sdk-release-ci/ci/manifests/mysql.yml
         stemcells:
@@ -838,7 +838,7 @@ jobs:
         - bpm-release/*.tgz
         - pxc-release/*.tgz
     - put: mysql-5-7-deployment
-      timeout: 2h
+      timeout: 3h
       params:
         manifest: backup-and-restore-sdk-release-ci/ci/manifests/mysql.yml
         stemcells:
