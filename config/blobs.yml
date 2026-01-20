@@ -14,10 +14,10 @@ mysql/mysql-5.7.44.tar.gz:
   size: 56570597
   object_id: 92e82aaa-6a33-40b7-5940-2366d90ad636
   sha: sha256:d03d8ff688862c40da3488451072a4b2178a86b53b4a7546ee5f864bb15cd919
-mysql/mysql-8.0.44-linux-glibc2.17-x86_64-minimal.tar.xz:
-  size: 61210260
-  object_id: 5b3a98ae-ba7a-41f2-7415-1fef6d025fae
-  sha: sha256:ef1197e8edbdd916a6e5f1dc4525c5a2a29d5cd7c86f19cd17383ecf354ef67c
+mysql/mysql-8.0.45-linux-glibc2.17-x86_64-minimal.tar.xz:
+  size: 61251552
+  object_id: 3a87799f-20e0-4ee7-7750-dda370823ae5
+  sha: sha256:a524f4163e7807b3e07cfe0109a13379bb8da4d3bdfac8521ae7f1ecb1623ab5
 ncurses/ncurses-6.6.tar.gz:
   size: 3791150
   object_id: 66926dd4-d034-4092-41d2-506b35dd7eba
