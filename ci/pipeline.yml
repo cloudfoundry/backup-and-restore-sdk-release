@@ -71,24 +71,16 @@ secrets:
 #! gchat webhook is used to send us ci status messages. It was created in gchat space settings after logging in with personal creds
 - &gchat_webhook ((gchat-webhook-dap-bosh-ecosystem-dev))
 
-- &bosh-smiths-creds
-  BOSH_ENVIRONMENT: &bosh_environment ((.:pooled-env.BOSH_ENVIRONMENT))
-  BOSH_CLIENT: &bosh_client ((.:pooled-env.BOSH_CLIENT))
-  BOSH_CLIENT_SECRET: &bosh_client_secret ((.:pooled-env.BOSH_CLIENT_SECRET))
-  BOSH_CA_CERT: &bosh_ca_cert ((.:pooled-env.BOSH_CA_CERT))
-  BOSH_GW_USER: &bosh_gw_user ((.:pooled-env.INSTANCE_JUMPBOX_USER))
-  BOSH_GW_HOST: &bosh_gw_host ((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))
-  BOSH_GW_PRIVATE_KEY: &bosh_gw_private_key ((.:pooled-env.INSTANCE_JUMPBOX_PRIVATE))
-
 #! The following external DB creds were needed on 2023-07-03 for testing the BBR SDK with some external databases.
 - &external_db_passwords
   postgres_13_password: &postgres_13_password ((rds_postgres_13_password))
   postgres_15_password: &postgres_15_password ((rds_postgres_15_password))
   mariadb_10_password: &mariadb_10_password ((rds_mariadb_10_password))
-  <<: *aws_credentials_tf
 
-- &mysql-password mysql_password
-
+- &mysql_common
+  MYSQL_PORT: 3306
+  MYSQL_USERNAME: root
+  MYSQL_PASSWORD: &mysql-password mysql_password
 - &mysql_certs_common
   databases.ca: &mysql_ca_cert ((mysql_tls.ca))
   databases.certificate: &mysql_cert ((mysql_tls.certificate))
@@ -102,10 +94,7 @@ secrets:
   MYSQL_CA_CERT: *mysql_ca_cert
   MYSQL_CLIENT_CERT: *mysql_cert
   MYSQL_CLIENT_KEY: *mysql_private_key
-  MYSQL_PORT: 3306
-  MYSQL_USERNAME: root
-  MYSQL_PASSWORD: *mysql-password
-  <<: *bosh-smiths-creds
+  <<: *mysql_common
 
 
 - &mysql-8-0-deployment-name mysql-8-0-dev
@@ -116,10 +105,7 @@ secrets:
   MYSQL_CA_CERT: *mysql_ca_cert
   MYSQL_CLIENT_CERT: *mysql_cert
   MYSQL_CLIENT_KEY: *mysql_private_key
-  MYSQL_PORT: 3306
-  MYSQL_USERNAME: root
-  MYSQL_PASSWORD: *mysql-password
-  <<: *bosh-smiths-creds
+  <<: *mysql_common
 
 - &minio_access_key ((minio_user.username))
 - &minio_secret_key ((minio_user.password))
@@ -130,6 +116,15 @@ secrets:
 
 - &postgres-13-deployment-name postgres-13-dev
 - &postgres-13-host 10.244.0.14
+
+- &bosh-smiths-creds
+  BOSH_ENVIRONMENT: ((.:pooled-env.BOSH_ENVIRONMENT))
+  BOSH_CLIENT: ((.:pooled-env.BOSH_CLIENT))
+  BOSH_CLIENT_SECRET: ((.:pooled-env.BOSH_CLIENT_SECRET))
+  BOSH_CA_CERT: ((.:pooled-env.BOSH_CA_CERT))
+  BOSH_GW_USER: ((.:pooled-env.INSTANCE_JUMPBOX_USER))
+  BOSH_GW_HOST: ((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))
+  BOSH_GW_PRIVATE_KEY: ((.:pooled-env.INSTANCE_JUMPBOX_PRIVATE))
 
 - &docker_username ((docker.username))
 - &docker_password ((docker.password))
@@ -936,7 +931,7 @@ jobs:
         TEST_SUITE_NAME: mysql
         TEST_TLS_VERIFY_IDENTITY: false
         TEST_TLS_MUTUAL_TLS: false
-        <<: *mysql_params_8
+        <<: [*bosh-smiths-creds, *mysql_params_8]
     - task: mysql-5-7-system-tests
       image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
@@ -944,7 +939,7 @@ jobs:
         TEST_SUITE_NAME: mysql
         TEST_TLS_VERIFY_IDENTITY: false
         TEST_TLS_MUTUAL_TLS: false
-        <<: *mysql_params_5_7
+        <<: [*bosh-smiths-creds, *mysql_params_5_7]
 
 - name: unclaim-cf-deployment-airgapped
   plan:
@@ -1177,7 +1172,7 @@ jobs:
       delete_on_failure: true
       vars:
         aws_region: *aws-region
-        <<: *external_db_passwords
+        <<: [*external_db_passwords, *aws_credentials_tf]
     get_params:
       output_statefile: true
   - task: alias-env
@@ -1273,13 +1268,6 @@ jobs:
       image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.yml
       params:
-        BOSH_ENVIRONMENT: *bosh_environment
-        BOSH_CLIENT: *bosh_client
-        BOSH_CLIENT_SECRET: *bosh_client_secret
-        BOSH_CA_CERT: *bosh_ca_cert
-        BOSH_GW_USER: *bosh_gw_user
-        BOSH_GW_HOST: *bosh_gw_host
-        BOSH_GW_PRIVATE_KEY: *bosh_gw_private_key
         TEST_SUITE_NAME: s3
         BOSH_DEPLOYMENT: s3-backuper
         AWS_TEST_BUCKET_NAME: bbr-system-test-bucket
@@ -1302,7 +1290,7 @@ jobs:
         S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BACKUP_BUCKET_REGION: *aws-region
         S3_UNVERSIONED_CLONE_BUCKET_NAME: sdk-unversioned-clone
         S3_UNVERSIONED_CLONE_BUCKET_REGION: us-east-1
-        <<: *AWS_ACCESS
+        <<: [*bosh-smiths-creds, *AWS_ACCESS]
     - task: azure-system-tests
       image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.yml
