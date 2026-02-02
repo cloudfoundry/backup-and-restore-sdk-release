@@ -3,7 +3,7 @@ module system-tests
 go 1.23.0
 
 require (
-	github.com/onsi/ginkgo/v2 v2.27.5
+	github.com/onsi/ginkgo/v2 v2.28.0
 	github.com/onsi/gomega v1.39.0
 )
 
