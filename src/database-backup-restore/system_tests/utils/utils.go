@@ -56,7 +56,7 @@ func BoshCommand() string {
 	MustHaveEnv("BOSH_CLIENT")
 	MustHaveEnv("BOSH_CLIENT_SECRET")
 
-	return fmt.Sprintf("bosh-cli --non-interactive")
+	return fmt.Sprintf("bosh --non-interactive")
 }
 
 func forDeployment(deploymentName string) string {
