@@ -5,9 +5,6 @@ VOLUME /tls-certs
 VOLUME /shared-creds
 # https://boxboat.com/2017/01/23/volumes-and-dockerfiles-dont-mix/
 
-# Tests assume the bosh binary is called bosh-cli
-RUN ln -s $(which bosh) /usr/bin/bosh-cli
-
 # When BOSH_ALL_PROXY is not empty Bosh invokes "nc -x" command
 # thus we need to install netcat-openbsd variant (netcat doesn't work).
 RUN apt-get update && apt-get install -y --no-install-recommends netcat-openbsd
