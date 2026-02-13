@@ -1175,6 +1175,11 @@ jobs:
         <<: [*external_db_passwords, *aws_credentials_tf]
     get_params:
       output_statefile: true
+  - load_var: tf-outputs
+    file: terraform/metadata
+    format: json
+  - load_var: rds-ca-cert
+    file: cert-store/rds-combined-ca-bundle.pem
   - task: alias-env
     image: bosh-integration-image
     file: backup-and-restore-sdk-release-ci/ci/tasks/bosh-envify/task.yml
@@ -1185,54 +1190,42 @@ jobs:
   - in_parallel:
     - task: postgres-tls-system-tests-15
       image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.yml
-      input_mapping:
-        terraform-state: terraform
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
       params:
         <<: *bosh-smiths-creds
-        DB_PREFIX: postgres_15
-        DB_TYPE: postgres
-        POSTGRES_CA_CERT_PATH: rds-combined-ca-bundle.pem
+        POSTGRES_HOSTNAME: ((.:tf-outputs.postgres_15_address))
         POSTGRES_PASSWORD: *postgres_15_password
+        POSTGRES_CA_CERT: ((.:rds-ca-cert))
         TEST_SSL_USER_REQUIRES_SSL: false
         TEST_SUITE_NAME: postgresql_tls
     - do:
       - task: postgres-system-tests-13
         image: bosh-integration-image
-        file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.yml
-        input_mapping:
-          terraform-state: terraform
+        file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
         params:
           <<: *bosh-smiths-creds
-          DB_PREFIX: postgres_13
-          DB_TYPE: postgres
+          POSTGRES_HOSTNAME: ((.:tf-outputs.postgres_13_address))
           POSTGRES_PASSWORD: *postgres_13_password
           TEST_SUITE_NAME: postgresql
       - task: postgres-tls-system-tests-13
         image: bosh-integration-image
-        file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.yml
-        input_mapping:
-          terraform-state: terraform
+        file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
         params:
           <<: *bosh-smiths-creds
-          DB_PREFIX: postgres_13
-          DB_TYPE: postgres
-          POSTGRES_CA_CERT_PATH: rds-combined-ca-bundle.pem
+          POSTGRES_HOSTNAME: ((.:tf-outputs.postgres_13_address))
           POSTGRES_PASSWORD: *postgres_13_password
+          POSTGRES_CA_CERT: ((.:rds-ca-cert))
           TEST_SSL_USER_REQUIRES_SSL: false
           TEST_SUITE_NAME: postgresql_tls
     - do:
       - task: maria-system-tests-10-6
         image: bosh-integration-image
-        file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/terraform-task.yml
-        input_mapping:
-          terraform-state: terraform
+        file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
         params:
           <<: *bosh-smiths-creds
-          DB_PREFIX: mariadb_10_6
-          DB_TYPE: mysql
-          MYSQL_CA_CERT_PATH: rds-combined-ca-bundle.pem
+          MYSQL_HOSTNAME: ((.:tf-outputs.mariadb_10_6_address))
           MYSQL_PASSWORD: *mariadb_10_password
+          MYSQL_CA_CERT: ((.:rds-ca-cert))
           TEST_SUITE_NAME: mysql
           TEST_TLS_MUTUAL_TLS: false
           TEST_TLS_VERIFY_IDENTITY: false
