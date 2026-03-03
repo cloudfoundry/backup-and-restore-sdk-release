@@ -1,4 +1,4 @@
-#/usr/bin/env bash
+#!/usr/bin/env bash
 
 # https://github.com/docker/docker/blob/master/project/PACKAGERS.md#runtime-dependencies
 set -eu
@@ -14,8 +14,7 @@ apt-get update && apt-get install -y --no-install-recommends \
   xz-utils \
   curl \
   ca-certificates \
-  apt-transport-https \
-  gnupg-agent \
+  gnupg \
   software-properties-common \
   ruby \
   git
@@ -26,11 +25,16 @@ useradd --system -g dockremap dockremap
 echo 'dockremap:165536:65536' >> /etc/subuid
 echo 'dockremap:165536:65536' >> /etc/subgid
 
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-apt-key fingerprint 0EBFCD88
-add-apt-repository \
- "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
- $(lsb_release -cs) \
- stable"
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+chmod a+r /etc/apt/keyrings/docker.gpg
 
-apt-get install docker-ce docker-ce-cli containerd.io -y --no-install-recommends
+echo \
+  "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list
+
+apt-get update && apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io
+
+# Docker-in-Docker requires iptables-legacy; nftables backend breaks nested networking
+update-alternatives --set iptables /usr/sbin/iptables-legacy
+update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy

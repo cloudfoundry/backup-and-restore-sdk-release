@@ -16,45 +16,32 @@ bump-postgres: config/private.yml ## update blobs, spec and packaging to Postgre
 	./scripts/bump_postgres_blobs.bash
 
 supported-stemcells=\
-  ubuntu-bionic \
   ubuntu-jammy  \
-  ubuntu-xenial \
+  ubuntu-noble \
 
 supported-mariadb=\
-  ubuntu-bionic~~~10.9-jammy  \
   ubuntu-jammy~~~~10.9-jammy  \
-  ubuntu-xenial~~~10.9-jammy  \
-  ubuntu-bionic~~~10.7-focal  \
+  ubuntu-noble~~~10.9-jammy  \
   ubuntu-jammy~~~~10.7-focal  \
-  ubuntu-xenial~~~10.7-focal  \
-  ubuntu-bionic~~~10.5-focal  \
+  ubuntu-noble~~~10.7-focal  \
   ubuntu-jammy~~~~10.5-focal  \
-  ubuntu-xenial~~~10.5-focal  \
-  ubuntu-bionic~~~10.2-bionic \
+  ubuntu-noble~~~10.5-focal  \
   ubuntu-jammy~~~~10.2-bionic \
-  ubuntu-xenial~~~10.2-bionic \
+  ubuntu-noble~~~10.2-bionic \
 
 supported-mysql=\
-  ubuntu-bionic~~~5.7-debian  \
   ubuntu-jammy~~~~5.7-debian  \
-  ubuntu-xenial~~~5.7-debian  \
-  ubuntu-bionic~~~8.0-debian  \
+  ubuntu-noble~~~5.7-debian  \
   ubuntu-jammy~~~~8.0-debian  \
-  ubuntu-xenial~~~8.0-debian  \
-  ubuntu-bionic~~~8.0-oracle  \
+  ubuntu-noble~~~8.0-debian  \
   ubuntu-jammy~~~~8.0-oracle  \
-  ubuntu-xenial~~~8.0-oracle  \
+  ubuntu-noble~~~8.0-oracle  \
 
 supported-postgres=\
-  ubuntu-bionic~~~15-bullseye  \
-  ubuntu-jammy~~~~15-bullseye  \
-  ubuntu-xenial~~~15-bullseye  \
-  ubuntu-bionic~~~13-bullseye  \
+  ubuntu-jammy~~~~15-trixie  \
+  ubuntu-nobel~~~15-trixie   \
   ubuntu-jammy~~~~13-bullseye  \
-  ubuntu-xenial~~~13-bullseye  \
-  ubuntu-bionic~~~11-bullseye  \
-  ubuntu-jammy~~~~11-bullseye  \
-  ubuntu-xenial~~~11-bullseye  \
+  ubuntu-noble~~~13-bullseye  \
 
 ruby-version=$$(cat .ruby-version)
 

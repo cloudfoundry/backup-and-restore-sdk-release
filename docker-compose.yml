@@ -3,6 +3,7 @@ version: '3.0'
 services:
   bosh-in-docker:
     privileged: true
+    network_mode: host
     build: { context: ., dockerfile: ci/dockerfiles/bosh-in-docker/Dockerfile }
     volumes:
     - director-creds:/shared-creds
