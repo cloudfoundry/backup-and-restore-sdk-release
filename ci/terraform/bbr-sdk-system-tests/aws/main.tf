@@ -6,6 +6,10 @@ variable "postgres_15_password" {
     type = string
 }
 
+variable "postgres_16_password" {
+    type = string
+}
+
 variable "mariadb_10_password" {
     type = string
 }
@@ -53,6 +57,19 @@ resource "aws_db_instance" "backup_and_restore_postgres_15" {
   skip_final_snapshot  = true
 }
 
+resource "aws_db_instance" "backup_and_restore_postgres_16" {
+  identifier           = "postgres-16-system-tests"
+  allocated_storage    = 20
+  storage_type         = "gp2"
+  engine               = "postgres"
+  engine_version       = "16"
+  instance_class       = "db.t3.micro"
+  username             = "root"
+  password             = var.postgres_16_password
+  publicly_accessible  = true
+  skip_final_snapshot  = true
+}
+
 resource "aws_db_instance" "backup_and_restore_mariadb_10_6" {
   identifier           = "mariadb-10-6-system-tests"
   allocated_storage    = 20
@@ -71,6 +88,9 @@ output "postgres_13_address" {
 }
 output "postgres_15_address" {
   value = aws_db_instance.backup_and_restore_postgres_15.address
+}
+output "postgres_16_address" {
+  value = aws_db_instance.backup_and_restore_postgres_16.address
 }
 
 output "mariadb_10_6_address" {

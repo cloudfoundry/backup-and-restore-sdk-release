@@ -44,14 +44,18 @@ var _ = Describe("Postgres", func() {
 		fakePgClient.Reset()
 		fakePgDump13.Reset()
 		fakePgDump15.Reset()
+		fakePgDump16.Reset()
 		fakePgRestore13.Reset()
 		fakePgRestore15.Reset()
+		fakePgRestore16.Reset()
 
 		envVars["PG_CLIENT_PATH"] = fakePgClient.Path
 		envVars["PG_DUMP_13_PATH"] = fakePgDump13.Path
 		envVars["PG_DUMP_15_PATH"] = fakePgDump15.Path
+		envVars["PG_DUMP_16_PATH"] = fakePgDump16.Path
 		envVars["PG_RESTORE_13_PATH"] = fakePgRestore13.Path
 		envVars["PG_RESTORE_15_PATH"] = fakePgRestore15.Path
+		envVars["PG_RESTORE_16_PATH"] = fakePgRestore16.Path
 
 		configFile = saveFile(fmt.Sprintf(`{
 				"adapter":  "postgres",

@@ -37,8 +37,10 @@ var envVars map[string]string
 
 var fakePgDump13 *binmock.Mock
 var fakePgDump15 *binmock.Mock
+var fakePgDump16 *binmock.Mock
 var fakePgRestore13 *binmock.Mock
 var fakePgRestore15 *binmock.Mock
+var fakePgRestore16 *binmock.Mock
 var fakePgClient *binmock.Mock
 var fakeMysqlClient57 *binmock.Mock
 var fakeMysqlDump57 *binmock.Mock
@@ -58,8 +60,10 @@ var _ = BeforeSuite(func() {
 	fakePgClient = binmock.NewBinMock(Fail)
 	fakePgDump13 = binmock.NewBinMock(Fail)
 	fakePgDump15 = binmock.NewBinMock(Fail)
+	fakePgDump16 = binmock.NewBinMock(Fail)
 	fakePgRestore13 = binmock.NewBinMock(Fail)
 	fakePgRestore15 = binmock.NewBinMock(Fail)
+	fakePgRestore16 = binmock.NewBinMock(Fail)
 	fakeMysqlDump57 = binmock.NewBinMock(Fail)
 	fakeMysqlClient57 = binmock.NewBinMock(Fail)
 	fakeMysqlDump80 = binmock.NewBinMock(Fail)
@@ -73,8 +77,10 @@ var _ = BeforeEach(func() {
 		"PG_CLIENT_PATH":        "non-existent",
 		"PG_DUMP_13_PATH":       "non-existent",
 		"PG_DUMP_15_PATH":       "non-existent",
+		"PG_DUMP_16_PATH":       "non-existent",
 		"PG_RESTORE_13_PATH":    "non-existent",
 		"PG_RESTORE_15_PATH":    "non-existent",
+		"PG_RESTORE_16_PATH":    "non-existent",
 		"MARIADB_CLIENT_PATH":   "non-existent",
 		"MARIADB_DUMP_PATH":     "non-existent",
 		"MYSQL_CLIENT_8_0_PATH": "non-existent",
