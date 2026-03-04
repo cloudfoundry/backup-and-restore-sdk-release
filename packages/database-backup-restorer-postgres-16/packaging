@@ -1,0 +1,33 @@
+set -e
+
+POSTGRES16_VERSION=16.13
+
+mkdir -p postgresql-${POSTGRES16_VERSION}
+
+tar xzf postgres/postgresql-${POSTGRES16_VERSION}.tar.gz --strip-components=1 -C postgresql-${POSTGRES16_VERSION}
+
+pushd postgresql-${POSTGRES16_VERSION}
+  ./configure --prefix=${BOSH_INSTALL_TARGET} --with-openssl
+
+  pushd src/bin/pg_config
+    make
+    make install
+  popd
+
+  cp -LR src/include ${BOSH_INSTALL_TARGET}
+
+  pushd src/interfaces/libpq
+    make
+    make install
+  popd
+
+  pushd src
+    make
+    make install
+  popd
+
+  pushd contrib
+    make
+    make install
+  popd
+popd
