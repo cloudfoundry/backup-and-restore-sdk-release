@@ -45,6 +45,7 @@ instance_groups:
     release: postgres
     properties:
       databases:
+        version: 15
         roles:
         - name: ((db_username))
           password: ((db_password))
