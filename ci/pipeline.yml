@@ -403,6 +403,7 @@ resources:
   icon: github
   source:
     uri: https://github.com/cloudfoundry/backup-and-restore-sdk-release.git
+    branch: *backup_and_restore_sdk_branch
     username: bosh-admin-bot
     password: *git_token
     disable_ci_skip: true
@@ -415,9 +416,9 @@ resources:
   icon: github
   source:
     uri: https://github.com/cloudfoundry/backup-and-restore-sdk-release.git
+    branch: *backup_and_restore_sdk_branch
     username: bosh-admin-bot
     password: *git_token
-    branch: *backup_and_restore_sdk_branch
     ignore_paths: [ "ci" ]
 
 - name: backup-and-restore-sdk-release-ci
@@ -425,9 +426,9 @@ resources:
   icon: github
   source:
     uri: https://github.com/cloudfoundry/backup-and-restore-sdk-release.git
+    branch: *backup_and_restore_sdk_branch
     username: bosh-admin-bot
     password: *git_token
-    branch: *backup_and_restore_sdk_branch
     paths: [ "ci" ]
 
 - name: bosh-shared-ci
