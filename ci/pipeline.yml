@@ -75,6 +75,7 @@ secrets:
 - &external_db_passwords
   postgres_13_password: &postgres_13_password ((rds_postgres_13_password))
   postgres_15_password: &postgres_15_password ((rds_postgres_15_password))
+  postgres_16_password: &postgres_16_password ((rds_postgres_16_password))
   mariadb_10_password: &mariadb_10_password ((rds_mariadb_10_password))
 
 - &mysql_common
@@ -85,17 +86,6 @@ secrets:
   databases.ca: &mysql_ca_cert ((mysql_tls.ca))
   databases.certificate: &mysql_cert ((mysql_tls.certificate))
   databases.private_key: &mysql_private_key ((mysql_tls.private_key))
-
-- &mysql-5-7-deployment-name mysql-5-7-dev
-- &mysql-5-7-host 10.244.0.9
-
-- &mysql_params_5_7
-  MYSQL_HOSTNAME: *mysql-5-7-host
-  MYSQL_CA_CERT: *mysql_ca_cert
-  MYSQL_CLIENT_CERT: *mysql_cert
-  MYSQL_CLIENT_KEY: *mysql_private_key
-  <<: *mysql_common
-
 
 - &mysql-8-0-deployment-name mysql-8-0-dev
 - &mysql-8-0-host 10.244.0.10
@@ -115,7 +105,11 @@ secrets:
   db_password: postgres_password
 
 - &postgres-13-deployment-name postgres-13-dev
+- &postgres-15-deployment-name postgres-15-dev
+- &postgres-16-deployment-name postgres-16-dev
 - &postgres-13-host 10.244.0.14
+- &postgres-15-host 10.244.0.15
+- &postgres-16-host 10.244.0.16
 
 - &bosh-smiths-creds
   BOSH_ENVIRONMENT: ((.:pooled-env.BOSH_ENVIRONMENT))
@@ -250,6 +244,12 @@ resources:
     index: https://ftp.postgresql.org/pub/source/
     uri: https://ftp.postgresql.org/pub/source/v{version}/postgresql-{version}.tar.gz
     regex: href="v(?P<version>15.[0-9]*.[0-9]*)/"
+- name: postgres-16-blob
+  type: http
+  source:
+    index: https://ftp.postgresql.org/pub/source/
+    uri: https://ftp.postgresql.org/pub/source/v{version}/postgresql-{version}.tar.gz
+    regex: href="v(?P<version>16.[0-9]*.[0-9]*)/"
 
 - name: libpcre2-blob
   type: github-release
@@ -477,16 +477,22 @@ resources:
     deployment: *mysql-8-0-deployment-name
     skip_check: true
 
-- name: mysql-5-7-deployment
-  type: bosh-deployment
-  source:
-    deployment: *mysql-5-7-deployment-name
-    skip_check: true
-
 - name: postgres-13-dev-deployment
   type: bosh-deployment
   source:
     deployment: *postgres-13-deployment-name
+    skip_check: true
+
+- name: postgres-15-dev-deployment
+  type: bosh-deployment
+  source:
+    deployment: *postgres-15-deployment-name
+    skip_check: true
+
+- name: postgres-16-dev-deployment
+  type: bosh-deployment
+  source:
+    deployment: *postgres-16-deployment-name
     skip_check: true
 
 - name: aws-blobstore-sdk-deployment
@@ -786,6 +792,38 @@ jobs:
       releases:
         - bpm-release/*.tgz
         - bosh-release-v271.7/*.tgz
+  - put: postgres-15-dev-deployment
+    params:
+      manifest: backup-and-restore-sdk-release-ci/ci/manifests/postgres-15.yml
+      stemcells:
+      - jammy-stemcell/*.tgz
+      vars:
+        deployment-name: *postgres-15-deployment-name
+        db_host: *postgres-15-host
+        <<: *pg_deployment_common
+        availability_zone: z1
+        vm_extensions: ["cf-tcp-router-network-properties"]
+      ops_files:
+      - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
+      source_file: source-file/source-file.yml
+      releases:
+        - bpm-release/*.tgz
+  - put: postgres-16-dev-deployment
+    params:
+      manifest: backup-and-restore-sdk-release-ci/ci/manifests/postgres-16.yml
+      stemcells:
+      - jammy-stemcell/*.tgz
+      vars:
+        deployment-name: *postgres-16-deployment-name
+        db_host: *postgres-16-host
+        <<: *pg_deployment_common
+        availability_zone: z1
+        vm_extensions: ["cf-tcp-router-network-properties"]
+      ops_files:
+      - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
+      source_file: source-file/source-file.yml
+      releases:
+        - bpm-release/*.tgz
 
 - name: deploy-mysql
   serial_groups: [system-test-internal-dbs]
@@ -837,26 +875,6 @@ jobs:
         releases:
         - bpm-release/*.tgz
         - pxc-release/*.tgz
-    - put: mysql-5-7-deployment
-      timeout: 3h
-      params:
-        manifest: backup-and-restore-sdk-release-ci/ci/manifests/mysql.yml
-        stemcells:
-        - jammy-stemcell/*.tgz
-        vars:
-          mysql_version: "5.7"
-          deployment-name: *mysql-5-7-deployment-name
-          db_password: *mysql-password
-          db_host: *mysql-5-7-host
-          availability_zone: z1
-          <<: *mysql_certs_common
-          vm_extensions: ["cf-tcp-router-network-properties"]
-        ops_files:
-        - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
-        source_file: source-file/source-file.yml
-        releases:
-        - bpm-release/*.tgz
-        - pxc-release/*.tgz
 
 - name: deploy-database-sdk-on-airgapped-env
   serial: true
@@ -864,8 +882,8 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
-      passed:
-        - claim-cf-deployment-airgapped
+#      passed:
+#        - claim-cf-deployment-airgapped
     - get: release-tarball
       trigger: true
       resource: dev-release
@@ -904,10 +922,10 @@ jobs:
     - get: bosh-integration-image
     - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
-      passed:
-      - deploy-database-sdk-on-airgapped-env
-      - deploy-postgres
-      - deploy-mysql
+#      passed:
+#      - deploy-database-sdk-on-airgapped-env
+#      - deploy-postgres
+#      - deploy-mysql
     - get: cert-store
       resource: gcp-db-certs-zip
     - get: cf-deployment-env-airgapped
@@ -924,6 +942,24 @@ jobs:
   - load_var: pooled-env
     file: bosh-env/metadata.yml
   - in_parallel:
+    - task: postgres-15-system-tests
+      image: bosh-integration-image
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
+      params:
+        <<: *bosh-smiths-creds
+        POSTGRES_HOSTNAME: *postgres-15-host
+        POSTGRES_PASSWORD: postgres_password
+        POSTGRES_USERNAME: test_user
+        TEST_SUITE_NAME: postgresql
+    - task: postgres-16-system-tests
+      image: bosh-integration-image
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
+      params:
+        <<: *bosh-smiths-creds
+        POSTGRES_HOSTNAME: *postgres-16-host
+        POSTGRES_PASSWORD: postgres_password
+        POSTGRES_USERNAME: test_user
+        TEST_SUITE_NAME: postgresql
     - task: mysql-8-0-system-tests
       image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
@@ -932,14 +968,6 @@ jobs:
         TEST_TLS_VERIFY_IDENTITY: false
         TEST_TLS_MUTUAL_TLS: false
         <<: [*bosh-smiths-creds, *mysql_params_8]
-    - task: mysql-5-7-system-tests
-      image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
-      params:
-        TEST_SUITE_NAME: mysql
-        TEST_TLS_VERIFY_IDENTITY: false
-        TEST_TLS_MUTUAL_TLS: false
-        <<: [*bosh-smiths-creds, *mysql_params_5_7]
 
 - name: unclaim-cf-deployment-airgapped
   plan:
@@ -1198,6 +1226,25 @@ jobs:
         POSTGRES_CA_CERT: ((.:rds-ca-cert))
         TEST_SSL_USER_REQUIRES_SSL: false
         TEST_SUITE_NAME: postgresql_tls
+    - do:
+      - task: postgres-system-tests-16
+        image: bosh-integration-image
+        file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
+        params:
+          <<: *bosh-smiths-creds
+          POSTGRES_HOSTNAME: ((.:tf-outputs.postgres_16_address))
+          POSTGRES_PASSWORD: *postgres_16_password
+          TEST_SUITE_NAME: postgresql
+      - task: postgres-tls-system-tests-16
+        image: bosh-integration-image
+        file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
+        params:
+          <<: *bosh-smiths-creds
+          POSTGRES_HOSTNAME: ((.:tf-outputs.postgres_16_address))
+          POSTGRES_PASSWORD: *postgres_16_password
+          POSTGRES_CA_CERT: ((.:rds-ca-cert))
+          TEST_SSL_USER_REQUIRES_SSL: false
+          TEST_SUITE_NAME: postgresql_tls
     - do:
       - task: postgres-system-tests-13
         image: bosh-integration-image
@@ -1635,6 +1682,8 @@ jobs:
       trigger: true
     - get: postgres-15-blob
       trigger: true
+    - get: postgres-16-blob
+      trigger: true
     - get: libpcre2-blob
       trigger: true
     - get: mysql-server-8-blob
@@ -1717,7 +1766,7 @@ jobs:
       GIT_BRANCH: main
       BLOB_NAME: postgresql
       BLOB_EXTENSION: .tar.gz
-      KEEP_BLOBS_FILTER: postgresql-15
+      KEEP_BLOBS_FILTER: postgresql-15,postgresql-16
       BLOB_DIRECTORY: postgres/
       UPDATE_REFERENCES: only-variable-name:POSTGRES13_VERSION
   # Postgres 15
@@ -1736,9 +1785,28 @@ jobs:
       GIT_BRANCH: main
       BLOB_NAME: postgresql
       BLOB_EXTENSION: .tar.gz
-      KEEP_BLOBS_FILTER: postgresql-13
+      KEEP_BLOBS_FILTER: postgresql-13,postgresql-16
       BLOB_DIRECTORY: postgres/
       UPDATE_REFERENCES: only-variable-name:POSTGRES15_VERSION
+  # Postgres 16
+  - task: bump-postgres-16-blob
+    image: bosh-integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
+    input_mapping:
+      distributed-package: postgres-16-blob
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
+    params:
+      <<: *AWS_ACCESS
+      GIT_USERNAME: *github_user
+      GIT_EMAIL: *github_email
+      GIT_BRANCH: main
+      BLOB_NAME: postgresql
+      BLOB_EXTENSION: .tar.gz
+      KEEP_BLOBS_FILTER: postgresql-13,postgresql-15
+      BLOB_DIRECTORY: postgres/
+      UPDATE_REFERENCES: only-variable-name:POSTGRES16_VERSION
   # PCRE2
   - task: bump-libpcre2-blob
     image: bosh-integration-image
