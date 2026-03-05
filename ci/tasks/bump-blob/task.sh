@@ -61,9 +61,9 @@ EOF
   # it could accidentially remove a blob that we actually still need.
 
  if [[ -n ${KEEP_BLOBS_FILTER} ]]; then
-    CURRENT_FILENAME=$(bosh blobs --column=path | grep "$BLOB_NAME_WITH_PATH"| grep -v "${KEEP_BLOBS_FILTER/,/\\|}" | xargs) # xargs is used to trim the trailing spaces
+    CURRENT_FILENAME=$(bosh blobs --column=path | grep "$BLOB_NAME_WITH_PATH" | { grep -v "${KEEP_BLOBS_FILTER/,/\\|}" || true; } | xargs) # xargs is used to trim the trailing spaces
  else
-    CURRENT_FILENAME=$(bosh blobs --column=path | grep "$BLOB_NAME_WITH_PATH"| xargs)
+    CURRENT_FILENAME=$(bosh blobs --column=path | { grep "$BLOB_NAME_WITH_PATH" || true; } | xargs)
  fi
   # On 2023-11-30, ksemenov tested the version-getting regex as follows:
   # $ for f in autoconf-2.71.tar.gz automake-1.16.5.tar.xz libtool-2.4.7.tar.xz json-c/json-c-0.17-nodoc.tar.gz jq/jq-1.7-linux-amd64; do
@@ -145,20 +145,24 @@ EOF
     NEW_BLOBNAME="${BLOB_DIRECTORY%/}/${NEW_FILENAME#../distributed-package/}"
   fi
 
-  echo "removing old blob(s) $CURRENT_FILENAME"
-  # check if we have " "(spaces) in CURRENT_FILENAME. It would indicate that we are about to remove more than one blob.
-  if [[ $(tr -dc ' ' <<<"$CURRENT_FILENAME" | wc -c) -gt 0 ]]; then
-    if [[ $REMOVE_MULTIPLE_BLOBS == true ]]; then
-      echo "${CURRENT_FILENAME}" | xargs -n1 bosh remove-blob
-    else
-      echo -e "It seems this would remove more than one blob. But remove multiple blobs is set to: $REMOVE_MULTIPLE_BLOBS\n bailing out to avoid removing the wrong blob"
-      exit 1
-    fi
+  if [[ -z "${CURRENT_FILENAME}" ]]; then
+    echo "No existing blob found for ${BLOB_NAME_WITH_PATH} (first-time add). Adding ${NEW_BLOBNAME}."
   else
-    bosh remove-blob "${CURRENT_FILENAME}"
+    echo "removing old blob(s) $CURRENT_FILENAME"
+    # check if we have " "(spaces) in CURRENT_FILENAME. It would indicate that we are about to remove more than one blob.
+    if [[ $(tr -dc ' ' <<<"$CURRENT_FILENAME" | wc -c) -gt 0 ]]; then
+      if [[ $REMOVE_MULTIPLE_BLOBS == true ]]; then
+        echo "${CURRENT_FILENAME}" | xargs -n1 bosh remove-blob
+      else
+        echo -e "It seems this would remove more than one blob. But remove multiple blobs is set to: $REMOVE_MULTIPLE_BLOBS\n bailing out to avoid removing the wrong blob"
+        exit 1
+      fi
+    else
+      bosh remove-blob "${CURRENT_FILENAME}"
+    fi
   fi
 
-  echo "updating ${BLOB_NAME} blob from ${CURRENT_VERSION} to ${NEW_VERSION}"
+  echo "updating ${BLOB_NAME} blob from ${CURRENT_VERSION:-<none>} to ${NEW_VERSION}"
   bosh add-blob "../distributed-package/${NEW_FILENAME}" "$NEW_BLOBNAME"
 
   # check if the blob we just added was already present. If the size and the checksum didn't change, we just added the same blob because the bumper was rerun for any reason. In that case the diff look similar to:
@@ -187,7 +191,7 @@ EOF
   bosh upload-blobs
   git add config/blobs.yml
 
-  if [[ -n "${UPDATE_REFERENCES:-""}" ]]
+  if [[ -n "${UPDATE_REFERENCES:-""}" && -n "${CURRENT_VERSION}" ]]
   then
     if [[ "$UPDATE_REFERENCES" =~ ^only-variable-name: ]]; then
       VARIABLE_NAME="${UPDATE_REFERENCES#only-variable-name:}"
@@ -202,5 +206,9 @@ EOF
 
   git config user.name "${GIT_USERNAME}"
   git config user.email "${GIT_EMAIL}"
-  git commit -m "Bump ${BLOB_NAME} from ${CURRENT_VERSION} to ${NEW_VERSION}"
+  if [[ -n "${CURRENT_VERSION}" ]]; then
+    git commit -m "Bump ${BLOB_NAME} from ${CURRENT_VERSION} to ${NEW_VERSION}"
+  else
+    git commit -m "Add ${BLOB_NAME} ${NEW_VERSION}"
+  fi
 popd
