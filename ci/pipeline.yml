@@ -883,8 +883,8 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
-#      passed:
-#        - claim-cf-deployment-airgapped
+      passed:
+        - claim-cf-deployment-airgapped
     - get: release-tarball
       trigger: true
       resource: dev-release
@@ -923,10 +923,10 @@ jobs:
     - get: bosh-integration-image
     - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
-#      passed:
-#      - deploy-database-sdk-on-airgapped-env
-#      - deploy-postgres
-#      - deploy-mysql
+      passed:
+      - deploy-database-sdk-on-airgapped-env
+      - deploy-postgres
+      - deploy-mysql
     - get: cert-store
       resource: gcp-db-certs-zip
     - get: cf-deployment-env-airgapped
