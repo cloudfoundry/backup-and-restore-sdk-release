@@ -1415,7 +1415,8 @@ jobs:
       passed:
       - release-fan-in
       trigger: true
-      params: {fetch_tags: true}
+      params:
+        fetch_tags: true
     - get: current-version
       resource: version
     - get: patched-version
