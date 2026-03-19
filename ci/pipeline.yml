@@ -1216,6 +1216,17 @@ jobs:
       toolsmiths-env: cf-deployment-env-non-airgapped
   - load_var: pooled-env
     file: bosh-env/metadata.yml
+  - task: verify-rds-connectivity
+    image: bosh-integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/verify-rds-connectivity/task.yml
+    params:
+      BOSH_GW_HOST: ((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))
+      BOSH_GW_USER: ((.:pooled-env.INSTANCE_JUMPBOX_USER))
+      BOSH_GW_PRIVATE_KEY: ((.:pooled-env.INSTANCE_JUMPBOX_PRIVATE))
+      POSTGRES_13_HOST: ((.:tf-outputs.postgres_13_address))
+      POSTGRES_15_HOST: ((.:tf-outputs.postgres_15_address))
+      POSTGRES_16_HOST: ((.:tf-outputs.postgres_16_address))
+      MARIADB_10_6_HOST: ((.:tf-outputs.mariadb_10_6_address))
   - in_parallel:
     - task: postgres-tls-system-tests-15
       image: bosh-integration-image
