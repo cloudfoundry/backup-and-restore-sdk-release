@@ -1,0 +1,18 @@
+platform: linux
+
+inputs:
+  - name: backup-and-restore-sdk-release-ci
+
+run:
+  path: backup-and-restore-sdk-release-ci/ci/tasks/verify-rds-connectivity/task.sh
+
+params:
+  BOSH_GW_HOST:
+  BOSH_GW_USER:
+  BOSH_GW_PRIVATE_KEY:
+  POSTGRES_13_HOST:
+  POSTGRES_15_HOST:
+  POSTGRES_16_HOST:
+  POSTGRES_PORT: 5432
+  MARIADB_10_6_HOST:
+  MARIADB_PORT: 3306
