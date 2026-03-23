@@ -131,7 +131,7 @@ secrets:
 
 resource_types:
 - name: http
-  type: docker-image
+  type: registry-image
   source:
     repository: aequitas/http-resource
     username: *docker_username
