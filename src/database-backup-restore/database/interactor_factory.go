@@ -118,8 +118,11 @@ func (f InteractorFactory) getUtilitiesForMySQL(mysqlVersion version.DatabaseSer
 		if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("5", "7", "0")) {
 			return f.utilitiesConfig.Mysql57.Dump, f.utilitiesConfig.Mysql57.Restore, nil
 		}
-		if mysqlVersion.SemanticVersion.MajorVersionMatches(version.SemVer("8", "0", "0")) {
+		if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("8", "0", "0")) {
 			return f.utilitiesConfig.Mysql80.Dump, f.utilitiesConfig.Mysql80.Restore, nil
+		}
+		if mysqlVersion.SemanticVersion.MinorVersionMatches(version.SemVer("8", "4", "0")) {
+			return f.utilitiesConfig.Mysql84.Dump, f.utilitiesConfig.Mysql84.Restore, nil
 		}
 	}
 

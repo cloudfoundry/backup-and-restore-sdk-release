@@ -45,6 +45,7 @@ var _ = Describe("InteractorFactory", func() {
 			Mariadb:    config.UtilityPaths{Dump: "mariadb_dump", Restore: "mariadb_restore", Client: "mariadb_client"},
 			Mysql57:    config.UtilityPaths{Dump: "mysql_57_dump", Restore: "mysql_57_restore", Client: "mysql_57_client"},
 			Mysql80:    config.UtilityPaths{Dump: "mysql_80_dump", Restore: "mysql_80_restore", Client: "mysql_80_client"},
+			Mysql84:    config.UtilityPaths{Dump: "mysql_84_dump", Restore: "mysql_84_restore", Client: "mysql_84_client"},
 		}
 	})
 
@@ -287,6 +288,42 @@ var _ = Describe("InteractorFactory", func() {
 				})
 			})
 
+			Context("when the version is detected as MySQL 8.4.0", func() {
+				BeforeEach(func() {
+					mysqlServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{
+							Implementation: "mysql",
+							SemanticVersion: version.SemanticVersion{
+								Major: "8",
+								Minor: "4",
+								Patch: "0"}},
+						nil,
+					)
+				})
+
+				Context("when MySQL 8.4 is supported", func() {
+					BeforeEach(func() {
+						tempfile, err := os.CreateTemp("", "fake_mysql_for_bbr_sdk")
+						Expect(err).NotTo(HaveOccurred())
+						utilitiesConfig.Mysql84.Client = tempfile.Name()
+					})
+
+					AfterEach(func() {
+						os.Remove(utilitiesConfig.Mysql84.Client)
+					})
+
+					It("builds a mysql.Backuper", func() {
+						Expect(factoryError).NotTo(HaveOccurred())
+						Expect(interactor).To(Equal(mysql.NewBackuper(
+							connectionConfig,
+							"mysql_84_dump",
+							mysql.NewDefaultSSLProvider(tempFolderManager),
+							mysql.NewPurgeGTIDOptionProvider(),
+						)))
+					})
+				})
+			})
+
 			Context("when the version is detected as the not supported MariaDB 5.5.58", func() {
 				BeforeEach(func() {
 					mysqlServerVersionDetector.GetVersionReturns(
@@ -362,6 +399,35 @@ var _ = Describe("InteractorFactory", func() {
 						Expect(interactor).To(Equal(mysql.NewRestorer(
 							connectionConfig,
 							"mysql_80_restore",
+							mysql.NewDefaultSSLProvider(tempFolderManager),
+						)))
+					})
+				})
+			})
+			Context("when the version is detected as MySQL 8.4.0", func() {
+				BeforeEach(func() {
+					mysqlServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{
+							"mysql",
+							version.SemanticVersion{Major: "8", Minor: "4", Patch: "0"}}, nil)
+				})
+
+				Context("when MySQL 8.4 is supported", func() {
+					BeforeEach(func() {
+						tempfile, err := os.CreateTemp("", "fake_mysql_for_bbr_sdk")
+						Expect(err).NotTo(HaveOccurred())
+						utilitiesConfig.Mysql84.Client = tempfile.Name()
+					})
+
+					AfterEach(func() {
+						os.Remove(utilitiesConfig.Mysql84.Client)
+					})
+
+					It("builds a mysql.Restorer", func() {
+						Expect(factoryError).NotTo(HaveOccurred())
+						Expect(interactor).To(Equal(mysql.NewRestorer(
+							connectionConfig,
+							"mysql_84_restore",
 							mysql.NewDefaultSSLProvider(tempFolderManager),
 						)))
 					})
