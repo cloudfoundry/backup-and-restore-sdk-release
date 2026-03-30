@@ -104,10 +104,8 @@ secrets:
   db_username: test_user
   db_password: postgres_password
 
-- &postgres-13-deployment-name postgres-13-dev
 - &postgres-15-deployment-name postgres-15-dev
 - &postgres-16-deployment-name postgres-16-dev
-- &postgres-13-host 10.244.0.14
 - &postgres-15-host 10.244.0.15
 - &postgres-16-host 10.244.0.16
 
@@ -277,24 +275,6 @@ resources:
   type: bosh-io-release
   source:
     repository: cloudfoundry/bpm-release
-
-- name: bosh-release-v271.7
-  type: bosh-io-release
-  source:
-    repository: cloudfoundry/bosh
-    regexp: 271.7.*
-
-- name: bosh-release-v268.6
-  type: bosh-io-release
-  source:
-    repository: cloudfoundry/bosh
-    regexp: 268.6.*
-
-- name: bosh-release-v260.3
-  type: bosh-io-release
-  source:
-    repository: cloudfoundry/bosh
-    regexp: "260.3"
 
 - name: postgres-release-v30
   type: bosh-io-release
@@ -476,12 +456,6 @@ resources:
   type: bosh-deployment
   source:
     deployment: *mysql-8-0-deployment-name
-    skip_check: true
-
-- name: postgres-13-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *postgres-13-deployment-name
     skip_check: true
 
 - name: postgres-15-dev-deployment
@@ -751,9 +725,6 @@ jobs:
   - in_parallel:
     - get: bosh-integration-image
     - get: bpm-release
-    - get: bosh-release-v260.3
-    - get: bosh-release-v271.7
-    - get: bosh-release-v268.6
     - get: postgres-release-v30
     - get: postgres-release-v37
     - get: backup-and-restore-sdk-release-ci
@@ -776,23 +747,6 @@ jobs:
     file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
     input_mapping:
       cf-deployment-env: cf-deployment-env-airgapped
-  - put: postgres-13-dev-deployment
-    params:
-      manifest: backup-and-restore-sdk-release-ci/ci/manifests/postgres-13.yml
-      stemcells:
-      - jammy-stemcell/*.tgz
-      vars:
-        deployment-name: *postgres-13-deployment-name
-        db_host: *postgres-13-host
-        <<: *pg_deployment_common
-        availability_zone: z1
-        vm_extensions: ["cf-tcp-router-network-properties"]
-      ops_files:
-      - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
-      source_file: source-file/source-file.yml
-      releases:
-        - bpm-release/*.tgz
-        - bosh-release-v271.7/*.tgz
   - put: postgres-15-dev-deployment
     params:
       manifest: backup-and-restore-sdk-release-ci/ci/manifests/postgres-15.yml
