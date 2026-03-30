@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -o errexit
+
+MYSQL84_VERSION=8.4.8
+NCURSES_VERSION=6.6
+
+tar \
+  --directory="${BOSH_INSTALL_TARGET}" \
+  --strip-components=1 \
+  --wildcards \
+  --extract \
+  --file mysql/mysql-${MYSQL84_VERSION}*.tar.xz \
+  "*/README" "*/LICENSE" \
+  "*/bin/mysql" "*/bin/mysqldump" \
+  "*/lib/private/libssl.so*" "*/lib/private/libcrypto.so*" \
+  "*/share/"
+
+tar -xf ncurses/ncurses-${NCURSES_VERSION}.tar.gz
+cd ncurses-*/
+./configure \
+  --with-abi-version=5 \
+  --with-shared \
+  --with-termlib \
+  --without-cxx-binding \
+  --without-debug \
+  --without-develop \
+  --without-normal \
+  --prefix="${BOSH_INSTALL_TARGET}" \
+  --libdir="${BOSH_INSTALL_TARGET}/lib/private"
+make -j "$(nproc)" install

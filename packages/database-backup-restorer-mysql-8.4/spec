@@ -1,0 +1,8 @@
+---
+name: database-backup-restorer-mysql-8.4
+
+dependencies: []
+
+files:
+- mysql/mysql-8.4.*.tar.xz
+- ncurses/ncurses-*.tar.gz

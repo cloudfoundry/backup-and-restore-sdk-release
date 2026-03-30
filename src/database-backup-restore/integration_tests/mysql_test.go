@@ -1224,6 +1224,258 @@ var _ = Describe("MySQL", func() {
 			})
 		})
 	})
+	Context("mysql 8.4", func() {
+		BeforeEach(func() {
+			artifactFile = tempFilePath()
+			fakeMysqlClient57.Reset()
+			fakeMysqlDump84.Reset()
+			fakeMysqlClient84.Reset()
+
+			envVars["MYSQL_CLIENT_5_7_PATH"] = fakeMysqlClient57.Path
+			envVars["MYSQL_CLIENT_8_4_PATH"] = fakeMysqlClient84.Path
+			envVars["MYSQL_DUMP_8_4_PATH"] = fakeMysqlDump84.Path
+		})
+
+		Context("backup", func() {
+			BeforeEach(func() {
+				configFile = saveFile(fmt.Sprintf(`{
+					"adapter":  "mysql",
+					"username": "%s",
+					"password": "%s",
+					"host":     "%s",
+					"port":     %d,
+					"database": "%s"
+				}`,
+					username,
+					password,
+					host,
+					port,
+					databaseName))
+			})
+
+			JustBeforeEach(func() {
+				cmd := exec.Command(
+					compiledSDKPath,
+					"--artifact-file",
+					artifactFile,
+					"--config",
+					configFile.Name(),
+					"--backup")
+
+				for key, val := range envVars {
+					cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
+				}
+
+				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).ToNot(HaveOccurred())
+				Eventually(session).Should(gexec.Exit())
+			})
+
+			Context("when mysqldump succeeds", func() {
+				BeforeEach(func() {
+					fakeMysqlClient57.WhenCalled().WillPrintToStdOut("MYSQL server version 8.4.8")
+					fakeMysqlDump84.WhenCalled().WillExitWith(0)
+				})
+
+				It("calls mysql and mysqldump with the correct arguments", func() {
+					By("calling mysql to detect the version", func() {
+						Expect(fakeMysqlClient57.Invocations()).To(HaveLen(1))
+						Expect(fakeMysqlClient57.Invocations()[0].Args()).Should(ConsistOf(
+							fmt.Sprintf("--user=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							"--skip-column-names",
+							"--silent",
+							`--execute=SELECT VERSION()`,
+						))
+						Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					})
+
+					By("then calling dump", func() {
+						Expect(fakeMysqlDump84.Invocations()).To(HaveLen(1))
+						expectedArgs := []interface{}{
+							fmt.Sprintf("--user=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							"-v",
+							"--set-gtid-purged=OFF",
+							"--single-transaction",
+							"--skip-add-locks",
+							fmt.Sprintf("--result-file=%s", artifactFile),
+							databaseName,
+						}
+
+						Expect(fakeMysqlDump84.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+						Expect(fakeMysqlDump84.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					})
+
+					Expect(session).Should(gexec.Exit(0))
+				})
+
+				Context("when 'tables' are specified in the configFile", func() {
+					BeforeEach(func() {
+						configFile = saveFile(fmt.Sprintf(`{
+					"adapter":  "mysql",
+					"username": "%s",
+					"password": "%s",
+					"host":     "%s",
+					"port":     %d,
+					"database": "%s",
+					"tables": ["table1", "table2", "table3"]
+				}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
+					})
+
+					It("calls mysqldump with the correct arguments", func() {
+						expectedArgs := []interface{}{
+							fmt.Sprintf("--user=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							"-v",
+							"--single-transaction",
+							"--set-gtid-purged=OFF",
+							"--skip-add-locks",
+							fmt.Sprintf("--result-file=%s", artifactFile),
+							databaseName,
+							"table1",
+							"table2",
+							"table3",
+						}
+
+						Expect(fakeMysqlDump84.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+					})
+				})
+			})
+
+			Context("when the server has a supported mysql minor version with a different patch to the packaged utility", func() {
+				BeforeEach(func() {
+					fakeMysqlDump84.WhenCalled().WillExitWith(0)
+					fakeMysqlClient57.WhenCalledWith(
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--skip-column-names",
+						"--silent",
+						`--execute=SELECT VERSION()`,
+					).WillPrintToStdOut("MYSQL server version 8.4.666")
+				})
+
+				It("succeeds despite different patch versions", func() {
+					Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					Expect(fakeMysqlDump84.Invocations()).Should(HaveLen(1))
+					Expect(session).Should(gexec.Exit(0))
+				})
+			})
+		})
+
+		Context("restore", func() {
+			BeforeEach(func() {
+				configFile = saveFile(fmt.Sprintf(`{
+					"adapter":  "mysql",
+					"username": "%s",
+					"password": "%s",
+					"host":     "%s",
+					"port":     %d,
+					"database": "%s"
+				}`,
+					username,
+					password,
+					host,
+					port,
+					databaseName))
+			})
+
+			JustBeforeEach(func() {
+				err := os.WriteFile(artifactFile, []byte("SOME BACKUP SQL"), 0644)
+				Expect(err).ToNot(HaveOccurred())
+
+				cmd := exec.Command(
+					compiledSDKPath,
+					"--artifact-file",
+					artifactFile,
+					"--config",
+					configFile.Name(),
+					"--restore")
+
+				for key, val := range envVars {
+					cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, val))
+				}
+
+				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).ToNot(HaveOccurred())
+				Eventually(session).Should(gexec.Exit())
+			})
+
+			Context("when mysql succeeds", func() {
+				BeforeEach(func() {
+					fakeMysqlClient57.WhenCalled().WillPrintToStdOut("MYSQL server version 8.4.8")
+					fakeMysqlClient84.WhenCalled().WillExitWith(0)
+				})
+
+				Context("when TLS block is not configured", func() {
+					It("calls mysql with the correct arguments", func() {
+						By("calling mysql with the correct arguments for version checking", func() {
+							expectedVersionCheckArgs := []string{
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								"--skip-column-names",
+								"--silent",
+								`--execute=SELECT VERSION()`,
+							}
+							Expect(fakeMysqlClient57.Invocations()).To(HaveLen(1))
+							Expect(fakeMysqlClient57.Invocations()[0].Args()).Should(ConsistOf(expectedVersionCheckArgs))
+							Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+						})
+
+						By("calling mysql with the correct arguments for restoring", func() {
+							expectedRestoreArgs := []interface{}{
+								"-v",
+								fmt.Sprintf("--user=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								databaseName,
+							}
+
+							Expect(fakeMysqlClient84.Invocations()).To(HaveLen(1))
+							Expect(fakeMysqlClient84.Invocations()[0].Args()).Should(ConsistOf(expectedRestoreArgs))
+							Expect(fakeMysqlClient84.Invocations()[0].Stdin()).Should(ConsistOf("SOME BACKUP SQL"))
+							Expect(fakeMysqlClient84.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+						})
+
+						By("succeeding", func() {
+							Expect(session).Should(gexec.Exit(0))
+						})
+					})
+				})
+			})
+
+			Context("when mysql fails", func() {
+				BeforeEach(func() {
+					fakeMysqlClient57.WhenCalledWith(
+						fmt.Sprintf("--user=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--skip-column-names",
+						"--silent",
+						`--execute=SELECT VERSION()`,
+					).WillPrintToStdOut("MYSQL server version 8.4.8")
+					fakeMysqlClient84.WhenCalled().WillExitWith(1)
+				})
+
+				It("also fails", func() {
+					Expect(fakeMysqlClient57.Invocations()).To(HaveLen(1))
+					Expect(fakeMysqlClient84.Invocations()).To(HaveLen(1))
+					Expect(fakeMysqlClient57.Invocations()[0].Env()).Should(HaveKeyWithValue("MYSQL_PWD", password))
+					Eventually(session).Should(gexec.Exit(1))
+				})
+			})
+		})
+	})
 
 })
 

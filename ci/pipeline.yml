@@ -97,6 +97,16 @@ secrets:
   MYSQL_CLIENT_KEY: *mysql_private_key
   <<: *mysql_common
 
+- &mysql-8-4-deployment-name mysql-8-4-dev
+- &mysql-8-4-host 10.244.0.11
+
+- &mysql_params_8_4
+  MYSQL_HOSTNAME: *mysql-8-4-host
+  MYSQL_CA_CERT: *mysql_ca_cert
+  MYSQL_CLIENT_CERT: *mysql_cert
+  MYSQL_CLIENT_KEY: *mysql_private_key
+  <<: *mysql_common
+
 - &minio_access_key ((minio_user.username))
 - &minio_secret_key ((minio_user.password))
 
@@ -220,6 +230,14 @@ resources:
   source:
     url: "https://dev.mysql.com/downloads/mysql/8.0.html?tpl=platform&os=2&version=8.0&osva=#downloads"
     static_download_url_path: "https://dev.mysql.com/get/Downloads/MySQL-8.0/"
+    version_regex: "mysql-(?P<version>[0-9]*.[0-9]*.[0-9]*)-linux-glibc.*-x86_64-minimal.tar.xz"
+    filename_mode: true
+
+- name: mysql-server-8-4-blob
+  type: ftp
+  source:
+    url: "https://dev.mysql.com/downloads/mysql/8.4.html?tpl=platform&os=2&version=8.4&osva=#downloads"
+    static_download_url_path: "https://dev.mysql.com/get/Downloads/MySQL-8.4/"
     version_regex: "mysql-(?P<version>[0-9]*.[0-9]*.[0-9]*)-linux-glibc.*-x86_64-minimal.tar.xz"
     filename_mode: true
 
@@ -456,6 +474,12 @@ resources:
   type: bosh-deployment
   source:
     deployment: *mysql-8-0-deployment-name
+    skip_check: true
+
+- name: mysql-8-4-deployment
+  type: bosh-deployment
+  source:
+    deployment: *mysql-8-4-deployment-name
     skip_check: true
 
 - name: postgres-15-dev-deployment
@@ -830,6 +854,26 @@ jobs:
         releases:
         - bpm-release/*.tgz
         - pxc-release/*.tgz
+    - put: mysql-8-4-deployment
+      timeout: 3h
+      params:
+        manifest: backup-and-restore-sdk-release-ci/ci/manifests/mysql.yml
+        stemcells:
+        - jammy-stemcell/*.tgz
+        vars:
+          mysql_version: "8.4"
+          deployment-name: *mysql-8-4-deployment-name
+          db_password: *mysql-password
+          db_host: *mysql-8-4-host
+          availability_zone: z1
+          <<: *mysql_certs_common
+          vm_extensions: ["cf-tcp-router-network-properties"]
+        ops_files:
+        - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
+        source_file: source-file/source-file.yml
+        releases:
+        - bpm-release/*.tgz
+        - pxc-release/*.tgz
 
 - name: deploy-database-sdk-on-airgapped-env
   serial: true
@@ -923,6 +967,14 @@ jobs:
         TEST_TLS_VERIFY_IDENTITY: false
         TEST_TLS_MUTUAL_TLS: false
         <<: [*bosh-smiths-creds, *mysql_params_8]
+    - task: mysql-8-4-system-tests
+      image: bosh-integration-image
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
+      params:
+        TEST_SUITE_NAME: mysql
+        TEST_TLS_VERIFY_IDENTITY: false
+        TEST_TLS_MUTUAL_TLS: false
+        <<: [*bosh-smiths-creds, *mysql_params_8_4]
 
 - name: unclaim-cf-deployment-airgapped
   plan:
@@ -1446,6 +1498,7 @@ jobs:
           - mariadb
           - mysql-5
           - mysql-8
+          - mysql-8.4
           - postgresql-13
           - postgresql-15
           - ncurses
@@ -1656,6 +1709,8 @@ jobs:
       trigger: true
     - get: mysql-server-8-blob
       trigger: true
+    - get: mysql-server-8-4-blob
+      trigger: true
     - get: golang-release
       trigger: true
   # Go
@@ -1793,7 +1848,7 @@ jobs:
       BLOB_EXTENSION: .tar.gz
       BLOB_DIRECTORY: libpcre2/
       UPDATE_REFERENCES: only-variable-name:LIBPCRE2_VERSION
-  # MySQL 8
+  # MySQL 8.0
   - task: bump-mysql-8-blob
     image: bosh-integration-image
     file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
@@ -1808,10 +1863,29 @@ jobs:
       GIT_EMAIL: *github_email
       GIT_BRANCH: main
       BLOB_NAME: mysql
-      KEEP_BLOBS_FILTER: mysql-5
+      KEEP_BLOBS_FILTER: mysql-5,mysql-8.4
       BLOB_EXTENSION: linux-glibc2.17-x86_64-minimal.tar.xz
       BLOB_DIRECTORY: mysql/
       UPDATE_REFERENCES: only-variable-name:MYSQL80_VERSION
+  # MySQL 8.4
+  - task: bump-mysql-8-4-blob
+    image: bosh-integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
+    input_mapping:
+      distributed-package: mysql-server-8-4-blob
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
+    params:
+      <<: *AWS_ACCESS
+      GIT_USERNAME: *github_user
+      GIT_EMAIL: *github_email
+      GIT_BRANCH: main
+      BLOB_NAME: mysql
+      KEEP_BLOBS_FILTER: mysql-5,mysql-8.0
+      BLOB_EXTENSION: linux-glibc2.17-x86_64-minimal.tar.xz
+      BLOB_DIRECTORY: mysql/
+      UPDATE_REFERENCES: only-variable-name:MYSQL84_VERSION
   # Push changes
   - put: backup-and-restore-sdk-release-write-only
     params:

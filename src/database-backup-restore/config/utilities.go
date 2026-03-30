@@ -18,6 +18,7 @@ type UtilitiesConfig struct {
 	Mariadb    UtilityPaths
 	Mysql57    UtilityPaths
 	Mysql80    UtilityPaths
+	Mysql84    UtilityPaths
 }
 
 func GetUtilitiesConfigFromEnv() UtilitiesConfig {
@@ -51,6 +52,11 @@ func GetUtilitiesConfigFromEnv() UtilitiesConfig {
 			Client:  lookupEnv("MYSQL_CLIENT_8_0_PATH"),
 			Dump:    lookupEnv("MYSQL_DUMP_8_0_PATH"),
 			Restore: lookupEnv("MYSQL_CLIENT_8_0_PATH"),
+		},
+		Mysql84: UtilityPaths{
+			Client:  lookupEnv("MYSQL_CLIENT_8_4_PATH"),
+			Dump:    lookupEnv("MYSQL_DUMP_8_4_PATH"),
+			Restore: lookupEnv("MYSQL_CLIENT_8_4_PATH"),
 		},
 	}
 }
