@@ -20,6 +20,7 @@ mysql/mysql-8.0.45-linux-glibc2.17-x86_64-minimal.tar.xz:
   sha: sha256:a524f4163e7807b3e07cfe0109a13379bb8da4d3bdfac8521ae7f1ecb1623ab5
 mysql/mysql-8.4.8-linux-glibc2.17-x86_64-minimal.tar.xz:
   size: 61526540
+  object_id: f01e67e4-ae7a-4de9-537e-d76c6530a0fc
   sha: sha256:964f279caa123fa31a7593b650d94b81f935989b06dfc893ece5b4033de22b8b
 ncurses/ncurses-6.6.tar.gz:
   size: 3791150
