@@ -1,0 +1,7 @@
+---
+name: database-backup-restorer-postgres-17
+
+dependencies: []
+
+files:
+- postgres/postgresql-17.*.tar.gz
