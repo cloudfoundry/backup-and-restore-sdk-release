@@ -1497,7 +1497,7 @@ jobs:
         BLOBS:
           - mariadb
           - mysql-5
-          - mysql-8
+          - mysql-8.0
           - mysql-8.4
           - postgresql-13
           - postgresql-15
