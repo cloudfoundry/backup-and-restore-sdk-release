@@ -22,9 +22,9 @@ releases:
   version: latest
   url: https://bosh.io/d/github.com/cloudfoundry/bpm-release
 - name: "postgres"
-  version: "53.0.3"
-  url: "https://bosh.io/d/github.com/cloudfoundry/postgres-release?v=53.0.3"
-  sha1: "sha256:ee8f1d44a7bbfd3d34595de45e1974daf9eb70b50432425f7680e16072cc1bee"
+  version: "53.1.2"
+  url: "https://bosh.io/d/github.com/cloudfoundry/postgres-release?v=53.1.2"
+  sha1: sha256:4c0a41401135751a9c007612d35ff3d8c6c063a224576550f68400dd4f3e000a
 
 stemcells:
 - alias: jammy
@@ -45,7 +45,7 @@ instance_groups:
     release: postgres
     properties:
       databases:
-        version: 16
+        version: ((postgres_version))
         roles:
         - name: ((db_username))
           password: ((db_password))

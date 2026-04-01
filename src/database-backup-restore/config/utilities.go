@@ -15,6 +15,7 @@ type UtilitiesConfig struct {
 	Postgres13 UtilityPaths
 	Postgres15 UtilityPaths
 	Postgres16 UtilityPaths
+	Postgres17 UtilityPaths
 	Mariadb    UtilityPaths
 	Mysql57    UtilityPaths
 	Mysql80    UtilityPaths
@@ -37,6 +38,11 @@ func GetUtilitiesConfigFromEnv() UtilitiesConfig {
 			Client:  lookupEnv("PG_CLIENT_PATH"),
 			Dump:    lookupEnv("PG_DUMP_16_PATH"),
 			Restore: lookupEnv("PG_RESTORE_16_PATH"),
+		},
+		Postgres17: UtilityPaths{
+			Client:  lookupEnv("PG_CLIENT_PATH"),
+			Dump:    lookupEnv("PG_DUMP_17_PATH"),
+			Restore: lookupEnv("PG_RESTORE_17_PATH"),
 		},
 		Mariadb: UtilityPaths{
 			Client:  lookupEnv("MARIADB_CLIENT_PATH"),
