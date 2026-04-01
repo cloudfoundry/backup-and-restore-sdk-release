@@ -46,7 +46,7 @@ EOF
     BLOB_NAME_WITH_PATH="${BLOB_DIRECTORY%/}/${BLOB_NAME}"
   fi
 
-  # ${KEEP_BLOBS_FILTER/,/\\\|}
+  # ${KEEP_BLOBS_FILTER//,/\\\|}
   # KEEP_BLOBS_FILTER expects a csv and will transform the values into a grep "or" matcher by replacing `,` with `\|`
   # This grep -v needs to happen before we pipe the output into xargs, because that will also trim newlines.
 
@@ -61,7 +61,7 @@ EOF
   # it could accidentially remove a blob that we actually still need.
 
  if [[ -n ${KEEP_BLOBS_FILTER} ]]; then
-    CURRENT_FILENAME=$(bosh blobs --column=path | grep "$BLOB_NAME_WITH_PATH" | { grep -v "${KEEP_BLOBS_FILTER/,/\\|}" || true; } | xargs) # xargs is used to trim the trailing spaces
+    CURRENT_FILENAME=$(bosh blobs --column=path | grep "$BLOB_NAME_WITH_PATH" | { grep -v "${KEEP_BLOBS_FILTER//,/\\|}" || true; } | xargs) # xargs is used to trim the trailing spaces
  else
     CURRENT_FILENAME=$(bosh blobs --column=path | { grep "$BLOB_NAME_WITH_PATH" || true; } | xargs)
  fi
