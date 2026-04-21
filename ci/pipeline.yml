@@ -1933,7 +1933,7 @@ jobs:
       GIT_BRANCH: main
       BLOB_NAME: mysql
       KEEP_BLOBS_FILTER: mysql-5,mysql-8.0
-      BLOB_EXTENSION: linux-glibc2.17-x86_64-minimal.tar.xz
+      BLOB_EXTENSION: linux-glibc2.28-x86_64-minimal.tar.xz
       BLOB_DIRECTORY: mysql/
       UPDATE_REFERENCES: only-variable-name:MYSQL84_VERSION
   # Push changes
