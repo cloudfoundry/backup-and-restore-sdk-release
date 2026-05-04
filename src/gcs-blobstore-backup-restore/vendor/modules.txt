@@ -55,7 +55,7 @@ github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric
 # github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.53.0
 ## explicit; go 1.23.0
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping
-# github.com/Masterminds/semver/v3 v3.4.0
+# github.com/Masterminds/semver/v3 v3.5.0
 ## explicit; go 1.21
 github.com/Masterminds/semver/v3
 # github.com/cespare/xxhash/v2 v2.3.0
