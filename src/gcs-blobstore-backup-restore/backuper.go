@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor"
+	"github.com/cloudfoundry/bosh-backup-and-restore/executor"
 )
 
 const timestampFormat = "2006_01_02_15_04_05"

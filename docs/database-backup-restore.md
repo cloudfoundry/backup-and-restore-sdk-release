@@ -4,9 +4,9 @@ This release enables release authors to write backup and restore scripts that ba
 
 Behind the scenes, the SDK parses a configuration file passed to it, which selects the appropriate database backup/restore strategy (e.g. `pg_dump` or `mysql` at the required version) and places the backup artifact in the specified location. For more details on how to implement backup and restore scripts, please refer to our [release author guide](http://docs.cloudfoundry.org/bbr/bbr-devguide.html).
 
-### Usage with [bbr](https://github.com/cloudfoundry-incubator/bosh-backup-and-restore)
+### Usage with [bbr](https://github.com/cloudfoundry/bosh-backup-and-restore)
 
-For an example of the SDK being used in a release that can be backed up by BBR see the [exemplar release](https://github.com/cloudfoundry-incubator/exemplar-backup-and-restore-release).
+For an example of the SDK being used in a release that can be backed up by BBR see the [exemplar release](https://github.com/cloudfoundry/exemplar-backup-and-restore-release).
 
 #### Enable Backup and Restore for `cf-deployment`
 
@@ -100,7 +100,7 @@ Or if you want to operate on specific tables:
 
 For the full list of `config.json` properties see [Config options](#config-options).
 
-An example of templating using BOSH Links can be seen in the [cf networking release](https://github.com/cloudfoundry-incubator/cf-networking-release/blob/647f7a71b442c25ec29b1cc6484410946f41935c/jobs/bbr-cfnetworkingdb/templates/config.json.erb).
+An example of templating using BOSH Links can be seen in the [cf networking release](https://github.com/cloudfoundry/cf-networking-release/blob/647f7a71b442c25ec29b1cc6484410946f41935c/jobs/bbr-cfnetworkingdb/templates/config.json.erb).
 
 #### 2. Write scripts to call the SDK binaries
 

@@ -1,6 +1,6 @@
 package incremental
 
-import "github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor"
+import "github.com/cloudfoundry/bosh-backup-and-restore/executor"
 
 type BackupToComplete struct {
 	BackupBucket    Bucket

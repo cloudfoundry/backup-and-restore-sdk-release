@@ -3,7 +3,7 @@ package gcs_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/bosh-backup-and-restore/executor"
+	"github.com/cloudfoundry/bosh-backup-and-restore/executor"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
