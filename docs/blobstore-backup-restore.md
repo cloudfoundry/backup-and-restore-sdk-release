@@ -1,6 +1,6 @@
 ## Blobstore Backup and Restore
 
-Operators can deploy these jobs with their deployments to back up and restore external blobstores by [BBR](https://github.com/cloudfoundry-incubator/bosh-backup-and-restore).
+Operators can deploy these jobs with their deployments to back up and restore external blobstores by [BBR](https://github.com/cloudfoundry/bosh-backup-and-restore).
 
 ### Usage
 
