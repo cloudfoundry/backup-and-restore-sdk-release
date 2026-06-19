@@ -1615,7 +1615,6 @@ jobs:
       GIT_USER_EMAIL: *github_email
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/azure-blobstore-backup-restore
-      DESIRED_GO_MAJOR_MINOR: '1.23'
       GOSUMDB: ((repository_mirrors.gosumdb))
       GOPROXY: ((repository_mirrors.goproxy))
     input_mapping:
@@ -1630,7 +1629,6 @@ jobs:
       GIT_USER_EMAIL: *github_email
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/database-backup-restore
-      DESIRED_GO_MAJOR_MINOR: '1.23'
       GOSUMDB: ((repository_mirrors.gosumdb))
       GOPROXY: ((repository_mirrors.goproxy))
     input_mapping:
@@ -1645,7 +1643,6 @@ jobs:
       GIT_USER_EMAIL: *github_email
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/gcs-blobstore-backup-restore
-      DESIRED_GO_MAJOR_MINOR: '1.23'
       GOSUMDB: ((repository_mirrors.gosumdb))
       GOPROXY: ((repository_mirrors.goproxy))
     input_mapping:
@@ -1660,7 +1657,6 @@ jobs:
       GIT_USER_EMAIL: *github_email
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/s3-blobstore-backup-restore
-      DESIRED_GO_MAJOR_MINOR: '1.23'
       GOSUMDB: ((repository_mirrors.gosumdb))
       GOPROXY: ((repository_mirrors.goproxy))
     input_mapping:
@@ -1675,7 +1671,6 @@ jobs:
       GIT_USER_EMAIL: *github_email
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/system-tests
-      DESIRED_GO_MAJOR_MINOR: '1.23'
       GOSUMDB: ((repository_mirrors.gosumdb))
       GOPROXY: ((repository_mirrors.goproxy))
     input_mapping:
