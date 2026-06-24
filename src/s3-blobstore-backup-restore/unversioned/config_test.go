@@ -574,5 +574,65 @@ var _ = Describe("Unversioned", func() {
 
 			Expect(err).To(MatchError(ContainSubstring("backup artifact does not contain bucket ID")))
 		})
+
+		Context("when the artifact bucket name does not match the configured backup bucket name", func() {
+			It("returns an error without constructing any bucket", func() {
+				artifact.LoadReturns(map[string]incremental.Backup{
+					"bucket1": {
+						BucketName:             "tampered-bucket",
+						BucketRegion:           "backup-region1",
+						SrcBackupDirectoryPath: "destination-backup-dir1",
+					},
+					"bucket2": {
+						BucketName:             "backup-name2",
+						BucketRegion:           "backup-region2",
+						SrcBackupDirectoryPath: "destination-backup-dir2",
+					},
+				}, nil)
+
+				newBucketCallCount := 0
+				countingNewBucket := func(bucketName, bucketRegion, endpoint, roleArn string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (unversioned.Bucket, error) {
+					newBucketCallCount++
+					return newBucket(bucketName, bucketRegion, endpoint, roleArn, accessKey, useIAMProfile, forcePathStyle)
+				}
+
+				_, err := unversioned.BuildRestoreBucketPairs(configs, artifact, countingNewBucket)
+
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring(`artifact bucket name "tampered-bucket"`))
+				Expect(err.Error()).To(ContainSubstring(`does not match configured backup bucket name "backup-name1"`))
+				Expect(newBucketCallCount).To(Equal(0))
+			})
+		})
+
+		Context("when the artifact bucket region does not match the configured backup bucket region", func() {
+			It("returns an error without constructing any bucket", func() {
+				artifact.LoadReturns(map[string]incremental.Backup{
+					"bucket1": {
+						BucketName:             "backup-name1",
+						BucketRegion:           "tampered-region",
+						SrcBackupDirectoryPath: "destination-backup-dir1",
+					},
+					"bucket2": {
+						BucketName:             "backup-name2",
+						BucketRegion:           "backup-region2",
+						SrcBackupDirectoryPath: "destination-backup-dir2",
+					},
+				}, nil)
+
+				newBucketCallCount := 0
+				countingNewBucket := func(bucketName, bucketRegion, endpoint, roleArn string, accessKey s3bucket.AccessKey, useIAMProfile, forcePathStyle bool) (unversioned.Bucket, error) {
+					newBucketCallCount++
+					return newBucket(bucketName, bucketRegion, endpoint, roleArn, accessKey, useIAMProfile, forcePathStyle)
+				}
+
+				_, err := unversioned.BuildRestoreBucketPairs(configs, artifact, countingNewBucket)
+
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring(`artifact bucket region "tampered-region"`))
+				Expect(err.Error()).To(ContainSubstring(`does not match configured backup bucket region "backup-region1"`))
+				Expect(newBucketCallCount).To(Equal(0))
+			})
+		})
 	})
 })
