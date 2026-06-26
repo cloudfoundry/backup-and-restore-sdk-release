@@ -1,16 +1,11 @@
 ---
-#! ************************************
-#! Secrets we need to run this pipeline
-#! ************************************
 secrets:
 - &backup_and_restore_sdk_branch main
 
 - &aws-region eu-west-1
 - &aws-backup-region eu-central-1
-- &number_of_test_retries 3
 
-- &aws-access
-#! AWS access keys for the 686843836666 account
+- &aws-access #! AWS access keys for the 686843836666 account
   aws-access-key-id: &aws_access_key ((bbr_aws_access_key.username))
   aws-secret-access-key: &aws_secret_key ((bbr_aws_access_key.password))
   aws-assumed-role-arn: &aws_role_arn ((bbr_aws_access_key.role_arn))
@@ -127,57 +122,54 @@ secrets:
   BOSH_GW_HOST: ((.:bbl-env.INSTANCE_JUMPBOX_EXTERNAL_IP))
   BOSH_GW_PRIVATE_KEY: ((.:bbl-env.INSTANCE_JUMPBOX_PRIVATE))
 
-- &docker_username ((docker.username))
-- &docker_password ((docker.password))
-
 resource_types:
 - name: http
   type: registry-image
   source:
     repository: aequitas/http-resource
-    username: *docker_username
-    password: *docker_password
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
 
 - name: bosh-deployment-resource
   type: registry-image
   source:
     repository: cloudfoundry/bosh-deployment-resource
-    username: *docker_username
-    password: *docker_password
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
 
 - name: custom-terraform
   type: registry-image
   source:
     repository: ljfranklin/terraform-resource
     tag: 0.14.2
-    username: *docker_username
-    password: *docker_password
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
 
 resources:
 - name: bosh-ecosystem-docker-image
   type: registry-image
   source:
     repository: bosh/bosh-ecosystem-concourse
-    username: ((docker.username))
-    password: ((docker.password))
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
 - name: ruby-image
   type: registry-image
   source:
     repository: ruby
-    username: ((docker.username))
-    password: ((docker.password))
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
 - name: bosh-security-scanner-registry-image
   type: registry-image
   source:
     repository: bosh/security-scanner
-    username: ((docker.username))
-    password: ((docker.password))
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
 - name: bosh-cli-registry-image
   type: registry-image
   source:
     repository: bosh/cli
-    username: ((docker.username))
-    password: ((docker.password))
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
 
 #! bbl infrastructure resources
 - name: bosh-deployment
@@ -507,7 +499,6 @@ jobs:
   - in_parallel:
     - task: aws-s3-blobstore-contract-tests
       image: bosh-integration-image
-      attempts: *number_of_test_retries
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: s3-blobstore-backup-restore/s3bucket
@@ -852,7 +843,6 @@ jobs:
     - task: gcs-blobstore-backuper-system-tests
       image: bosh-integration-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.yml
-      attempts: *number_of_test_retries
       params:
         <<: *bbl-bosh-creds
         TEST_SUITE_NAME: gcs
@@ -1294,8 +1284,6 @@ jobs:
       GIT_USER_EMAIL: *github_email
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/azure-blobstore-backup-restore
-      GOSUMDB: ((repository_mirrors.gosumdb))
-      GOPROXY: ((repository_mirrors.goproxy))
     input_mapping:
       input_repo: backup-and-restore-sdk-release
     output_mapping:
@@ -1308,8 +1296,6 @@ jobs:
       GIT_USER_EMAIL: *github_email
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/database-backup-restore
-      GOSUMDB: ((repository_mirrors.gosumdb))
-      GOPROXY: ((repository_mirrors.goproxy))
     input_mapping:
       input_repo: backup-and-restore-sdk-release
     output_mapping:
@@ -1322,8 +1308,6 @@ jobs:
       GIT_USER_EMAIL: *github_email
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/gcs-blobstore-backup-restore
-      GOSUMDB: ((repository_mirrors.gosumdb))
-      GOPROXY: ((repository_mirrors.goproxy))
     input_mapping:
       input_repo: backup-and-restore-sdk-release
     output_mapping:
@@ -1336,8 +1320,6 @@ jobs:
       GIT_USER_EMAIL: *github_email
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/s3-blobstore-backup-restore
-      GOSUMDB: ((repository_mirrors.gosumdb))
-      GOPROXY: ((repository_mirrors.goproxy))
     input_mapping:
       input_repo: backup-and-restore-sdk-release
     output_mapping:
@@ -1350,8 +1332,6 @@ jobs:
       GIT_USER_EMAIL: *github_email
       GO_PACKAGE: golang-1-linux
       SOURCE_PATH: src/system-tests
-      GOSUMDB: ((repository_mirrors.gosumdb))
-      GOPROXY: ((repository_mirrors.goproxy))
     input_mapping:
       input_repo: backup-and-restore-sdk-release
     output_mapping:
