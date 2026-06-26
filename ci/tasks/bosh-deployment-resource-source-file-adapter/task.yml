@@ -1,0 +1,25 @@
+---
+platform: linux
+
+image_resource:
+  type: registry-image
+  source:
+    repository: cloudfoundry/cf-deployment-concourse-tasks
+
+inputs:
+- name: backup-and-restore-sdk-release-ci
+
+outputs:
+- name: source-file
+
+params:
+  BOSH_ENVIRONMENT:
+  BOSH_CLIENT:
+  BOSH_CLIENT_SECRET:
+  BOSH_CA_CERT:
+  BOSH_GW_HOST:
+  BOSH_GW_USER:
+  BOSH_GW_PRIVATE_KEY:
+
+run:
+  path: backup-and-restore-sdk-release-ci/ci/tasks/bosh-deployment-resource-source-file-adapter/task.sh
