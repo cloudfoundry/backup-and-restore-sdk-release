@@ -124,49 +124,49 @@ resource_types:
   type: registry-image
   source:
     repository: aequitas/http-resource
-    username: ((docker.username))
-    password: ((docker.password))
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
 
 - name: bosh-deployment-resource
   type: registry-image
   source:
     repository: cloudfoundry/bosh-deployment-resource
-    username: ((docker.username))
-    password: ((docker.password))
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
 
 - name: custom-terraform
   type: registry-image
   source:
     repository: ljfranklin/terraform-resource
     tag: 0.14.2
-    username: ((docker.username))
-    password: ((docker.password))
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
 
 resources:
 - name: bosh-ecosystem-docker-image
   type: registry-image
   source:
     repository: bosh/bosh-ecosystem-concourse
-    username: ((docker.username))
-    password: ((docker.password))
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
 - name: ruby-image
   type: registry-image
   source:
     repository: ruby
-    username: ((docker.username))
-    password: ((docker.password))
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
 - name: bosh-security-scanner-registry-image
   type: registry-image
   source:
     repository: bosh/security-scanner
-    username: ((docker.username))
-    password: ((docker.password))
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
 - name: bosh-cli-registry-image
   type: registry-image
   source:
     repository: bosh/cli
-    username: ((docker.username))
-    password: ((docker.password))
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
 
 #! bbl infrastructure resources
 - name: bosh-deployment
