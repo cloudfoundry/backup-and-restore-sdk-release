@@ -82,7 +82,7 @@ github.com/onsi/gomega/types
 github.com/pivotal-cf-experimental/go-binmock
 # github.com/pivotal-cf/go-binmock v0.0.0-20171027112700-f797157c64e9
 ## explicit
-# go.yaml.in/yaml/v3 v3.0.4
+# go.yaml.in/yaml/v3 v3.0.5
 ## explicit; go 1.16
 go.yaml.in/yaml/v3
 # golang.org/x/mod v0.38.0
