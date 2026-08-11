@@ -29,8 +29,8 @@ var _ = Describe("GCS Blobstore System Tests", func() {
 		})
 
 		AfterEach(func() {
-			gcsClient.DeleteAllBlobInBucket(fmt.Sprintf(bucket + "/*"))
-			gcsClient.DeleteAllBlobInBucket(fmt.Sprintf(backupBucket + "/*"))
+			gcsClient.DeleteAllBlobInBucket(bucket + "/*")
+			gcsClient.DeleteAllBlobInBucket(backupBucket + "/*")
 		})
 
 		Context("when there is single live bucket", func() {
