@@ -44,7 +44,6 @@ var _ = Describe("InteractorFactory", func() {
 			Postgres16: config.UtilityPaths{Dump: "pg_p_16_dump", Restore: "pg_p_16_restore", Client: "pg_p_16_client"},
 			Postgres17: config.UtilityPaths{Dump: "pg_p_17_dump", Restore: "pg_p_17_restore", Client: "pg_p_17_client"},
 			Mariadb:    config.UtilityPaths{Dump: "mariadb_dump", Restore: "mariadb_restore", Client: "mariadb_client"},
-			Mysql57:    config.UtilityPaths{Dump: "mysql_57_dump", Restore: "mysql_57_restore", Client: "mysql_57_client"},
 			Mysql80:    config.UtilityPaths{Dump: "mysql_80_dump", Restore: "mysql_80_restore", Client: "mysql_80_client"},
 			Mysql84:    config.UtilityPaths{Dump: "mysql_84_dump", Restore: "mysql_84_restore", Client: "mysql_84_client"},
 		}
@@ -378,23 +377,6 @@ var _ = Describe("InteractorFactory", func() {
 						"mariadb_restore",
 						mysql.NewLegacySSLOptionsProvider(tempFolderManager)),
 					))
-				})
-			})
-			Context("when the version is detected as MySQL 5.7.19", func() {
-				BeforeEach(func() {
-					mysqlServerVersionDetector.GetVersionReturns(
-						version.DatabaseServerVersion{
-							"mysql",
-							version.SemanticVersion{Major: "5", Minor: "7", Patch: "19"}}, nil)
-				})
-
-				It("builds a mysql.Restorer", func() {
-					Expect(factoryError).NotTo(HaveOccurred())
-					Expect(interactor).To(Equal(mysql.NewRestorer(
-						connectionConfig,
-						"mysql_57_restore",
-						mysql.NewDefaultSSLProvider(tempFolderManager),
-					)))
 				})
 			})
 			Context("when the version is detected as MySQL 8.0.27", func() {
