@@ -8,11 +8,8 @@ $(VERBOSE).SILENT:
 help: ## list Makefile targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m - %s\n", $$1, $$2}'
 
-config/private.yml: # To populate private.yml with S3 creds needed to upload blobs
-	lpass show "Shared-PCF Backup and Restore/private_yml" --notes > config/private.yml
-
 .PHONY: bump-postgres
-bump-postgres: config/private.yml ## update blobs, spec and packaging to PostgreSQL version specified by MAJOR and MINOR
+bump-postgres: ## update blobs, spec and packaging to PostgreSQL version specified by MAJOR and MINOR
 	./scripts/bump_postgres_blobs.bash
 
 supported-stemcells=\
