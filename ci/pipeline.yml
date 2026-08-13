@@ -1523,7 +1523,6 @@ jobs:
       params:
         BLOBS:
           - mariadb
-          - mysql-5
           - mysql-8.0
           - mysql-8.4
           - postgresql-13
@@ -1908,7 +1907,7 @@ jobs:
       GIT_EMAIL: *github_email
       GIT_BRANCH: main
       BLOB_NAME: mysql
-      KEEP_BLOBS_FILTER: mysql-5,mysql-8.4
+      KEEP_BLOBS_FILTER: mysql-8.4
       BLOB_EXTENSION: linux-glibc2.17-x86_64-minimal.tar.xz
       BLOB_DIRECTORY: mysql/
       UPDATE_REFERENCES: only-variable-name:MYSQL80_VERSION
@@ -1927,7 +1926,7 @@ jobs:
       GIT_EMAIL: *github_email
       GIT_BRANCH: main
       BLOB_NAME: mysql
-      KEEP_BLOBS_FILTER: mysql-5,mysql-8.0
+      KEEP_BLOBS_FILTER: mysql-8.0
       BLOB_EXTENSION: linux-glibc2.28-x86_64-minimal.tar.xz
       BLOB_DIRECTORY: mysql/
       UPDATE_REFERENCES: only-variable-name:MYSQL84_VERSION
