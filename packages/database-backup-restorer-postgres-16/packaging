@@ -7,7 +7,10 @@ mkdir -p postgresql-${POSTGRES16_VERSION}
 tar xzf postgres/postgresql-${POSTGRES16_VERSION}.tar.gz --strip-components=1 -C postgresql-${POSTGRES16_VERSION}
 
 pushd postgresql-${POSTGRES16_VERSION}
-  ICU_CFLAGS=" " ICU_LIBS="-L/usr/lib/x86_64-linux-gnu -licui18n -licuuc -licudata" ./configure --prefix=${BOSH_INSTALL_TARGET} --with-openssl
+  # ICU is enabled by default from PostgreSQL 16 on, but it is only used by the
+  # server (collation providers) and initdb -- never by the psql/pg_dump/pg_restore
+  # client binaries this package ships. 
+  ./configure --prefix=${BOSH_INSTALL_TARGET} --with-openssl --without-icu
 
   pushd src/bin/pg_config
     make
