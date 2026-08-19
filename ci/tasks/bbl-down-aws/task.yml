@@ -1,0 +1,20 @@
+---
+platform: linux
+
+image_resource:
+  type: registry-image
+  source:
+    repository: cloudfoundry/cf-deployment-concourse-tasks
+
+inputs:
+  - name: backup-and-restore-sdk-release-ci
+  - name: bbl-state
+
+params:
+  BBL_IAAS: aws
+  BBL_AWS_ACCESS_KEY_ID: ((bbr_aws_access_key.username))
+  BBL_AWS_SECRET_ACCESS_KEY: ((bbr_aws_access_key.password))
+  BBL_AWS_REGION: eu-west-1
+
+run:
+  path: backup-and-restore-sdk-release-ci/ci/tasks/bbl-down-aws/task.sh
