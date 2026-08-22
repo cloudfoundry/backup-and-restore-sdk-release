@@ -166,8 +166,6 @@ func BuildRestoreBucketPairs(
 	artifact incremental.Artifact,
 	newBucket NewBucket,
 ) (map[string]incremental.RestoreBucketPair, error) {
-	pairs := map[string]incremental.RestoreBucketPair{}
-
 	backups, err := artifact.Load()
 	if err != nil {
 		return nil, err
@@ -178,6 +176,27 @@ func BuildRestoreBucketPairs(
 			return nil, fmt.Errorf("backup artifact does not contain bucket ID '%s'", bucketID)
 		}
 
+		if backups[bucketID].SameBucketAs != "" {
+			continue
+		}
+
+		if backups[bucketID].BucketName != config.Backup.Name {
+			return nil, fmt.Errorf(
+				"artifact bucket name %q for bucket ID %q does not match configured backup bucket name %q",
+				backups[bucketID].BucketName, bucketID, config.Backup.Name,
+			)
+		}
+		if backups[bucketID].BucketRegion != config.Backup.Region {
+			return nil, fmt.Errorf(
+				"artifact bucket region %q for bucket ID %q does not match configured backup bucket region %q",
+				backups[bucketID].BucketRegion, bucketID, config.Backup.Region,
+			)
+		}
+	}
+
+	pairs := map[string]incremental.RestoreBucketPair{}
+
+	for bucketID, config := range configs {
 		if backups[bucketID].SameBucketAs != "" {
 			pairs[bucketID] = incremental.RestoreBucketPair{
 				SameAsBucketID: backups[bucketID].SameBucketAs,
@@ -207,8 +226,8 @@ func BuildRestoreBucketPairs(
 		}
 
 		backupBucket, err := newBucket(
-			backups[bucketID].BucketName,
-			backups[bucketID].BucketRegion,
+			config.Backup.Name,
+			config.Backup.Region,
 			config.Endpoint,
 			config.AwsAssumedRoleArn,
 			s3bucket.AccessKey{
