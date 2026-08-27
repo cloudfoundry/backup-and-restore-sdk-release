@@ -46,20 +46,24 @@ var _ = Describe("Postgres", func() {
 		fakePgDump15.Reset()
 		fakePgDump16.Reset()
 		fakePgDump17.Reset()
+		fakePgDump18.Reset()
 		fakePgRestore13.Reset()
 		fakePgRestore15.Reset()
 		fakePgRestore16.Reset()
 		fakePgRestore17.Reset()
+		fakePgRestore18.Reset()
 
 		envVars["PG_CLIENT_PATH"] = fakePgClient.Path
 		envVars["PG_DUMP_13_PATH"] = fakePgDump13.Path
 		envVars["PG_DUMP_15_PATH"] = fakePgDump15.Path
 		envVars["PG_DUMP_16_PATH"] = fakePgDump16.Path
 		envVars["PG_DUMP_17_PATH"] = fakePgDump17.Path
+		envVars["PG_DUMP_18_PATH"] = fakePgDump18.Path
 		envVars["PG_RESTORE_13_PATH"] = fakePgRestore13.Path
 		envVars["PG_RESTORE_15_PATH"] = fakePgRestore15.Path
 		envVars["PG_RESTORE_16_PATH"] = fakePgRestore16.Path
 		envVars["PG_RESTORE_17_PATH"] = fakePgRestore17.Path
+		envVars["PG_RESTORE_18_PATH"] = fakePgRestore18.Path
 
 		configFile = saveFile(fmt.Sprintf(`{
 				"adapter":  "postgres",
@@ -824,6 +828,190 @@ var _ = Describe("Postgres", func() {
 			})
 
 		})
+		Context("Postgres database server is version 18", func() {
+			BeforeEach(func() {
+				fakePgClient.WhenCalled().WillPrintToStdOut(
+					" PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc " +
+						"(Ubuntu 5.4.0-6ubuntu1~16.04.12) 5.4.0 20160609, 64-bit").
+					WillExitWith(0)
+			})
+
+			Context("when pg_dump succeeds", func() {
+				BeforeEach(func() {
+					fakePgDump18.WhenCalled().WillExitWith(0)
+				})
+
+				It("takes a backup", func() {
+					By("getting the server version", func() {
+						expectedArgs := []string{
+							"--tuples-only",
+							fmt.Sprintf("--username=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							databaseName,
+							`--command=SELECT VERSION()`,
+						}
+
+						Expect(fakePgClient.Invocations()).To(HaveLen(1))
+						Expect(fakePgClient.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+						Expect(fakePgClient.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+					})
+
+					By("dumping the database with the correct dump binary", func() {
+						expectedArgs := []string{
+							"--verbose",
+							fmt.Sprintf("--username=%s", username),
+							fmt.Sprintf("--host=%s", host),
+							fmt.Sprintf("--port=%d", port),
+							"--format=custom",
+							fmt.Sprintf("--file=%s", artifactFile),
+							databaseName,
+						}
+
+						Expect(fakePgDump18.Invocations()).To(HaveLen(1))
+						Expect(fakePgDump18.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+						Expect(fakePgDump18.Invocations()[0].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+					})
+
+					By("not invoking the dump binary for a different version", func() {
+						Expect(fakePgDump13.Invocations()).To(HaveLen(0))
+					})
+
+					Expect(session).Should(gexec.Exit(0))
+				})
+
+				Context("when 'tables' are specified in the configFile", func() {
+					BeforeEach(func() {
+						configFile = saveFile(fmt.Sprintf(`{
+								"adapter":  "postgres",
+								"username": "%s",
+								"password": "%s",
+								"host":     "%s",
+								"port":     %d,
+								"database": "%s",
+								"tables": ["table1", "table2", "table3"]
+							}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
+						fakePgClient.WhenCalled().WillPrintToStdOut(
+							" table1 \n table2 \n table3 \n\n\n").
+							WillExitWith(0)
+					})
+
+					It("backs up the specified tables", func() {
+						By("checking if the tables exist", func() {
+							expectedArgs := []string{
+								"--tuples-only",
+								fmt.Sprintf("--username=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								databaseName,
+								`--command=SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';`,
+							}
+
+							Expect(fakePgClient.Invocations()).To(HaveLen(2))
+							Expect(fakePgClient.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+							Expect(fakePgClient.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+						})
+
+						By("calling pg_dump with the correct arguments", func() {
+							expectedArgs := []string{
+								"--verbose",
+								fmt.Sprintf("--username=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								"--format=custom",
+								fmt.Sprintf("--file=%s", artifactFile),
+								databaseName,
+								"-t", "table1",
+								"-t", "table2",
+								"-t", "table3",
+							}
+
+							Expect(fakePgDump18.Invocations()[0].Args()).Should(ConsistOf(expectedArgs))
+						})
+
+						Expect(session).Should(gexec.Exit(0))
+					})
+				})
+
+				Context("when missing 'tables' are specified in the configFile", func() {
+					BeforeEach(func() {
+						configFile = saveFile(fmt.Sprintf(`{
+								"adapter":  "postgres",
+								"username": "%s",
+								"password": "%s",
+								"host":     "%s",
+								"port":     %d,
+								"database": "%s",
+								"tables": ["table1", "table2", "table3"]
+							}`,
+							username,
+							password,
+							host,
+							port,
+							databaseName))
+						fakePgClient.WhenCalled().WillPrintToStdOut(
+							" table1 \n table2 \n\n\n").
+							WillExitWith(0)
+					})
+
+					It("fails", func() {
+						By("checking if the tables exist", func() {
+							expectedArgs := []string{
+								"--tuples-only",
+								fmt.Sprintf("--username=%s", username),
+								fmt.Sprintf("--host=%s", host),
+								fmt.Sprintf("--port=%d", port),
+								databaseName,
+								`--command=SELECT table_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema='public';`,
+							}
+
+							Expect(fakePgClient.Invocations()).To(HaveLen(2))
+							Expect(fakePgClient.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+							Expect(fakePgClient.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+						})
+
+						By("exiting with a helpful error message", func() {
+							Expect(session).Should(gexec.Exit(1))
+							Expect(session.Err).Should(gbytes.Say(`can't find specified table\(s\): table3`))
+						})
+					})
+				})
+
+			})
+
+			Context("when pg_dump fails", func() {
+				BeforeEach(func() {
+					configFile = saveFile(fmt.Sprintf(`{
+								"adapter":  "postgres",
+								"username": "%s",
+								"password": "%s",
+								"host":     "%s",
+								"port":     %d,
+								"database": "%s",
+								"tables": ["table1", "table2", "table3"]
+							}`,
+						username,
+						password,
+						host,
+						port,
+						databaseName))
+					fakePgClient.WhenCalled().WillPrintToStdOut(
+						" table1 \n table2 \n\n\n").
+						WillExitWith(0)
+					fakePgDump18.WhenCalled().WillExitWith(1)
+				})
+
+				It("also fails", func() {
+					Eventually(session).Should(gexec.Exit(1))
+				})
+			})
+
+		})
 	})
 
 	Context("restore", func() {
@@ -1087,6 +1275,70 @@ var _ = Describe("Postgres", func() {
 			Context("and pg_restore fails to get file list", func() {
 				BeforeEach(func() {
 					fakePgRestore17.WhenCalled().WillExitWith(1)
+				})
+
+				It("also fails", func() {
+					Eventually(session).Should(gexec.Exit(1))
+				})
+			})
+		})
+		Context("Postgres database server is version 18", func() {
+			BeforeEach(func() {
+				fakePgClient.WhenCalled().WillPrintToStdOut(
+					" PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc " +
+						"(Ubuntu 5.4.0-6ubuntu1~16.04.12) 5.4.0 20160609, 64-bit").
+					WillExitWith(0)
+			})
+
+			Context("pg_restore succeeds", func() {
+				BeforeEach(func() {
+					fakePgRestore18.WhenCalled().WillExitWith(0)
+					fakePgRestore18.WhenCalled().WillExitWith(0)
+				})
+
+				It("calls pg_restore to get information about the restore", func() {
+					Expect(fakePgRestore18.Invocations()).To(HaveLen(2))
+
+					Expect(fakePgRestore18.Invocations()[0].Args()).To(Equal([]string{"--list", artifactFile}))
+
+					expectedArgs := []interface{}{
+						"--verbose",
+						fmt.Sprintf("--username=%s", username),
+						fmt.Sprintf("--host=%s", host),
+						fmt.Sprintf("--port=%d", port),
+						"--format=custom",
+						fmt.Sprintf("--dbname=%s", databaseName),
+						"--clean",
+						"--if-exists",
+						"--single-transaction",
+						"--exit-on-error",
+						HavePrefix("--use-list="),
+						artifactFile,
+					}
+
+					Expect(fakePgRestore18.Invocations()[1].Args()).Should(ConsistOf(expectedArgs))
+					Expect(fakePgRestore18.Invocations()[1].Env()).Should(HaveKeyWithValue("PGPASSWORD", password))
+				})
+
+				It("succeeds", func() {
+					Expect(session).Should(gexec.Exit(0))
+				})
+			})
+
+			Context("and pg_restore fails when restoring", func() {
+				BeforeEach(func() {
+					fakePgRestore18.WhenCalled().WillExitWith(0)
+					fakePgRestore18.WhenCalled().WillExitWith(1)
+				})
+
+				It("also fails", func() {
+					Eventually(session).Should(gexec.Exit(1))
+				})
+			})
+
+			Context("and pg_restore fails to get file list", func() {
+				BeforeEach(func() {
+					fakePgRestore18.WhenCalled().WillExitWith(1)
 				})
 
 				It("also fails", func() {

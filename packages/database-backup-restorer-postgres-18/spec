@@ -1,0 +1,7 @@
+---
+name: database-backup-restorer-postgres-18
+
+dependencies: []
+
+files:
+- postgres/postgresql-18.*.tar.gz
