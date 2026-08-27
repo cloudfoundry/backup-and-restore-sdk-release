@@ -117,9 +117,11 @@ secrets:
 - &postgres-15-deployment-name postgres-15-dev
 - &postgres-16-deployment-name postgres-16-dev
 - &postgres-17-deployment-name postgres-17-dev
+- &postgres-18-deployment-name postgres-18-dev
 - &postgres-15-host 10.244.0.15
 - &postgres-16-host 10.244.0.16
 - &postgres-17-host 10.244.0.17
+- &postgres-18-host 10.244.0.18
 
 - &bosh-smiths-creds
   BOSH_ENVIRONMENT: ((.:pooled-env.BOSH_ENVIRONMENT))
@@ -274,6 +276,12 @@ resources:
     index: https://ftp.postgresql.org/pub/source/
     uri: https://ftp.postgresql.org/pub/source/v{version}/postgresql-{version}.tar.gz
     regex: href="v(?P<version>17.[0-9]*.[0-9]*)/"
+- name: postgres-18-blob
+  type: http
+  source:
+    index: https://ftp.postgresql.org/pub/source/
+    uri: https://ftp.postgresql.org/pub/source/v{version}/postgresql-{version}.tar.gz
+    regex: href="v(?P<version>18.[0-9]*.[0-9]*)/"
 
 - name: libpcre2-blob
   type: github-release
@@ -494,6 +502,12 @@ resources:
   type: bosh-deployment
   source:
     deployment: *postgres-17-deployment-name
+    skip_check: true
+
+- name: postgres-18-dev-deployment
+  type: bosh-deployment
+  source:
+    deployment: *postgres-18-deployment-name
     skip_check: true
 
 - name: aws-blobstore-sdk-deployment
@@ -821,6 +835,23 @@ jobs:
       source_file: source-file/source-file.yml
       releases:
         - bpm-release/*.tgz
+  - put: postgres-18-dev-deployment
+    params:
+      manifest: backup-and-restore-sdk-release-ci/ci/manifests/postgres.yml
+      stemcells:
+        - jammy-stemcell/*.tgz
+      vars:
+        deployment-name: *postgres-18-deployment-name
+        db_host: *postgres-18-host
+        postgres_version: 18
+        <<: *pg_deployment_common
+        availability_zone: z1
+        vm_extensions: ["cf-tcp-router-network-properties"]
+      ops_files:
+        - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
+      source_file: source-file/source-file.yml
+      releases:
+        - bpm-release/*.tgz
 
 - name: deploy-mysql
   serial_groups: [system-test-internal-dbs]
@@ -983,6 +1014,15 @@ jobs:
       params:
         <<: *bosh-smiths-creds
         POSTGRES_HOSTNAME: *postgres-17-host
+        POSTGRES_PASSWORD: postgres_password
+        POSTGRES_USERNAME: test_user
+        TEST_SUITE_NAME: postgresql
+    - task: postgres-18-system-tests
+      image: bosh-integration-image
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
+      params:
+        <<: *bosh-smiths-creds
+        POSTGRES_HOSTNAME: *postgres-18-host
         POSTGRES_PASSWORD: postgres_password
         POSTGRES_USERNAME: test_user
         TEST_SUITE_NAME: postgresql
@@ -1529,6 +1569,7 @@ jobs:
           - postgresql-16
           - postgresql-15
           - postgresql-17
+          - postgresql-18
           - ncurses
           - pcre2
       on_success:
@@ -1730,6 +1771,8 @@ jobs:
       trigger: true
     - get: postgres-17-blob
       trigger: true
+    - get: postgres-18-blob
+      trigger: true
     - get: libpcre2-blob
       trigger: true
     - get: mysql-server-8-blob
@@ -1814,7 +1857,7 @@ jobs:
       GIT_BRANCH: main
       BLOB_NAME: postgresql
       BLOB_EXTENSION: .tar.gz
-      KEEP_BLOBS_FILTER: postgresql-15,postgresql-16,postgresql-17
+      KEEP_BLOBS_FILTER: postgresql-15,postgresql-16,postgresql-17,postgresql-18
       BLOB_DIRECTORY: postgres/
       UPDATE_REFERENCES: only-variable-name:POSTGRES13_VERSION
   # Postgres 15
@@ -1833,7 +1876,7 @@ jobs:
       GIT_BRANCH: main
       BLOB_NAME: postgresql
       BLOB_EXTENSION: .tar.gz
-      KEEP_BLOBS_FILTER: postgresql-13,postgresql-16,postgresql-17
+      KEEP_BLOBS_FILTER: postgresql-13,postgresql-16,postgresql-17,postgresql-18
       BLOB_DIRECTORY: postgres/
       UPDATE_REFERENCES: only-variable-name:POSTGRES15_VERSION
   # Postgres 16
@@ -1852,7 +1895,7 @@ jobs:
       GIT_BRANCH: main
       BLOB_NAME: postgresql
       BLOB_EXTENSION: .tar.gz
-      KEEP_BLOBS_FILTER: postgresql-13,postgresql-15,postgresql-17
+      KEEP_BLOBS_FILTER: postgresql-13,postgresql-15,postgresql-17,postgresql-18
       BLOB_DIRECTORY: postgres/
       UPDATE_REFERENCES: only-variable-name:POSTGRES16_VERSION
     # Postgres 17
@@ -1871,9 +1914,28 @@ jobs:
       GIT_BRANCH: main
       BLOB_NAME: postgresql
       BLOB_EXTENSION: .tar.gz
-      KEEP_BLOBS_FILTER: postgresql-13,postgresql-15,postgresql-16
+      KEEP_BLOBS_FILTER: postgresql-13,postgresql-15,postgresql-16,postgresql-18
       BLOB_DIRECTORY: postgres/
       UPDATE_REFERENCES: only-variable-name:POSTGRES17_VERSION
+    # Postgres 18
+  - task: bump-postgres-18-blob
+    image: bosh-integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
+    input_mapping:
+      distributed-package: postgres-18-blob
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
+    params:
+      <<: *AWS_ACCESS
+      GIT_USERNAME: *github_user
+      GIT_EMAIL: *github_email
+      GIT_BRANCH: main
+      BLOB_NAME: postgresql
+      BLOB_EXTENSION: .tar.gz
+      KEEP_BLOBS_FILTER: postgresql-13,postgresql-15,postgresql-16,postgresql-17
+      BLOB_DIRECTORY: postgres/
+      UPDATE_REFERENCES: only-variable-name:POSTGRES18_VERSION
   # PCRE2
   - task: bump-libpcre2-blob
     image: bosh-integration-image
