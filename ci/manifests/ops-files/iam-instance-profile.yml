@@ -1,0 +1,11 @@
+---
+# Adds a vm_extension named 's3-backup-iam-instance-profile' to the BOSH
+# cloud config. Any instance group that includes this extension in its
+# vm_extensions list will have the named IAM instance profile attached to
+# its EC2 instance, granting S3 access without static AWS credentials.
+- type: replace
+  path: /vm_extensions/-
+  value:
+    name: s3-backup-iam-instance-profile
+    cloud_properties:
+      iam_instance_profile: ((iam_instance_profile))
