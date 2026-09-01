@@ -50,7 +50,7 @@ var _ = Describe("Restorer", func() {
 			artifact.LoadReturns(map[string]versioned.BucketSnapshot{
 				"droplets": {
 					BucketName: "my_droplets_bucket",
-					RegionName: "my_droplets_source_region",
+					RegionName: "my_droplets_region",
 					Versions: []versioned.BlobVersion{
 						{BlobKey: "one", Id: "13"},
 						{BlobKey: "two", Id: "22"},
@@ -58,14 +58,14 @@ var _ = Describe("Restorer", func() {
 				},
 				"buildpacks": {
 					BucketName: "my_buildpacks_bucket",
-					RegionName: "my_buildpacks_source_region",
+					RegionName: "my_buildpacks_region",
 					Versions: []versioned.BlobVersion{
 						{BlobKey: "three", Id: "32"},
 					},
 				},
 				"packages": {
 					BucketName: "my_packages_bucket",
-					RegionName: "my_packages_source_region",
+					RegionName: "my_packages_region",
 					Versions: []versioned.BlobVersion{
 						{BlobKey: "four", Id: "43"},
 					},
@@ -75,12 +75,15 @@ var _ = Describe("Restorer", func() {
 			dropletsBucket.CopyVersionReturns(nil)
 			buildpacksBucket.CopyVersionReturns(nil)
 			packagesBucket.CopyVersionReturns(nil)
-			dropletsBucket.RegionReturns("destination_droplets_region")
-			buildpacksBucket.RegionReturns("destination_buildpacks_region")
-			packagesBucket.RegionReturns("destination_packages_region")
+			dropletsBucket.NameReturns("my_droplets_bucket")
+			dropletsBucket.RegionReturns("my_droplets_region")
+			buildpacksBucket.NameReturns("my_buildpacks_bucket")
+			buildpacksBucket.RegionReturns("my_buildpacks_region")
+			packagesBucket.NameReturns("my_packages_bucket")
+			packagesBucket.RegionReturns("my_packages_region")
 		})
 
-		It("restores a backup from one region to a new foundation in a different region", func() {
+		It("copies each version from the artifact to the destination buckets", func() {
 			By("successfully running", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
@@ -91,43 +94,113 @@ var _ = Describe("Restorer", func() {
 				Expect(packagesBucket.IsVersionedCallCount()).To(Equal(1))
 			})
 
-			By("Calling CopyVersion for each object in the droplets bucket with the old region", func() {
+			By("Calling CopyVersion for each object in the droplets bucket", func() {
 				Expect(dropletsBucket.CopyVersionCallCount()).To(Equal(2))
 
 				expectedBlobKey, expectedVersionId, expectedSourceBucketName, expectedSourceRegionName := dropletsBucket.CopyVersionArgsForCall(0)
 				Expect(expectedBlobKey).To(Equal("one"))
 				Expect(expectedVersionId).To(Equal("13"))
 				Expect(expectedSourceBucketName).To(Equal("my_droplets_bucket"))
-				Expect(expectedSourceRegionName).To(Equal("my_droplets_source_region"))
+				Expect(expectedSourceRegionName).To(Equal("my_droplets_region"))
 
 				expectedBlobKey, expectedVersionId, expectedSourceBucketName, expectedSourceRegionName = dropletsBucket.CopyVersionArgsForCall(1)
 				Expect(expectedBlobKey).To(Equal("two"))
 				Expect(expectedVersionId).To(Equal("22"))
 				Expect(expectedSourceBucketName).To(Equal("my_droplets_bucket"))
-				Expect(expectedSourceRegionName).To(Equal("my_droplets_source_region"))
+				Expect(expectedSourceRegionName).To(Equal("my_droplets_region"))
 			})
 
-			By("Calling CopyVersions for each object in the buildpacks bucket with the old region", func() {
+			By("Calling CopyVersions for each object in the buildpacks bucket", func() {
 				Expect(buildpacksBucket.CopyVersionCallCount()).To(Equal(1))
 
 				expectedBlobKey, expectedVersionId, expectedSourceBucketName, expectedSourceRegionName := buildpacksBucket.CopyVersionArgsForCall(0)
 				Expect(expectedBlobKey).To(Equal("three"))
 				Expect(expectedVersionId).To(Equal("32"))
 				Expect(expectedSourceBucketName).To(Equal("my_buildpacks_bucket"))
-				Expect(expectedSourceRegionName).To(Equal("my_buildpacks_source_region"))
+				Expect(expectedSourceRegionName).To(Equal("my_buildpacks_region"))
 			})
 
-			By("Calling CopyVersions for each object in the packages bucket with the old region", func() {
+			By("Calling CopyVersions for each object in the packages bucket", func() {
 				Expect(packagesBucket.CopyVersionCallCount()).To(Equal(1))
 
 				expectedBlobKey, expectedVersionId, expectedSourceBucketName, expectedSourceRegionName := packagesBucket.CopyVersionArgsForCall(0)
 				Expect(expectedBlobKey).To(Equal("four"))
 				Expect(expectedVersionId).To(Equal("43"))
 				Expect(expectedSourceBucketName).To(Equal("my_packages_bucket"))
-				Expect(expectedSourceRegionName).To(Equal("my_packages_source_region"))
+				Expect(expectedSourceRegionName).To(Equal("my_packages_region"))
 			})
 		})
 
+	})
+
+	Context("when the artifact bucket name does not match the configured bucket name", func() {
+		BeforeEach(func() {
+			artifact.LoadReturns(map[string]versioned.BucketSnapshot{
+				"droplets": {
+					BucketName: "tampered-bucket",
+					RegionName: "my_droplets_region",
+					Versions:   []versioned.BlobVersion{{BlobKey: "one", Id: "13"}},
+				},
+				"buildpacks": {
+					BucketName: "my_buildpacks_bucket",
+					RegionName: "my_buildpacks_region",
+					Versions:   []versioned.BlobVersion{{BlobKey: "three", Id: "32"}},
+				},
+			}, nil)
+			restorer = versioned.NewRestorer(map[string]versioned.Bucket{
+				"droplets":   dropletsBucket,
+				"buildpacks": buildpacksBucket,
+			}, artifact)
+			dropletsBucket.NameReturns("my_droplets_bucket")
+			dropletsBucket.RegionReturns("my_droplets_region")
+			buildpacksBucket.NameReturns("my_buildpacks_bucket")
+			buildpacksBucket.RegionReturns("my_buildpacks_region")
+		})
+
+		It("returns an error without calling IsVersioned or CopyVersion on any bucket", func() {
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring(`artifact bucket name "tampered-bucket"`))
+			Expect(err.Error()).To(ContainSubstring(`does not match configured bucket name "my_droplets_bucket"`))
+			Expect(dropletsBucket.IsVersionedCallCount()).To(Equal(0))
+			Expect(dropletsBucket.CopyVersionCallCount()).To(Equal(0))
+			Expect(buildpacksBucket.IsVersionedCallCount()).To(Equal(0))
+			Expect(buildpacksBucket.CopyVersionCallCount()).To(Equal(0))
+		})
+	})
+
+	Context("when the artifact bucket region does not match the configured bucket region", func() {
+		BeforeEach(func() {
+			artifact.LoadReturns(map[string]versioned.BucketSnapshot{
+				"droplets": {
+					BucketName: "my_droplets_bucket",
+					RegionName: "tampered-region",
+					Versions:   []versioned.BlobVersion{{BlobKey: "one", Id: "13"}},
+				},
+				"buildpacks": {
+					BucketName: "my_buildpacks_bucket",
+					RegionName: "my_buildpacks_region",
+					Versions:   []versioned.BlobVersion{{BlobKey: "three", Id: "32"}},
+				},
+			}, nil)
+			restorer = versioned.NewRestorer(map[string]versioned.Bucket{
+				"droplets":   dropletsBucket,
+				"buildpacks": buildpacksBucket,
+			}, artifact)
+			dropletsBucket.NameReturns("my_droplets_bucket")
+			dropletsBucket.RegionReturns("my_droplets_region")
+			buildpacksBucket.NameReturns("my_buildpacks_bucket")
+			buildpacksBucket.RegionReturns("my_buildpacks_region")
+		})
+
+		It("returns an error without calling IsVersioned or CopyVersion on any bucket", func() {
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring(`artifact bucket region "tampered-region"`))
+			Expect(err.Error()).To(ContainSubstring(`does not match configured bucket region "my_droplets_region"`))
+			Expect(dropletsBucket.IsVersionedCallCount()).To(Equal(0))
+			Expect(dropletsBucket.CopyVersionCallCount()).To(Equal(0))
+			Expect(buildpacksBucket.IsVersionedCallCount()).To(Equal(0))
+			Expect(buildpacksBucket.CopyVersionCallCount()).To(Equal(0))
+		})
 	})
 
 	Context("when the artifact fails to load", func() {
@@ -170,6 +243,13 @@ var _ = Describe("Restorer", func() {
 				},
 			}, nil)
 
+			dropletsBucket.NameReturns("my_droplets_bucket")
+			dropletsBucket.RegionReturns("my_droplets_region")
+			buildpacksBucket.NameReturns("my_buildpacks_bucket")
+			buildpacksBucket.RegionReturns("my_buildpacks_region")
+			packagesBucket.NameReturns("my_packages_bucket")
+			packagesBucket.RegionReturns("my_packages_region")
+
 			dropletsBucket.CopyVersionReturns(nil)
 			buildpacksBucket.CopyVersionReturns(errors.New("failed to put version to bucket 'buildpacks'"))
 			packagesBucket.CopyVersionReturns(nil)
@@ -207,12 +287,18 @@ var _ = Describe("Restorer", func() {
 				},
 			}, nil)
 
+			dropletsBucket.NameReturns("my_droplets_bucket")
+			dropletsBucket.RegionReturns("my_droplets_region")
+			buildpacksBucket.NameReturns("my_buildpacks_bucket")
+			buildpacksBucket.RegionReturns("my_buildpacks_region")
+			packagesBucket.NameReturns("my_packages_bucket")
+			packagesBucket.RegionReturns("my_packages_region")
+
 			dropletsBucket.CopyVersionReturns(nil)
 			buildpacksBucket.CopyVersionReturns(nil)
 			packagesBucket.CopyVersionReturns(nil)
 
 			dropletsBucket.IsVersionedReturns(false, nil)
-			dropletsBucket.NameReturns("my_droplets_bucket")
 		})
 
 		It("returns an error", func() {
@@ -247,12 +333,18 @@ var _ = Describe("Restorer", func() {
 				},
 			}, nil)
 
+			dropletsBucket.NameReturns("my_droplets_bucket")
+			dropletsBucket.RegionReturns("my_droplets_region")
+			buildpacksBucket.NameReturns("my_buildpacks_bucket")
+			buildpacksBucket.RegionReturns("my_buildpacks_region")
+			packagesBucket.NameReturns("my_packages_bucket")
+			packagesBucket.RegionReturns("my_packages_region")
+
 			dropletsBucket.CopyVersionReturns(nil)
 			buildpacksBucket.CopyVersionReturns(nil)
 			packagesBucket.CopyVersionReturns(nil)
 
 			dropletsBucket.IsVersionedReturns(false, fmt.Errorf("ooops"))
-			dropletsBucket.NameReturns("my_droplets_bucket")
 		})
 
 		It("returns an error", func() {
@@ -279,6 +371,11 @@ var _ = Describe("Restorer", func() {
 					},
 				},
 			}, nil)
+
+			dropletsBucket.NameReturns("my_droplets_bucket")
+			dropletsBucket.RegionReturns("my_droplets_region")
+			buildpacksBucket.NameReturns("my_buildpacks_bucket")
+			buildpacksBucket.RegionReturns("my_buildpacks_region")
 
 			restorer = versioned.NewRestorer(map[string]versioned.Bucket{
 				"droplets":   dropletsBucket,
