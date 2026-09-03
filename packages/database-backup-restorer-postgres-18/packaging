@@ -1,0 +1,36 @@
+set -e
+
+POSTGRES18_VERSION=18.6
+
+mkdir -p postgresql-${POSTGRES18_VERSION}
+
+tar xzf postgres/postgresql-${POSTGRES18_VERSION}.tar.gz --strip-components=1 -C postgresql-${POSTGRES18_VERSION}
+
+pushd postgresql-${POSTGRES18_VERSION}
+  # ICU is enabled by default from PostgreSQL 16 on, but it is only used by the
+  # server (collation providers) and initdb -- never by the psql/pg_dump/pg_restore
+  # client binaries this package ships.
+  ./configure --prefix=${BOSH_INSTALL_TARGET} --with-openssl --without-icu
+
+  pushd src/bin/pg_config
+    make
+    make install
+  popd
+
+  cp -LR src/include ${BOSH_INSTALL_TARGET}
+
+  pushd src/interfaces/libpq
+    make
+    make install
+  popd
+
+  pushd src
+    make
+    make install
+  popd
+
+  pushd contrib
+    make
+    make install
+  popd
+popd

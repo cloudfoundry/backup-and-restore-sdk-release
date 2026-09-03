@@ -43,6 +43,7 @@ var _ = Describe("InteractorFactory", func() {
 			Postgres15: config.UtilityPaths{Dump: "pg_p_15_dump", Restore: "pg_p_15_restore", Client: "pg_p_15_client"},
 			Postgres16: config.UtilityPaths{Dump: "pg_p_16_dump", Restore: "pg_p_16_restore", Client: "pg_p_16_client"},
 			Postgres17: config.UtilityPaths{Dump: "pg_p_17_dump", Restore: "pg_p_17_restore", Client: "pg_p_17_client"},
+			Postgres18: config.UtilityPaths{Dump: "pg_p_18_dump", Restore: "pg_p_18_restore", Client: "pg_p_18_client"},
 			Mariadb:    config.UtilityPaths{Dump: "mariadb_dump", Restore: "mariadb_restore", Client: "mariadb_client"},
 			Mysql80:    config.UtilityPaths{Dump: "mysql_80_dump", Restore: "mysql_80_restore", Client: "mysql_80_client"},
 			Mysql84:    config.UtilityPaths{Dump: "mysql_84_dump", Restore: "mysql_84_restore", Client: "mysql_84_client"},
@@ -143,6 +144,27 @@ var _ = Describe("InteractorFactory", func() {
 					))
 				})
 			})
+			Context("when the version is detected as 18", func() {
+				BeforeEach(func() {
+					postgresServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{Implementation: "postgres", SemanticVersion: version.SemanticVersion{Major: "18", Minor: "6", Patch: "0"}},
+						nil)
+				})
+
+				It("builds a database.TableCheckingInteractor", func() {
+					Expect(factoryError).NotTo(HaveOccurred())
+					Expect(interactor).To(Equal(
+						database.NewTableCheckingInteractor(connectionConfig,
+							postgres.NewTableChecker(connectionConfig, "pg_p_18_client"),
+							postgres.NewBackuper(
+								connectionConfig,
+								tempFolderManager,
+								"pg_p_18_dump",
+							),
+						),
+					))
+				})
+			})
 
 			Context("when the version is detected as below 13", func() {
 				BeforeEach(func() {
@@ -222,6 +244,24 @@ var _ = Describe("InteractorFactory", func() {
 							connectionConfig,
 							tempFolderManager,
 							"pg_p_16_restore",
+						),
+					))
+					Expect(factoryError).NotTo(HaveOccurred())
+				})
+			})
+			Context("when the version is detected as 18", func() {
+				BeforeEach(func() {
+					postgresServerVersionDetector.GetVersionReturns(
+						version.DatabaseServerVersion{Implementation: "postgres", SemanticVersion: version.SemanticVersion{Major: "18", Minor: "6", Patch: "0"}},
+						nil)
+				})
+
+				It("builds a postgres.Restorer", func() {
+					Expect(interactor).To(Equal(
+						postgres.NewRestorer(
+							connectionConfig,
+							tempFolderManager,
+							"pg_p_18_restore",
 						),
 					))
 					Expect(factoryError).NotTo(HaveOccurred())
