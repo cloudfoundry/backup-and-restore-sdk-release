@@ -115,13 +115,13 @@ github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/klauspost/cpuid/v2 v2.4.0
 ## explicit; go 1.24.0
 github.com/klauspost/cpuid/v2
-# github.com/maxbrunsfeld/counterfeiter/v6 v6.12.2
-## explicit; go 1.25.0
+# github.com/maxbrunsfeld/counterfeiter/v6 v6.13.0
+## explicit; go 1.26.0
 github.com/maxbrunsfeld/counterfeiter/v6
 github.com/maxbrunsfeld/counterfeiter/v6/arguments
 github.com/maxbrunsfeld/counterfeiter/v6/command
 github.com/maxbrunsfeld/counterfeiter/v6/generator
-# github.com/onsi/ginkgo/v2 v2.32.2
+# github.com/onsi/ginkgo/v2 v2.33.0
 ## explicit; go 1.25.0
 github.com/onsi/ginkgo/v2
 github.com/onsi/ginkgo/v2/config
@@ -158,7 +158,7 @@ github.com/onsi/gomega/matchers/support/goraph/edge
 github.com/onsi/gomega/matchers/support/goraph/node
 github.com/onsi/gomega/matchers/support/goraph/util
 github.com/onsi/gomega/types
-# github.com/pierrec/lz4/v4 v4.1.29
+# github.com/pierrec/lz4/v4 v4.1.30
 ## explicit; go 1.17
 github.com/pierrec/lz4/v4
 github.com/pierrec/lz4/v4/internal/lz4block
@@ -250,7 +250,7 @@ golang.org/x/tools/internal/typeparams
 golang.org/x/tools/internal/typesinternal
 golang.org/x/tools/internal/versions
 # system-tests v0.0.0 => ../system-tests
-## explicit; go 1.25.0
+## explicit; go 1.26.0
 system-tests/azure
 # system-tests => ../system-tests
 # s3-blobstore-backup-restore => ../s3-blobstore-backup-restore
