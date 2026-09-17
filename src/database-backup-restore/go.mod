@@ -3,9 +3,9 @@ module database-backup-restore
 require (
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/lib/pq v1.10.9
-	github.com/maxbrunsfeld/counterfeiter/v6 v6.12.2
-	github.com/onsi/ginkgo/v2 v2.32.2
-	github.com/onsi/gomega v1.43.0
+	github.com/maxbrunsfeld/counterfeiter/v6 v6.13.0
+	github.com/onsi/ginkgo/v2 v2.33.0
+	github.com/onsi/gomega v1.43.1
 	github.com/pivotal-cf-experimental/go-binmock v0.0.0-20171027112700-f797157c64e9
 )
 
