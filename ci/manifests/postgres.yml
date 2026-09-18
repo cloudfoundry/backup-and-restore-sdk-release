@@ -22,9 +22,9 @@ releases:
   version: latest
   url: https://bosh.io/d/github.com/cloudfoundry/bpm-release
 - name: "postgres"
-  version: "53.1.2"
-  url: "https://bosh.io/d/github.com/cloudfoundry/postgres-release?v=53.1.2"
-  sha1: sha256:4c0a41401135751a9c007612d35ff3d8c6c063a224576550f68400dd4f3e000a
+  version: "56.0.4"
+  url: "https://bosh.io/d/github.com/cloudfoundry/postgres-release?v=56.0.4"
+  sha1: 1a456173b2626050f4bee850eeafc19ad5a0949b
 
 stemcells:
 - alias: jammy
