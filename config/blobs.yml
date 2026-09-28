@@ -1,7 +1,7 @@
-libpcre2/pcre2-10.48.tar.gz:
-  size: 2887260
-  object_id: c892a86e-997f-462c-7578-9954c183300d
-  sha: sha256:ebcc25aadf2a51fa1fefa9b8bc9e7a79b3dae86870a0f1152a22e42befd46888
+libpcre2/pcre2-10.49.tar.gz:
+  size: 2880625
+  object_id: e3904963-d92d-4f62-55e4-179a0c783663
+  sha: sha256:929f0b20e62879252a15886b06c89f1edef61a363cbd5826fb041080a5e557ae
 mariadb/mariadb-10.6.27.tar.gz:
   size: 109060020
   object_id: e392129f-0761-4322-7f42-ee45bd70a943
