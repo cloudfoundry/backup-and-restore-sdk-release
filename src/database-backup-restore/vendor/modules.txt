@@ -22,7 +22,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20260906184651-6331bc6350fe
+# github.com/google/pprof v0.0.0-20261002000307-77d3b59017a0
 ## explicit; go 1.25.0
 github.com/google/pprof/profile
 # github.com/lib/pq v1.10.9
@@ -30,7 +30,7 @@ github.com/google/pprof/profile
 github.com/lib/pq
 github.com/lib/pq/oid
 github.com/lib/pq/scram
-# github.com/maxbrunsfeld/counterfeiter/v6 v6.13.0
+# github.com/maxbrunsfeld/counterfeiter/v6 v6.14.0
 ## explicit; go 1.26.0
 github.com/maxbrunsfeld/counterfeiter/v6
 github.com/maxbrunsfeld/counterfeiter/v6/arguments
