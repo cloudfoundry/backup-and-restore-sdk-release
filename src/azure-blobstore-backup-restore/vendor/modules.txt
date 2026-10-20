@@ -103,7 +103,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20261014150452-c3b4e57cab2c
+# github.com/google/pprof v0.0.0-20261016150608-1facf8f91b50
 ## explicit; go 1.26.0
 github.com/google/pprof/profile
 # github.com/klauspost/compress v1.20.3
@@ -117,9 +117,10 @@ github.com/klauspost/compress/internal/regmask
 github.com/klauspost/compress/internal/snapref
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
-# github.com/klauspost/cpuid/v2 v2.4.0
+# github.com/klauspost/cpuid/v2 v2.4.1
 ## explicit; go 1.24.0
 github.com/klauspost/cpuid/v2
+github.com/klauspost/cpuid/v2/topology
 # github.com/maxbrunsfeld/counterfeiter/v6 v6.14.0
 ## explicit; go 1.26.0
 github.com/maxbrunsfeld/counterfeiter/v6
@@ -202,6 +203,7 @@ golang.org/x/sync/errgroup
 ## explicit; go 1.26.0
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
+golang.org/x/sys/windows
 # golang.org/x/text v0.43.0
 ## explicit; go 1.26.0
 golang.org/x/text/cases
