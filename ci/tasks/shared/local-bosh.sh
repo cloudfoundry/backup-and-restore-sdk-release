@@ -24,6 +24,43 @@ start_local_bosh() {
 
   # Deployments are reachable directly over the route start-bosh adds.
   unset BOSH_ALL_PROXY BOSH_GW_HOST BOSH_GW_USER BOSH_GW_PRIVATE_KEY
+
+  fix_warden_sshd
+}
+
+# Warden VMs boot systemd, and both systemd's ssh.service and runit start
+# sshd. Whichever loses the race for port 22 exits. When that's ssh.service,
+# systemd deletes its RuntimeDirectory, /run/sshd, from under the runit sshd
+# that's still listening, and that sshd then drops every connection
+# ("kex_exchange_identification: read: Connection reset by peer"). Which VMs
+# are hit depends on boot timing.
+#
+# This addon puts /run/sshd back before jobs start and stops ssh.service
+# coming back.
+fix_warden_sshd() {
+  local runtime_config
+  runtime_config="$(mktemp)"
+
+  cat > "${runtime_config}" <<'EOF'
+releases:
+- name: os-conf
+  version: 23.0.4
+  url: https://bosh.io/d/github.com/cloudfoundry/os-conf-release?v=23.0.4
+  sha1: 0d16b6133a7931cc1cb721a39d43e97a9408c506
+
+addons:
+- name: warden-sshd
+  jobs:
+  - name: pre-start-script
+    release: os-conf
+    properties:
+      script: |
+        #!/bin/bash
+        systemctl mask ssh.service ssh.socket || true
+        mkdir -p -m 0755 /run/sshd
+EOF
+
+  bosh -n update-runtime-config --name warden-sshd "${runtime_config}"
 }
 
 # Points BOSH_ALL_PROXY at BOSH_GW_HOST, for directors behind a jumpbox.
