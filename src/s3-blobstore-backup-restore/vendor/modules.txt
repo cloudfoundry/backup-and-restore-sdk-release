@@ -1,7 +1,7 @@
 # github.com/Masterminds/semver/v3 v3.5.0
 ## explicit; go 1.21
 github.com/Masterminds/semver/v3
-# github.com/aws/aws-sdk-go-v2 v1.47.3
+# github.com/aws/aws-sdk-go-v2 v1.47.4
 ## explicit; go 1.24
 github.com/aws/aws-sdk-go-v2/aws
 github.com/aws/aws-sdk-go-v2/aws/arn
@@ -25,52 +25,52 @@ github.com/aws/aws-sdk-go-v2/internal/strings
 github.com/aws/aws-sdk-go-v2/internal/sync/singleflight
 github.com/aws/aws-sdk-go-v2/internal/timeconv
 github.com/aws/aws-sdk-go-v2/internal/timeouts
-# github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.22
+# github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.24
 ## explicit; go 1.24
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream/eventstreamapi
-# github.com/aws/aws-sdk-go-v2/credentials v1.20.9
+# github.com/aws/aws-sdk-go-v2/credentials v1.20.10
 ## explicit; go 1.24
 github.com/aws/aws-sdk-go-v2/credentials
 github.com/aws/aws-sdk-go-v2/credentials/ec2rolecreds
 github.com/aws/aws-sdk-go-v2/credentials/stscreds
-# github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.20.3
+# github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.20.4
 ## explicit; go 1.24
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds/internal/config
-# github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.6
+# github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.7
 ## explicit; go 1.24
 github.com/aws/aws-sdk-go-v2/internal/configsources
-# github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.6
+# github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.7
 ## explicit; go 1.24
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2
-# github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.6
+# github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.7
 ## explicit; go 1.24
 github.com/aws/aws-sdk-go-v2/internal/v4a
 github.com/aws/aws-sdk-go-v2/internal/v4a/internal/crypto
 github.com/aws/aws-sdk-go-v2/internal/v4a/internal/v4
-# github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.21
+# github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.22
 ## explicit; go 1.24
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding
-# github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.11.7
+# github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.11.8
 ## explicit; go 1.24
 github.com/aws/aws-sdk-go-v2/service/internal/checksum
-# github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.6
+# github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.7
 ## explicit; go 1.24
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url
-# github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.20.6
+# github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.20.7
 ## explicit; go 1.24
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared/arn
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared/config
-# github.com/aws/aws-sdk-go-v2/service/s3 v1.114.3
+# github.com/aws/aws-sdk-go-v2/service/s3 v1.114.5
 ## explicit; go 1.24
 github.com/aws/aws-sdk-go-v2/service/s3
 github.com/aws/aws-sdk-go-v2/service/s3/internal/arn
 github.com/aws/aws-sdk-go-v2/service/s3/internal/customizations
 github.com/aws/aws-sdk-go-v2/service/s3/internal/endpoints
 github.com/aws/aws-sdk-go-v2/service/s3/types
-# github.com/aws/aws-sdk-go-v2/service/sts v1.51.4
+# github.com/aws/aws-sdk-go-v2/service/sts v1.51.5
 ## explicit; go 1.24
 github.com/aws/aws-sdk-go-v2/service/sts
 github.com/aws/aws-sdk-go-v2/service/sts/internal/endpoints
@@ -108,6 +108,8 @@ github.com/aws/smithy-go/waiter
 # github.com/cloudfoundry/bosh-backup-and-restore v1.9.82
 ## explicit; go 1.26.0
 github.com/cloudfoundry/bosh-backup-and-restore/executor
+# github.com/gkampitakis/go-snaps v0.5.23
+## explicit; go 1.23
 # github.com/go-logr/logr v1.4.4
 ## explicit; go 1.18
 github.com/go-logr/logr
@@ -170,6 +172,16 @@ github.com/onsi/gomega/matchers/support/goraph/edge
 github.com/onsi/gomega/matchers/support/goraph/node
 github.com/onsi/gomega/matchers/support/goraph/util
 github.com/onsi/gomega/types
+# github.com/rogpeppe/go-internal v1.16.0
+## explicit; go 1.25
+# github.com/stretchr/testify v1.12.1
+## explicit; go 1.17
+# github.com/tidwall/gjson v1.20.0
+## explicit; go 1.23
+# github.com/tidwall/match v1.2.0
+## explicit; go 1.15
+# github.com/tidwall/pretty v1.2.2
+## explicit; go 1.16
 # go.yaml.in/yaml/v3 v3.0.5
 ## explicit; go 1.16
 go.yaml.in/yaml/v3
@@ -238,3 +250,5 @@ golang.org/x/tools/internal/stdlib
 golang.org/x/tools/internal/typeparams
 golang.org/x/tools/internal/typesinternal
 golang.org/x/tools/internal/versions
+# google.golang.org/protobuf v1.36.12
+## explicit; go 1.23
