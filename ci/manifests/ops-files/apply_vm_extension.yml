@@ -1,3 +1,0 @@
-- type: replace
-  path: /instance_groups/0/vm_extensions?
-  value: ((vm_extensions))

@@ -1,0 +1,24 @@
+---
+platform: linux
+
+inputs:
+- name: backup-and-restore-sdk-release
+- name: backup-and-restore-sdk-release-ci
+- name: dev-release
+- name: bpm-release
+- name: stemcell
+
+run:
+  path: backup-and-restore-sdk-release-ci/ci/tasks/system-tests-postgres/task.sh
+
+params:
+  # Postgres N is deployed with static IP 10.244.0.N.
+  POSTGRES_VERSIONS: 15 16 17 18
+  POSTGRES_USERNAME: test_user
+  POSTGRES_PASSWORD: postgres_password
+  POSTGRES_PORT: 5432
+  SDK_DEPLOYMENT: database-backup-restorer
+  SDK_INSTANCE_GROUP: database-backup-restorer
+  TEST_TLS: true
+  TEST_TLS_VERIFY_IDENTITY: true
+  TEST_SSL_USER_REQUIRES_SSL: true

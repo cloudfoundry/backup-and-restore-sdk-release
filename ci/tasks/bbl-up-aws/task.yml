@@ -1,0 +1,21 @@
+---
+platform: linux
+
+inputs:
+- name: backup-and-restore-sdk-release-ci
+
+outputs:
+- name: bbl-state
+
+params:
+  BBL_IAAS: aws
+  BBL_AWS_ACCESS_KEY_ID:
+  BBL_AWS_SECRET_ACCESS_KEY:
+  BBL_AWS_ASSUME_ROLE:
+  BBL_AWS_REGION:
+  # Attached to VMs that use the s3-backup-iam-instance-profile vm_extension.
+  # The director keeps the role bbl creates for it.
+  IAM_INSTANCE_PROFILE:
+
+run:
+  path: backup-and-restore-sdk-release-ci/ci/tasks/bbl-up-aws/task.sh

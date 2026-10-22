@@ -1,304 +1,188 @@
 ---
-#! ************************************
-#! Secrets we need to run this pipeline
-#! ************************************
-secrets:
-- &backup_and_restore_sdk_branch main
-#! Created using `shepherd create service-account` after logging in with WS1.
-- &shepherd_account_key ((bosh-ecosystem-shepherd-service-account-lvn))
+#! CFF Concourse (bosh.ci.cloudfoundry.org, team main). See MIGRATION-TO-CFF.md.
+#!
+#! Until cutover this pipeline only tests. The old pipeline on
+#! ci.bosh-ecosystem.cf-app.com keeps cutting releases and bumping
+#! dependencies, so no job here writes to git or to the release blobstore.
 
-- &aws-region eu-west-1
-- &aws-backup-region eu-central-1
-- &number_of_test_retries 3
-- &number_of_claim_retries 5
+#! This var source only holds the YAML anchors used below; nothing reads it
+#! as a var source. It's here, rather than in a top-level key of its own, so
+#! that `fly validate-pipeline --strict` passes.
+var_sources:
+- name: anchors
+  type: dummy
+  config:
+    vars:
+      branch: &backup_and_restore_sdk_branch cff-migration
 
-- &aws-access
-#! AWS access keys for the 686843836666 account
-  aws-access-key-id: &aws_access_key ((bbr_aws_access_key.username))
-  aws-secret-access-key: &aws_secret_key ((bbr_aws_access_key.password))
-  aws-assumed-role-arn: &aws_role_arn ((bbr_aws_access_key.role_arn))
+      aws-region: &aws-region eu-north-1
+      aws-backup-region: &aws-backup-region eu-west-1
+      number-of-test-retries: &number_of_test_retries 3
 
-#! following are the various snippets containing the aws secrets.
-- &S3_AWS
-  S3_ACCESS_KEY_ID: *aws_access_key
-  S3_SECRET_ACCESS_KEY: *aws_secret_key
-  S3_ASSUMED_ROLE_ARN: *aws_role_arn
-- &AWS_ACCESS
-  AWS_ACCESS_KEY_ID: *aws_access_key
-  AWS_SECRET_ACCESS_KEY: *aws_secret_key
-  AWS_ROLE_ARN: *aws_role_arn #used by create-release/task.yml
-  AWS_ASSUME_ROLE_ARN: *aws_role_arn #used by bump-golang/task.yml and bump-package/task.yml
-  AWS_ASSUMED_ROLE_ARN: *aws_role_arn #sdk-system-blobstore/task.yml
-- &aws_credentials_s3
-  access_key_id: *aws_access_key
-  secret_access_key: *aws_secret_key
-  aws_role_arn: *aws_role_arn
-  assume_role_arn: *aws_role_arn
-- &aws_credentials_tf
-  aws_access_key: *aws_access_key
-  aws_secret_key: *aws_secret_key
-  aws_assumed_role_arn: *aws_role_arn
+      #! AWS: CFF account 504405067906, created by ci/scripts/create-cff-iam.sh.
+      #! The user's only permission is assuming role_arn.
+      aws-access-key: &aws_access_key ((bbr_sdk_aws_creds.access_key_id))
+      aws-secret-key: &aws_secret_key ((bbr_sdk_aws_creds.secret_access_key))
+      aws-role-arn: &aws_role_arn ((bbr_sdk_aws_creds.role_arn))
 
-- release_private_yaml: &release_private_yaml |
-    ---
-    blobstore:
-      provider: s3
-      options:
-        access_key_id: ((bbr_aws_access_key.username))
-        secret_access_key: ((bbr_aws_access_key.password))
-        assume_role_arn: ((bbr_aws_access_key.role_arn))
+      #! The IAM test's VM gets this instance profile, which can only reach
+      #! the iam-instance-role-test buckets.
+      iam-instance-profile: &iam_instance_profile ci-bbr-sdk-s3-backuper
 
-#! Azure credentials for 3 separate storage accounts. Currently, in the CF-bosh-toronto-king subscription
-- &azure_credentials_storage_account_1 ((bbr_azure_credentials.storage_account))
-- &azure_credentials_storage_key_1 ((bbr_azure_credentials.storage_account_key))
-- &azure_credentials_storage_account_2 ((bbr_azure_credentials.storage_account2))
-- &azure_credentials_storage_key_2 ((bbr_azure_credentials.storage_account2_key))
-- &azure_storage_account_no_soft_delete ((bbr_azure_credentials.storage_account_no_soft_delete))
-- &azure_storage_key_no_soft_delete ((bbr_azure_credentials.storage_account_no_soft_delete_key))
+      #! S3 buckets, created by ci/scripts/create-cff-s3-buckets.sh.
+      #! Buckets aren't shared between tests.
+      pipeline-bucket: &pipeline_bucket ci-bbr-sdk-pipeline
+      s3-system-test-bucket: &s3_system_test_bucket ci-bbr-sdk-system-test
+      s3-system-test-clone-bucket: &s3_system_test_clone_bucket ci-bbr-sdk-system-test-clone
+      s3-system-test-unversioned-bucket: &s3_system_test_unversioned_bucket ci-bbr-sdk-system-test-unversioned
+      s3-unversioned-bucket: &s3_unversioned_bucket ci-bbr-sdk-s3-unversioned
+      s3-unversioned-backup-bucket: &s3_unversioned_backup_bucket ci-bbr-sdk-s3-unversioned-backup
+      s3-unversioned-bpm-bucket: &s3_unversioned_bpm_bucket ci-bbr-sdk-unversioned-bpm
+      s3-unversioned-bpm-backup-bucket: &s3_unversioned_bpm_backup_bucket ci-bbr-sdk-unversioned-bpm-backup
+      s3-large-number-of-files-bucket: &s3_large_number_of_files_bucket ci-bbr-sdk-large-number-of-files
+      s3-large-number-of-files-backup-bucket: &s3_large_number_of_files_backup_bucket ci-bbr-sdk-large-number-of-files-backup
+      s3-unversioned-clone-bucket: &s3_unversioned_clone_bucket ci-bbr-sdk-unversioned-clone
+      s3-iam-test-bucket: &s3_iam_test_bucket ci-bbr-sdk-iam-instance-role-test
+      s3-iam-test-clone-bucket: &s3_iam_test_clone_bucket ci-bbr-sdk-iam-instance-role-test-clone
 
-#! service_accounts_bucket_owner_json_key was needed on 2023-07-03 for deploying database infra for testing. Generated using personal creds in the mapbu-cryogenics GCP account.
-- &service_accounts_bucket_owner_json_key ((broadcom_labs_gcp_credentials_json))
-#! service_accounts_gcp_cf_backup_and_restore_owner_role_json_key was needed on 2023-07-03 for actually running the GCP tests. Presumably it has lower privileges than the other two GCP keys?. Generated using personal creds in the mapbu-cryogenics GCP account.
-- &service_accounts_gcp_cf_backup_and_restore_owner_role_json_key ((broadcom_labs_gcp_credentials_json))
+      #! S3 contract test fixtures, seeded by ci/scripts/seed-cff-fixtures.sh.
+      #! Re-running the script prints these values again.
+      s3-contract-test-fixtures: &S3_CONTRACT_TEST_FIXTURES
+        S3_BIG_FILE_BUCKET: ci-bbr-sdk-large-blob-unversioned
+        S3_BIG_FILE_SHA1: b4464dccad4fbfc9ccb8fc6e56e1f40463cd7514
+        S3_VERSIONED_BIG_FILE_BUCKET: ci-bbr-sdk-large-blob
+        S3_VERSIONED_BIG_FILE_REGION: *aws-region
+        S3_VERSIONED_BIG_FILE_VERSION_ID: tC_VB4OU2K0v2J97xlzCzwx0z7ea9Wkv
+        S3_VERSIONED_BIG_FILE_SHA1: b4464dccad4fbfc9ccb8fc6e56e1f40463cd7514
+        S3_VERSIONED_BIG_BUCKET: ci-bbr-sdk-big-bucket
+        S3_UNVERSIONED_BIG_BUCKET: ci-bbr-sdk-unversioned-big-bucket
 
-#! github_access_token is required to create PRs against repos used in this pipeline and access github-releases.
-- &git_token ((github_read_write_token))
+      s3-aws: &S3_AWS
+        S3_ACCESS_KEY_ID: *aws_access_key
+        S3_SECRET_ACCESS_KEY: *aws_secret_key
+        S3_ASSUMED_ROLE_ARN: *aws_role_arn
+      aws-access: &AWS_ACCESS
+        AWS_ACCESS_KEY_ID: *aws_access_key
+        AWS_SECRET_ACCESS_KEY: *aws_secret_key
+        AWS_ROLE_ARN: *aws_role_arn
+        AWS_ASSUMED_ROLE_ARN: *aws_role_arn #! sdk-system-blobstore
+      aws-deploy-vars: &aws_deploy_vars
+        aws-access-key-id: *aws_access_key
+        aws-secret-access-key: *aws_secret_key
+        aws-assumed-role-arn: *aws_role_arn
+      aws-credentials-s3: &aws_credentials_s3
+        access_key_id: *aws_access_key
+        secret_access_key: *aws_secret_key
+        aws_role_arn: *aws_role_arn
+      aws-credentials-tf: &aws_credentials_tf
+        aws_access_key: *aws_access_key
+        aws_secret_key: *aws_secret_key
+        aws_assumed_role_arn: *aws_role_arn
+      bbl-aws-params: &bbl_aws_params
+        BBL_AWS_ACCESS_KEY_ID: *aws_access_key
+        BBL_AWS_SECRET_ACCESS_KEY: *aws_secret_key
+        BBL_AWS_ASSUME_ROLE: *aws_role_arn
+        BBL_AWS_REGION: *aws-region
 
-#! github_email and user used for creating commits
-- &github_email bots@cloudfoundry.org
-- &github_user CI Bot
+      #! Team-wide, to avoid Docker Hub rate limits.
+      docker-username: &docker_username ((dockerhub_username))
+      docker-password: &docker_password ((dockerhub_password))
 
-#! gchat webhook is used to send us ci status messages. It was created in gchat space settings after logging in with personal creds
-- &gchat_webhook ((gchat-webhook-dap-bosh-ecosystem-dev))
-
-#! The following external DB creds were needed on 2023-07-03 for testing the BBR SDK with some external databases.
-- &external_db_passwords
-  postgres_13_password: &postgres_13_password ((rds_postgres_13_password))
-  postgres_15_password: &postgres_15_password ((rds_postgres_15_password))
-  postgres_16_password: &postgres_16_password ((rds_postgres_16_password))
-  mariadb_10_password: &mariadb_10_password ((rds_mariadb_10_password))
-
-- &mysql_common
-  MYSQL_PORT: 3306
-  MYSQL_USERNAME: root
-  MYSQL_PASSWORD: &mysql-password mysql_password
-- &mysql_certs_common
-  databases.ca: &mysql_ca_cert ((mysql_tls.ca))
-  databases.certificate: &mysql_cert ((mysql_tls.certificate))
-  databases.private_key: &mysql_private_key ((mysql_tls.private_key))
-
-- &mysql-8-0-deployment-name mysql-8-0-dev
-- &mysql-8-0-host 10.244.0.10
-
-- &mysql_params_8
-  MYSQL_HOSTNAME: *mysql-8-0-host
-  MYSQL_CA_CERT: *mysql_ca_cert
-  MYSQL_CLIENT_CERT: *mysql_cert
-  MYSQL_CLIENT_KEY: *mysql_private_key
-  <<: *mysql_common
-
-- &mysql-8-4-deployment-name mysql-8-4-dev
-- &mysql-8-4-host 10.244.0.11
-
-- &mysql_params_8_4
-  MYSQL_HOSTNAME: *mysql-8-4-host
-  MYSQL_CA_CERT: *mysql_ca_cert
-  MYSQL_CLIENT_CERT: *mysql_cert
-  MYSQL_CLIENT_KEY: *mysql_private_key
-  <<: *mysql_common
-
-- &minio_access_key ((minio_user.username))
-- &minio_secret_key ((minio_user.password))
-
-- &pg_deployment_common
-  db_username: test_user
-  db_password: postgres_password
-
-- &postgres-15-deployment-name postgres-15-dev
-- &postgres-16-deployment-name postgres-16-dev
-- &postgres-17-deployment-name postgres-17-dev
-- &postgres-18-deployment-name postgres-18-dev
-- &postgres-15-host 10.244.0.15
-- &postgres-16-host 10.244.0.16
-- &postgres-17-host 10.244.0.17
-- &postgres-18-host 10.244.0.18
-
-- &bosh-smiths-creds
-  BOSH_ENVIRONMENT: ((.:pooled-env.BOSH_ENVIRONMENT))
-  BOSH_CLIENT: ((.:pooled-env.BOSH_CLIENT))
-  BOSH_CLIENT_SECRET: ((.:pooled-env.BOSH_CLIENT_SECRET))
-  BOSH_CA_CERT: ((.:pooled-env.BOSH_CA_CERT))
-  BOSH_GW_USER: ((.:pooled-env.INSTANCE_JUMPBOX_USER))
-  BOSH_GW_HOST: ((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))
-  BOSH_GW_PRIVATE_KEY: ((.:pooled-env.INSTANCE_JUMPBOX_PRIVATE))
-
-- &docker_username ((docker.username))
-- &docker_password ((docker.password))
-
-#! Artifactory token
-- &artifactory_username ((broadcom_artifactory.username))
-- &artifactory_token ((broadcom_artifactory.password))
-
-- &internal_worker_tag broadcom
+      #! Team-wide; reads only, to avoid GitHub API rate limits.
+      github-token: &github_token ((github_public_repo_token))
 
 resource_types:
-- name: http
-  type: registry-image
-  source:
-    repository: aequitas/http-resource
-    username: *docker_username
-    password: *docker_password
-
-- name: ftp
-  type: registry-image
-  source:
-    repository: tas-bosh-docker-dev-local.usw1.packages.broadcom.com/cryogenics/concourse-ftp-resource
-    tag: latest
-    username: *artifactory_username
-    password: *artifactory_token
-
-- name: shepherd
-  source:
-    repository: tas-bosh-docker-dev-local.usw1.packages.broadcom.com/cryogenics/shepherd2-concourse-resource
-    tag: v1
-    username: *artifactory_username
-    password: *artifactory_token
-  type: registry-image
-  tags: [ *internal_worker_tag ]
-
-- name: file-url
-  type: registry-image
-  source:
-    repository: pivotalservices/concourse-curl-resource
-    username: *docker_username
-    password: *docker_password
-
-- name: bosh-deployment
-  type: registry-image
-  source:
-    repository: cloudfoundry/bosh-deployment-resource
-    username: *docker_username
-    password: *docker_password
-
-- name: custom-terraform
+- name: terraform
   type: registry-image
   source:
     repository: ljfranklin/terraform-resource
-    tag: 0.14.2
+    tag: 1.10.2
     username: *docker_username
     password: *docker_password
-
-- name: google-chat-notify-resource
-  type: registry-image
-  source:
-    repository: springio/google-chat-notify-resource
-    username: *docker_username
-    password: *docker_password
-    tag: 0.0.1-SNAPSHOT
 
 resources:
+- name: backup-and-restore-sdk-release
+  type: git
+  icon: github
+  source:
+    uri: https://github.com/cloudfoundry/backup-and-restore-sdk-release.git
+    branch: *backup_and_restore_sdk_branch
+    ignore_paths: [ "ci" ]
+
+- name: backup-and-restore-sdk-release-ci
+  type: git
+  icon: github
+  source:
+    uri: https://github.com/cloudfoundry/backup-and-restore-sdk-release.git
+    branch: *backup_and_restore_sdk_branch
+    paths: [ "ci" ]
+
+- name: bosh-shared-ci
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry/bosh-shared-ci.git
+
+- name: bosh-integration-image
+  type: registry-image
+  source:
+    repository: ghcr.io/cloudfoundry/bosh/integration
+    tag: main
+
+- name: warden-cpi-image
+  type: registry-image
+  source:
+    repository: ghcr.io/cloudfoundry/bosh/warden-cpi
+    tag: main
+
 - name: bosh-ecosystem-docker-image
   type: registry-image
   source:
     repository: bosh/bosh-ecosystem-concourse
-    username: ((docker.username))
-    password: ((docker.password))
-- name: ruby-image
-  type: registry-image
-  source:
-    repository: ruby
-    username: ((docker.username))
-    password: ((docker.password))
-- name: bosh-security-scanner-registry-image
-  type: registry-image
-  source:
-    repository: bosh/security-scanner
-    username: ((docker.username))
-    password: ((docker.password))
+    username: *docker_username
+    password: *docker_password
+
 - name: bosh-cli-registry-image
   type: registry-image
   source:
     repository: bosh/cli
-    username: ((docker.username))
-    password: ((docker.password))
+    username: *docker_username
+    password: *docker_password
 
-- name: mariadb-10-6-blob
-  type: http
+- name: cf-deployment-concourse-tasks-image
+  type: registry-image
   source:
-    index: https://archive.mariadb.org/
-    uri: "https://archive.mariadb.org/mariadb-{version}/source/mariadb-{version}.tar.gz"
-    regex: href="mariadb-(?P<version>10.6.[0-9]*)/"
+    repository: cloudfoundry/cf-deployment-concourse-tasks
+    username: *docker_username
+    password: *docker_password
 
-- name: mysql-server-8-blob
-  type: ftp
-  source:
-    url: "https://dev.mysql.com/downloads/mysql/8.0.html?tpl=platform&os=2&version=8.0&osva=#downloads"
-    static_download_url_path: "https://dev.mysql.com/get/Downloads/MySQL-8.0/"
-    version_regex: "mysql-(?P<version>[0-9]*.[0-9]*.[0-9]*)-linux-glibc.*-x86_64-minimal.tar.xz"
-    filename_mode: true
-
-- name: mysql-server-8-4-blob
-  type: ftp
-  source:
-    url: "https://dev.mysql.com/downloads/mysql/8.4.html?tpl=platform&os=2&version=8.4&osva=#downloads"
-    static_download_url_path: "https://dev.mysql.com/get/Downloads/MySQL-8.4/"
-    version_regex: "mysql-(?P<version>[0-9]*.[0-9]*.[0-9]*)-linux-glibc.*-x86_64-minimal.tar.xz"
-    filename_mode: true
-
-- name: ncurses-blob
-  type: http
-  source:
-    index: https://mirrors.kernel.org/gnu/ncurses/
-    uri: https://mirrors.kernel.org/gnu/ncurses/ncurses-{version}.tar.gz
-    regex: href="ncurses-(?P<version>[0-9]*.[0-9]*).tar.gz"
-
-- name: postgres-13-blob
-  type: http
-  source:
-    index: https://ftp.postgresql.org/pub/source/
-    uri: https://ftp.postgresql.org/pub/source/v{version}/postgresql-{version}.tar.gz
-    regex: href="v(?P<version>13.[0-9]*.[0-9]*)/"
-- name: postgres-15-blob
-  type: http
-  source:
-    index: https://ftp.postgresql.org/pub/source/
-    uri: https://ftp.postgresql.org/pub/source/v{version}/postgresql-{version}.tar.gz
-    regex: href="v(?P<version>15.[0-9]*.[0-9]*)/"
-- name: postgres-16-blob
-  type: http
-  source:
-    index: https://ftp.postgresql.org/pub/source/
-    uri: https://ftp.postgresql.org/pub/source/v{version}/postgresql-{version}.tar.gz
-    regex: href="v(?P<version>16.[0-9]*.[0-9]*)/"
-- name: postgres-17-blob
-  type: http
-  source:
-    index: https://ftp.postgresql.org/pub/source/
-    uri: https://ftp.postgresql.org/pub/source/v{version}/postgresql-{version}.tar.gz
-    regex: href="v(?P<version>17.[0-9]*.[0-9]*)/"
-- name: postgres-18-blob
-  type: http
-  source:
-    index: https://ftp.postgresql.org/pub/source/
-    uri: https://ftp.postgresql.org/pub/source/v{version}/postgresql-{version}.tar.gz
-    regex: href="v(?P<version>18.[0-9]*.[0-9]*)/"
-
-- name: libpcre2-blob
+- name: ruby-install
   type: github-release
   source:
-    owner: PCRE2Project
-    repository: pcre2
-    access_token: *git_token
-    tag_filter: pcre2-([0-9]*.[0-9]*)$
-    order_by: time
+    access_token: *github_token
+    owner: postmodern
+    repository: ruby-install
+    tag_filter: \d+\.\d+\.\d+
 
-- name: bosh-integration-image
-  type: docker-image
+- name: dev-release
+  type: s3
+  icon: database
   source:
-    repository: ghcr.io/cloudfoundry/bosh/integration
-    tag: main
-    username: ((github_read_write_packages.username))
-    password: ((github_read_write_packages.password))
+    bucket: *pipeline_bucket
+    versioned_file: dev-release.tgz
+    region_name: *aws-region
+    <<: *aws_credentials_s3
+
+- name: jammy-stemcell
+  type: bosh-io-stemcell
+  icon: seed-outline
+  source:
+    name: bosh-warden-boshlite-ubuntu-jammy-go_agent
+
+- name: jammy-stemcell-aws
+  type: bosh-io-stemcell
+  icon: seed-outline
+  source:
+    name: bosh-aws-xen-hvm-ubuntu-jammy-go_agent
 
 - name: pxc-release
   type: bosh-io-release
@@ -310,266 +194,20 @@ resources:
   source:
     repository: cloudfoundry/bpm-release
 
-- name: cf-deployment-env-non-airgapped
-  icon: pool
-  type: shepherd
-  source:
-    url: https://v2-shepherd.lvn.broadcom.net
-    service-account-key: *shepherd_account_key
-    lease:
-      namespace: bosh-ecosystem
-      template:
-        name: cfd-bosh-lite
-        namespace: official
-        revision: "3.0"
-        arguments:
-          gcp_region: us-west1
-          vm_type: n2d-standard-8
-          root_disk_gb: 32
-          disk_pool_gb: 200
-          cfd_version: "v52.0.0"
-          cfd_additional_opsfiles_b64: "LS0tCi0gdHlwZTogcmVwbGFjZQogIHBhdGg6IC9hZGRvbnMvbmFtZT1ib3NoLWRucy1hbGlhc2VzL2pvYnMvbmFtZT1ib3NoLWRucy1hbGlhc2VzL3Byb3BlcnRpZXMvYWxpYXNlcy8tCiAgdmFsdWU6CiAgICBkb21haW46IF8uKChzeXN0ZW1fZG9tYWluKSkKICAgIHRhcmdldHM6CiAgICAgIC0gZGVwbG95bWVudDogY2YKICAgICAgICBkb21haW46IGJvc2gKICAgICAgICBpbnN0YW5jZV9ncm91cDogcm91dGVyCiAgICAgICAgbmV0d29yazogZGVmYXVsdAogICAgICAgIHF1ZXJ5OiAiKiI="
-          bosh_additional_opsfiles_b64: ""
-
-- name: cf-deployment-env-airgapped
-  icon: pool
-  type: shepherd
-  source:
-    url: https://v2-shepherd.lvn.broadcom.net
-    service-account-key: *shepherd_account_key
-    lease:
-      namespace: bosh-ecosystem
-      template:
-        name: cfd-bosh-lite
-        namespace: official
-        revision: "3.0"
-        arguments:
-          gcp_region: us-west1
-          vm_type: n2d-standard-8
-          root_disk_gb: 32
-          disk_pool_gb: 200
-          cfd_version: "v52.0.0"
-          cfd_additional_opsfiles_b64: "LS0tCi0gdHlwZTogcmVwbGFjZQogIHBhdGg6IC9hZGRvbnMvbmFtZT1ib3NoLWRucy1hbGlhc2VzL2pvYnMvbmFtZT1ib3NoLWRucy1hbGlhc2VzL3Byb3BlcnRpZXMvYWxpYXNlcy8tCiAgdmFsdWU6CiAgICBkb21haW46IF8uKChzeXN0ZW1fZG9tYWluKSkKICAgIHRhcmdldHM6CiAgICAgIC0gZGVwbG95bWVudDogY2YKICAgICAgICBkb21haW46IGJvc2gKICAgICAgICBpbnN0YW5jZV9ncm91cDogcm91dGVyCiAgICAgICAgbmV0d29yazogZGVmYXVsdAogICAgICAgIHF1ZXJ5OiAiKiI="
-          bosh_additional_opsfiles_b64: ""
-
-- name: rds-ca-bundle
-  type: file-url
-  icon: web-box
-  source:
-    url: https://truststore.pki.rds.amazonaws.com/eu-west-1/eu-west-1-bundle.pem
-    filename: rds-combined-ca-bundle.pem
-
 - name: terraform
-  type: custom-terraform
+  type: terraform
   icon: terraform
   source:
-    backend_type: gcs
+    backend_type: s3
     backend_config:
-      bucket: bbr-pipeline
-      prefix: bbr-sdk-pr-tests
-      credentials: *service_accounts_bucket_owner_json_key
+      bucket: *pipeline_bucket
+      key: terraform-rds-state
+      region: *aws-region
+      access_key: *aws_access_key
+      secret_key: *aws_secret_key
+      assume_role:
+        role_arn: *aws_role_arn
 
-- name: version
-  type: semver
-  icon: tag
-  source:
-    bucket: backup-and-restore-sdk-releases
-    region_name: *aws-region
-    key: current-dev-version
-    <<: *aws_credentials_s3
-
-- name: dev-release
-  type: s3
-  icon: database
-  source:
-    bucket: backup-and-restore-sdk-releases
-    versioned_file: dev-release.tgz
-    region_name: *aws-region
-    <<: *aws_credentials_s3
-
-- name: release-notes
-  type: s3
-  source:
-    bucket: backup-and-restore-sdk-release-blobs
-    versioned_file: release-notes.md
-    region_name: *aws-region
-    <<: *aws_credentials_s3
-
-- name: gchat-cryo-notification
-  type: google-chat-notify-resource
-  source:
-    url: *gchat_webhook
-
-- name: backup-and-restore-sdk-release-write-only
-  type: git
-  icon: github
-  source:
-    uri: https://github.com/cloudfoundry/backup-and-restore-sdk-release.git
-    branch: *backup_and_restore_sdk_branch
-    username: bosh-admin-bot
-    password: *git_token
-    disable_ci_skip: true
-    commit_filter:
-      exclude:
-      - ;resource comment; This resource is used exclusively for pushing new changes
-
-- name: backup-and-restore-sdk-release
-  type: git
-  icon: github
-  source:
-    uri: https://github.com/cloudfoundry/backup-and-restore-sdk-release.git
-    branch: *backup_and_restore_sdk_branch
-    username: bosh-admin-bot
-    password: *git_token
-    ignore_paths: [ "ci" ]
-
-- name: backup-and-restore-sdk-release-ci
-  type: git
-  icon: github
-  source:
-    uri: https://github.com/cloudfoundry/backup-and-restore-sdk-release.git
-    branch: *backup_and_restore_sdk_branch
-    username: bosh-admin-bot
-    password: *git_token
-    paths: [ "ci" ]
-
-- name: bosh-shared-ci
-  type: git
-  source:
-    uri: https://github.com/cloudfoundry/bosh-shared-ci.git
-
-- name: every-week
-  type: time
-  source:
-    interval: 168h # 24h*7days
-
-- name: github-release
-  type: github-release
-  icon: rocket
-  source:
-    user: cloudfoundry
-    repository: backup-and-restore-sdk-release
-    access_token: *git_token
-
-- name: golang-release
-  type: git
-  icon: tag
-  source:
-    uri: https://github.com/cloudfoundry/bosh-package-golang-release.git
-    tag_filter: v*
-- name: golang-release-image
-  type: registry-image
-  source:
-    repository: ghcr.io/cloudfoundry/bosh/golang-release
-
-- name: jammy-stemcell-aws
-  type: bosh-io-stemcell
-  source:
-    name: bosh-aws-xen-hvm-ubuntu-jammy-go_agent
-
-- name: jammy-stemcell
-  type: bosh-io-stemcell
-  icon: seed-outline
-  source:
-    name: bosh-warden-boshlite-ubuntu-jammy-go_agent
-    version_family: latest
-
-- name: mysql-8-0-deployment
-  type: bosh-deployment
-  source:
-    deployment: *mysql-8-0-deployment-name
-    skip_check: true
-
-- name: mysql-8-4-deployment
-  type: bosh-deployment
-  source:
-    deployment: *mysql-8-4-deployment-name
-    skip_check: true
-
-- name: postgres-15-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *postgres-15-deployment-name
-    skip_check: true
-
-- name: postgres-16-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *postgres-16-deployment-name
-    skip_check: true
-
-- name: postgres-17-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *postgres-17-deployment-name
-    skip_check: true
-
-- name: postgres-18-dev-deployment
-  type: bosh-deployment
-  source:
-    deployment: *postgres-18-deployment-name
-    skip_check: true
-
-- name: aws-blobstore-sdk-deployment
-  type: bosh-deployment
-  source:
-    deployment: s3-backuper
-    skip_check: true
-
-- name: azure-blobstore-sdk-deployment
-  type: bosh-deployment
-  source:
-    deployment: azure-backuper
-    skip_check: true
-# this is generated in the setup-infrastructure pipeline as part of the setup-infrastructure task in the setup-infrastructure-aws-ec2 job
-- name: director-with-iam-profile
-  type: s3
-  source:
-    region_name: eu-west-1
-    bucket: bbr-terraform-states
-    versioned_file: sdk-config.yml
-    <<: *aws_credentials_s3
-
-- name: s3-backuper-with-iam-instance-profile-deployment
-  type: bosh-deployment
-  source:
-    deployment: s3-backuper
-    skip_check: true
-    target: ((iaas_directors_aws-director_bosh_environment))
-    client: ((iaas_directors_aws-director_bosh_client.username))
-    client_secret: ((iaas_directors_aws-director_bosh_client.password))
-    ca_cert: ((iaas_directors_aws-director_bosh_ca_cert.ca))
-    jumpbox_ssh_key: ((iaas_directors_aws-director_bosh_jumpbox_ssh.private_key))
-    jumpbox_username: ((iaas_directors_aws-director_bosh_jumpbox_username))
-    jumpbox_url: ((iaas_directors_aws-director_bosh_jumpbox_ip)):22
-
-- name: database-backup-restorer-deployment
-  type: bosh-deployment
-  source:
-    deployment: database-backup-restorer
-    skip_check: true
-
-- name: gcp-db-certs-zip
-  type: s3
-  source:
-    region_name: eu-west-1
-    bucket: bbr-terraform-states
-    versioned_file: gcp-db-certs.zip
-    <<: *aws_credentials_s3
-
-- name: gcs-blobstore-sdk-deployment
-  type: bosh-deployment
-  source:
-    deployment: gcs-backuper
-    skip_check: true
-
-- name: ruby-install
-  type: github-release
-  source:
-    access_token: *git_token
-    owner: postmodern
-    repository: ruby-install
-    tag_filter: \d+\.\d+\.\d+
 jobs:
 - name: unit-tests
   serial: true
@@ -628,31 +266,10 @@ jobs:
         S3_LIVE_REGION: *aws-region
         S3_BACKUP_REGION: *aws-backup-region
         S3_ENDPOINT: ""
-        S3_BIG_FILE_BUCKET: "large-blob-test-bucket-unversioned"
-        <<: *S3_AWS
-    - task: gcs-blobstore-contract-tests
-      image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
-      params:
-        PACKAGE_NAME: gcs-blobstore-backup-restore/contract_test
-        GCP_SERVICE_ACCOUNT_KEY: *service_accounts_gcp_cf_backup_and_restore_owner_role_json_key
-        GCP_PROJECT_NAME: ltnz001-tas-opsmanager
-    - task: azure-blobstore-contract-tests
-      image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
-      params:
-        PACKAGE_NAME: azure-blobstore-backup-restore/contract_test
-        AZURE_STORAGE_ACCOUNT: *azure_credentials_storage_account_1
-        AZURE_STORAGE_KEY: *azure_credentials_storage_key_1
-        AZURE_STORAGE_ACCOUNT_NO_SOFT_DELETE: *azure_storage_account_no_soft_delete
-        AZURE_STORAGE_KEY_NO_SOFT_DELETE: *azure_storage_key_no_soft_delete
-        AZURE_DIFFERENT_STORAGE_ACCOUNT: *azure_credentials_storage_account_2
-        AZURE_DIFFERENT_STORAGE_KEY: *azure_credentials_storage_key_2
-        AZURE_CONTAINER_NAME_MANY_FILES: bbr-test-many-blobs-azure-container
+        <<: [*S3_CONTRACT_TEST_FIXTURES, *S3_AWS]
 
 - name: build-rc
   serial: true
-  serial_groups: [version]
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release
@@ -660,6 +277,7 @@ jobs:
       trigger: true
     - get: bosh-shared-ci
     - get: bosh-cli-registry-image
+  #! Reads the existing final release blobs anonymously; nothing is uploaded.
   - task: create-dev-release
     image: bosh-cli-registry-image
     file: bosh-shared-ci/tasks/release/create-dev-release.yml
@@ -669,588 +287,114 @@ jobs:
     params:
       file: release_tarball/release.tgz
 
-- name: deploy-s3-blobstore-sdk-with-iam-instance-profile
+- name: system-tests-postgres
   serial: true
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-ci
-    - get: backup-and-restore-sdk-release
-      resource: backup-and-restore-sdk-release
-      passed: [build-rc]
-    - get: release-tarball
-      trigger: true
-      resource: dev-release
-      passed: [build-rc]
-    - get: jammy-stemcell-aws
-    - get: director-with-iam-profile
-      trigger: true
-  - put: s3-backuper-with-iam-instance-profile-deployment
-    params:
-      manifest: backup-and-restore-sdk-release-ci/ci/manifests/s3-backuper-with-iam-instance-profile.yml
-      stemcells:
-      - jammy-stemcell-aws/*.tgz
-      releases:
-      - release-tarball/*.tgz
-      vars:
-        deployment-name: s3-backuper
-        s3-bucket-name: iam-instance-role-test
-        s3-region: *aws-region
-    on_failure:
-      put: s3-backuper-with-iam-instance-profile-deployment
-      params:
-        delete:
-          enabled: true
-          force: true
-
-- name: system-tests-blobstore-backuper-with-iam-instance-profile
-  serial: true
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-ci
-    - get: backup-and-restore-sdk-release
-      trigger: true
-      passed:
-      - deploy-s3-blobstore-sdk-with-iam-instance-profile
-    - get: director-with-iam-profile
-    - get: bosh-integration-image
-  - in_parallel:
-    - task: s3-with-iam-instance-profile
-      image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.yml
-      params:
-        TEST_SUITE_NAME: s3
-        FOCUS_SPEC: backs up and restores in-place # focus on one it to avoid redundant testing
-        BOSH_DEPLOYMENT: s3-backuper
-        BOSH_GW_USER: ubuntu
-        AWS_TEST_BUCKET_NAME: iam-instance-role-test
-        AWS_TEST_BUCKET_REGION: *aws-region
-        AWS_TEST_CLONE_BUCKET_NAME: iam-instance-role-test-clone
-        AWS_TEST_CLONE_BUCKET_REGION: *aws-region
-        AWS_TEST_UNVERSIONED_BUCKET_NAME: bbr-system-test-bucket-unversioned
-        AWS_TEST_UNVERSIONED_BUCKET_REGION: *aws-region
-        <<: *AWS_ACCESS
-
-  - put: s3-backuper-with-iam-instance-profile-deployment
-    params:
-      cleanup: true
-      delete:
-        enabled: true
-      manifest: backup-and-restore-sdk-release-ci/ci/manifests/s3-backuper-with-iam-instance-profile.yml
-      stemcells:
-      - jammy-stemcell-aws/*.tgz
-      vars:
-        deployment-name: s3-backuper
-        s3-bucket-name: iam-instance-role-test
-        s3-region: *aws-region
-- name: claim-cf-deployment-airgapped
-  plan:
-  - in_parallel:
     - get: backup-and-restore-sdk-release
       passed: [build-rc]
     - get: dev-release
       trigger: true
       passed: [build-rc]
-    - get: bosh-integration-image
-    - put: cf-deployment-env-airgapped
-      attempts: *number_of_claim_retries
-      timeout: 6h
-      params:
-        action: create
-        duration: 24h
-        resource: cf-deployment-env-airgapped
-        timeout: 6h
-- name: deploy-postgres
-  serial_groups: [system-test-internal-dbs]
+    - get: stemcell
+      resource: jammy-stemcell
+    - get: bpm-release
+    - get: warden-cpi-image
+  - task: system-tests-postgres
+    image: warden-cpi-image
+    privileged: true
+    file: backup-and-restore-sdk-release-ci/ci/tasks/system-tests-postgres/task.yml
+
+- name: system-tests-mysql
+  serial: true
   plan:
   - in_parallel:
-    - get: bosh-integration-image
-    - get: bpm-release
     - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
-      passed:
-      - claim-cf-deployment-airgapped
-    - get: release-tarball
-      resource: dev-release
+      passed: [build-rc]
+    - get: dev-release
       trigger: true
-      passed:
-      - claim-cf-deployment-airgapped
-    - get: jammy-stemcell
-    - get: cf-deployment-env-airgapped
-      trigger: true
-      passed:
-      - claim-cf-deployment-airgapped
-  - task: generate-bosh-deployment-source-file
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    input_mapping:
-      cf-deployment-env: cf-deployment-env-airgapped
-  - put: postgres-15-dev-deployment
-    params:
-      manifest: backup-and-restore-sdk-release-ci/ci/manifests/postgres.yml
-      stemcells:
-      - jammy-stemcell/*.tgz
-      vars:
-        deployment-name: *postgres-15-deployment-name
-        db_host: *postgres-15-host
-        postgres_version: 15
-        <<: *pg_deployment_common
-        availability_zone: z1
-        vm_extensions: ["cf-tcp-router-network-properties"]
-      ops_files:
-      - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
-      source_file: source-file/source-file.yml
-      releases:
-        - bpm-release/*.tgz
-  - put: postgres-16-dev-deployment
-    params:
-      manifest: backup-and-restore-sdk-release-ci/ci/manifests/postgres.yml
-      stemcells:
-      - jammy-stemcell/*.tgz
-      vars:
-        deployment-name: *postgres-16-deployment-name
-        db_host: *postgres-16-host
-        postgres_version: 16
-        <<: *pg_deployment_common
-        availability_zone: z1
-        vm_extensions: ["cf-tcp-router-network-properties"]
-      ops_files:
-      - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
-      source_file: source-file/source-file.yml
-      releases:
-        - bpm-release/*.tgz
-  - put: postgres-17-dev-deployment
-    params:
-      manifest: backup-and-restore-sdk-release-ci/ci/manifests/postgres.yml
-      stemcells:
-        - jammy-stemcell/*.tgz
-      vars:
-        deployment-name: *postgres-17-deployment-name
-        db_host: *postgres-17-host
-        postgres_version: 17
-        <<: *pg_deployment_common
-        availability_zone: z1
-        vm_extensions: ["cf-tcp-router-network-properties"]
-      ops_files:
-        - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
-      source_file: source-file/source-file.yml
-      releases:
-        - bpm-release/*.tgz
-  - put: postgres-18-dev-deployment
-    params:
-      manifest: backup-and-restore-sdk-release-ci/ci/manifests/postgres.yml
-      stemcells:
-        - jammy-stemcell/*.tgz
-      vars:
-        deployment-name: *postgres-18-deployment-name
-        db_host: *postgres-18-host
-        postgres_version: 18
-        <<: *pg_deployment_common
-        availability_zone: z1
-        vm_extensions: ["cf-tcp-router-network-properties"]
-      ops_files:
-        - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
-      source_file: source-file/source-file.yml
-      releases:
-        - bpm-release/*.tgz
-
-- name: deploy-mysql
-  serial_groups: [system-test-internal-dbs]
-  plan:
-  - in_parallel:
-    - get: bosh-integration-image
+      passed: [build-rc]
+    - get: stemcell
+      resource: jammy-stemcell
     - get: bpm-release
     - get: pxc-release
-    - get: backup-and-restore-sdk-release-ci
-    - get: backup-and-restore-sdk-release
-      passed:
-      - claim-cf-deployment-airgapped
-    - get: release-tarball
-      trigger: true
-      resource: dev-release
-      passed:
-      - claim-cf-deployment-airgapped
-    - get: jammy-stemcell
-    - get: cf-deployment-env-airgapped
-      trigger: true
-      passed:
-      - claim-cf-deployment-airgapped
-  - task: generate-bosh-deployment-source-file
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    input_mapping:
-      cf-deployment-env: cf-deployment-env-airgapped
-  - do:
-    #! It seems that 2 deployments cannot be performed in parallel if they
-    #! compile the same release against the same stemcell and therefore BOSH
-    #! refuses to grant some locks.
-    - put: mysql-8-0-deployment
-      timeout: 3h
-      params:
-        manifest: backup-and-restore-sdk-release-ci/ci/manifests/mysql.yml
-        stemcells:
-        - jammy-stemcell/*.tgz
-        vars:
-          mysql_version: "8.0"
-          deployment-name: *mysql-8-0-deployment-name
-          db_password: *mysql-password
-          db_host: *mysql-8-0-host
-          availability_zone: z1
-          <<: *mysql_certs_common
-          vm_extensions: ["cf-tcp-router-network-properties"]
-        ops_files:
-        - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
-        source_file: source-file/source-file.yml
-        releases:
-        - bpm-release/*.tgz
-        - pxc-release/*.tgz
-    - put: mysql-8-4-deployment
-      timeout: 3h
-      params:
-        manifest: backup-and-restore-sdk-release-ci/ci/manifests/mysql.yml
-        stemcells:
-        - jammy-stemcell/*.tgz
-        vars:
-          mysql_version: "8.4"
-          deployment-name: *mysql-8-4-deployment-name
-          db_password: *mysql-password
-          db_host: *mysql-8-4-host
-          availability_zone: z1
-          <<: *mysql_certs_common
-          vm_extensions: ["cf-tcp-router-network-properties"]
-        ops_files:
-        - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
-        source_file: source-file/source-file.yml
-        releases:
-        - bpm-release/*.tgz
-        - pxc-release/*.tgz
+    - get: warden-cpi-image
+  - task: system-tests-mysql
+    image: warden-cpi-image
+    privileged: true
+    #! PXC compiles from source, twice.
+    timeout: 3h
+    file: backup-and-restore-sdk-release-ci/ci/tasks/system-tests-mysql/task.yml
 
-- name: deploy-database-sdk-on-airgapped-env
+- name: system-tests-s3
   serial: true
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-ci
-    - get: backup-and-restore-sdk-release
-      passed:
-        - claim-cf-deployment-airgapped
-    - get: release-tarball
-      trigger: true
-      resource: dev-release
-      passed:
-        - claim-cf-deployment-airgapped
-    - get: jammy-stemcell
-    - get: bosh-integration-image
-    - get: cf-deployment-env-airgapped
-      trigger: true
-      passed:
-        - claim-cf-deployment-airgapped
-  - task: generate-bosh-deployment-source-file
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    input_mapping:
-      cf-deployment-env: cf-deployment-env-airgapped
-  - put: database-backup-restorer-deployment
-    params:
-      manifest: backup-and-restore-sdk-release-ci/ci/manifests/database-backup-restorer.yml
-      stemcells:
-      - jammy-stemcell/*.tgz
-      releases:
-      - release-tarball/*.tgz
-      vars:
-        deployment-name: database-backup-restorer
-        availability_zone: z1
-        vm_extensions: ["cf-tcp-router-network-properties"]
-      ops_files:
-      - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
-      source_file: source-file/source-file.yml
-
-- name: system-tests-internal-dbs
-  serial: true
-  plan:
-  - in_parallel:
-    - get: bosh-integration-image
-    - get: backup-and-restore-sdk-release-ci
-    - get: backup-and-restore-sdk-release
-      passed:
-      - deploy-database-sdk-on-airgapped-env
-      - deploy-postgres
-      - deploy-mysql
-    - get: cert-store
-      resource: gcp-db-certs-zip
-    - get: cf-deployment-env-airgapped
-      trigger: true
-      passed:
-      - deploy-database-sdk-on-airgapped-env
-      - deploy-postgres
-      - deploy-mysql
-  - task: alias-env
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/bosh-envify/task.yml
-    input_mapping:
-      toolsmiths-env: cf-deployment-env-airgapped
-  - load_var: pooled-env
-    file: bosh-env/metadata.yml
-  - in_parallel:
-    - task: postgres-15-system-tests
-      image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
-      params:
-        <<: *bosh-smiths-creds
-        POSTGRES_HOSTNAME: *postgres-15-host
-        POSTGRES_PASSWORD: postgres_password
-        POSTGRES_USERNAME: test_user
-        TEST_SUITE_NAME: postgresql
-    - task: postgres-16-system-tests
-      image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
-      params:
-        <<: *bosh-smiths-creds
-        POSTGRES_HOSTNAME: *postgres-16-host
-        POSTGRES_PASSWORD: postgres_password
-        POSTGRES_USERNAME: test_user
-        TEST_SUITE_NAME: postgresql
-    - task: postgres-17-system-tests
-      image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
-      params:
-        <<: *bosh-smiths-creds
-        POSTGRES_HOSTNAME: *postgres-17-host
-        POSTGRES_PASSWORD: postgres_password
-        POSTGRES_USERNAME: test_user
-        TEST_SUITE_NAME: postgresql
-    - task: postgres-18-system-tests
-      image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
-      params:
-        <<: *bosh-smiths-creds
-        POSTGRES_HOSTNAME: *postgres-18-host
-        POSTGRES_PASSWORD: postgres_password
-        POSTGRES_USERNAME: test_user
-        TEST_SUITE_NAME: postgresql
-    - task: mysql-8-0-system-tests
-      image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
-      params:
-        TEST_SUITE_NAME: mysql
-        TEST_TLS_VERIFY_IDENTITY: false
-        TEST_TLS_MUTUAL_TLS: false
-        <<: [*bosh-smiths-creds, *mysql_params_8]
-    - task: mysql-8-4-system-tests
-      image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
-      params:
-        TEST_SUITE_NAME: mysql
-        TEST_TLS_VERIFY_IDENTITY: false
-        TEST_TLS_MUTUAL_TLS: false
-        <<: [*bosh-smiths-creds, *mysql_params_8_4]
-
-- name: unclaim-cf-deployment-airgapped
-  plan:
-  - get: cf-deployment-env-airgapped
-    trigger: true
-    passed:
-    - system-tests-internal-dbs
-  - put: cf-deployment-env-airgapped
-    params:
-      action: release
-      resource: cf-deployment-env-airgapped
-
-- name: claim-cf-deployment
-  plan:
-  - in_parallel:
     - get: backup-and-restore-sdk-release
       passed: [build-rc]
     - get: dev-release
       trigger: true
       passed: [build-rc]
-    - get: bosh-integration-image
-    - put: cf-deployment-env-non-airgapped
-      attempts: *number_of_claim_retries
-      timeout: 6h
-      params:
-        action: create
-        duration: 24h
-        resource: cf-deployment-env-non-airgapped
-        timeout: 6h
-
-- name: deploy-database-sdk
-  serial: true
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-ci
-    - get: backup-and-restore-sdk-release
-      passed:
-      - claim-cf-deployment
-    - get: release-tarball
-      trigger: true
-      resource: dev-release
-      passed:
-      - claim-cf-deployment
-    - get: jammy-stemcell
-    - get: bosh-integration-image
-    - get: cf-deployment-env-non-airgapped
-      trigger: true
-      passed:
-      - claim-cf-deployment
-  - task: generate-bosh-deployment-source-file
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    input_mapping:
-      cf-deployment-env: cf-deployment-env-non-airgapped
-  - put: database-backup-restorer-deployment
+    - get: stemcell
+      resource: jammy-stemcell
+    - get: warden-cpi-image
+  - task: system-tests-s3
+    image: warden-cpi-image
+    privileged: true
+    file: backup-and-restore-sdk-release-ci/ci/tasks/system-tests-blobstore/task.yml
     params:
-      manifest: backup-and-restore-sdk-release-ci/ci/manifests/database-backup-restorer.yml
-      stemcells:
-      - jammy-stemcell/*.tgz
-      releases:
-      - release-tarball/*.tgz
-      vars:
-        deployment-name: database-backup-restorer
-        availability_zone: z1
-        vm_extensions: ["cf-tcp-router-network-properties"]
-      ops_files:
-      - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
-      source_file: source-file/source-file.yml
-
-- name: deploy-s3-blobstore-sdk
-  serial: true
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-ci
-    - get: backup-and-restore-sdk-release
-      passed:
-      - claim-cf-deployment
-    - get: release-tarball
-      trigger: true
-      resource: dev-release
-      passed:
-      - claim-cf-deployment
-    - get: jammy-stemcell
-    - get: cf-deployment-env-non-airgapped
-      trigger: true
-      passed:
-      - claim-cf-deployment
-    - get: bosh-integration-image
-  - task: generate-bosh-deployment-source-file
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    input_mapping:
-      cf-deployment-env: cf-deployment-env-non-airgapped
-  - put: aws-blobstore-sdk-deployment
-    params:
-      manifest: backup-and-restore-sdk-release-ci/ci/manifests/s3-backuper.yml
-      stemcells:
-      - jammy-stemcell/*.tgz
-      releases:
-      - release-tarball/*.tgz
-      vars:
-        deployment-name: s3-backuper
-        availability_zone: z1
-        s3-bucket-name: bbr-system-test-bucket
-        s3-cloned-bucket-name: bbr-system-test-bucket-clone
+      MANIFEST: s3-backuper.yml
+      BOSH_DEPLOYMENT: s3-backuper
+      DEPLOY_VARS:
+        s3-bucket-name: *s3_system_test_bucket
         s3-region: *aws-region
+        s3-cloned-bucket-name: *s3_system_test_clone_bucket
         s3-cloned-bucket-region: *aws-backup-region
-        s3-unversioned-bucket-name-for-versioned-backuper: bbr-system-test-bucket-unversioned
+        s3-unversioned-bucket-name-for-versioned-backuper: *s3_system_test_unversioned_bucket
         s3-unversioned-bucket-region-for-versioned-backuper: *aws-region
-        s3-unversioned-bucket-name: bbr-system-test-s3-unversioned-bucket
+        s3-unversioned-bucket-name: *s3_unversioned_bucket
         s3-unversioned-bucket-region: *aws-region
-        s3-unversioned-backup-bucket-name: bbr-system-test-s3-unversioned-backup-bucket
-        s3-unversioned-backup-bucket-region: us-east-1
-        minio-access-key: *minio_access_key
-        minio-secret-key: *minio_secret_key
-        s3-unversioned-bpm-bucket-name: sdk-system-test-unversioned-bpm
+        s3-unversioned-backup-bucket-name: *s3_unversioned_backup_bucket
+        s3-unversioned-backup-bucket-region: *aws-backup-region
+        s3-unversioned-bpm-bucket-name: *s3_unversioned_bpm_bucket
         s3-unversioned-bpm-bucket-region: *aws-region
-        s3-unversioned-bpm-backup-bucket-name: sdk-system-test-unversioned-bpm-backup
+        s3-unversioned-bpm-backup-bucket-name: *s3_unversioned_bpm_backup_bucket
         s3-unversioned-bpm-backup-bucket-region: *aws-region
-        s3-unversioned-large-number-of-files-bucket-name: sdk-large-number-of-files
+        s3-unversioned-large-number-of-files-bucket-name: *s3_large_number_of_files_bucket
         s3-unversioned-large-number-of-files-bucket-region: *aws-region
-        s3-unversioned-large-number-of-files-backup-bucket-name: sdk-large-number-of-files-backup
+        s3-unversioned-large-number-of-files-backup-bucket-name: *s3_large_number_of_files_backup_bucket
         s3-unversioned-large-number-of-files-backup-bucket-region: *aws-region
-        s3-unversioned-clone-bucket-name: sdk-unversioned-clone
-        s3-unversioned-clone-bucket-region: us-east-1
-        <<: *aws-access
-        vm_extensions: ["cf-tcp-router-network-properties"]
-      ops_files:
-      - backup-and-restore-sdk-release-ci/ci/manifests/ops-files/apply_vm_extension.yml
-      source_file: source-file/source-file.yml
-
-- name: deploy-azure-blobstore-sdk
-  serial: true
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-ci
-    - get: backup-and-restore-sdk-release
-      passed:
-      - claim-cf-deployment
-    - get: release-tarball
-      trigger: true
-      resource: dev-release
-      passed:
-      - claim-cf-deployment
-    - get: jammy-stemcell
-    - get: bosh-integration-image
-    - get: cf-deployment-env-non-airgapped
-      trigger: true
-      passed:
-      - claim-cf-deployment
-  - task: generate-bosh-deployment-source-file
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    input_mapping:
-      cf-deployment-env: cf-deployment-env-non-airgapped
-  - put: azure-blobstore-sdk-deployment
-    params:
-      manifest: backup-and-restore-sdk-release-ci/ci/manifests/azure-backuper.yml
-      stemcells:
-      - jammy-stemcell/*.tgz
-      releases:
-      - release-tarball/*.tgz
-      vars:
-        deployment-name: azure-backuper
-        azure-container-name: bbr-system-test-azure-container
-        azure-storage-account: *azure_credentials_storage_account_1
-        azure-storage-key: *azure_credentials_storage_key_1
-        azure-different-storage-account: *azure_credentials_storage_account_2
-        azure-different-storage-key: *azure_credentials_storage_key_2
-        azure-different-container-name: bbr-system-test-azure-different-container
-      source_file: source-file/source-file.yml
-
-- name: deploy-gcs-blobstore-sdk
-  serial: true
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-ci
-    - get: backup-and-restore-sdk-release
-      passed:
-      - claim-cf-deployment
-    - get: release-tarball
-      trigger: true
-      resource: dev-release
-      passed:
-      - claim-cf-deployment
-    - get: jammy-stemcell
-    - get: cf-deployment-env-non-airgapped
-      trigger: true
-      passed:
-      - claim-cf-deployment
-    - get: bosh-integration-image
-  - task: generate-bosh-deployment-source-file
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/generate-bosh-deployment-source-file/task.yml
-    input_mapping:
-      cf-deployment-env: cf-deployment-env-non-airgapped
-  - put: gcs-blobstore-sdk-deployment
-    params:
-      manifest: backup-and-restore-sdk-release-ci/ci/manifests/gcs-backuper.yml
-      stemcells:
-      - jammy-stemcell/*.tgz
-      releases:
-      - release-tarball/*.tgz
-      vars:
-        deployment-name: gcs-backuper
-        gcp-service-account-key: *service_accounts_gcp_cf_backup_and_restore_owner_role_json_key
-        gcs-bucket-name: bbr-system-test-bucket
-        gcs-backup-bucket-name: bbr-system-test-backup-bucket
-      source_file: source-file/source-file.yml
+        s3-unversioned-clone-bucket-name: *s3_unversioned_clone_bucket
+        s3-unversioned-clone-bucket-region: *aws-backup-region
+        #! MinIO runs inside the deployment, so these never leave it.
+        minio-access-key: minio-access-key
+        minio-secret-key: minio-secret-key
+        <<: *aws_deploy_vars
+      TEST_SUITE_NAME: s3
+      AWS_TEST_BUCKET_NAME: *s3_system_test_bucket
+      AWS_TEST_BUCKET_REGION: *aws-region
+      AWS_TEST_CLONE_BUCKET_NAME: *s3_system_test_clone_bucket
+      AWS_TEST_CLONE_BUCKET_REGION: *aws-backup-region
+      AWS_TEST_UNVERSIONED_BUCKET_NAME: *s3_system_test_unversioned_bucket
+      AWS_TEST_UNVERSIONED_BUCKET_REGION: *aws-region
+      S3_UNVERSIONED_BUCKET_NAME: *s3_unversioned_bucket
+      S3_UNVERSIONED_BUCKET_REGION: *aws-region
+      S3_UNVERSIONED_BACKUP_BUCKET_NAME: *s3_unversioned_backup_bucket
+      S3_UNVERSIONED_BACKUP_BUCKET_REGION: *aws-backup-region
+      S3_UNVERSIONED_BPM_BUCKET_NAME: *s3_unversioned_bpm_bucket
+      S3_UNVERSIONED_BPM_BUCKET_REGION: *aws-region
+      S3_UNVERSIONED_BPM_BACKUP_BUCKET_NAME: *s3_unversioned_bpm_backup_bucket
+      S3_UNVERSIONED_BPM_BACKUP_BUCKET_REGION: *aws-region
+      S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BUCKET_NAME: *s3_large_number_of_files_bucket
+      S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BUCKET_REGION: *aws-region
+      S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BACKUP_BUCKET_NAME: *s3_large_number_of_files_backup_bucket
+      S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BACKUP_BUCKET_REGION: *aws-region
+      S3_UNVERSIONED_CLONE_BUCKET_NAME: *s3_unversioned_clone_bucket
+      S3_UNVERSIONED_CLONE_BUCKET_REGION: *aws-backup-region
+      <<: *AWS_ACCESS
 
 - name: system-tests-external-dbs-rds
   serial: true
@@ -1258,15 +402,13 @@ jobs:
   - in_parallel:
     - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
-      passed:
-      - deploy-database-sdk
-    - get: cert-store
-      resource: rds-ca-bundle
-    - get: cf-deployment-env-non-airgapped
+      passed: [build-rc]
+    - get: dev-release
       trigger: true
-      passed:
-      - deploy-database-sdk
-    - get: bosh-integration-image
+      passed: [build-rc]
+    - get: stemcell
+      resource: jammy-stemcell
+    - get: warden-cpi-image
   - put: terraform
     params:
       terraform_source: backup-and-restore-sdk-release-ci/ci/terraform/bbr-sdk-system-tests/aws/
@@ -1274,185 +416,85 @@ jobs:
       delete_on_failure: true
       vars:
         aws_region: *aws-region
-        <<: [*external_db_passwords, *aws_credentials_tf]
-    get_params:
-      output_statefile: true
+        <<: *aws_credentials_tf
   - load_var: tf-outputs
     file: terraform/metadata
     format: json
-  - load_var: rds-ca-cert
-    file: cert-store/rds-combined-ca-bundle.pem
-  - task: alias-env
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/bosh-envify/task.yml
-    input_mapping:
-      toolsmiths-env: cf-deployment-env-non-airgapped
-  - load_var: pooled-env
-    file: bosh-env/metadata.yml
-  - task: verify-rds-connectivity
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/verify-rds-connectivity/task.yml
+  - task: system-tests-external-dbs-rds
+    image: warden-cpi-image
+    privileged: true
+    file: backup-and-restore-sdk-release-ci/ci/tasks/system-tests-external-dbs-rds/task.yml
     params:
-      BOSH_GW_HOST: ((.:pooled-env.INSTANCE_JUMPBOX_EXTERNAL_IP))
-      BOSH_GW_USER: ((.:pooled-env.INSTANCE_JUMPBOX_USER))
-      BOSH_GW_PRIVATE_KEY: ((.:pooled-env.INSTANCE_JUMPBOX_PRIVATE))
-      POSTGRES_13_HOST: ((.:tf-outputs.postgres_13_address))
+      AWS_REGION: *aws-region
+      RDS_SECURITY_GROUP_ID: ((.:tf-outputs.security_group_id))
       POSTGRES_15_HOST: ((.:tf-outputs.postgres_15_address))
+      POSTGRES_15_PASSWORD: ((.:tf-outputs.postgres_15_password))
       POSTGRES_16_HOST: ((.:tf-outputs.postgres_16_address))
+      POSTGRES_16_PASSWORD: ((.:tf-outputs.postgres_16_password))
       MARIADB_10_6_HOST: ((.:tf-outputs.mariadb_10_6_address))
-  - in_parallel:
-    - task: postgres-tls-system-tests-15
-      image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
-      params:
-        <<: *bosh-smiths-creds
-        POSTGRES_HOSTNAME: ((.:tf-outputs.postgres_15_address))
-        POSTGRES_PASSWORD: *postgres_15_password
-        POSTGRES_CA_CERT: ((.:rds-ca-cert))
-        TEST_SSL_USER_REQUIRES_SSL: false
-        TEST_SUITE_NAME: postgresql_tls
-    - do:
-      - task: postgres-system-tests-16
-        image: bosh-integration-image
-        file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
-        params:
-          <<: *bosh-smiths-creds
-          POSTGRES_HOSTNAME: ((.:tf-outputs.postgres_16_address))
-          POSTGRES_PASSWORD: *postgres_16_password
-          TEST_SUITE_NAME: postgresql
-      - task: postgres-tls-system-tests-16
-        image: bosh-integration-image
-        file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
-        params:
-          <<: *bosh-smiths-creds
-          POSTGRES_HOSTNAME: ((.:tf-outputs.postgres_16_address))
-          POSTGRES_PASSWORD: *postgres_16_password
-          POSTGRES_CA_CERT: ((.:rds-ca-cert))
-          TEST_SSL_USER_REQUIRES_SSL: false
-          TEST_SUITE_NAME: postgresql_tls
-    - do:
-      - task: postgres-system-tests-13
-        image: bosh-integration-image
-        file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
-        params:
-          <<: *bosh-smiths-creds
-          POSTGRES_HOSTNAME: ((.:tf-outputs.postgres_13_address))
-          POSTGRES_PASSWORD: *postgres_13_password
-          TEST_SUITE_NAME: postgresql
-      - task: postgres-tls-system-tests-13
-        image: bosh-integration-image
-        file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
-        params:
-          <<: *bosh-smiths-creds
-          POSTGRES_HOSTNAME: ((.:tf-outputs.postgres_13_address))
-          POSTGRES_PASSWORD: *postgres_13_password
-          POSTGRES_CA_CERT: ((.:rds-ca-cert))
-          TEST_SSL_USER_REQUIRES_SSL: false
-          TEST_SUITE_NAME: postgresql_tls
-    - do:
-      - task: maria-system-tests-10-6
-        image: bosh-integration-image
-        file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-db/task.yml
-        params:
-          <<: *bosh-smiths-creds
-          MYSQL_HOSTNAME: ((.:tf-outputs.mariadb_10_6_address))
-          MYSQL_PASSWORD: *mariadb_10_password
-          MYSQL_CA_CERT: ((.:rds-ca-cert))
-          TEST_SUITE_NAME: mysql
-          TEST_TLS_MUTUAL_TLS: false
-          TEST_TLS_VERIFY_IDENTITY: false
+      MARIADB_10_6_PASSWORD: ((.:tf-outputs.mariadb_10_password))
+      <<: *AWS_ACCESS
+  #! The instances are recreated on every run, rather than left running.
+  ensure:
+    put: terraform
+    params:
+      terraform_source: backup-and-restore-sdk-release-ci/ci/terraform/bbr-sdk-system-tests/aws/
+      env_name: bbr-sdk-external-rds-dbs
+      action: destroy
+      vars:
+        aws_region: *aws-region
+        <<: *aws_credentials_tf
+    get_params:
+      action: destroy
 
-- name: system-tests-blobstore-backuper
+- name: system-tests-s3-iam-instance-profile
   serial: true
   plan:
   - in_parallel:
     - get: backup-and-restore-sdk-release-ci
     - get: backup-and-restore-sdk-release
-      passed:
-      - deploy-database-sdk
-      - deploy-s3-blobstore-sdk
-      - deploy-azure-blobstore-sdk
-      - deploy-gcs-blobstore-sdk
-    - get: cf-deployment-env-non-airgapped
+      passed: [build-rc]
+    - get: dev-release
       trigger: true
-      passed:
-      - deploy-database-sdk
-      - deploy-s3-blobstore-sdk
-      - deploy-azure-blobstore-sdk
-      - deploy-gcs-blobstore-sdk
+      passed: [build-rc]
+    - get: stemcell
+      resource: jammy-stemcell-aws
     - get: bosh-integration-image
-  - task: alias-env
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/bosh-envify/task.yml
-    input_mapping:
-      toolsmiths-env: cf-deployment-env-non-airgapped
-  - load_var: pooled-env
-    file: bosh-env/metadata.yml
-  - in_parallel:
-    - task: s3
-      image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.yml
-      params:
-        TEST_SUITE_NAME: s3
-        BOSH_DEPLOYMENT: s3-backuper
-        AWS_TEST_BUCKET_NAME: bbr-system-test-bucket
-        AWS_TEST_BUCKET_REGION: *aws-region
-        AWS_TEST_CLONE_BUCKET_NAME: bbr-system-test-bucket-clone
-        AWS_TEST_CLONE_BUCKET_REGION: *aws-backup-region
-        AWS_TEST_UNVERSIONED_BUCKET_NAME: bbr-system-test-bucket-unversioned
-        AWS_TEST_UNVERSIONED_BUCKET_REGION: *aws-region
-        S3_UNVERSIONED_BUCKET_NAME: bbr-system-test-s3-unversioned-bucket
-        S3_UNVERSIONED_BUCKET_REGION: *aws-region
-        S3_UNVERSIONED_BACKUP_BUCKET_NAME: bbr-system-test-s3-unversioned-backup-bucket
-        S3_UNVERSIONED_BACKUP_BUCKET_REGION: us-east-1
-        S3_UNVERSIONED_BPM_BUCKET_NAME: sdk-system-test-unversioned-bpm
-        S3_UNVERSIONED_BPM_BUCKET_REGION: *aws-region
-        S3_UNVERSIONED_BPM_BACKUP_BUCKET_NAME: sdk-system-test-unversioned-bpm-backup
-        S3_UNVERSIONED_BPM_BACKUP_BUCKET_REGION: *aws-region
-        S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BUCKET_NAME: sdk-large-number-of-files
-        S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BUCKET_REGION: *aws-region
-        S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BACKUP_BUCKET_NAME: sdk-large-number-of-files-backup
-        S3_UNVERSIONED_LARGE_NUMBER_OF_FILES_BACKUP_BUCKET_REGION: *aws-region
-        S3_UNVERSIONED_CLONE_BUCKET_NAME: sdk-unversioned-clone
-        S3_UNVERSIONED_CLONE_BUCKET_REGION: us-east-1
-        <<: [*bosh-smiths-creds, *AWS_ACCESS]
-    - task: azure-system-tests
-      image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.yml
-      params:
-        <<: *bosh-smiths-creds
-        TEST_SUITE_NAME: azure
-        BOSH_DEPLOYMENT: azure-backuper
-        AZURE_STORAGE_ACCOUNT: *azure_credentials_storage_account_1
-        AZURE_STORAGE_KEY: *azure_credentials_storage_key_1
-        AZURE_CONTAINER_NAME: bbr-system-test-azure-container
-        AZURE_DIFFERENT_STORAGE_ACCOUNT: *azure_credentials_storage_account_2
-        AZURE_DIFFERENT_STORAGE_KEY: *azure_credentials_storage_key_2
-        AZURE_DIFFERENT_CONTAINER_NAME: bbr-system-test-azure-different-container
-    - task: gcs-blobstore-backuper-system-tests
-      image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.yml
-      attempts: *number_of_test_retries
-      params:
-        <<: *bosh-smiths-creds
-        TEST_SUITE_NAME: gcs
-        GCP_SERVICE_ACCOUNT_KEY: *service_accounts_gcp_cf_backup_and_restore_owner_role_json_key
-        GCP_PROJECT_NAME: ltnz001-tas-opsmanager
-        GCS_BUCKET_NAME: bbr-system-test-bucket
-        GCS_BACKUP_BUCKET_NAME: bbr-system-test-backup-bucket
-        BOSH_DEPLOYMENT: gcs-backuper
-
-- name: unclaim-cf-deployment
-  plan:
-  - get: cf-deployment-env-non-airgapped
-    trigger: true
-    passed:
-    - system-tests-external-dbs-rds
-    - system-tests-blobstore-backuper
-  - put: cf-deployment-env-non-airgapped
+    - get: cf-deployment-concourse-tasks-image
+  - task: bbl-up-aws
+    image: cf-deployment-concourse-tasks-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bbl-up-aws/task.yml
     params:
-      action: release
-      resource: cf-deployment-env-non-airgapped
+      IAM_INSTANCE_PROFILE: *iam_instance_profile
+      <<: *bbl_aws_params
+  - task: extract-bbl-env
+    image: cf-deployment-concourse-tasks-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/extract-bbl-env/task.yml
+    params: *bbl_aws_params
+  - task: system-tests-s3-iam-instance-profile
+    image: bosh-integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/system-tests-blobstore/task.yml
+    params:
+      MANIFEST: s3-backuper-with-iam-instance-profile.yml
+      BOSH_DEPLOYMENT: s3-backuper
+      DEPLOY_VARS:
+        s3-bucket-name: *s3_iam_test_bucket
+        s3-region: *aws-region
+      TEST_SUITE_NAME: s3
+      #! Only one spec: the rest of the suite is covered by system-tests-s3.
+      FOCUS_SPEC: backs up and restores in-place
+      AWS_TEST_BUCKET_NAME: *s3_iam_test_bucket
+      AWS_TEST_BUCKET_REGION: *aws-region
+      AWS_TEST_CLONE_BUCKET_NAME: *s3_iam_test_clone_bucket
+      AWS_TEST_CLONE_BUCKET_REGION: *aws-region
+      AWS_TEST_UNVERSIONED_BUCKET_NAME: *s3_system_test_unversioned_bucket
+      AWS_TEST_UNVERSIONED_BUCKET_REGION: *aws-region
+      <<: *AWS_ACCESS
+  ensure:
+    task: bbl-down-aws
+    image: cf-deployment-concourse-tasks-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bbl-down-aws/task.yml
+    params: *bbl_aws_params
 
 - name: release-fan-in
   serial: true
@@ -1460,541 +502,9 @@ jobs:
   - get: backup-and-restore-sdk-release
     trigger: true
     passed:
-    - system-tests-internal-dbs
-    #! TODO reenable this when these dbs are reachable from cfd and the concourse worker; see TNZ-64137
+    - system-tests-postgres
+    - system-tests-mysql
+    - system-tests-s3
+    - system-tests-s3-iam-instance-profile
+    #! Add once it has been green several times (MIGRATION-TO-CFF.md, 2.4).
     #! - system-tests-external-dbs-rds
-    - system-tests-blobstore-backuper
-    - system-tests-blobstore-backuper-with-iam-instance-profile
-
-# Release
-- name: release-new-patch
-  serial_groups:
-    - version
-  plan:
-    - put: version
-      params:
-        bump: patch
-
-- name: release-new-minor
-  serial_groups:
-    - version
-  plan:
-    - put: version
-      params:
-        bump: minor
-
-- name: release-new-major
-  serial_groups:
-    - version
-  plan:
-    - put: version
-      params:
-        bump: major
-
-- name: automatically-release-new-patch
-  serial_groups: [version]
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release
-      passed:
-      - release-fan-in
-      trigger: true
-      params:
-        fetch_tags: true
-    - get: current-version
-      resource: version
-    - get: patched-version
-      resource: version
-      params:
-        bump: patch
-    - get: bosh-shared-ci
-    - get: bosh-security-scanner-registry-image
-  - try:
-      task: check-for-patched-cves
-      file: bosh-shared-ci/tasks/release/check-for-patched-cves.yml
-      image: bosh-security-scanner-registry-image
-      input_mapping:
-        input_repo: backup-and-restore-sdk-release
-        version: current-version
-      params:
-        SEVERITY: CRITICAL,HIGH
-      on_success:
-        do:
-          - put: release-notes
-            params:
-              file: release-notes/release-notes.md
-          - put: version
-            params:
-              file: patched-version/version
-  - task: ensure-cve-checker-succeeded
-    file: bosh-shared-ci/tasks/release/ensure-task-succeeded.yml
-    image: bosh-security-scanner-registry-image
-    input_mapping:
-      task-output-folder: patched_cves
-  - try:
-      task: check-for-updated-vendored-packages
-      file: bosh-shared-ci/tasks/release/check-for-updated-vendored-packages.yml
-      image: bosh-security-scanner-registry-image
-      input_mapping:
-        input_repo: backup-and-restore-sdk-release
-        version: current-version
-      params:
-        PACKAGES: [ golang-1-linux ]
-      on_success:
-        do:
-          - put: release-notes
-            params:
-              file: release-notes/release-notes.md
-          - put: version
-            params:
-              file: patched-version/version
-  - task: ensure-update-package-check-succeeded
-    file: bosh-shared-ci/tasks/release/ensure-task-succeeded.yml
-    image: bosh-security-scanner-registry-image
-    input_mapping:
-      task-output-folder: package-updates
-  - try:
-      task: check-for-updated-blobs
-      file: bosh-shared-ci/tasks/release/check-for-updated-blobs.yml
-      image: bosh-security-scanner-registry-image
-      input_mapping:
-        input_repo: backup-and-restore-sdk-release
-        version: current-version
-      params:
-        BLOBS:
-          - mariadb
-          - mysql-8.0
-          - mysql-8.4
-          - postgresql-13
-          - postgresql-16
-          - postgresql-15
-          - postgresql-17
-          - postgresql-18
-          - ncurses
-          - pcre2
-      on_success:
-        do:
-          - put: release-notes
-            params:
-              file: release-notes/release-notes.md
-          - put: version
-            params:
-              file: patched-version/version
-  - task: ensure-blob-update-checker-succeeded
-    file: bosh-shared-ci/tasks/release/ensure-task-succeeded.yml
-    image: bosh-security-scanner-registry-image
-    input_mapping:
-      task-output-folder: blob-updates
-
-- name: create-final-release
-  disable_manual_trigger: true
-  serial_groups: [version]
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release
-      passed: [release-fan-in]
-    - get: version
-      trigger: true
-    - get: release-notes
-    - get: bosh-shared-ci
-    - get: bosh-cli-registry-image
-  - task: create-final-release
-    image: bosh-cli-registry-image
-    file: bosh-shared-ci/tasks/release/create-final-release.yml
-    input_mapping:
-      release_repo: backup-and-restore-sdk-release
-    params:
-      GIT_USER_NAME: *github_user
-      GIT_USER_EMAIL: *github_email
-      PRIVATE_YML: *release_private_yaml
-  - put: backup-and-restore-sdk-release
-    params:
-      repository: release_repo
-      rebase: true
-      tag: release_metadata/tag-name
-  - put: github-release
-    params:
-      name: release_metadata/version
-      tag: release_metadata/tag-name
-      body: release-notes/release-notes.md
-      commitish: backup-and-restore-sdk-release/.git/ref
-      generate_release_notes: true
-  - load_var: version-number
-    file: version/number
-  - load_var: github-release-url
-    file: github-release/url
-  - put: release-notes
-    params:
-      file: release_metadata/empty-file
-  - put: gchat-cryo-notification
-    params:
-      text: |
-        *BBR SDK*: version `((.:version-number))` has been published!
-        Next steps: Review the release notes <((.:github-release-url))|here>.
-
-# Dependency bumps
-- name: bump-golang-deps
-  serial: true
-  plan:
-  - in_parallel:
-    - get: golang-release-image
-    - get: every-week
-      trigger: true
-    - get: bosh-integration-image
-    - get: golang-release
-      trigger: true
-    - get: backup-and-restore-sdk-release-ci
-    - get: backup-and-restore-sdk-release
-    - get: ruby-install
-  # Bump each package src directory
-  - task: bump-deps-azure-blobstore-backup-restore
-    file: golang-release/ci/tasks/shared/bump-deps.yml
-    image: golang-release-image
-    params:
-      GIT_USER_NAME: *github_user
-      GIT_USER_EMAIL: *github_email
-      GO_PACKAGE: golang-1-linux
-      SOURCE_PATH: src/azure-blobstore-backup-restore
-      GOSUMDB: ((repository_mirrors.gosumdb))
-      GOPROXY: ((repository_mirrors.goproxy))
-    input_mapping:
-      input_repo: backup-and-restore-sdk-release
-    output_mapping:
-      output_repo: backup-and-restore-sdk-release
-  - task: bump-deps-database-backup-restore
-    file: golang-release/ci/tasks/shared/bump-deps.yml
-    image: golang-release-image
-    params:
-      GIT_USER_NAME: *github_user
-      GIT_USER_EMAIL: *github_email
-      GO_PACKAGE: golang-1-linux
-      SOURCE_PATH: src/database-backup-restore
-      GOSUMDB: ((repository_mirrors.gosumdb))
-      GOPROXY: ((repository_mirrors.goproxy))
-    input_mapping:
-      input_repo: backup-and-restore-sdk-release
-    output_mapping:
-      output_repo: backup-and-restore-sdk-release
-  - task: bump-deps-gcs-blobstore-backup-restore
-    file: golang-release/ci/tasks/shared/bump-deps.yml
-    image: golang-release-image
-    params:
-      GIT_USER_NAME: *github_user
-      GIT_USER_EMAIL: *github_email
-      GO_PACKAGE: golang-1-linux
-      SOURCE_PATH: src/gcs-blobstore-backup-restore
-      GOSUMDB: ((repository_mirrors.gosumdb))
-      GOPROXY: ((repository_mirrors.goproxy))
-    input_mapping:
-      input_repo: backup-and-restore-sdk-release
-    output_mapping:
-      output_repo: backup-and-restore-sdk-release
-  - task: bump-deps-s3-blobstore-backup-restore
-    file: golang-release/ci/tasks/shared/bump-deps.yml
-    image: golang-release-image
-    params:
-      GIT_USER_NAME: *github_user
-      GIT_USER_EMAIL: *github_email
-      GO_PACKAGE: golang-1-linux
-      SOURCE_PATH: src/s3-blobstore-backup-restore
-      GOSUMDB: ((repository_mirrors.gosumdb))
-      GOPROXY: ((repository_mirrors.goproxy))
-    input_mapping:
-      input_repo: backup-and-restore-sdk-release
-    output_mapping:
-      output_repo: backup-and-restore-sdk-release
-  - task: bump-deps-system-tests
-    file: golang-release/ci/tasks/shared/bump-deps.yml
-    image: golang-release-image
-    params:
-      GIT_USER_NAME: *github_user
-      GIT_USER_EMAIL: *github_email
-      GO_PACKAGE: golang-1-linux
-      SOURCE_PATH: src/system-tests
-      GOSUMDB: ((repository_mirrors.gosumdb))
-      GOPROXY: ((repository_mirrors.goproxy))
-    input_mapping:
-      input_repo: backup-and-restore-sdk-release
-    output_mapping:
-      output_repo: backup-and-restore-sdk-release
-  # Run unit tests
-  - in_parallel:
-    - task: databases-unit-tests
-      image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/database-unit-tests/task.yml
-      privileged: true
-    - task: s3-blobstore-unit-tests
-      image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
-      params:
-        PACKAGE_NAME: s3-blobstore-backup-restore
-        GINKGO_EXTRA_FLAGS: -p --skip-package s3bucket
-    - task: azure-blobstore-unit-tests
-      image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
-      params:
-        PACKAGE_NAME: azure-blobstore-backup-restore
-        GINKGO_EXTRA_FLAGS: -p --skip-package contract_test
-    - task: gcs-blobstore-unit-tests
-      image: bosh-integration-image
-      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
-      params:
-        PACKAGE_NAME: gcs-blobstore-backup-restore
-        GINKGO_EXTRA_FLAGS: -p --skip-package contract_test
-  # Push changes
-  - put: backup-and-restore-sdk-release-write-only
-    params:
-      repository: backup-and-restore-sdk-release
-      rebase: true
-      branch: main
-
-- name: bump-packages
-  serial: true
-  plan:
-  - in_parallel:
-    - get: backup-and-restore-sdk-release-ci
-    - get: backup-and-restore-sdk-release
-    - get: bosh-ecosystem-docker-image
-    - get: bosh-integration-image
-    - get: ruby-install
-    - get: ruby-image
-      trigger: true
-    - get: mariadb-10-6-blob
-      trigger: true
-    - get: ncurses-blob
-      trigger: true
-    - get: postgres-13-blob
-      trigger: true
-    - get: postgres-15-blob
-      trigger: true
-    - get: postgres-16-blob
-      trigger: true
-    - get: postgres-17-blob
-      trigger: true
-    - get: postgres-18-blob
-      trigger: true
-    - get: libpcre2-blob
-      trigger: true
-    - get: mysql-server-8-blob
-      trigger: true
-    - get: mysql-server-8-4-blob
-      trigger: true
-    - get: golang-release
-      trigger: true
-  # Go
-  - task: bump-golang-package
-    file: golang-release/ci/tasks/shared/bump-golang-package.yml
-    input_mapping:
-      input_repo: backup-and-restore-sdk-release
-    output_mapping:
-      output_repo: backup-and-restore-sdk-release
-    params:
-      GIT_USER_NAME: *github_user
-      GIT_USER_EMAIL: *github_email
-      PACKAGES: [ golang-1-linux ]
-      PRIVATE_YML: *release_private_yaml
-  # Ruby
-  - task: bump-ruby
-    image: ruby-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-ruby/task.yml
-    output_mapping:
-      bumped-repo: backup-and-restore-sdk-release
-    params:
-      GIT_USERNAME: *github_user
-      GIT_EMAIL: *github_email
-  - task: sdk-template-unit-tests
-    image: bosh-ecosystem-docker-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-template-unit-tests/task.yml
-  # MariaDB 10.6
-  - task: bump-mariadb-10-6-blob
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
-    input_mapping:
-      distributed-package: mariadb-10-6-blob
-      bosh-release: backup-and-restore-sdk-release
-    output_mapping:
-      bosh-release-updated: backup-and-restore-sdk-release
-    params:
-      <<: *AWS_ACCESS
-      GIT_USERNAME: *github_user
-      GIT_EMAIL: *github_email
-      GIT_BRANCH: main
-      BLOB_NAME: mariadb
-      BLOB_EXTENSION: .tar.gz
-      BLOB_DIRECTORY: mariadb/
-      UPDATE_REFERENCES: only-variable-name:MARIADB_VERSION
-  # ncurses
-  - task: bump-ncurses-blob
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
-    input_mapping:
-      distributed-package: ncurses-blob
-      bosh-release: backup-and-restore-sdk-release
-    output_mapping:
-      bosh-release-updated: backup-and-restore-sdk-release
-    params:
-      <<: *AWS_ACCESS
-      GIT_USERNAME: *github_user
-      GIT_EMAIL: *github_email
-      GIT_BRANCH: main
-      BLOB_NAME: ncurses
-      BLOB_EXTENSION: .tar.gz
-      BLOB_DIRECTORY: ncurses/
-      UPDATE_REFERENCES: only-variable-name:NCURSES_VERSION
-  # Postgres 13
-  - task: bump-postgres-13-blob
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
-    input_mapping:
-      distributed-package: postgres-13-blob
-      bosh-release: backup-and-restore-sdk-release
-    output_mapping:
-      bosh-release-updated: backup-and-restore-sdk-release
-    params:
-      <<: *AWS_ACCESS
-      GIT_USERNAME: *github_user
-      GIT_EMAIL: *github_email
-      GIT_BRANCH: main
-      BLOB_NAME: postgresql
-      BLOB_EXTENSION: .tar.gz
-      KEEP_BLOBS_FILTER: postgresql-15,postgresql-16,postgresql-17,postgresql-18
-      BLOB_DIRECTORY: postgres/
-      UPDATE_REFERENCES: only-variable-name:POSTGRES13_VERSION
-  # Postgres 15
-  - task: bump-postgres-15-blob
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
-    input_mapping:
-      distributed-package: postgres-15-blob
-      bosh-release: backup-and-restore-sdk-release
-    output_mapping:
-      bosh-release-updated: backup-and-restore-sdk-release
-    params:
-      <<: *AWS_ACCESS
-      GIT_USERNAME: *github_user
-      GIT_EMAIL: *github_email
-      GIT_BRANCH: main
-      BLOB_NAME: postgresql
-      BLOB_EXTENSION: .tar.gz
-      KEEP_BLOBS_FILTER: postgresql-13,postgresql-16,postgresql-17,postgresql-18
-      BLOB_DIRECTORY: postgres/
-      UPDATE_REFERENCES: only-variable-name:POSTGRES15_VERSION
-  # Postgres 16
-  - task: bump-postgres-16-blob
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
-    input_mapping:
-      distributed-package: postgres-16-blob
-      bosh-release: backup-and-restore-sdk-release
-    output_mapping:
-      bosh-release-updated: backup-and-restore-sdk-release
-    params:
-      <<: *AWS_ACCESS
-      GIT_USERNAME: *github_user
-      GIT_EMAIL: *github_email
-      GIT_BRANCH: main
-      BLOB_NAME: postgresql
-      BLOB_EXTENSION: .tar.gz
-      KEEP_BLOBS_FILTER: postgresql-13,postgresql-15,postgresql-17,postgresql-18
-      BLOB_DIRECTORY: postgres/
-      UPDATE_REFERENCES: only-variable-name:POSTGRES16_VERSION
-    # Postgres 17
-  - task: bump-postgres-17-blob
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
-    input_mapping:
-      distributed-package: postgres-17-blob
-      bosh-release: backup-and-restore-sdk-release
-    output_mapping:
-      bosh-release-updated: backup-and-restore-sdk-release
-    params:
-      <<: *AWS_ACCESS
-      GIT_USERNAME: *github_user
-      GIT_EMAIL: *github_email
-      GIT_BRANCH: main
-      BLOB_NAME: postgresql
-      BLOB_EXTENSION: .tar.gz
-      KEEP_BLOBS_FILTER: postgresql-13,postgresql-15,postgresql-16,postgresql-18
-      BLOB_DIRECTORY: postgres/
-      UPDATE_REFERENCES: only-variable-name:POSTGRES17_VERSION
-    # Postgres 18
-  - task: bump-postgres-18-blob
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
-    input_mapping:
-      distributed-package: postgres-18-blob
-      bosh-release: backup-and-restore-sdk-release
-    output_mapping:
-      bosh-release-updated: backup-and-restore-sdk-release
-    params:
-      <<: *AWS_ACCESS
-      GIT_USERNAME: *github_user
-      GIT_EMAIL: *github_email
-      GIT_BRANCH: main
-      BLOB_NAME: postgresql
-      BLOB_EXTENSION: .tar.gz
-      KEEP_BLOBS_FILTER: postgresql-13,postgresql-15,postgresql-16,postgresql-17
-      BLOB_DIRECTORY: postgres/
-      UPDATE_REFERENCES: only-variable-name:POSTGRES18_VERSION
-  # PCRE2
-  - task: bump-libpcre2-blob
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
-    input_mapping:
-      distributed-package: libpcre2-blob
-      bosh-release: backup-and-restore-sdk-release
-    output_mapping:
-      bosh-release-updated: backup-and-restore-sdk-release
-    params:
-      <<: *AWS_ACCESS
-      GIT_USERNAME: *github_user
-      GIT_EMAIL: *github_email
-      GIT_BRANCH: main
-      BLOB_NAME: pcre2
-      BLOB_EXTENSION: .tar.gz
-      BLOB_DIRECTORY: libpcre2/
-      UPDATE_REFERENCES: only-variable-name:LIBPCRE2_VERSION
-  # MySQL 8.0
-  - task: bump-mysql-8-blob
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
-    input_mapping:
-      distributed-package: mysql-server-8-blob
-      bosh-release: backup-and-restore-sdk-release
-    output_mapping:
-      bosh-release-updated: backup-and-restore-sdk-release
-    params:
-      <<: *AWS_ACCESS
-      GIT_USERNAME: *github_user
-      GIT_EMAIL: *github_email
-      GIT_BRANCH: main
-      BLOB_NAME: mysql
-      KEEP_BLOBS_FILTER: mysql-8.4
-      BLOB_EXTENSION: linux-glibc2.17-x86_64-minimal.tar.xz
-      BLOB_DIRECTORY: mysql/
-      UPDATE_REFERENCES: only-variable-name:MYSQL80_VERSION
-  # MySQL 8.4
-  - task: bump-mysql-8-4-blob
-    image: bosh-integration-image
-    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
-    input_mapping:
-      distributed-package: mysql-server-8-4-blob
-      bosh-release: backup-and-restore-sdk-release
-    output_mapping:
-      bosh-release-updated: backup-and-restore-sdk-release
-    params:
-      <<: *AWS_ACCESS
-      GIT_USERNAME: *github_user
-      GIT_EMAIL: *github_email
-      GIT_BRANCH: main
-      BLOB_NAME: mysql
-      KEEP_BLOBS_FILTER: mysql-8.0
-      BLOB_EXTENSION: linux-glibc2.28-x86_64-minimal.tar.xz
-      BLOB_DIRECTORY: mysql/
-      UPDATE_REFERENCES: only-variable-name:MYSQL84_VERSION
-  # Push changes
-  - put: backup-and-restore-sdk-release-write-only
-    params:
-      repository: backup-and-restore-sdk-release
-      rebase: true
-      branch: main

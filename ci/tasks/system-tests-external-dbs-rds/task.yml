@@ -1,0 +1,36 @@
+---
+platform: linux
+
+inputs:
+- name: backup-and-restore-sdk-release
+- name: backup-and-restore-sdk-release-ci
+- name: dev-release
+- name: stemcell
+
+run:
+  path: backup-and-restore-sdk-release-ci/ci/tasks/system-tests-external-dbs-rds/task.sh
+
+params:
+  # The pipeline user can only assume AWS_ROLE_ARN.
+  AWS_ACCESS_KEY_ID:
+  AWS_SECRET_ACCESS_KEY:
+  AWS_ROLE_ARN:
+  AWS_REGION:
+  # From the terraform outputs.
+  RDS_SECURITY_GROUP_ID:
+  POSTGRES_15_HOST:
+  POSTGRES_15_PASSWORD:
+  POSTGRES_16_HOST:
+  POSTGRES_16_PASSWORD:
+  MARIADB_10_6_HOST:
+  MARIADB_10_6_PASSWORD:
+
+  POSTGRES_USERNAME: root
+  POSTGRES_PORT: 5432
+  MYSQL_USERNAME: root
+  MYSQL_PORT: 3306
+  SDK_DEPLOYMENT: database-backup-restorer
+  SDK_INSTANCE_GROUP: database-backup-restorer
+  TEST_TLS: true
+  TEST_TLS_VERIFY_IDENTITY: true
+  TEST_SSL_USER_REQUIRES_SSL: false

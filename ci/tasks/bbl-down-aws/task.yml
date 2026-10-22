@@ -1,0 +1,16 @@
+---
+platform: linux
+
+inputs:
+- name: backup-and-restore-sdk-release-ci
+- name: bbl-state
+
+params:
+  BBL_IAAS: aws
+  BBL_AWS_ACCESS_KEY_ID:
+  BBL_AWS_SECRET_ACCESS_KEY:
+  BBL_AWS_ASSUME_ROLE:
+  BBL_AWS_REGION:
+
+run:
+  path: backup-and-restore-sdk-release-ci/ci/tasks/bbl-down-aws/task.sh

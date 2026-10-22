@@ -19,16 +19,20 @@ set -euo pipefail
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ssh_proxy_key="$(mktemp)"
-echo -e "${BOSH_GW_PRIVATE_KEY}" > "$ssh_proxy_key"
-chmod 0400 "$ssh_proxy_key"
+# Without a gateway (e.g. a director running in this container), the tests
+# reach the database servers and VMs directly.
+if [[ -n "${BOSH_GW_HOST:-}" ]]; then
+  ssh_proxy_key="$(mktemp)"
+  echo -e "${BOSH_GW_PRIVATE_KEY}" > "$ssh_proxy_key"
+  chmod 0400 "$ssh_proxy_key"
 
-export SSH_PROXY_HOST="$BOSH_GW_HOST"
-export SSH_PROXY_USER="$BOSH_GW_USER"
-export SSH_PROXY_KEY_FILE="$ssh_proxy_key"
-export BOSH_GW_PRIVATE_KEY="$ssh_proxy_key"
+  export SSH_PROXY_HOST="$BOSH_GW_HOST"
+  export SSH_PROXY_USER="$BOSH_GW_USER"
+  export SSH_PROXY_KEY_FILE="$ssh_proxy_key"
+  export BOSH_GW_PRIVATE_KEY="$ssh_proxy_key"
 
-export BOSH_ALL_PROXY="ssh+socks5://${BOSH_GW_USER}@${BOSH_GW_HOST}:22?private-key=${ssh_proxy_key}"
+  export BOSH_ALL_PROXY="ssh+socks5://${BOSH_GW_USER}@${BOSH_GW_HOST}:22?private-key=${ssh_proxy_key}"
+fi
 
 cd backup-and-restore-sdk-release/src/database-backup-restore
 go run github.com/onsi/ginkgo/v2/ginkgo -r -v --trace -mod vendor "system_tests/${TEST_SUITE_NAME}"

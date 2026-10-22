@@ -1,0 +1,26 @@
+---
+platform: linux
+
+inputs:
+- name: backup-and-restore-sdk-release
+- name: backup-and-restore-sdk-release-ci
+- name: dev-release
+- name: stemcell
+# From extract-bbl-env. Without it, the task starts a director in the
+# container, and must run privileged on the warden-cpi image.
+- name: bosh-env
+  optional: true
+
+run:
+  path: backup-and-restore-sdk-release-ci/ci/tasks/system-tests-blobstore/task.sh
+
+params:
+  # Manifest under ci/manifests, and its vars as a YAML/JSON map.
+  MANIFEST:
+  DEPLOY_VARS:
+  BOSH_DEPLOYMENT:
+  # Suite under src/system-tests, run by ci/tasks/sdk-system-blobstore.
+  TEST_SUITE_NAME:
+  FOCUS_SPEC:
+  # Suite-specific settings (bucket names, credentials, ...) are passed
+  # straight through to the suite.
