@@ -38,9 +38,18 @@ EOF
 
   eval "$(bbl print-env)"
 
-  # Add the vm_extension the s3-backuper-with-iam-instance-profile manifest uses.
+  # Add the vm_extension the s3-backuper-with-iam-instance-profile manifest
+  # uses. bbl's default vm_type is m4.large, which eu-north-1 doesn't offer
+  # ("The requested configuration is currently not supported"), so use
+  # m5.large instead.
+  cat > default-vm-type.yml <<'EOF'
+- type: replace
+  path: /vm_types/name=default/cloud_properties/instance_type
+  value: m5.large
+EOF
   bosh cloud-config > cloud-config.yml
   bosh -n update-cloud-config cloud-config.yml \
     -o "${ci_dir}/manifests/ops-files/iam-instance-profile.yml" \
+    -o default-vm-type.yml \
     -v iam_instance_profile="${IAM_INSTANCE_PROFILE}"
 popd > /dev/null
