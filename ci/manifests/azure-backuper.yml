@@ -32,8 +32,8 @@ stemcells:
 instance_groups:
 - name: azure-backuper
   instances: 1
-  vm_type: small
-  persistent_disk_type: 10GB
+  vm_type: default
+  persistent_disk: 10240
   stemcell: jammy
   update:
     serial: true
@@ -52,8 +52,8 @@ instance_groups:
   azs: [z1]
 - name: azure-backuper-bpm
   instances: 1
-  vm_type: small
-  persistent_disk_type: 10GB
+  vm_type: default
+  persistent_disk: 10240
   stemcell: jammy
   update:
     serial: true
@@ -76,8 +76,8 @@ instance_groups:
   azs: [z1]
 - name: azure-restore-to-different-container
   instances: 1
-  vm_type: small
-  persistent_disk_type: 10GB
+  vm_type: default
+  persistent_disk: 10240
   stemcell: jammy
   update:
     serial: true
@@ -96,8 +96,8 @@ instance_groups:
   azs: [z1]
 - name: azure-restore-to-different-storage-account
   instances: 1
-  vm_type: small
-  persistent_disk_type: 10GB
+  vm_type: default
+  persistent_disk: 10240
   stemcell: jammy
   update:
     serial: true

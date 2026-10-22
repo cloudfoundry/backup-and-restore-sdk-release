@@ -32,8 +32,8 @@ stemcells:
 instance_groups:
 - name: gcs-backuper
   instances: 1
-  vm_type: small
-  persistent_disk_type: 10GB
+  vm_type: default
+  persistent_disk: 10240
   stemcell: jammy
   update:
     serial: true
@@ -56,8 +56,8 @@ instance_groups:
           backup_bucket_name: ((gcs-backup-bucket-name))
 - name: gcs-backuper-same-bucket
   instances: 1
-  vm_type: small
-  persistent_disk_type: 10GB
+  vm_type: default
+  persistent_disk: 10240
   stemcell: jammy
   update:
     serial: true

@@ -3,8 +3,6 @@ platform: linux
 inputs:
   - name: backup-and-restore-sdk-release
   - name: backup-and-restore-sdk-release-ci
-  - name: director-with-iam-profile
-    optional: true
 
 run:
   path: backup-and-restore-sdk-release-ci/ci/tasks/sdk-system-blobstore/task.sh
