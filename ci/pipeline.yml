@@ -319,8 +319,8 @@ jobs:
   - task: system-tests-mysql
     image: warden-cpi-image
     privileged: true
-    #! PXC compiles from source, twice.
-    timeout: 3h
+    #! PXC compiles from source, twice; the first run took 2h47m.
+    timeout: 4h
     file: backup-and-restore-sdk-release-ci/ci/tasks/system-tests-mysql/task.yml
 
 - name: system-tests-s3
