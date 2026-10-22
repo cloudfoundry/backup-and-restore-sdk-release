@@ -37,9 +37,6 @@ type JobInstance struct {
 func (i *JobInstance) Run(command string) *gexec.Session {
 	return i.runBosh(
 		"ssh",
-		"--gw-user="+MustHaveEnv("BOSH_GW_USER"),
-		"--gw-host="+MustHaveEnv("BOSH_GW_HOST"),
-		"--gw-private-key="+MustHaveEnv("BOSH_GW_PRIVATE_KEY"),
 		fmt.Sprintf("%s/%s", i.Name, i.Index),
 		command,
 	)
@@ -53,9 +50,6 @@ func (i *JobInstance) RunSuccessfully(command string) {
 func (i *JobInstance) Download(remotePath, localPath string) *gexec.Session {
 	return i.runBosh(
 		"scp",
-		"--gw-user="+MustHaveEnv("BOSH_GW_USER"),
-		"--gw-host="+MustHaveEnv("BOSH_GW_HOST"),
-		"--gw-private-key="+MustHaveEnv("BOSH_GW_PRIVATE_KEY"),
 		fmt.Sprintf("%s/%s:%s", i.Name, i.Index, remotePath),
 		localPath,
 	)
@@ -64,9 +58,6 @@ func (i *JobInstance) Download(remotePath, localPath string) *gexec.Session {
 func (i *JobInstance) Upload(localPath, remotePath string) *gexec.Session {
 	return i.runBosh(
 		"scp",
-		"--gw-user="+MustHaveEnv("BOSH_GW_USER"),
-		"--gw-host="+MustHaveEnv("BOSH_GW_HOST"),
-		"--gw-private-key="+MustHaveEnv("BOSH_GW_PRIVATE_KEY"),
 		localPath,
 		fmt.Sprintf("%s/%s:%s", i.Name, i.Index, remotePath),
 	)
