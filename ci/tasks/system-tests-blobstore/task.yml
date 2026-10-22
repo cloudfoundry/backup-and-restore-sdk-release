@@ -1,0 +1,22 @@
+---
+platform: linux
+
+inputs:
+- name: backup-and-restore-sdk-release
+- name: backup-and-restore-sdk-release-ci
+- name: dev-release
+- name: stemcell
+# Can be from extract-bbl-env. Without it, the task starts a director in the
+# container
+- name: bosh-env
+  optional: true
+
+run:
+  path: backup-and-restore-sdk-release-ci/ci/tasks/system-tests-blobstore/task.sh
+
+params:
+  MANIFEST:
+  DEPLOY_VARS:
+  BOSH_DEPLOYMENT:
+  TEST_SUITE_NAME:
+  FOCUS_SPEC:

@@ -3,6 +3,11 @@ set -euo pipefail
 
 [ -z "${DEBUG:-}" ] || set -x
 
-fly -t "${CONCOURSE_TARGET:-bosh-ecosystem}" \
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+pipeline_config="${REPO_ROOT}/ci/pipeline.yml"
+
+fly validate-pipeline --strict --config "${pipeline_config}"
+
+fly -t "${CONCOURSE_TARGET:-bosh}" \
   set-pipeline -p backup-and-restore-sdk-release \
-  -c ci/pipeline.yml
+  -c "${pipeline_config}"

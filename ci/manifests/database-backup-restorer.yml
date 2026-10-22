@@ -3,18 +3,18 @@ name: ((deployment-name))
 
 releases:
 - name: backup-and-restore-sdk
-  version: latest  # replaced by exact version by bosh-deployment-resource in CI
+  version: latest  # pinned to the uploaded dev release in CI
 
 stemcells:
 - alias: jammy
   os: ubuntu-jammy
-  version: latest  # replaced by exact version by bosh-deployment-resource in CI
+  version: latest
 
 instance_groups:
 - name: database-backup-restorer
   instances: 1
-  vm_type: small
-  persistent_disk_type: 10GB
+  vm_type: default
+  persistent_disk: 10240
   stemcell: jammy
   networks:
   - name: default

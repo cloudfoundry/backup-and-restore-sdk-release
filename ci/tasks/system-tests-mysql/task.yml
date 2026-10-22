@@ -1,0 +1,24 @@
+---
+platform: linux
+
+inputs:
+- name: backup-and-restore-sdk-release
+- name: backup-and-restore-sdk-release-ci
+- name: dev-release
+- name: bpm-release
+- name: pxc-release
+- name: stemcell
+
+run:
+  path: backup-and-restore-sdk-release-ci/ci/tasks/system-tests-mysql/task.sh
+
+params:
+  MYSQL_VERSIONS: "8.0 8.4"
+  MYSQL_USERNAME: root
+  MYSQL_PASSWORD: mysql_password
+  MYSQL_PORT: 3306
+  SDK_DEPLOYMENT: database-backup-restorer
+  SDK_INSTANCE_GROUP: database-backup-restorer
+  TEST_TLS: true
+  TEST_TLS_VERIFY_IDENTITY: false
+  TEST_TLS_MUTUAL_TLS: false
