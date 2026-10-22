@@ -20,7 +20,6 @@ deploy "${SDK_DEPLOYMENT}" "${ci_dir}/manifests/database-backup-restorer.yml" \
 for version in ${POSTGRES_VERSIONS}; do
   deploy "postgres-${version}" "${ci_dir}/manifests/postgres.yml" \
     -o "$(release_ops bpm)" \
-    -v db_host="10.244.0.${version}" \
     -v postgres_version="${version}" \
     -v db_username="${POSTGRES_USERNAME}" \
     -v db_password="${POSTGRES_PASSWORD}" \
@@ -29,7 +28,7 @@ done
 
 for version in ${POSTGRES_VERSIONS}; do
   run_suite "postgres ${version}" \
-    POSTGRES_HOSTNAME="10.244.0.${version}" \
+    POSTGRES_HOSTNAME="$(instance_ip "postgres-${version}")" \
     TEST_SUITE_NAME=postgresql \
     "${ci_dir}/tasks/sdk-system-db/task.sh"
 done

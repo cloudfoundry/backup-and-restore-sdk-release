@@ -22,24 +22,19 @@ vars_store="$(mktemp -d)/mysql-vars.yml"
 
 # Deploy one at a time: parallel deploys that compile the same release
 # against the same stemcell fight over compilation locks.
-for server in ${MYSQL_SERVERS}; do
-  version="${server%%:*}"
-  host="${server#*:}"
+for version in ${MYSQL_VERSIONS}; do
   deploy "mysql-${version//./-}" "${ci_dir}/manifests/mysql.yml" \
     -o "$(release_ops bpm)" \
     -o "$(release_ops pxc)" \
     --vars-store "${vars_store}" \
     -v mysql_version="${version}" \
-    -v db_host="${host}" \
     -v db_password="${MYSQL_PASSWORD}" \
     -v availability_zone=z1
 done
 
-for server in ${MYSQL_SERVERS}; do
-  version="${server%%:*}"
-  host="${server#*:}"
+for version in ${MYSQL_VERSIONS}; do
   run_suite "mysql ${version}" \
-    MYSQL_HOSTNAME="${host}" \
+    MYSQL_HOSTNAME="$(instance_ip "mysql-${version//./-}")" \
     MYSQL_CA_CERT="$(bosh int "${vars_store}" --path /databases/ca)" \
     MYSQL_CLIENT_CERT="$(bosh int "${vars_store}" --path /databases/certificate)" \
     MYSQL_CLIENT_KEY="$(bosh int "${vars_store}" --path /databases/private_key)" \

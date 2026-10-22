@@ -12,8 +12,7 @@ run:
   path: backup-and-restore-sdk-release-ci/ci/tasks/system-tests-postgres/task.sh
 
 params:
-  # Postgres N is deployed with static IP 10.244.0.N.
-  POSTGRES_VERSIONS: 15 16 17 18
+  POSTGRES_VERSIONS: "15 16 17 18"
   POSTGRES_USERNAME: test_user
   POSTGRES_PASSWORD: postgres_password
   POSTGRES_PORT: 5432

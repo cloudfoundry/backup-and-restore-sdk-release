@@ -8,6 +8,7 @@
 #
 # Source this file; it doesn't do anything on its own.
 
+# shellcheck disable=SC2034 # used by the tasks that source this
 ci_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 release_ops_dir="$(mktemp -d)"
 failed_suites=()
@@ -20,11 +21,6 @@ start_local_bosh() {
   # shellcheck disable=SC1091
   source /tmp/local-bosh/director/env
   set -u
-
-  # The test manifests use vm_type `small`, disk type `10GB` and static IPs,
-  # which bosh-lite's own cloud-config doesn't have.
-  bosh -n update-cloud-config "${BOSH_DEPLOYMENT_PATH:-/usr/local/bosh-deployment}/warden/cloud-config.yml" \
-    -o "${ci_dir}/manifests/ops-files/warden-cloud-config.yml"
 
   # Deployments are reachable directly over the route start-bosh adds.
   unset BOSH_ALL_PROXY BOSH_GW_HOST BOSH_GW_USER BOSH_GW_PRIVATE_KEY
@@ -75,6 +71,11 @@ deploy() {
   bosh -n -d "${deployment}" deploy "${manifest}" \
     -v deployment-name="${deployment}" \
     "$@"
+}
+
+# instance_ip <deployment>: the IP of the deployment's only instance.
+instance_ip() {
+  bosh -d "$1" instances --json | jq -r '.Tables[0].Rows[0].ips'
 }
 
 # run_suite <label> [VAR=value...] <command...>

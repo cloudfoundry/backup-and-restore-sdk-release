@@ -13,8 +13,7 @@ run:
   path: backup-and-restore-sdk-release-ci/ci/tasks/system-tests-mysql/task.sh
 
 params:
-  # Each entry is <mysql_version>:<static IP>.
-  MYSQL_SERVERS: 8.0:10.244.0.10 8.4:10.244.0.11
+  MYSQL_VERSIONS: "8.0 8.4"
   MYSQL_USERNAME: root
   MYSQL_PASSWORD: mysql_password
   MYSQL_PORT: 3306
