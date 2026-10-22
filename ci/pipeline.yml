@@ -222,7 +222,6 @@ jobs:
     - task: databases-unit-tests
       image: warden-cpi-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/database-unit-tests/task.yml
-      privileged: true
     - task: s3-blobstore-unit-tests
       image: warden-cpi-image
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
