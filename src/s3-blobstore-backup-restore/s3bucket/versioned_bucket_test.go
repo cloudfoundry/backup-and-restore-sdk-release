@@ -104,7 +104,7 @@ var _ = Describe("VersionedBucket", func() {
 
 			Context("when the bucket has a lot of files", func() {
 				BeforeEach(func() {
-					bucketObjectUnderTest, err = s3bucket.NewBucketWithRoleARN("sdk-big-bucket-integration-test", LiveRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
+					bucketObjectUnderTest, err = s3bucket.NewBucketWithRoleARN(VersionedBigBucketName, LiveRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
@@ -264,16 +264,16 @@ var _ = Describe("VersionedBucket", func() {
 		It("works", func() {
 			err := bucketObjectUnderTest.CopyVersion(
 				"big_file",
-				"YfWcz5KoJzfjKB9gnBI6q7ue_jZGTvkw",
-				"large-blob-test-bucket",
-				"eu-west-1",
+				VersionedBigFileVersionID,
+				VersionedBigFileBucketName,
+				VersionedBigFileRegion,
 			)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(listFiles(destinationBucketName, S3Endpoint)).To(ConsistOf("big_file"))
 
 			localFilePath := downloadFileToTmp(destinationBucketName, S3Endpoint, "big_file")
-			Expect(shasum(localFilePath)).To(Equal("188f500de28479d67e7375566750472e58e4cec1"))
+			Expect(shasum(localFilePath)).To(Equal(VersionedBigFileSHA1))
 		})
 	})
 })

@@ -25,6 +25,15 @@ var (
 	SecretKey                    = MustHaveEnv("S3_SECRET_ACCESS_KEY")
 	AssumedRoleARN               = MustHaveEnv("S3_ASSUMED_ROLE_ARN")
 	PreExistingBigFileBucketName = MustHaveEnv("S3_BIG_FILE_BUCKET")
+	PreExistingBigFileSHA1       = MustHaveEnv("S3_BIG_FILE_SHA1")
+
+	VersionedBigFileBucketName = MustHaveEnv("S3_VERSIONED_BIG_FILE_BUCKET")
+	VersionedBigFileRegion     = MustHaveEnv("S3_VERSIONED_BIG_FILE_REGION")
+	VersionedBigFileVersionID  = MustHaveEnv("S3_VERSIONED_BIG_FILE_VERSION_ID")
+	VersionedBigFileSHA1       = MustHaveEnv("S3_VERSIONED_BIG_FILE_SHA1")
+
+	VersionedBigBucketName   = MustHaveEnv("S3_VERSIONED_BIG_BUCKET")
+	UnversionedBigBucketName = MustHaveEnv("S3_UNVERSIONED_BIG_BUCKET")
 )
 
 func TestS3(t *testing.T) {
