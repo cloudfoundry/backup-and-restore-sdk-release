@@ -22,12 +22,15 @@ vars_store="$(mktemp -d)/mysql-vars.yml"
 
 # Deploy one at a time: parallel deploys that compile the same release
 # against the same stemcell fight over compilation locks.
+#
+# -v values are parsed as YAML, so the version is quoted to keep 8.0 from
+# becoming 8.
 for version in ${MYSQL_VERSIONS}; do
   deploy "mysql-${version//./-}" "${ci_dir}/manifests/mysql.yml" \
     -o "$(release_ops bpm)" \
     -o "$(release_ops pxc)" \
     --vars-store "${vars_store}" \
-    -v mysql_version="${version}" \
+    -v mysql_version="'${version}'" \
     -v db_password="${MYSQL_PASSWORD}" \
     -v availability_zone=z1
 done
