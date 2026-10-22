@@ -67,18 +67,10 @@ func forDeployment(deploymentName string) string {
 }
 
 func getSSHCommand(instanceName, instanceIndex string) string {
-	MustHaveEnv("BOSH_GW_USER")
-	MustHaveEnv("BOSH_GW_HOST")
-	MustHaveEnv("BOSH_GW_PRIVATE_KEY")
-
 	return fmt.Sprintf("ssh %s", instanceName)
 }
 
 func getUploadCommand(localPath, remotePath, instanceName, instanceIndex string) string {
-	MustHaveEnv("BOSH_GW_USER")
-	MustHaveEnv("BOSH_GW_HOST")
-	MustHaveEnv("BOSH_GW_PRIVATE_KEY")
-
 	return fmt.Sprintf(
 		"scp %s %s/%s:%s",
 		localPath,
@@ -89,10 +81,6 @@ func getUploadCommand(localPath, remotePath, instanceName, instanceIndex string)
 }
 
 func getDownloadCommand(remotePath, localPath, instanceName, instanceIndex string) string {
-	MustHaveEnv("BOSH_GW_USER")
-	MustHaveEnv("BOSH_GW_HOST")
-	MustHaveEnv("BOSH_GW_PRIVATE_KEY")
-
 	return fmt.Sprintf(
 		"scp %s/%s:%s %s",
 		instanceName,
