@@ -66,6 +66,18 @@ resource "aws_db_instance" "backup_and_restore_postgres_15" {
   vpc_security_group_ids = [aws_security_group.backup_and_restore_rds.id]
 }
 
+# RDS for PostgreSQL 15+ forces SSL by default. The pipeline also runs the
+# non-TLS suite against postgres 16, so allow plain connections there.
+resource "aws_db_parameter_group" "postgres_16_allow_non_ssl" {
+  name   = "bbr-sdk-postgres-16-allow-non-ssl"
+  family = "postgres16"
+
+  parameter {
+    name  = "rds.force_ssl"
+    value = "0"
+  }
+}
+
 resource "aws_db_instance" "backup_and_restore_postgres_16" {
   identifier             = "postgres-16-system-tests"
   allocated_storage      = 20
@@ -75,6 +87,7 @@ resource "aws_db_instance" "backup_and_restore_postgres_16" {
   instance_class         = "db.t3.micro"
   username               = "root"
   password               = random_password.postgres_16.result
+  parameter_group_name   = aws_db_parameter_group.postgres_16_allow_non_ssl.name
   publicly_accessible    = true
   skip_final_snapshot    = true
   vpc_security_group_ids = [aws_security_group.backup_and_restore_rds.id]
