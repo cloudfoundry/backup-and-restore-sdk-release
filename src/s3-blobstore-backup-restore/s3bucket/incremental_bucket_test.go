@@ -62,7 +62,7 @@ var _ = Describe("IncrementalBucket", func() {
 
 				Context("when the bucket has a lot of blobs", func() {
 					It("works", func() {
-						bucketObjectUnderTest, err := s3bucket.NewBucketWithRoleARN("sdk-unversioned-big-bucket-integration-test", LiveRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
+						bucketObjectUnderTest, err := s3bucket.NewBucketWithRoleARN(UnversionedBigBucketName, LiveRegion, S3Endpoint, AssumedRoleARN, creds, false, false)
 						Expect(err).NotTo(HaveOccurred())
 
 						blobs, err := bucketObjectUnderTest.ListBlobs("")
@@ -273,7 +273,7 @@ var _ = Describe("IncrementalBucket", func() {
 				Secret: SecretKey,
 			}
 
-			bucketName = setUpUnversionedBucket("eu-west-1", S3Endpoint)
+			bucketName = setUpUnversionedBucket(LiveRegion, S3Endpoint)
 		})
 
 		AfterEach(func() {
@@ -297,7 +297,7 @@ var _ = Describe("IncrementalBucket", func() {
 
 			By("not corrupting the large file")
 			Expect(
-				shasum(downloadFileToTmp(bucketName, S3Endpoint, "path/to/big_file"))).To(Equal("91d50642dd930e9542c39d36f0516d45f4e1af0d"))
+				shasum(downloadFileToTmp(bucketName, S3Endpoint, "path/to/big_file"))).To(Equal(PreExistingBigFileSHA1))
 		})
 	})
 })
