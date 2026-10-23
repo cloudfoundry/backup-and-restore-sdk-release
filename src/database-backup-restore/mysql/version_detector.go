@@ -27,7 +27,7 @@ func (d ServerVersionDetector) GetVersion(config config.ConnectionConfig, tempFo
 		).Run()
 
 	if err != nil {
-		return version.DatabaseServerVersion{}, fmt.Errorf(string(stderr))
+		return version.DatabaseServerVersion{}, fmt.Errorf("%s", stderr)
 	}
 
 	versionString := string(stdout)
