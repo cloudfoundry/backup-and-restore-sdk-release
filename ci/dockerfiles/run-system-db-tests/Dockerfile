@@ -1,4 +1,4 @@
-FROM bosh/cli
+FROM bosh/cli@sha256:a9845d3e6cd4eb85def1d88b34d14082f2c33c2f8ba5f20e2908b2b44d93aaec
 
 RUN mkdir -p /tls-certs && chmod -R 777 /tls-certs
 VOLUME /tls-certs

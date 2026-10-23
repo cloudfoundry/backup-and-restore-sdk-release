@@ -67,19 +67,19 @@ docker-system-postgres: $(supported-postgres) ## run system tests for all suppor
 docker-system: docker-system-postgres docker-system-mariadb docker-system-mysql ## run all system tests for all supported Stemcells and database versions
 
 docker-unit-blobstore-azure: ## run azure blobstore unit tests in Docker
-	docker compose up --build --exit-code-from unit-blobstore-azure unit-blobstore-azure
+	GO_IMAGE=$$(./ci/image-ref.sh golang 1) && export GO_IMAGE && docker compose up --build --exit-code-from unit-blobstore-azure unit-blobstore-azure
 
 docker-unit-blobstore-gcs: ## run GCS blobstore unit tests in Docker
-	docker compose up --build --exit-code-from unit-blobstore-gcs unit-blobstore-gcs
+	GO_IMAGE=$$(./ci/image-ref.sh golang 1) && export GO_IMAGE && docker compose up --build --exit-code-from unit-blobstore-gcs unit-blobstore-gcs
 
 docker-unit-blobstore-s3: ## run S3 blobstore unit tests in Docker
-	docker compose up --build --exit-code-from unit-blobstore-s3 unit-blobstore-s3
+	GO_IMAGE=$$(./ci/image-ref.sh golang 1) && export GO_IMAGE && docker compose up --build --exit-code-from unit-blobstore-s3 unit-blobstore-s3
 
 docker-unit-database: ## run database unit tests in Docker
-	docker compose up --build --exit-code-from unit-database unit-database
+	GO_IMAGE=$$(./ci/image-ref.sh golang 1) && export GO_IMAGE && docker compose up --build --exit-code-from unit-database unit-database
 
 docker-unit-template-specs: ## run templating unit tests in Docker
-	RUBY_VERSION=$(ruby-version) docker compose up --build --exit-code-from unit-sdk-template unit-sdk-template
+	RUBY_IMAGE=$$(./ci/image-ref.sh ruby $(ruby-version)) && export RUBY_IMAGE && docker compose up --build --exit-code-from unit-sdk-template unit-sdk-template
 
 docker-unit: docker-unit-blobstore-azure docker-unit-blobstore-gcs docker-unit-blobstore-s3 docker-unit-database docker-unit-template-specs ## run all unit tests in Docker
 
@@ -121,6 +121,7 @@ $(supported-mariadb):
 	else                                                                        \
 		echo "\033[92m Testing: MariaDB $@ \033[0m"                        ;\
 		export MARIADB_VERSION=$(word 2,$(subst ~, ,$@))                   ;\
+		MARIADB_IMAGE=$$(./ci/image-ref.sh mariadb "$${MARIADB_VERSION}") || exit 1; export MARIADB_IMAGE; \
 		export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))                     ;\
 		export MARIADB_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
 		docker --log-level ERROR compose up --build --exit-code-from system-db-mariadb system-db-mariadb         ;\
@@ -135,6 +136,7 @@ $(supported-mysql):
 	else                                                                        \
 		echo "\033[92m Testing MySQL $@ \033[0m"                           ;\
 		export MYSQL_VERSION=$(word 2,$(subst ~, ,$@))                     ;\
+		MYSQL_IMAGE=$$(./ci/image-ref.sh mysql "$${MYSQL_VERSION}") || exit 1; export MYSQL_IMAGE; \
 		export STEMCELL_NAME=$(word 1,$(subst ~, ,$@))                     ;\
 		export MYSQL_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"    ;\
 		docker --log-level ERROR compose up --build --exit-code-from system-db-mysql system-db-mysql          ;\
@@ -145,6 +147,7 @@ $(supported-mysql):
 
 docker-system-postgres-aux:
 	export POSTGRES_VERSION=$(word 2,$(subst ~, ,$(MATRIX_TUPLE)))             ;\
+		POSTGRES_IMAGE=$$(./ci/image-ref.sh postgres "$${POSTGRES_VERSION}") || exit 1; export POSTGRES_IMAGE; \
 	export STEMCELL_NAME=$(word 1,$(subst ~, ,$(MATRIX_TUPLE)))                ;\
 	export POSTGRES_PASSWORD="$$(head /dev/urandom | md5sum | cut -f1 -d" ")"  ;\
 	docker --log-level ERROR compose up --build --exit-code-from system-db-postgres system-db-postgres          ;\

@@ -83,3 +83,13 @@ task](ci/tasks/sdk-system-db/task.yml) for more details.
 You'll also need a bosh director with a few particular bosh releases deployed in
 it. Given a bosh director exists, the [infrastructure pipeline](ci/pipelines/bbr-sdk-test-infrastructure/pipeline.yml)
 can be set to deploy the necessary releases.
+
+### CI image digests
+
+Docker test images use reviewed manifest digests in `ci/image-pins.txt`.
+The Makefile resolves each database matrix version separately, so pinning does
+not cause different database versions to run against the same image. Add the
+matching digest before introducing a new Ruby or database version. Missing pins
+stop the build. Keep Dockerfile default image references aligned with the pins.
+Direct Docker/Compose users can supply `GO_IMAGE`, `RUBY_IMAGE`, `MYSQL_IMAGE`,
+`POSTGRES_IMAGE` or `MARIADB_IMAGE` as a complete `repository:tag@sha256:...` reference.

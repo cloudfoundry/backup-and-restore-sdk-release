@@ -1,5 +1,5 @@
-ARG MARIADB_VERSION
-FROM mariadb:$MARIADB_VERSION
+ARG MARIADB_IMAGE=mariadb:10.9-jammy@sha256:56710811b0b96233ef84f4982d3337d88d3aa46a68f3fcb2853b94e1d04ea25c
+FROM ${MARIADB_IMAGE}
 
 RUN mkdir -p /tls-certs && chmod -R 777 /tls-certs
 VOLUME /tls-certs

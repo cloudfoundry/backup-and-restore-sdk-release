@@ -1,5 +1,5 @@
-ARG POSTGRES_VERSION
-FROM postgres:$POSTGRES_VERSION
+ARG POSTGRES_IMAGE=postgres:15-bullseye@sha256:4ce70bcb2c05817a09b9919fc440878cf893cfb5623cd05023778a67644ea81d
+FROM ${POSTGRES_IMAGE}
 
 RUN mkdir -p /tls-certs && chmod -R 777 /tls-certs
 VOLUME /tls-certs
