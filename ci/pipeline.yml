@@ -83,6 +83,14 @@ var_sources:
         BBL_AWS_ASSUME_ROLE: *aws_role_arn
         BBL_AWS_REGION: *aws-region
 
+      #! ci/scripts/create-gcp.sh creates the
+      #! service account, key and buckets. The contract tests create and
+      #! delete their own contract-test-* buckets.
+      gcp-project: &gcp_project cloud-foundry-310819
+      gcp-service-account-key: &gcp_service_account_key ((bbr_sdk_gcp_service_account_key))
+      gcs-bucket: &gcs_bucket ci-bbr-sdk-gcs-live
+      gcs-backup-bucket: &gcs_backup_bucket ci-bbr-sdk-gcs-backup
+
       docker-username: &docker_username ((dockerhub_username))
       docker-password: &docker_password ((dockerhub_password))
 
@@ -269,6 +277,13 @@ jobs:
         S3_BACKUP_REGION: *aws-backup-region
         S3_ENDPOINT: ""
         <<: [*S3_CONTRACT_TEST_FIXTURES, *S3_AWS]
+    - task: gcs-blobstore-contract-tests
+      image: integration-image
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
+      params:
+        PACKAGE_NAME: gcs-blobstore-backup-restore/contract_test
+        GCP_SERVICE_ACCOUNT_KEY: *gcp_service_account_key
+        GCP_PROJECT_NAME: *gcp_project
 
 - name: build-rc
   serial: true
@@ -397,6 +412,35 @@ jobs:
       S3_UNVERSIONED_CLONE_BUCKET_REGION: *aws-backup-region
       <<: *AWS_ACCESS
 
+- name: system-tests-gcs
+  serial: true
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release-ci
+    - get: backup-and-restore-sdk-release
+      passed: [build-rc]
+    - get: dev-release
+      trigger: true
+      passed: [build-rc]
+    - get: stemcell
+      resource: jammy-stemcell
+    - get: docker-cpi-image
+  - task: system-tests-gcs
+    image: docker-cpi-image
+    privileged: true
+    file: backup-and-restore-sdk-release-ci/ci/tasks/system-tests-blobstore/task.yml
+    params:
+      MANIFEST: gcs-backuper.yml
+      BOSH_DEPLOYMENT: gcs-backuper
+      DEPLOY_VARS:
+        gcs-bucket-name: *gcs_bucket
+        gcs-backup-bucket-name: *gcs_backup_bucket
+      TEST_SUITE_NAME: gcs
+      GCP_SERVICE_ACCOUNT_KEY: *gcp_service_account_key
+      GCP_PROJECT_NAME: *gcp_project
+      GCS_BUCKET_NAME: *gcs_bucket
+      GCS_BACKUP_BUCKET_NAME: *gcs_backup_bucket
+
 - name: system-tests-external-dbs-rds
   serial: true
   plan:
@@ -506,6 +550,7 @@ jobs:
     - system-tests-postgres
     - system-tests-mysql
     - system-tests-s3
+    - system-tests-gcs
     - system-tests-s3-iam-instance-profile
     #! Add once it has been green several times.
     #! - system-tests-external-dbs-rds
