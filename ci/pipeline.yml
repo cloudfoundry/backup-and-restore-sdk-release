@@ -91,6 +91,23 @@ var_sources:
       gcs-bucket: &gcs_bucket ci-bbr-sdk-gcs-live
       gcs-backup-bucket: &gcs_backup_bucket ci-bbr-sdk-gcs-backup
 
+      #! Azure resource group ci-bbr-sdk, created by ci/scripts/create-azure.sh.
+      #! Accounts 1 and 2 have blob soft delete on; the third has it off, for
+      #! the negative test. The contract tests create and delete their own
+      #! sdk-azure-test-* containers.
+      azure-storage-account: &azure_storage_account ((bbr_sdk_azure_credentials.storage_account))
+      azure-storage-key: &azure_storage_key ((bbr_sdk_azure_credentials.storage_account_key))
+      azure-different-storage-account: &azure_different_storage_account ((bbr_sdk_azure_credentials.storage_account2))
+      azure-different-storage-key: &azure_different_storage_key ((bbr_sdk_azure_credentials.storage_account2_key))
+      azure-no-soft-delete-storage-account: &azure_no_soft_delete_storage_account ((bbr_sdk_azure_credentials.storage_account_no_soft_delete))
+      azure-no-soft-delete-storage-key: &azure_no_soft_delete_storage_key ((bbr_sdk_azure_credentials.storage_account_no_soft_delete_key))
+      #! In account 1. It must hold exactly 10104 blobs: the contract tests
+      #! check the count.
+      azure-container: &azure_container bbr-system-test-azure-container
+      azure-many-blobs-container: &azure_many_blobs_container bbr-test-many-blobs-azure-container
+      #! In account 2.
+      azure-different-container: &azure_different_container bbr-system-test-azure-different-container
+
       docker-username: &docker_username ((dockerhub_username))
       docker-password: &docker_password ((dockerhub_password))
 
@@ -284,6 +301,18 @@ jobs:
         PACKAGE_NAME: gcs-blobstore-backup-restore/contract_test
         GCP_SERVICE_ACCOUNT_KEY: *gcp_service_account_key
         GCP_PROJECT_NAME: *gcp_project
+    - task: azure-blobstore-contract-tests
+      image: integration-image
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
+      params:
+        PACKAGE_NAME: azure-blobstore-backup-restore/contract_test
+        AZURE_STORAGE_ACCOUNT: *azure_storage_account
+        AZURE_STORAGE_KEY: *azure_storage_key
+        AZURE_STORAGE_ACCOUNT_NO_SOFT_DELETE: *azure_no_soft_delete_storage_account
+        AZURE_STORAGE_KEY_NO_SOFT_DELETE: *azure_no_soft_delete_storage_key
+        AZURE_DIFFERENT_STORAGE_ACCOUNT: *azure_different_storage_account
+        AZURE_DIFFERENT_STORAGE_KEY: *azure_different_storage_key
+        AZURE_CONTAINER_NAME_MANY_FILES: *azure_many_blobs_container
 
 - name: build-rc
   serial: true
@@ -441,6 +470,41 @@ jobs:
       GCS_BUCKET_NAME: *gcs_bucket
       GCS_BACKUP_BUCKET_NAME: *gcs_backup_bucket
 
+- name: system-tests-azure
+  serial: true
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release-ci
+    - get: backup-and-restore-sdk-release
+      passed: [build-rc]
+    - get: dev-release
+      trigger: true
+      passed: [build-rc]
+    - get: stemcell
+      resource: jammy-stemcell
+    - get: docker-cpi-image
+  - task: system-tests-azure
+    image: docker-cpi-image
+    privileged: true
+    file: backup-and-restore-sdk-release-ci/ci/tasks/system-tests-blobstore/task.yml
+    params:
+      MANIFEST: azure-backuper.yml
+      BOSH_DEPLOYMENT: azure-backuper
+      DEPLOY_VARS:
+        azure-container-name: *azure_container
+        azure-storage-account: *azure_storage_account
+        azure-storage-key: *azure_storage_key
+        azure-different-container-name: *azure_different_container
+        azure-different-storage-account: *azure_different_storage_account
+        azure-different-storage-key: *azure_different_storage_key
+      TEST_SUITE_NAME: azure
+      AZURE_STORAGE_ACCOUNT: *azure_storage_account
+      AZURE_STORAGE_KEY: *azure_storage_key
+      AZURE_CONTAINER_NAME: *azure_container
+      AZURE_DIFFERENT_STORAGE_ACCOUNT: *azure_different_storage_account
+      AZURE_DIFFERENT_STORAGE_KEY: *azure_different_storage_key
+      AZURE_DIFFERENT_CONTAINER_NAME: *azure_different_container
+
 - name: system-tests-external-dbs-rds
   serial: true
   plan:
@@ -551,6 +615,7 @@ jobs:
     - system-tests-mysql
     - system-tests-s3
     - system-tests-gcs
+    - system-tests-azure
     - system-tests-s3-iam-instance-profile
     #! Add once it has been green several times.
     #! - system-tests-external-dbs-rds
