@@ -60,9 +60,9 @@ var _ = Describe("Azure backup and restore", func() {
 			err := os.RemoveAll(localArtifactDirectory)
 			Expect(err).NotTo(HaveOccurred())
 
-			azureClient.DeleteFileInContainer(containerName, fileName1)
-			azureClient.DeleteFileInContainer(containerName, fileName2)
-			azureClient.DeleteFileInContainer(containerName, fileName3)
+			azureClient.DeleteFileInContainerIfExists(containerName, fileName1)
+			azureClient.DeleteFileInContainerIfExists(containerName, fileName2)
+			azureClient.DeleteFileInContainerIfExists(containerName, fileName3)
 		})
 
 		It("backs up and restores successfully", func() {
@@ -98,9 +98,9 @@ var _ = Describe("Azure backup and restore", func() {
 			err := os.RemoveAll(localArtifactDirectory)
 			Expect(err).NotTo(HaveOccurred())
 
-			azureClient.DeleteFileInContainer(containerName, fileName1)
-			azureClient.DeleteFileInContainer(containerName, fileName2)
-			azureClient.DeleteFileInContainer(containerName, fileName3)
+			azureClient.DeleteFileInContainerIfExists(containerName, fileName1)
+			azureClient.DeleteFileInContainerIfExists(containerName, fileName2)
+			azureClient.DeleteFileInContainerIfExists(containerName, fileName3)
 		})
 
 		It("backs up and restores in-place successfully", func() {
@@ -148,12 +148,12 @@ var _ = Describe("Azure backup and restore", func() {
 			err := os.RemoveAll(localArtifactDirectory)
 			Expect(err).NotTo(HaveOccurred())
 
-			azureClient.DeleteFileInContainer(containerName, fileName1)
-			azureClient.DeleteFileInContainer(containerName, fileName2)
-			azureClient.DeleteFileInContainer(containerName, fileName3)
-			azureClient.DeleteFileInContainer(differentContainerName, fileName1)
-			azureClient.DeleteFileInContainer(differentContainerName, fileName2)
-			azureClient.DeleteFileInContainer(differentContainerName, fileName3)
+			azureClient.DeleteFileInContainerIfExists(containerName, fileName1)
+			azureClient.DeleteFileInContainerIfExists(containerName, fileName2)
+			azureClient.DeleteFileInContainerIfExists(containerName, fileName3)
+			azureClient.DeleteFileInContainerIfExists(differentContainerName, fileName1)
+			azureClient.DeleteFileInContainerIfExists(differentContainerName, fileName2)
+			azureClient.DeleteFileInContainerIfExists(differentContainerName, fileName3)
 		})
 
 		It("backs up and restores cloned container successfully", func() {
@@ -211,12 +211,12 @@ var _ = Describe("Azure backup and restore", func() {
 			err := os.RemoveAll(localArtifactDirectory)
 			Expect(err).NotTo(HaveOccurred())
 
-			azureClient.DeleteFileInContainer(containerName, fileName1)
-			azureClient.DeleteFileInContainer(containerName, fileName2)
-			azureClient.DeleteFileInContainer(containerName, fileName3)
-			differentAzureClient.DeleteFileInContainer(differentContainerName, fileName1)
-			differentAzureClient.DeleteFileInContainer(differentContainerName, fileName2)
-			differentAzureClient.DeleteFileInContainer(differentContainerName, fileName3)
+			azureClient.DeleteFileInContainerIfExists(containerName, fileName1)
+			azureClient.DeleteFileInContainerIfExists(containerName, fileName2)
+			azureClient.DeleteFileInContainerIfExists(containerName, fileName3)
+			differentAzureClient.DeleteFileInContainerIfExists(differentContainerName, fileName1)
+			differentAzureClient.DeleteFileInContainerIfExists(differentContainerName, fileName2)
+			differentAzureClient.DeleteFileInContainerIfExists(differentContainerName, fileName3)
 		})
 
 		It("backs up and restores cloned container successfully", func() {
