@@ -617,5 +617,4 @@ jobs:
     - system-tests-gcs
     - system-tests-azure
     - system-tests-s3-iam-instance-profile
-    #! Add once it has been green several times.
-    #! - system-tests-external-dbs-rds
+    - system-tests-external-dbs-rds
