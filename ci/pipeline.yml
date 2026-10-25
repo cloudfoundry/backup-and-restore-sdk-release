@@ -206,21 +206,32 @@ resources:
   source:
     name: bosh-oci-container-ubuntu-resolute
 
+- name: noble-stemcell
+  type: bosh-io-stemcell
+  icon: seed-outline
+  source:
+    name: bosh-warden-boshlite-ubuntu-noble
+
 - name: resolute-stemcell-aws
   type: bosh-io-stemcell
   icon: seed-outline
   source:
     name: bosh-aws-xen-hvm-ubuntu-resolute
 
-- name: pxc-release
-  type: bosh-io-release
-  source:
-    repository: cloudfoundry/pxc-release
-
 - name: bpm-release
   type: bosh-io-release
   source:
     repository: cloudfoundry/bpm-release
+
+#! For operations/use-compiled-releases.yml, which points at compiled PXC and
+#! BPM tarballs on public GCS. No `paths`: with tag_filter it makes the
+#! resource find v1.1.0 instead of the latest release.
+- name: cf-deployment
+  type: git
+  icon: github
+  source:
+    uri: https://github.com/cloudfoundry/cf-deployment.git
+    tag_filter: v*
 
 - name: terraform
   type: terraform
@@ -363,14 +374,13 @@ jobs:
       passed: [build-rc]
     - get: stemcell
       resource: resolute-stemcell
-    - get: bpm-release
-    - get: pxc-release
+    - get: mysql-stemcell
+      resource: noble-stemcell
+    - get: cf-deployment
     - get: docker-cpi-image
   - task: system-tests-mysql
     image: docker-cpi-image
     privileged: true
-    #! PXC compiles from source, twice.
-    timeout: 3h
     file: backup-and-restore-sdk-release-ci/ci/tasks/system-tests-mysql/task.yml
 
 - name: system-tests-s3
