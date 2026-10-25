@@ -60,7 +60,7 @@ func main() {
 func makeInteractor(isRestoreAction bool, utilitiesConfig config.UtilitiesConfig,
 	connectionConfig config.ConnectionConfig, tempFolderManager config.TempFolderManager) (database.Interactor, error) {
 
-	postgresServerVersionDetector := postgres.NewServerVersionDetector(utilitiesConfig.Postgres13.Client)
+	postgresServerVersionDetector := postgres.NewServerVersionDetector(utilitiesConfig.Postgres15.Client)
 	mysqlServerVersionDetector := mysql.NewServerVersionDetector(utilitiesConfig.Mysql80.Client)
 	interactorFactory := database.NewInteractorFactory(utilitiesConfig, postgresServerVersionDetector, mysqlServerVersionDetector, tempFolderManager)
 	return interactorFactory.Make(actionLabel(isRestoreAction), connectionConfig)

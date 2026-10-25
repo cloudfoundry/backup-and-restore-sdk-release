@@ -145,12 +145,7 @@ func (f InteractorFactory) getAdditionalOptionsProvider(mysqlVersion version.Dat
 
 func (f InteractorFactory) getUtilitiesForPostgres(postgresVersion version.DatabaseServerVersion) (string, string, string, error) {
 	semVer := postgresVersion.SemanticVersion
-	if semVer.MajorVersionMatches(version.SemVer("13", "x", "x")) {
-		return f.utilitiesConfig.Postgres13.Client,
-			f.utilitiesConfig.Postgres13.Dump,
-			f.utilitiesConfig.Postgres13.Restore,
-			nil
-	} else if semVer.MajorVersionMatches(version.SemVer("15", "x", "x")) {
+	if semVer.MajorVersionMatches(version.SemVer("15", "x", "x")) {
 		return f.utilitiesConfig.Postgres15.Client,
 			f.utilitiesConfig.Postgres15.Dump,
 			f.utilitiesConfig.Postgres15.Restore,

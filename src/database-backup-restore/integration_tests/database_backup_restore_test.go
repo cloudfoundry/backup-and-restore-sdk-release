@@ -153,8 +153,6 @@ var _ = Describe("Backup and Restore DB Utility", func() {
 			Entry("pg_restore_18 path missing", "PG_RESTORE_18_PATH"),
 			Entry("pg_client path missing", "PG_CLIENT_PATH"),
 			Entry("pg_client path missing", "PG_CLIENT_PATH"),
-			Entry("pg_dump_13 path missing", "PG_DUMP_13_PATH"),
-			Entry("pg_restore_13 path missing", "PG_RESTORE_13_PATH"),
 			Entry("pg_client path missing", "PG_CLIENT_PATH"),
 			Entry("pg_client path missing", "PG_CLIENT_PATH"),
 			Entry("pg_client path missing", "PG_CLIENT_PATH"),
