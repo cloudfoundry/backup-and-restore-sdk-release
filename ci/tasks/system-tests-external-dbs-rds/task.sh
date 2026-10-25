@@ -59,7 +59,7 @@ wait_for_endpoint() {
 
 wait_for_endpoint "Postgres 15" "${POSTGRES_15_HOST}" "${POSTGRES_PORT}"
 wait_for_endpoint "Postgres 16" "${POSTGRES_16_HOST}" "${POSTGRES_PORT}"
-wait_for_endpoint "MariaDB 10.6" "${MARIADB_10_6_HOST}" "${MYSQL_PORT}"
+wait_for_endpoint "MariaDB 10.11" "${MARIADB_10_11_HOST}" "${MYSQL_PORT}"
 
 rds_ca_cert="$(curl -fsSL "https://truststore.pki.rds.amazonaws.com/${AWS_REGION}/${AWS_REGION}-bundle.pem")"
 
@@ -93,9 +93,9 @@ run_suite "postgres 16 tls" \
   TEST_SUITE_NAME=postgresql_tls \
   "${db_suite}"
 
-run_suite "mariadb 10.6" \
-  MYSQL_HOSTNAME="${MARIADB_10_6_HOST}" \
-  MYSQL_PASSWORD="${MARIADB_10_6_PASSWORD}" \
+run_suite "mariadb 10.11" \
+  MYSQL_HOSTNAME="${MARIADB_10_11_HOST}" \
+  MYSQL_PASSWORD="${MARIADB_10_11_PASSWORD}" \
   MYSQL_CA_CERT="${rds_ca_cert}" \
   TEST_TLS_MUTUAL_TLS=false \
   TEST_TLS_VERIFY_IDENTITY=false \
