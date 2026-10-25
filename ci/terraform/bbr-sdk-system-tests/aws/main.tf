@@ -93,12 +93,12 @@ resource "aws_db_instance" "backup_and_restore_postgres_16" {
   vpc_security_group_ids = [aws_security_group.backup_and_restore_rds.id]
 }
 
-resource "aws_db_instance" "backup_and_restore_mariadb_10_6" {
-  identifier             = "mariadb-10-6-system-tests"
+resource "aws_db_instance" "backup_and_restore_mariadb_10_11" {
+  identifier             = "mariadb-10-11-system-tests"
   allocated_storage      = 20
   storage_type           = "gp2"
   engine                 = "mariadb"
-  engine_version         = "10.6"
+  engine_version         = "10.11"
   instance_class         = "db.t3.micro"
   username               = "root"
   password               = random_password.mariadb_10.result
@@ -119,8 +119,8 @@ output "postgres_16_address" {
   value = aws_db_instance.backup_and_restore_postgres_16.address
 }
 
-output "mariadb_10_6_address" {
-  value = aws_db_instance.backup_and_restore_mariadb_10_6.address
+output "mariadb_10_11_address" {
+  value = aws_db_instance.backup_and_restore_mariadb_10_11.address
 }
 
 output "postgres_15_password" {

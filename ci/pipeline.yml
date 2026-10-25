@@ -550,8 +550,8 @@ jobs:
       POSTGRES_15_PASSWORD: ((.:tf-outputs.postgres_15_password))
       POSTGRES_16_HOST: ((.:tf-outputs.postgres_16_address))
       POSTGRES_16_PASSWORD: ((.:tf-outputs.postgres_16_password))
-      MARIADB_10_6_HOST: ((.:tf-outputs.mariadb_10_6_address))
-      MARIADB_10_6_PASSWORD: ((.:tf-outputs.mariadb_10_password))
+      MARIADB_10_11_HOST: ((.:tf-outputs.mariadb_10_11_address))
+      MARIADB_10_11_PASSWORD: ((.:tf-outputs.mariadb_10_password))
       <<: *AWS_ACCESS
   ensure:
     put: terraform
