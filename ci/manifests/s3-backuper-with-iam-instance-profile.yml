@@ -22,8 +22,8 @@ releases:
   version: latest
 
 stemcells:
-- alias: jammy
-  os: ubuntu-jammy
+- alias: default
+  os: ubuntu-resolute
   version: latest
 
 instance_groups:
@@ -33,7 +33,7 @@ instance_groups:
   vm_extensions:
   - s3-backup-iam-instance-profile
   persistent_disk_type: default
-  stemcell: jammy
+  stemcell: default
   update:
     serial: true
   networks:

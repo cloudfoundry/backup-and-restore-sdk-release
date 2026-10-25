@@ -21,14 +21,16 @@ releases:
 - name: bpm
   version: latest
   url: https://bosh.io/d/github.com/cloudfoundry/bpm-release
+# 57.0.0 is the first that builds postgres 16+ on Resolute: it vendors
+# libicu, which the stemcell has no headers for.
 - name: "postgres"
-  version: "56.0.4"
-  url: "https://bosh.io/d/github.com/cloudfoundry/postgres-release?v=56.0.4"
-  sha1: 1a456173b2626050f4bee850eeafc19ad5a0949b
+  version: "57.1.0"
+  url: "https://bosh.io/d/github.com/cloudfoundry/postgres-release?v=57.1.0"
+  sha1: 81ff7cf59f71ed0df644eb97950940a2cf12fae1
 
 stemcells:
-- alias: jammy
-  os: ubuntu-jammy
+- alias: default
+  os: ubuntu-resolute
   version: latest
 
 instance_groups:
@@ -36,7 +38,7 @@ instance_groups:
   instances: 1
   vm_type: default
   persistent_disk: 10240
-  stemcell: jammy
+  stemcell: default
   networks:
   - name: default
   jobs:

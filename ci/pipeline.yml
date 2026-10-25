@@ -200,17 +200,17 @@ resources:
     region_name: *aws-region
     <<: *aws_credentials_s3
 
-- name: jammy-stemcell
+- name: resolute-stemcell
   type: bosh-io-stemcell
   icon: seed-outline
   source:
-    name: bosh-warden-boshlite-ubuntu-jammy-go_agent
+    name: bosh-oci-container-ubuntu-resolute
 
-- name: jammy-stemcell-aws
+- name: resolute-stemcell-aws
   type: bosh-io-stemcell
   icon: seed-outline
   source:
-    name: bosh-aws-xen-hvm-ubuntu-jammy-go_agent
+    name: bosh-aws-xen-hvm-ubuntu-resolute
 
 - name: pxc-release
   type: bosh-io-release
@@ -343,7 +343,7 @@ jobs:
       trigger: true
       passed: [build-rc]
     - get: stemcell
-      resource: jammy-stemcell
+      resource: resolute-stemcell
     - get: bpm-release
     - get: docker-cpi-image
   - task: system-tests-postgres
@@ -362,7 +362,7 @@ jobs:
       trigger: true
       passed: [build-rc]
     - get: stemcell
-      resource: jammy-stemcell
+      resource: resolute-stemcell
     - get: bpm-release
     - get: pxc-release
     - get: docker-cpi-image
@@ -384,7 +384,7 @@ jobs:
       trigger: true
       passed: [build-rc]
     - get: stemcell
-      resource: jammy-stemcell
+      resource: resolute-stemcell
     - get: docker-cpi-image
   - task: system-tests-s3
     image: docker-cpi-image
@@ -452,7 +452,7 @@ jobs:
       trigger: true
       passed: [build-rc]
     - get: stemcell
-      resource: jammy-stemcell
+      resource: resolute-stemcell
     - get: docker-cpi-image
   - task: system-tests-gcs
     image: docker-cpi-image
@@ -481,7 +481,7 @@ jobs:
       trigger: true
       passed: [build-rc]
     - get: stemcell
-      resource: jammy-stemcell
+      resource: resolute-stemcell
     - get: docker-cpi-image
   - task: system-tests-azure
     image: docker-cpi-image
@@ -516,7 +516,7 @@ jobs:
       trigger: true
       passed: [build-rc]
     - get: stemcell
-      resource: jammy-stemcell
+      resource: resolute-stemcell
     - get: docker-cpi-image
   - put: terraform
     params:
@@ -566,7 +566,7 @@ jobs:
       trigger: true
       passed: [build-rc]
     - get: stemcell
-      resource: jammy-stemcell-aws
+      resource: resolute-stemcell-aws
     - get: integration-image
     - get: cf-deployment-concourse-tasks-image
   - task: bbl-up-aws
