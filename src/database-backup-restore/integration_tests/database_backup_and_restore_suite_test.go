@@ -35,12 +35,10 @@ func TestDatabaseBackupAndRestore(t *testing.T) {
 var compiledSDKPath string
 var envVars map[string]string
 
-var fakePgDump13 *binmock.Mock
 var fakePgDump15 *binmock.Mock
 var fakePgDump16 *binmock.Mock
 var fakePgDump17 *binmock.Mock
 var fakePgDump18 *binmock.Mock
-var fakePgRestore13 *binmock.Mock
 var fakePgRestore15 *binmock.Mock
 var fakePgRestore16 *binmock.Mock
 var fakePgRestore17 *binmock.Mock
@@ -62,12 +60,10 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	fakePgClient = binmock.NewBinMock(Fail)
-	fakePgDump13 = binmock.NewBinMock(Fail)
 	fakePgDump15 = binmock.NewBinMock(Fail)
 	fakePgDump16 = binmock.NewBinMock(Fail)
 	fakePgDump17 = binmock.NewBinMock(Fail)
 	fakePgDump18 = binmock.NewBinMock(Fail)
-	fakePgRestore13 = binmock.NewBinMock(Fail)
 	fakePgRestore15 = binmock.NewBinMock(Fail)
 	fakePgRestore16 = binmock.NewBinMock(Fail)
 	fakePgRestore17 = binmock.NewBinMock(Fail)
@@ -83,12 +79,10 @@ var _ = BeforeSuite(func() {
 var _ = BeforeEach(func() {
 	envVars = map[string]string{
 		"PG_CLIENT_PATH":        "non-existent",
-		"PG_DUMP_13_PATH":       "non-existent",
 		"PG_DUMP_15_PATH":       "non-existent",
 		"PG_DUMP_16_PATH":       "non-existent",
 		"PG_DUMP_17_PATH":       "non-existent",
 		"PG_DUMP_18_PATH":       "non-existent",
-		"PG_RESTORE_13_PATH":    "non-existent",
 		"PG_RESTORE_15_PATH":    "non-existent",
 		"PG_RESTORE_16_PATH":    "non-existent",
 		"PG_RESTORE_17_PATH":    "non-existent",
