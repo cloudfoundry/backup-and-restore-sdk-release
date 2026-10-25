@@ -25,8 +25,8 @@ releases:
   url: https://bosh.io/d/github.com/cloudfoundry/bpm-release
 
 stemcells:
-- alias: jammy
-  os: ubuntu-jammy
+- alias: default
+  os: ubuntu-resolute
   version: latest
 
 instance_groups:
@@ -34,7 +34,7 @@ instance_groups:
   instances: 1
   vm_type: default
   persistent_disk: 10240
-  stemcell: jammy
+  stemcell: default
   update:
     serial: true
   networks:
@@ -54,7 +54,7 @@ instance_groups:
   instances: 1
   vm_type: default
   persistent_disk: 10240
-  stemcell: jammy
+  stemcell: default
   update:
     serial: true
   networks:
@@ -78,7 +78,7 @@ instance_groups:
   instances: 1
   vm_type: default
   persistent_disk: 10240
-  stemcell: jammy
+  stemcell: default
   update:
     serial: true
   networks:
@@ -98,7 +98,7 @@ instance_groups:
   instances: 1
   vm_type: default
   persistent_disk: 10240
-  stemcell: jammy
+  stemcell: default
   update:
     serial: true
   networks:
