@@ -13,7 +13,6 @@ var_sources:
 
       aws-region: &aws-region eu-north-1
       aws-backup-region: &aws-backup-region eu-west-1
-      number-of-test-retries: &number_of_test_retries 3
 
       #! ci/scripts/create-aws-iam.sh creates the user, the role and the
       #! IAM test's instance profile. The user's only permission is assuming role_arn.
@@ -297,7 +296,6 @@ jobs:
   - in_parallel:
     - task: aws-s3-blobstore-contract-tests
       image: integration-image
-      attempts: *number_of_test_retries
       file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
       params:
         PACKAGE_NAME: s3-blobstore-backup-restore/s3bucket
