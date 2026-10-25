@@ -32,7 +32,7 @@ The SDK accepts a JSON document with the following fields:
 
 #### Supported Database Adapters
 
-* `postgres` (auto-detects `13.x`, `15.x`, `16.x` and `17.x`)
+* `postgres` (auto-detects `15.x`, `16.x`, `17.x` and `18.x`)
 * `mysql` (auto-detects `MariaDB 10.x`, `MySQL 8.0.x` and `MySQL 8.4.x`. Any other `mysql` variants are not tested)
 
 
