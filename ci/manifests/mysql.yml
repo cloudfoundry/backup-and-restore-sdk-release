@@ -25,10 +25,13 @@ releases:
   version: latest
   url: https://bosh.io/d/github.com/cloudfoundry/bpm-release
 
+# The mysql servers are a test fixture, not the code under test. They run on
+# noble because cf-deployment only publishes compiled PXC and BPM for noble,
+# and compiling PXC takes hours. The SDK itself is deployed on Resolute.
 stemcells:
 - alias: default
-  os: ubuntu-resolute
-  version: latest  # replaced by exact version by bosh-deployment-resource in CI
+  os: ubuntu-noble
+  version: latest
 
 instance_groups:
 - name: mysql

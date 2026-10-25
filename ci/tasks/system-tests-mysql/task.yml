@@ -5,9 +5,13 @@ inputs:
 - name: backup-and-restore-sdk-release
 - name: backup-and-restore-sdk-release-ci
 - name: dev-release
-- name: bpm-release
-- name: pxc-release
+# For the SDK's database-backup-restorer.
 - name: stemcell
+# For the mysql servers: the stemcell cf-deployment's compiled PXC and BPM
+# are built for.
+- name: mysql-stemcell
+# Its operations/use-compiled-releases.yml says where those are.
+- name: cf-deployment
 
 run:
   path: backup-and-restore-sdk-release-ci/ci/tasks/system-tests-mysql/task.sh
