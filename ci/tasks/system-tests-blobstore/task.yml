@@ -8,6 +8,8 @@ inputs:
 - name: stemcell
 - name: bpm-release
   optional: true
+- name: minio-release
+  optional: true
 - name: os-conf-release
   optional: true
 # Can be from extract-bbl-env. Without it, the task starts a director in the

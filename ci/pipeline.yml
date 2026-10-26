@@ -227,6 +227,11 @@ resources:
   source:
     repository: cloudfoundry/postgres-release
 
+- name: minio-release
+  type: bosh-io-release
+  source:
+    repository: minio/minio-boshrelease
+
 - name: os-conf-release
   type: bosh-io-release
   source:
@@ -405,6 +410,7 @@ jobs:
     - get: stemcell
       resource: resolute-stemcell
     - get: bpm-release
+    - get: minio-release
     - get: os-conf-release
     - get: docker-cpi-image
   - task: system-tests-s3

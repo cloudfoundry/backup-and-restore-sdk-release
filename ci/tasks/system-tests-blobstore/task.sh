@@ -21,7 +21,7 @@ deploy_vars="$(mktemp)"
 echo "${DEPLOY_VARS}" > "${deploy_vars}"
 
 deploy_args=(-o "$(release_ops backup-and-restore-sdk)")
-for release in bpm os-conf; do
+for release in bpm minio os-conf; do
   if [[ -d "${release}-release" ]]; then
     upload_release "${release}-release"/*.tgz
     deploy_args+=(-o "$(release_ops "${release}")")

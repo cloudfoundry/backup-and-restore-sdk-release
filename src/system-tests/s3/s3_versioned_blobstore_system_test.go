@@ -190,7 +190,8 @@ var _ = Describe("S3 versioned backup and restore", func() {
 			Expect(session).To(gexec.Exit(1))
 			Expect(string(session.Out.Contents())).NotTo(ContainSubstring("CERTIFICATE_VERIFY_FAILED"))
 			Expect(string(session.Out.Contents())).NotTo(ContainSubstring("no such host"))
-			Expect(string(session.Out.Contents())).To(ContainSubstring("A header you provided implies functionality that is not implemented"))
+			// The bucket doesn't exist, so minio's reply shows the TLS connection worked.
+			Expect(string(session.Out.Contents())).To(ContainSubstring("NoSuchBucket"))
 		})
 	})
 
