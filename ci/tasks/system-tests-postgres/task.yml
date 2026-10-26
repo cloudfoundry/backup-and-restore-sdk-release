@@ -6,6 +6,7 @@ inputs:
 - name: backup-and-restore-sdk-release-ci
 - name: dev-release
 - name: bpm-release
+- name: postgres-release
 - name: stemcell
 
 run:

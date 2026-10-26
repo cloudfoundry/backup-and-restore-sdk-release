@@ -11,6 +11,7 @@ start_local_bosh
 upload_stemcell stemcell/*.tgz
 upload_release dev-release/*.tgz
 upload_release bpm-release/*.tgz
+upload_release postgres-release/*.tgz
 
 deploy "${SDK_DEPLOYMENT}" "${ci_dir}/manifests/database-backup-restorer.yml" \
   -o "$(release_ops backup-and-restore-sdk)"
@@ -20,6 +21,7 @@ deploy "${SDK_DEPLOYMENT}" "${ci_dir}/manifests/database-backup-restorer.yml" \
 for version in ${POSTGRES_VERSIONS}; do
   deploy "postgres-${version}" "${ci_dir}/manifests/postgres.yml" \
     -o "$(release_ops bpm)" \
+    -o "$(release_ops postgres)" \
     -v postgres_version="${version}" \
     -v db_username="${POSTGRES_USERNAME}" \
     -v db_password="${POSTGRES_PASSWORD}" \

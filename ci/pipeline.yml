@@ -222,6 +222,16 @@ resources:
   source:
     repository: cloudfoundry/bpm-release
 
+- name: postgres-release
+  type: bosh-io-release
+  source:
+    repository: cloudfoundry/postgres-release
+
+- name: os-conf-release
+  type: bosh-io-release
+  source:
+    repository: cloudfoundry/os-conf-release
+
 #! For operations/use-compiled-releases.yml, which points at compiled PXC and
 #! BPM tarballs on public GCS. No `paths`: with tag_filter it makes the
 #! resource find v1.1.0 instead of the latest release.
@@ -354,6 +364,7 @@ jobs:
     - get: stemcell
       resource: resolute-stemcell
     - get: bpm-release
+    - get: postgres-release
     - get: docker-cpi-image
   - task: system-tests-postgres
     image: docker-cpi-image
@@ -393,6 +404,8 @@ jobs:
       passed: [build-rc]
     - get: stemcell
       resource: resolute-stemcell
+    - get: bpm-release
+    - get: os-conf-release
     - get: docker-cpi-image
   - task: system-tests-s3
     image: docker-cpi-image
@@ -461,6 +474,7 @@ jobs:
       passed: [build-rc]
     - get: stemcell
       resource: resolute-stemcell
+    - get: bpm-release
     - get: docker-cpi-image
   - task: system-tests-gcs
     image: docker-cpi-image
@@ -490,6 +504,7 @@ jobs:
       passed: [build-rc]
     - get: stemcell
       resource: resolute-stemcell
+    - get: bpm-release
     - get: docker-cpi-image
   - task: system-tests-azure
     image: docker-cpi-image

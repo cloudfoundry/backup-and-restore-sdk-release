@@ -21,12 +21,11 @@ releases:
 - name: bpm
   version: latest
   url: https://bosh.io/d/github.com/cloudfoundry/bpm-release
-# 57.0.0 is the first that builds postgres 16+ on Resolute: it vendors
+# Needs 57.0.0 or later to build postgres 16+ on Resolute: it vendors
 # libicu, which the stemcell has no headers for.
-- name: "postgres"
-  version: "57.1.0"
-  url: "https://bosh.io/d/github.com/cloudfoundry/postgres-release?v=57.1.0"
-  sha1: 81ff7cf59f71ed0df644eb97950940a2cf12fae1
+- name: postgres
+  version: latest
+  url: https://bosh.io/d/github.com/cloudfoundry/postgres-release
 
 stemcells:
 - alias: default
