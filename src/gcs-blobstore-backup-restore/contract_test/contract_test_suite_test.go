@@ -17,5 +17,6 @@ func TestGcsBlobstoreBackupRestore(t *testing.T) {
 
 var _ = SynchronizedBeforeSuite(func() []byte {
 	Authenticate(MustHaveEnv("GCP_SERVICE_ACCOUNT_KEY"), MustHaveEnv("GCP_PROJECT_NAME"))
+	deleteLeftoverBuckets(MustHaveEnv("GCP_PROJECT_NAME"))
 	return nil
 }, func([]byte) {})
