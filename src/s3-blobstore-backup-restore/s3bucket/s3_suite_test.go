@@ -41,9 +41,13 @@ func TestS3(t *testing.T) {
 	RunSpecs(t, "S3 Suite")
 }
 
-var _ = BeforeSuite(func() {
+// The config file is in the home directory, which parallel processes share,
+// so the first process writes it, and sweeps leftover buckets, once.
+var _ = SynchronizedBeforeSuite(func() []byte {
 	mustCreateAWSConfigFile()
-})
+	deleteLeftoverBuckets(S3Endpoint)
+	return nil
+}, func([]byte) {})
 
 func mustCreateAWSConfigFile() {
 	homeDir, err := os.UserHomeDir()
