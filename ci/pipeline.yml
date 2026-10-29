@@ -9,7 +9,7 @@ var_sources:
   type: dummy
   config:
     vars:
-      branch: &backup_and_restore_sdk_branch cff-migration
+      branch: &backup_and_restore_sdk_branch main
 
       aws-region: &aws-region eu-north-1
       aws-backup-region: &aws-backup-region eu-west-1
