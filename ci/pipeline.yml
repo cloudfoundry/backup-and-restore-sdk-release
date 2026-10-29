@@ -82,6 +82,33 @@ var_sources:
         BBL_AWS_ASSUME_ROLE: *aws_role_arn
         BBL_AWS_REGION: *aws-region
 
+      #! Release blobstore: the bucket config/final.yml points at. Its creds,
+      #! from ci/scripts/create-release-blobstore-iam.sh, can read and add
+      #! objects there and nothing else. The test creds above can't write it.
+      release-blobstore-bucket: &release_blobstore_bucket backup-and-restore-sdk-release-blobs
+      release-blobstore-region: &release_blobstore_region eu-west-1
+      release-blobstore-access-key: &release_blobstore_access_key ((bbr_sdk_release_blobstore_creds.access_key_id))
+      release-blobstore-secret-key: &release_blobstore_secret_key ((bbr_sdk_release_blobstore_creds.secret_access_key))
+      release-blobstore-role-arn: &release_blobstore_role_arn ((bbr_sdk_release_blobstore_creds.role_arn))
+      release-private-yml: &release_private_yml |
+        ---
+        blobstore:
+          provider: s3
+          options:
+            access_key_id: ((bbr_sdk_release_blobstore_creds.access_key_id))
+            secret_access_key: ((bbr_sdk_release_blobstore_creds.secret_access_key))
+            assume_role_arn: ((bbr_sdk_release_blobstore_creds.role_arn))
+
+      #! Git pushes (final releases, tags, bumps) use the repo's deploy key.
+      github-deploy-key: &github_deploy_key ((github_deploy_key_backup-and-restore-sdk-release.private_key))
+      git-user-name: &git_user_name CI Bot
+      git-user-email: &git_user_email bots@cloudfoundry.org
+      bump-blob-params: &bump_blob_params
+        PRIVATE_YML: *release_private_yml
+        GIT_USERNAME: *git_user_name
+        GIT_EMAIL: *git_user_email
+        GIT_BRANCH: *backup_and_restore_sdk_branch
+
       #! ci/scripts/create-gcp.sh creates the
       #! service account, key and buckets. The contract tests create and
       #! delete their own contract-test-* buckets.
@@ -110,7 +137,6 @@ var_sources:
       docker-username: &docker_username ((dockerhub_username))
       docker-password: &docker_password ((dockerhub_password))
 
-      #! Team-wide; reads only, to avoid GitHub API rate limits.
       github-token: &github_token ((github_public_repo_token))
 
       ghcr-username: &ghcr_username ((github_read_write_packages.username))
@@ -125,14 +151,34 @@ resource_types:
     username: *docker_username
     password: *docker_password
 
+- name: http
+  type: registry-image
+  source:
+    repository: aequitas/http-resource
+    username: *docker_username
+    password: *docker_password
+
 resources:
 - name: backup-and-restore-sdk-release
   type: git
   icon: github
   source:
-    uri: https://github.com/cloudfoundry/backup-and-restore-sdk-release.git
+    uri: git@github.com:cloudfoundry/backup-and-restore-sdk-release.git
     branch: *backup_and_restore_sdk_branch
+    private_key: *github_deploy_key
     ignore_paths: [ "ci" ]
+
+- name: backup-and-restore-sdk-release-write-only
+  type: git
+  icon: github
+  source:
+    uri: git@github.com:cloudfoundry/backup-and-restore-sdk-release.git
+    branch: *backup_and_restore_sdk_branch
+    private_key: *github_deploy_key
+    disable_ci_skip: true
+    commit_filter:
+      exclude:
+      - ;resource comment; This resource is used exclusively for pushing new changes
 
 - name: backup-and-restore-sdk-release-ci
   type: git
@@ -198,6 +244,138 @@ resources:
     versioned_file: dev-release.tgz
     region_name: *aws-region
     <<: *aws_credentials_s3
+
+- name: version
+  type: semver
+  icon: tag
+  source:
+    driver: s3
+    bucket: *pipeline_bucket
+    key: current-dev-version
+    region_name: *aws-region
+    access_key_id: *aws_access_key
+    secret_access_key: *aws_secret_key
+    assume_role_arn: *aws_role_arn
+
+#! Release notes collected for the next release. create-final-release
+#! publishes them and resets the file.
+- name: release-notes
+  type: s3
+  icon: note-text
+  source:
+    bucket: *release_blobstore_bucket
+    versioned_file: release-notes.md
+    region_name: *release_blobstore_region
+    access_key_id: *release_blobstore_access_key
+    secret_access_key: *release_blobstore_secret_key
+    aws_role_arn: *release_blobstore_role_arn
+
+- name: github-release
+  type: github-release
+  icon: rocket
+  source:
+    owner: cloudfoundry
+    repository: backup-and-restore-sdk-release
+    access_token: *github_token
+
+- name: golang-release
+  type: git
+  icon: tag
+  source:
+    uri: https://github.com/cloudfoundry/bosh-package-golang-release.git
+    tag_filter: v*
+
+- name: golang-release-image
+  type: registry-image
+  source:
+    repository: ghcr.io/cloudfoundry/bosh/golang-release
+
+- name: ruby-image
+  type: registry-image
+  source:
+    repository: ruby
+    username: *docker_username
+    password: *docker_password
+
+- name: bosh-security-scanner-registry-image
+  type: registry-image
+  source:
+    repository: bosh/security-scanner
+    username: *docker_username
+    password: *docker_password
+
+- name: every-week
+  type: time
+  source:
+    interval: 168h
+
+#! Upstream sources bump-packages bumps.
+- name: mariadb-10-6-blob
+  type: http
+  source:
+    index: https://archive.mariadb.org/
+    uri: "https://archive.mariadb.org/mariadb-{version}/source/mariadb-{version}.tar.gz"
+    regex: href="mariadb-(?P<version>10.6.[0-9]*)/"
+
+#! The index is the fragment dev.mysql.com's downloads page loads, and lists
+#! only the latest release. The CDN only hosts the latest release too.
+- name: mysql-8-0-blob
+  type: http
+  source:
+    index: "https://dev.mysql.com/downloads/mysql/8.0.html?tpl=platform&os=2&version=8.0&osva="
+    uri: "https://cdn.mysql.com/Downloads/MySQL-8.0/mysql-{version}-linux-glibc2.17-x86_64-minimal.tar.xz"
+    regex: '\(mysql-(?P<version>8\.0\.[0-9]+)-linux-glibc2\.17-x86_64-minimal\.tar\.xz\)'
+
+- name: mysql-8-4-blob
+  type: http
+  source:
+    index: "https://dev.mysql.com/downloads/mysql/8.4.html?tpl=platform&os=2&version=8.4&osva="
+    uri: "https://cdn.mysql.com/Downloads/MySQL-8.4/mysql-{version}-linux-glibc2.28-x86_64-minimal.tar.xz"
+    regex: '\(mysql-(?P<version>8\.4\.[0-9]+)-linux-glibc2\.28-x86_64-minimal\.tar\.xz\)'
+
+- name: ncurses-blob
+  type: http
+  source:
+    index: https://mirrors.kernel.org/gnu/ncurses/
+    uri: https://mirrors.kernel.org/gnu/ncurses/ncurses-{version}.tar.gz
+    regex: href="ncurses-(?P<version>[0-9]*.[0-9]*).tar.gz"
+
+- name: postgres-15-blob
+  type: http
+  source:
+    index: https://ftp.postgresql.org/pub/source/
+    uri: https://ftp.postgresql.org/pub/source/v{version}/postgresql-{version}.tar.gz
+    regex: href="v(?P<version>15.[0-9]*.[0-9]*)/"
+
+- name: postgres-16-blob
+  type: http
+  source:
+    index: https://ftp.postgresql.org/pub/source/
+    uri: https://ftp.postgresql.org/pub/source/v{version}/postgresql-{version}.tar.gz
+    regex: href="v(?P<version>16.[0-9]*.[0-9]*)/"
+
+- name: postgres-17-blob
+  type: http
+  source:
+    index: https://ftp.postgresql.org/pub/source/
+    uri: https://ftp.postgresql.org/pub/source/v{version}/postgresql-{version}.tar.gz
+    regex: href="v(?P<version>17.[0-9]*.[0-9]*)/"
+
+- name: postgres-18-blob
+  type: http
+  source:
+    index: https://ftp.postgresql.org/pub/source/
+    uri: https://ftp.postgresql.org/pub/source/v{version}/postgresql-{version}.tar.gz
+    regex: href="v(?P<version>18.[0-9]*.[0-9]*)/"
+
+- name: libpcre2-blob
+  type: github-release
+  source:
+    owner: PCRE2Project
+    repository: pcre2
+    access_token: *github_token
+    tag_filter: pcre2-([0-9]*.[0-9]*)$
+    order_by: time
 
 - name: resolute-stemcell
   type: bosh-io-stemcell
@@ -647,3 +825,440 @@ jobs:
     - system-tests-azure
     - system-tests-s3-iam-instance-profile
     - system-tests-external-dbs-rds
+
+#! Release
+- name: release-new-patch
+  serial_groups: [version]
+  plan:
+  - put: version
+    params:
+      bump: patch
+
+- name: release-new-minor
+  serial_groups: [version]
+  plan:
+  - put: version
+    params:
+      bump: minor
+
+- name: release-new-major
+  serial_groups: [version]
+  plan:
+  - put: version
+    params:
+      bump: major
+
+#! Bumps the patch version, which triggers create-final-release, when a
+#! commit that passed release-fan-in fixes a CVE or updates Go or a blob.
+- name: automatically-release-new-patch
+  serial_groups: [version]
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release
+      passed: [release-fan-in]
+      trigger: true
+      params:
+        fetch_tags: true
+    - get: current-version
+      resource: version
+    - get: patched-version
+      resource: version
+      params:
+        bump: patch
+    - get: bosh-shared-ci
+    - get: bosh-security-scanner-registry-image
+  - try:
+      task: check-for-patched-cves
+      file: bosh-shared-ci/tasks/release/check-for-patched-cves.yml
+      image: bosh-security-scanner-registry-image
+      input_mapping:
+        input_repo: backup-and-restore-sdk-release
+        version: current-version
+      params:
+        SEVERITY: CRITICAL,HIGH
+      on_success:
+        do:
+        - put: release-notes
+          params:
+            file: release-notes/release-notes.md
+        - put: version
+          params:
+            file: patched-version/version
+  - task: ensure-cve-checker-succeeded
+    file: bosh-shared-ci/tasks/release/ensure-task-succeeded.yml
+    image: bosh-security-scanner-registry-image
+    input_mapping:
+      task-output-folder: patched_cves
+  - try:
+      task: check-for-updated-vendored-packages
+      file: bosh-shared-ci/tasks/release/check-for-updated-vendored-packages.yml
+      image: bosh-security-scanner-registry-image
+      input_mapping:
+        input_repo: backup-and-restore-sdk-release
+        version: current-version
+      params:
+        PACKAGES: [ golang-1-linux ]
+      on_success:
+        do:
+        - put: release-notes
+          params:
+            file: release-notes/release-notes.md
+        - put: version
+          params:
+            file: patched-version/version
+  - task: ensure-update-package-check-succeeded
+    file: bosh-shared-ci/tasks/release/ensure-task-succeeded.yml
+    image: bosh-security-scanner-registry-image
+    input_mapping:
+      task-output-folder: package-updates
+  - try:
+      task: check-for-updated-blobs
+      file: bosh-shared-ci/tasks/release/check-for-updated-blobs.yml
+      image: bosh-security-scanner-registry-image
+      input_mapping:
+        input_repo: backup-and-restore-sdk-release
+        version: current-version
+      params:
+        BLOBS:
+        - mariadb
+        - mysql-8.0
+        - mysql-8.4
+        - postgresql-15
+        - postgresql-16
+        - postgresql-17
+        - postgresql-18
+        - ncurses
+        - pcre2
+      on_success:
+        do:
+        - put: release-notes
+          params:
+            file: release-notes/release-notes.md
+        - put: version
+          params:
+            file: patched-version/version
+  - task: ensure-blob-update-checker-succeeded
+    file: bosh-shared-ci/tasks/release/ensure-task-succeeded.yml
+    image: bosh-security-scanner-registry-image
+    input_mapping:
+      task-output-folder: blob-updates
+
+#! Uploads the final release blobs, pushes the final-release commit and tag,
+#! and publishes the GitHub release.
+- name: create-final-release
+  disable_manual_trigger: true
+  serial_groups: [version]
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release
+      passed: [release-fan-in]
+    - get: version
+      trigger: true
+    - get: release-notes
+    - get: bosh-shared-ci
+    - get: bosh-cli-registry-image
+  - task: create-final-release
+    image: bosh-cli-registry-image
+    file: bosh-shared-ci/tasks/release/create-final-release.yml
+    input_mapping:
+      release_repo: backup-and-restore-sdk-release
+    params:
+      GIT_USER_NAME: *git_user_name
+      GIT_USER_EMAIL: *git_user_email
+      PRIVATE_YML: *release_private_yml
+  - put: backup-and-restore-sdk-release
+    params:
+      repository: release_repo
+      rebase: true
+      tag: release_metadata/tag-name
+  - put: github-release
+    params:
+      name: release_metadata/version
+      tag: release_metadata/tag-name
+      body: release-notes/release-notes.md
+      commitish: backup-and-restore-sdk-release/.git/ref
+      generate_release_notes: true
+  - put: release-notes
+    params:
+      file: release_metadata/empty-file
+
+- name: bump-golang-deps
+  serial: true
+  plan:
+  - in_parallel:
+    - get: golang-release-image
+    - get: every-week
+      trigger: true
+    - get: integration-image
+    - get: golang-release
+      trigger: true
+    - get: backup-and-restore-sdk-release-ci
+    - get: backup-and-restore-sdk-release
+  - task: bump-deps-azure-blobstore-backup-restore
+    file: golang-release/ci/tasks/shared/bump-deps.yml
+    image: golang-release-image
+    params: &bump_deps_params
+      GIT_USER_NAME: *git_user_name
+      GIT_USER_EMAIL: *git_user_email
+      GO_PACKAGE: golang-1-linux
+      SOURCE_PATH: src/azure-blobstore-backup-restore
+    input_mapping:
+      input_repo: backup-and-restore-sdk-release
+    output_mapping:
+      output_repo: backup-and-restore-sdk-release
+  - task: bump-deps-database-backup-restore
+    file: golang-release/ci/tasks/shared/bump-deps.yml
+    image: golang-release-image
+    params:
+      <<: *bump_deps_params
+      SOURCE_PATH: src/database-backup-restore
+    input_mapping:
+      input_repo: backup-and-restore-sdk-release
+    output_mapping:
+      output_repo: backup-and-restore-sdk-release
+  - task: bump-deps-gcs-blobstore-backup-restore
+    file: golang-release/ci/tasks/shared/bump-deps.yml
+    image: golang-release-image
+    params:
+      <<: *bump_deps_params
+      SOURCE_PATH: src/gcs-blobstore-backup-restore
+    input_mapping:
+      input_repo: backup-and-restore-sdk-release
+    output_mapping:
+      output_repo: backup-and-restore-sdk-release
+  - task: bump-deps-s3-blobstore-backup-restore
+    file: golang-release/ci/tasks/shared/bump-deps.yml
+    image: golang-release-image
+    params:
+      <<: *bump_deps_params
+      SOURCE_PATH: src/s3-blobstore-backup-restore
+    input_mapping:
+      input_repo: backup-and-restore-sdk-release
+    output_mapping:
+      output_repo: backup-and-restore-sdk-release
+  - task: bump-deps-system-tests
+    file: golang-release/ci/tasks/shared/bump-deps.yml
+    image: golang-release-image
+    params:
+      <<: *bump_deps_params
+      SOURCE_PATH: src/system-tests
+    input_mapping:
+      input_repo: backup-and-restore-sdk-release
+    output_mapping:
+      output_repo: backup-and-restore-sdk-release
+  - in_parallel:
+    - task: databases-unit-tests
+      image: integration-image
+      file: backup-and-restore-sdk-release-ci/ci/tasks/database-unit-tests/task.yml
+    - task: s3-blobstore-unit-tests
+      image: integration-image
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
+      params:
+        PACKAGE_NAME: s3-blobstore-backup-restore
+        GINKGO_EXTRA_FLAGS: -p --skip-package s3bucket
+    - task: azure-blobstore-unit-tests
+      image: integration-image
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
+      params:
+        PACKAGE_NAME: azure-blobstore-backup-restore
+        GINKGO_EXTRA_FLAGS: -p --skip-package contract_test
+    - task: gcs-blobstore-unit-tests
+      image: integration-image
+      file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-unit-blobstore/task.yml
+      params:
+        PACKAGE_NAME: gcs-blobstore-backup-restore
+        GINKGO_EXTRA_FLAGS: -p --skip-package contract_test
+  - put: backup-and-restore-sdk-release-write-only
+    params:
+      repository: backup-and-restore-sdk-release
+      rebase: true
+
+- name: bump-packages
+  serial: true
+  plan:
+  - in_parallel:
+    - get: backup-and-restore-sdk-release-ci
+    - get: backup-and-restore-sdk-release
+    - get: bosh-ecosystem-docker-image
+    - get: integration-image
+    - get: ruby-install
+    - get: ruby-image
+      trigger: true
+    - get: mariadb-10-6-blob
+      trigger: true
+    - get: mysql-8-0-blob
+      trigger: true
+    - get: mysql-8-4-blob
+      trigger: true
+    - get: ncurses-blob
+      trigger: true
+    - get: postgres-15-blob
+      trigger: true
+    - get: postgres-16-blob
+      trigger: true
+    - get: postgres-17-blob
+      trigger: true
+    - get: postgres-18-blob
+      trigger: true
+    - get: libpcre2-blob
+      trigger: true
+    - get: golang-release
+      trigger: true
+  - task: bump-golang-package
+    file: golang-release/ci/tasks/shared/bump-golang-package.yml
+    input_mapping:
+      input_repo: backup-and-restore-sdk-release
+    output_mapping:
+      output_repo: backup-and-restore-sdk-release
+    params:
+      GIT_USER_NAME: *git_user_name
+      GIT_USER_EMAIL: *git_user_email
+      PACKAGES: [ golang-1-linux ]
+      PRIVATE_YML: *release_private_yml
+  - task: bump-ruby
+    image: ruby-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-ruby/task.yml
+    output_mapping:
+      bumped-repo: backup-and-restore-sdk-release
+    params:
+      GIT_USERNAME: *git_user_name
+      GIT_EMAIL: *git_user_email
+  - task: sdk-template-unit-tests
+    image: bosh-ecosystem-docker-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/sdk-template-unit-tests/task.yml
+  - task: bump-mariadb-10-6-blob
+    image: integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
+    input_mapping:
+      distributed-package: mariadb-10-6-blob
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
+    params:
+      <<: *bump_blob_params
+      BLOB_NAME: mariadb
+      BLOB_EXTENSION: .tar.gz
+      BLOB_DIRECTORY: mariadb/
+      UPDATE_REFERENCES: only-variable-name:MARIADB_VERSION
+  - task: bump-mysql-8-0-blob
+    image: integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
+    input_mapping:
+      distributed-package: mysql-8-0-blob
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
+    params:
+      <<: *bump_blob_params
+      BLOB_NAME: mysql
+      BLOB_EXTENSION: linux-glibc2.17-x86_64-minimal.tar.xz
+      KEEP_BLOBS_FILTER: mysql-8.4
+      BLOB_DIRECTORY: mysql/
+      UPDATE_REFERENCES: only-variable-name:MYSQL80_VERSION
+  - task: bump-mysql-8-4-blob
+    image: integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
+    input_mapping:
+      distributed-package: mysql-8-4-blob
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
+    params:
+      <<: *bump_blob_params
+      BLOB_NAME: mysql
+      BLOB_EXTENSION: linux-glibc2.28-x86_64-minimal.tar.xz
+      KEEP_BLOBS_FILTER: mysql-8.0
+      BLOB_DIRECTORY: mysql/
+      UPDATE_REFERENCES: only-variable-name:MYSQL84_VERSION
+  - task: bump-ncurses-blob
+    image: integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
+    input_mapping:
+      distributed-package: ncurses-blob
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
+    params:
+      <<: *bump_blob_params
+      BLOB_NAME: ncurses
+      BLOB_EXTENSION: .tar.gz
+      BLOB_DIRECTORY: ncurses/
+      UPDATE_REFERENCES: only-variable-name:NCURSES_VERSION
+  - task: bump-postgres-15-blob
+    image: integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
+    input_mapping:
+      distributed-package: postgres-15-blob
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
+    params:
+      <<: *bump_blob_params
+      BLOB_NAME: postgresql
+      BLOB_EXTENSION: .tar.gz
+      KEEP_BLOBS_FILTER: postgresql-16,postgresql-17,postgresql-18
+      BLOB_DIRECTORY: postgres/
+      UPDATE_REFERENCES: only-variable-name:POSTGRES15_VERSION
+  - task: bump-postgres-16-blob
+    image: integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
+    input_mapping:
+      distributed-package: postgres-16-blob
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
+    params:
+      <<: *bump_blob_params
+      BLOB_NAME: postgresql
+      BLOB_EXTENSION: .tar.gz
+      KEEP_BLOBS_FILTER: postgresql-15,postgresql-17,postgresql-18
+      BLOB_DIRECTORY: postgres/
+      UPDATE_REFERENCES: only-variable-name:POSTGRES16_VERSION
+  - task: bump-postgres-17-blob
+    image: integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
+    input_mapping:
+      distributed-package: postgres-17-blob
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
+    params:
+      <<: *bump_blob_params
+      BLOB_NAME: postgresql
+      BLOB_EXTENSION: .tar.gz
+      KEEP_BLOBS_FILTER: postgresql-15,postgresql-16,postgresql-18
+      BLOB_DIRECTORY: postgres/
+      UPDATE_REFERENCES: only-variable-name:POSTGRES17_VERSION
+  - task: bump-postgres-18-blob
+    image: integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
+    input_mapping:
+      distributed-package: postgres-18-blob
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
+    params:
+      <<: *bump_blob_params
+      BLOB_NAME: postgresql
+      BLOB_EXTENSION: .tar.gz
+      KEEP_BLOBS_FILTER: postgresql-15,postgresql-16,postgresql-17
+      BLOB_DIRECTORY: postgres/
+      UPDATE_REFERENCES: only-variable-name:POSTGRES18_VERSION
+  - task: bump-libpcre2-blob
+    image: integration-image
+    file: backup-and-restore-sdk-release-ci/ci/tasks/bump-blob/task.yml
+    input_mapping:
+      distributed-package: libpcre2-blob
+      bosh-release: backup-and-restore-sdk-release
+    output_mapping:
+      bosh-release-updated: backup-and-restore-sdk-release
+    params:
+      <<: *bump_blob_params
+      BLOB_NAME: pcre2
+      BLOB_EXTENSION: .tar.gz
+      BLOB_DIRECTORY: libpcre2/
+      UPDATE_REFERENCES: only-variable-name:LIBPCRE2_VERSION
+  - put: backup-and-restore-sdk-release-write-only
+    params:
+      repository: backup-and-restore-sdk-release
+      rebase: true
