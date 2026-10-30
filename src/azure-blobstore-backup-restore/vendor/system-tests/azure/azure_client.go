@@ -49,6 +49,25 @@ func (c AzureClient) DeleteFileInContainer(container, blobName string) {
 		"--delete-snapshots", "include")
 }
 
+// DeleteFileInContainerIfExists is for cleanup, which also runs after specs
+// that failed before writing the blob, or before its container existed.
+func (c AzureClient) DeleteFileInContainerIfExists(container, blobName string) {
+	_, stderr, err := c.runAzureCommand(
+		"storage",
+		"blob",
+		"delete",
+		"--container-name", container,
+		"--name", blobName,
+		"--delete-snapshots", "include")
+	if err != nil && !isNotFound(stderr.String()) {
+		panic(fmt.Errorf("azure command failed: %q, stderr: %q", err, stderr.String()))
+	}
+}
+
+func isNotFound(stderr string) bool {
+	return strings.Contains(stderr, "BlobNotFound") || strings.Contains(stderr, "ContainerNotFound")
+}
+
 func (c AzureClient) WriteFileInContainer(container, blobName, body string) string {
 	bodyFile, _ := os.CreateTemp("", "write_file_in_container_")
 	bodyFile.WriteString(body)
@@ -109,6 +128,15 @@ func (c AzureClient) ReadFileFromContainer(container, blobName string) string {
 }
 
 func (c AzureClient) runAzureCommandSuccessfully(args ...string) *bytes.Buffer {
+	outputBuffer, errorBuffer, err := c.runAzureCommand(args...)
+	if err != nil {
+		panic(fmt.Errorf("azure command failed: %q, stderr: %q", err, errorBuffer.String()))
+	}
+
+	return outputBuffer
+}
+
+func (c AzureClient) runAzureCommand(args ...string) (*bytes.Buffer, *bytes.Buffer, error) {
 	outputBuffer := new(bytes.Buffer)
 	errorBuffer := new(bytes.Buffer)
 
@@ -133,9 +161,6 @@ func (c AzureClient) runAzureCommandSuccessfully(args ...string) *bytes.Buffer {
 	)
 
 	err = azCmd.Run()
-	if err != nil {
-		panic(fmt.Errorf("azure command failed: %q, stderr: %q", err, errorBuffer.String()))
-	}
 
-	return outputBuffer
+	return outputBuffer, errorBuffer, err
 }
