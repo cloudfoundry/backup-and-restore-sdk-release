@@ -6,12 +6,10 @@ cel.dev/expr
 cloud.google.com/go/internal/optional
 cloud.google.com/go/internal/trace
 cloud.google.com/go/internal/version
-# cloud.google.com/go/auth v0.24.1
+# cloud.google.com/go/auth v0.24.2
 ## explicit; go 1.26.0
 cloud.google.com/go/auth
 cloud.google.com/go/auth/credentials
-cloud.google.com/go/auth/credentials/idtoken
-cloud.google.com/go/auth/credentials/impersonate
 cloud.google.com/go/auth/credentials/internal/externalaccount
 cloud.google.com/go/auth/credentials/internal/externalaccountuser
 cloud.google.com/go/auth/credentials/internal/gdch
@@ -28,21 +26,21 @@ cloud.google.com/go/auth/internal/retry
 cloud.google.com/go/auth/internal/transport
 cloud.google.com/go/auth/internal/transport/cert
 cloud.google.com/go/auth/internal/transport/headers
-# cloud.google.com/go/auth/oauth2adapt v0.3.0
+# cloud.google.com/go/auth/oauth2adapt v0.3.1
 ## explicit; go 1.26.0
 cloud.google.com/go/auth/oauth2adapt
 # cloud.google.com/go/compute/metadata v0.10.0
 ## explicit; go 1.26.0
 cloud.google.com/go/compute/metadata
-# cloud.google.com/go/iam v1.15.0
+# cloud.google.com/go/iam v1.15.1
 ## explicit; go 1.26.0
 cloud.google.com/go/iam
 cloud.google.com/go/iam/apiv1/iampb
-# cloud.google.com/go/logging v1.21.0
+# cloud.google.com/go/logging v1.21.1
 ## explicit; go 1.26.0
-# cloud.google.com/go/longrunning v1.4.0
+# cloud.google.com/go/longrunning v1.4.1
 ## explicit; go 1.26.0
-# cloud.google.com/go/monitoring v1.32.0
+# cloud.google.com/go/monitoring v1.32.1
 ## explicit; go 1.26.0
 cloud.google.com/go/monitoring/apiv3/v2
 cloud.google.com/go/monitoring/apiv3/v2/monitoringpb
@@ -54,7 +52,7 @@ cloud.google.com/go/storage/experimental
 cloud.google.com/go/storage/internal
 cloud.google.com/go/storage/internal/apiv2
 cloud.google.com/go/storage/internal/apiv2/storagepb
-# cloud.google.com/go/trace v1.18.0
+# cloud.google.com/go/trace v1.18.1
 ## explicit; go 1.26.0
 # github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.62.0
 ## explicit; go 1.26.0
@@ -108,6 +106,9 @@ github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/gcp_authn/v
 github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/rbac/v3
 github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3
 github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3
+github.com/envoyproxy/go-control-plane/envoy/extensions/grpc_service/call_credentials/access_token/v3
+github.com/envoyproxy/go-control-plane/envoy/extensions/grpc_service/channel_credentials/tls/v3
+github.com/envoyproxy/go-control-plane/envoy/extensions/grpc_service/channel_credentials/xds/v3
 github.com/envoyproxy/go-control-plane/envoy/extensions/load_balancing_policies/client_side_weighted_round_robin/v3
 github.com/envoyproxy/go-control-plane/envoy/extensions/load_balancing_policies/common/v3
 github.com/envoyproxy/go-control-plane/envoy/extensions/load_balancing_policies/least_request/v3
@@ -132,7 +133,7 @@ github.com/envoyproxy/protoc-gen-validate/validate
 # github.com/felixge/httpsnoop v1.1.0
 ## explicit; go 1.25
 github.com/felixge/httpsnoop
-# github.com/gkampitakis/go-snaps v0.5.23
+# github.com/gkampitakis/go-snaps v0.5.25
 ## explicit; go 1.23
 # github.com/go-jose/go-jose/v4 v4.1.6
 ## explicit; go 1.24.0
@@ -156,7 +157,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20261016150608-1facf8f91b50
+# github.com/google/pprof v0.0.0-20261026192309-dbd0ed30aa88
 ## explicit; go 1.26.0
 github.com/google/pprof/profile
 # github.com/google/s2a-go v0.1.11
@@ -362,7 +363,7 @@ golang.org/x/crypto/internal/poly1305
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.61.0
+# golang.org/x/net v0.62.0
 ## explicit; go 1.26.0
 golang.org/x/net/context
 golang.org/x/net/html
@@ -453,7 +454,7 @@ golang.org/x/tools/internal/stdlib
 golang.org/x/tools/internal/typeparams
 golang.org/x/tools/internal/typesinternal
 golang.org/x/tools/internal/versions
-# google.golang.org/api v0.308.0
+# google.golang.org/api v0.310.0
 ## explicit; go 1.26.0
 google.golang.org/api/googleapi
 google.golang.org/api/googleapi/transport
@@ -471,13 +472,13 @@ google.golang.org/api/storage/v1
 google.golang.org/api/transport
 google.golang.org/api/transport/grpc
 google.golang.org/api/transport/http
-# google.golang.org/genproto v0.0.0-20261019180522-ce908d29299b
+# google.golang.org/genproto v0.0.0-20261026165753-2ffab32bce7e
 ## explicit; go 1.26.0
 google.golang.org/genproto/googleapis/type/calendarperiod
 google.golang.org/genproto/googleapis/type/date
 google.golang.org/genproto/googleapis/type/expr
 google.golang.org/genproto/googleapis/type/timeofday
-# google.golang.org/genproto/googleapis/api v0.0.0-20261019180522-ce908d29299b
+# google.golang.org/genproto/googleapis/api v0.0.0-20261026165753-2ffab32bce7e
 ## explicit; go 1.26.0
 google.golang.org/genproto/googleapis/api
 google.golang.org/genproto/googleapis/api/annotations
@@ -486,13 +487,13 @@ google.golang.org/genproto/googleapis/api/expr/v1alpha1
 google.golang.org/genproto/googleapis/api/label
 google.golang.org/genproto/googleapis/api/metric
 google.golang.org/genproto/googleapis/api/monitoredres
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20261019180522-ce908d29299b
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20261026165753-2ffab32bce7e
 ## explicit; go 1.26.0
 google.golang.org/genproto/googleapis/rpc/code
 google.golang.org/genproto/googleapis/rpc/errdetails
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.84.0
-## explicit; go 1.25.0
+# google.golang.org/grpc v1.85.0
+## explicit; go 1.26.0
 google.golang.org/grpc
 google.golang.org/grpc/attributes
 google.golang.org/grpc/authz/audit
@@ -550,7 +551,6 @@ google.golang.org/grpc/internal
 google.golang.org/grpc/internal/admin
 google.golang.org/grpc/internal/backoff
 google.golang.org/grpc/internal/balancer/gracefulswitch
-google.golang.org/grpc/internal/balancer/nop
 google.golang.org/grpc/internal/balancergroup
 google.golang.org/grpc/internal/balancerload
 google.golang.org/grpc/internal/binarylog
@@ -617,6 +617,8 @@ google.golang.org/grpc/internal/xds/clients/xdsclient/internal/xdsresource
 google.golang.org/grpc/internal/xds/clients/xdsclient/metrics
 google.golang.org/grpc/internal/xds/clusterspecifier
 google.golang.org/grpc/internal/xds/clusterspecifier/rls
+google.golang.org/grpc/internal/xds/credentials
+google.golang.org/grpc/internal/xds/grpcservice
 google.golang.org/grpc/internal/xds/httpfilter
 google.golang.org/grpc/internal/xds/httpfilter/extproc
 google.golang.org/grpc/internal/xds/httpfilter/extproc/internal
