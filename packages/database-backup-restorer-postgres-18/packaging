@@ -1,6 +1,6 @@
 set -e
 
-POSTGRES18_VERSION=18.6
+POSTGRES18_VERSION=18.7
 
 mkdir -p postgresql-${POSTGRES18_VERSION}
 
