@@ -13,11 +13,12 @@ require (
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
+	github.com/gkampitakis/ciinfo v0.3.5 // indirect
 	github.com/gkampitakis/go-snaps v0.5.25 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/pprof v0.0.0-20261110164715-8bb1ee682bd8 // indirect
+	github.com/google/pprof v0.0.0-20261111200114-fac431ef4d26 // indirect
 	github.com/nxadm/tail v1.4.11 // indirect
 	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/pivotal-cf/go-binmock v0.0.0-20171027112700-f797157c64e9 // indirect
