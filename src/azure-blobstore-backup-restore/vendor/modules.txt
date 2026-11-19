@@ -55,8 +55,8 @@ github.com/Azure/azure-sdk-for-go/sdk/storage/internal/sasurl
 github.com/Masterminds/semver/v3
 # github.com/andybalholm/brotli v1.3.0
 ## explicit; go 1.22
-# github.com/apache/arrow-go/v18 v18.8.0
-## explicit; go 1.25.0
+# github.com/apache/arrow-go/v18 v18.9.0
+## explicit; go 1.26.0
 github.com/apache/arrow-go/v18/arrow
 github.com/apache/arrow-go/v18/arrow/array
 github.com/apache/arrow-go/v18/arrow/arrio
@@ -80,8 +80,6 @@ github.com/apache/arrow-go/v18/internal/hashing
 github.com/apache/arrow-go/v18/internal/json
 github.com/apache/arrow-go/v18/internal/utils
 github.com/apache/arrow-go/v18/internal/utils/maphash
-# github.com/apache/thrift v0.25.0
-## explicit; go 1.26
 # github.com/go-logr/logr v1.4.4
 ## explicit; go 1.18
 github.com/go-logr/logr
@@ -122,7 +120,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/pprof v0.0.0-20261111200114-fac431ef4d26
+# github.com/google/pprof v0.0.0-20261118010117-084b33a85f63
 ## explicit; go 1.26.0
 github.com/google/pprof/profile
 # github.com/klauspost/compress v1.20.4
@@ -192,8 +190,12 @@ github.com/pierrec/lz4/v4/internal/lz4block
 github.com/pierrec/lz4/v4/internal/lz4errors
 github.com/pierrec/lz4/v4/internal/lz4stream
 github.com/pierrec/lz4/v4/internal/xxh32
-# github.com/sergi/go-diff v1.4.0
+# github.com/sergi/go-diff v1.4.5
 ## explicit; go 1.13
+# github.com/tidwall/gjson v1.20.4
+## explicit; go 1.23
+# github.com/tidwall/sjson v1.2.10
+## explicit; go 1.23
 # github.com/zeebo/assert v1.3.1
 ## explicit; go 1.13
 # github.com/zeebo/xxh3 v1.1.0
@@ -202,9 +204,7 @@ github.com/zeebo/xxh3
 # go.yaml.in/yaml/v3 v3.0.6
 ## explicit; go 1.16
 go.yaml.in/yaml/v3
-# golang.org/x/crypto v0.59.0
-## explicit; go 1.26.0
-# golang.org/x/exp v0.0.0-20261112173441-d10d3b464990
+# golang.org/x/exp v0.0.0-20261119141654-b15d094f3610
 ## explicit; go 1.26.0
 golang.org/x/exp/constraints
 # golang.org/x/mod v0.43.0
@@ -212,7 +212,7 @@ golang.org/x/exp/constraints
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.62.0
+# golang.org/x/net v0.63.0
 ## explicit; go 1.26.0
 golang.org/x/net/html
 golang.org/x/net/html/atom
@@ -255,7 +255,7 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# golang.org/x/tools v0.52.1-0.20261106145633-d407941a339a
+# golang.org/x/tools v0.53.0
 ## explicit; go 1.26.0
 golang.org/x/tools/cover
 golang.org/x/tools/go/ast/astutil
