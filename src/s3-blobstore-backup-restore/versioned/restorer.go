@@ -34,6 +34,23 @@ func (r Restorer) Run() error {
 			return fmt.Errorf("no entry found in backup artifact for bucket: %s", identifier)
 		}
 
+		if bucketSnapshot.BucketName != destinationBucket.Name() {
+			return fmt.Errorf(
+				"artifact bucket name %q for bucket %q does not match configured bucket name %q",
+				bucketSnapshot.BucketName, identifier, destinationBucket.Name(),
+			)
+		}
+		if bucketSnapshot.RegionName != destinationBucket.Region() {
+			return fmt.Errorf(
+				"artifact bucket region %q for bucket %q does not match configured bucket region %q",
+				bucketSnapshot.RegionName, identifier, destinationBucket.Region(),
+			)
+		}
+	}
+
+	for identifier, destinationBucket := range r.destinationBuckets {
+		bucketSnapshot := bucketSnapshots[identifier]
+
 		isVersioned, err := destinationBucket.IsVersioned()
 
 		if err != nil {
@@ -48,8 +65,8 @@ func (r Restorer) Run() error {
 			err = destinationBucket.CopyVersion(
 				versionToCopy.BlobKey,
 				versionToCopy.Id,
-				bucketSnapshot.BucketName,
-				bucketSnapshot.RegionName,
+				destinationBucket.Name(),
+				destinationBucket.Region(),
 			)
 
 			if err != nil {
