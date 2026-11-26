@@ -188,7 +188,7 @@ github.com/pierrec/lz4/v4/internal/lz4block
 github.com/pierrec/lz4/v4/internal/lz4errors
 github.com/pierrec/lz4/v4/internal/lz4stream
 github.com/pierrec/lz4/v4/internal/xxh32
-# github.com/tidwall/gjson v1.20.6
+# github.com/tidwall/gjson v1.20.7
 ## explicit; go 1.23
 # github.com/tidwall/pretty v1.3.1
 ## explicit; go 1.16
@@ -202,7 +202,7 @@ github.com/zeebo/xxh3
 # go.yaml.in/yaml/v3 v3.0.6
 ## explicit; go 1.16
 go.yaml.in/yaml/v3
-# golang.org/x/exp v0.0.0-20261121134650-e1094eeca1b5
+# golang.org/x/exp v0.0.0-20261124000051-d6646c509b6d
 ## explicit; go 1.26.0
 golang.org/x/exp/constraints
 # golang.org/x/mod v0.43.0
